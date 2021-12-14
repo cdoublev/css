@@ -1,0 +1,93 @@
+<style>
+    * {
+        box-sizing: border-box;
+    }
+    table {
+        margin-inline: auto;
+        border-spacing: 0;
+    }
+    table thead {
+        position: sticky;
+        top: 0;
+        background-color: #ffffffbb;
+    }
+    table th,
+    table td {
+        padding: 1em;
+    }
+    table th {
+        text-align: left;
+        font-weight: 600;
+        border-block-end: 2px solid lightgrey;
+    }
+    table td {
+        border-block-end: 1px solid lightgrey;
+    }
+    tr.error {
+        color: red;
+    }
+</style>
+
+<div id="target"></div>
+<table>
+    <thead>
+        <th>Input</th>
+        <th>Expected</th>
+        <th>Actual</th>
+    </thead>
+</table>
+
+<script>
+
+    // Act, Assert
+    function aa(value, expected) {
+        target.style.backgroundImage = ''
+        target.style.backgroundImage = value
+        const actual = target.style.backgroundImage
+        const result = actual === expected ? 'success' : 'error'
+        console.log(`%c$Input: ${value}"`, `color: white; background-color: ${result === 'success' ? 'limegreen' : 'red'}`)
+        console.log(`Actual: "${actual}"`)
+        console.log(`Expected: "${expected}"`)
+        let html = `<td>${value}</td>`
+        html += `<td>${expected === '' ? '-' : expected}</td>`
+        html += `<td>${actual === '' ? '-' : actual}</td>`
+        const tr = document.createElement('tr')
+        tr.innerHTML = html
+        tr.classList.add(result)
+        document.querySelector('table').appendChild(tr)
+    }
+
+    /**
+     * - Chrome do not add `center` when the other position component value is missing or is a percentage
+     * - Firefix removes the position component values when both are equivalent to `center`
+     * - Chrome/Firefox do not remove an angle equivalent to the default value
+     * - Chrome /Firefoxdo not clamp angles
+     */
+    aa('conic-gradient(red, cyan)', 'conic-gradient(at center center, red, cyan)')
+    aa('CONIc-gradient(red, cyan)', 'conic-gradient(at center center, red, cyan)')
+    aa('repeating-conic-gradient(red, cyan)', 'repeating-conic-gradient(at center center, red, cyan)')
+    aa('conic-gradient(from 90deg at left center, red, cyan)', 'conic-gradient(from 90deg at left center, red, cyan)')
+    aa('conic-gradient(from 0, red, cyan)', 'conic-gradient(at center center, red, cyan)')
+    aa('conic-gradient(from 0deg, red, cyan)', 'conic-gradient(at center center, red, cyan)')
+    aa('conic-gradient(from 0turn, red, cyan)', 'conic-gradient(at center center, red, cyan)')
+    aa('conic-gradient(from calc(0deg), red, cyan)', 'conic-gradient(at center center, red, cyan)')
+    aa('conic-gradient(from 360deg, red, cyan)', 'conic-gradient(at center center, red, cyan)')
+    aa('conic-gradient(at center, red, cyan)', 'conic-gradient(at center center, red, cyan)')
+    aa('conic-gradient(at center center, red, cyan)', 'conic-gradient(at center center, red, cyan)')
+    aa('conic-gradient(at center 50%, red, cyan)', 'conic-gradient(at center 50%, red, cyan)')
+    aa('conic-gradient(at 50% center, red, cyan)', 'conic-gradient(at 50% center, red, cyan)')
+    aa('conic-gradient(at 50% 50%, red, cyan)', 'conic-gradient(at 50% 50%, red, cyan)')
+    aa('conic-gradient(at 50%, red, cyan)', 'conic-gradient(at 50%, red, cyan)')
+    aa('conic-gradient(at 50% top, red, cyan)', 'conic-gradient(at 50% top, red, cyan)')
+    aa('conic-gradient(at top, red, cyan)', 'conic-gradient(at center top, red, cyan)')
+    aa('conic-gradient(at top center, red, cyan)', 'conic-gradient(at center top, red, cyan)')
+    aa('conic-gradient(at left, red, cyan)', 'conic-gradient(at left center, red, cyan)')
+    aa('conic-gradient(at left center, red, cyan)', 'conic-gradient(at left center, red, cyan)')
+    aa('conic-gradient(at left 50%, red, cyan)', 'conic-gradient(at left 50%, red, cyan)')
+    aa('conic-gradient(at top left, red, cyan)', 'conic-gradient(at left top, red, cyan)')
+    aa('conic-gradient(red, 50%, cyan)', 'conic-gradient(at center center, red, 50%, cyan)')
+    aa('conic-gradient(red 0 0, 0, cyan)', 'conic-gradient(at center center, red 0deg, red 0deg, 0deg, cyan)')
+    aa('conic-gradient(red 0deg 1turn, 50%, cyan)', 'conic-gradient(at center center, red 0deg, red 1turn, 50%, cyan)')
+    aa('conic-gradient(red -1% 200%, 540deg, cyan)', 'conic-gradient(at center center, red -1%, red 200%, 540deg, cyan)')
+    aa('conic-gradient(red 0deg 180deg)', 'conic-gradient(at center center, red 0deg, red 180deg)')
+</script>

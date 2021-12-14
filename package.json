@@ -1,0 +1,56 @@
+{
+  "name": "@cdoublev/cssstyle",
+  "description": "CSSStyleDeclaration implementation",
+  "author": "Guillaume Lebas",
+  "license": "MIT",
+  "keywords": [
+    "CSS"
+  ],
+  "version": "0.1.0",
+  "engines": {
+    "node": ">= 16"
+  },
+  "homepage": "https://github.com/cdoublev/cssstyle#readme",
+  "bugs": "https://github.com/cdoublev/cssstyle/issues",
+  "repository": "github:cdoublev/cssstyle",
+  "directories": {
+    "lib": "./lib",
+    "test": "__tests__"
+  },
+  "files": [
+    "lib",
+    "index.js"
+  ],
+  "exports": {
+    ".": "./index.js"
+  },
+  "scripts": {
+    "build:definitions": "node ./scripts/definitions.js",
+    "build:initial": "node ./scripts/initial.js",
+    "build:interface": "node ./scripts/convert-idl.js",
+    "lint": "eslint --report-unused-disable-directives .",
+    "safe-publish": "npm run lint && npm run test && npm publish",
+    "test": "npm run prepare && jest",
+    "test:watch": "jest --watchAll -b",
+    "test:inspect": "node --inspect-brk=0.0.0.0:9222 ./node_modules/.bin/jest --watchAll -b"
+  },
+  "dependencies": {
+    "@webref/css": "^2.0.12",
+    "webidl-conversions": "^6.1.0"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.16.0",
+    "@babel/eslint-parser": "^7.16.3",
+    "@babel/preset-env": "^7.16.0",
+    "@cdoublev/eslint-config": "^0.9.0",
+    "eslint": "^8.2.0",
+    "eslint-plugin-jest": "^25.2.4",
+    "eslint-plugin-node": "^11.1.0",
+    "jest": "^27.1.0",
+    "jest-junit": "^12.2.0",
+    "webidl2js": "^16.2.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

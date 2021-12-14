@@ -1,0 +1,80 @@
+<style>
+    * {
+        box-sizing: border-box;
+    }
+    table {
+        margin-inline: auto;
+        border-spacing: 0;
+    }
+    table thead {
+        position: sticky;
+        top: 0;
+        background-color: #ffffffbb;
+    }
+    table th,
+    table td {
+        padding: 1em;
+    }
+    table th {
+        text-align: left;
+        font-weight: 600;
+        border-block-end: 2px solid lightgrey;
+    }
+    table td {
+        border-block-end: 1px solid lightgrey;
+    }
+    tr.error {
+        color: red;
+    }
+</style>
+
+<div id="target"></div>
+<table>
+    <thead>
+        <th>Input</th>
+        <th>Expected</th>
+        <th>Actual</th>
+    </thead>
+</table>
+
+<script>
+
+    // Act, Assert
+    function aa(value, expected = value) {
+        target.style.objectPosition = ''
+        target.style.objectPosition = value
+        const actual = target.style.objectPosition
+        const result = actual === expected ? 'success' : 'error'
+        console.log(`%c$Input: ${value}"`, `color: white; background-color: ${result === 'success' ? 'limegreen' : 'red'}`)
+        console.log(`Actual: "${actual}"`)
+        console.log(`Expected: "${expected}"`)
+        let html = `<td>${value}</td>`
+        html += `<td>${expected === '' ? '-' : expected}</td>`
+        html += `<td>${actual === '' ? '-' : actual}</td>`
+        const tr = document.createElement('tr')
+        tr.innerHTML = html
+        tr.classList.add(result)
+        document.querySelector('table').appendChild(tr)
+    }
+
+    /**
+     * Note: the default value is `50% 50%`.
+     *
+     * - Chrome/Firefox resolve 0 to 0%
+     * - Chrome/Firefox do not simplify 4 to 2 values
+     */
+    aa('center', 'center center')
+    aa('center center')
+    aa('center 50%')
+    aa('50% center')
+    aa('50% 50%')
+    aa('50%', '50% center')
+    aa('50% top')
+    aa('left 50%')
+    aa('0', '0px center')
+    aa('0%', '0% center')
+    aa('0px', '0% center')
+    aa('1px', '1px center')
+    aa('right 1% bottom 1%', '99% 99%')
+    aa('right 1px bottom 1%', 'right 1px top 99%')
+</script>
