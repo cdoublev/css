@@ -9,7 +9,7 @@ const path = require('path')
 const { parseValue } = require('../lib/parse/value.js')
 const properties = require('../lib/properties/definitions.js')
 
-const outputPath = path.resolve(__dirname, '../lib/properties/definitions-tmp.js')
+const outputPath = path.resolve(__dirname, '../lib/properties/definitions.js')
 const dependency = "const createList = require('../values/value.js')"
 const header = `// Generated from ${__filename}\n\n${dependency}`
 

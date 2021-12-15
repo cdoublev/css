@@ -1,5 +1,5 @@
 {
-  "name": "@cdoublev/cssstyle",
+  "name": "@cdoublev/css",
   "description": "CSSStyleDeclaration implementation",
   "author": "Guillaume Lebas",
   "license": "MIT",
@@ -10,10 +10,11 @@
   "engines": {
     "node": ">= 16"
   },
-  "homepage": "https://github.com/cdoublev/cssstyle#readme",
-  "bugs": "https://github.com/cdoublev/cssstyle/issues",
-  "repository": "github:cdoublev/cssstyle",
+  "homepage": "https://github.com/cdoublev/css#readme",
+  "bugs": "https://github.com/cdoublev/css/issues",
+  "repository": "github:cdoublev/css",
   "directories": {
+    "doc": "doc",
     "lib": "./lib",
     "test": "__tests__"
   },
@@ -35,19 +36,19 @@
     "test:inspect": "node --inspect-brk=0.0.0.0:9222 ./node_modules/.bin/jest --watchAll -b"
   },
   "dependencies": {
-    "@webref/css": "^2.0.12",
+    "@webref/css": "^2.1.8",
     "webidl-conversions": "^6.1.0"
   },
   "devDependencies": {
-    "@babel/core": "^7.16.0",
-    "@babel/eslint-parser": "^7.16.3",
-    "@babel/preset-env": "^7.16.0",
+    "@babel/core": "^7.16.5",
+    "@babel/eslint-parser": "^7.16.5",
+    "@babel/preset-env": "^7.16.5",
     "@cdoublev/eslint-config": "^0.9.0",
-    "eslint": "^8.2.0",
-    "eslint-plugin-jest": "^25.2.4",
+    "eslint": "^8.4.1",
+    "eslint-plugin-jest": "^25.3.0",
     "eslint-plugin-node": "^11.1.0",
     "jest": "^27.1.0",
-    "jest-junit": "^12.2.0",
+    "jest-junit": "^13.0.0",
     "webidl2js": "^16.2.0"
   },
   "publishConfig": {

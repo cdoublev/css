@@ -2366,16 +2366,16 @@ describe('<color>', () => {
     })
     it('parses a color to a representation with the expected CSS types', () => {
         expect(parse('<color>', 'red', false, false)).toEqual({
-            type: new Set(['ident', 'keyword', 'named-color', 'color']),
+            type: new Set(['ident', 'keyword', 'named-color', 'absolute-color-base', 'color']),
             value: 'red',
         })
         expect(parse('<color>', '#000', false, false)).toEqual({
-            type: new Set(['hash-token', 'hex-color', 'color']),
+            type: new Set(['hash-token', 'hex-color', 'absolute-color-base', 'color']),
             value: '000',
         })
         expect(parse('<color>', 'rgb(0, 0, 0)', false, false)).toEqual({
             name: 'rgb',
-            type: new Set(['function', 'rgb()', 'color']),
+            type: new Set(['function', 'rgb()', 'absolute-color-base', 'color']),
             value: createList([
                 list([
                     { location: -1, type: new Set(['integer', 'number']), value: 0 },

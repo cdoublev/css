@@ -8,7 +8,8 @@
  * specifications.
  */
 const { addQuotes, logError, tab } = require('../lib/utils/script.js')
-const { aliases: webKitAliases, propertyMap } = require('../lib/properties/webkit.js')
+const { aliases } = require('../lib/properties/compatibility.js')
+const cssWideKeywords = require('../lib/values/cssWideKeywords.js')
 const fs = require('fs')
 const { listAll } = require('@webref/css')
 const namedColors = require('../lib/values/namedColors.js')
@@ -21,57 +22,76 @@ const outputPaths = {
 }
 const header = `// Generated from ${__filename}`
 
-// Properties/types missing from specifications or customs
-const initial = {
-    properties: {},
-    types: {
-        // Legacy types
-        'hsla()': '<hsl()>',
-        'rgba()': '<rgb()>',
-        // Implicit types
-        'repeating-conic-gradient()': '<conic-gradient()>',
-        'repeating-linear-gradient()': '<linear-gradient()>',
-        'repeating-radial-gradient()': '<radial-gradient()>',
-        // Custom types
-        'css-wide-keyword': 'inherit | initial | revert | unset',
-        'math-function': '<calc()> | <min()> | <max()> | <clamp()> | <round()> | <mod()> | <rem()> | <sin()> | <cos()> | <tan()> | <asin()> | <acos()> | <atan()> | <atan2()> | <pow()> | <sqrt()> | <hypot()> | <log()> | <exp()> | <abs()> | <sign()>',
-        // TODO: report spec issue "the grammar of `url()` is missing `<function-token>`"
-        'url-modifier': '<custom-ident>',
-        // TODO: report @webref/css issue related to missing type definitions (written in prose)
-        'absolute-size': 'xx-small | x-small | small | medium | large | x-large | xx-large',
-        'basic-shape': '<inset()> | <circle()> | <ellipse()> | <polygon()> | <path()>',
-        'bottom': '<length> | auto',
-        'colorspace-params': '<custom-params> | <predefined-rgb-params> | <xyz-params>',
-        'content-level': 'element | content | text',
-        'counter-name': '<custom-ident>',
-        'counter-style-name': '<custom-ident>',
-        'custom-params': '<dashed-ident> [ <number> | <percentage> ]#',
-        'dimension': '<length> | <time> | <frequency> | <resolution> | <angle>',
-        'dimension-unit': '"%" | <angle> | <flex> | <frequency> | <length> | <time>',
-        'extent-keyword': 'closest-corner | closest-side | farthest-corner | farthest-side',
-        'lang': '<ident> | <string>',
-        'left': '<length> | auto',
-        'named-color': namedColors.join(' | '),
-        'outline-line-style': '<line-style> | auto',
-        'predefined-rgb-params': '<predefined-rgb> [ <number> | <percentage> ]{3}',
-        'predefined-rgb': 'srgb | display-p3 | a98-rgb | prophoto-rgb | rec2020',
-        'relative-size': 'larger | smaller',
-        'right': '<length> | auto',
-        'rounding-strategy': 'nearest | up | down | to-zero',
-        'system-color': systemColors.join(' | '),
-        'top': '<length> | auto',
-        'transform-function': '<matrix()> | <translate()> | <translateX()> | <translateY()> | <scale()> | <scaleX()> | <scaleY()> | <rotate()> | <skew()> | <skewX()> | <skewY()>',
-        'x': '<number>',
-        'xyz-params': 'xyz <number>{3}',
-        'y': '<number>',
-        // TODO: report spec issue "replace `<uri>` by `<url-token>`"
-        'uri': '<url-token>',
-        // TODO: report spec issue "replace `<number-percentage>` by `<number> | <percentage>`"
-        'number-percentage': '<number> | <percentage>',
-    },
-}
+/**
+ * Terminal types
+ *
+ * These types are and always will be defined only in prose and therefore can
+ * not but be replaced by a definition using the CSS syntax.
+ */
+const terminals = ['EOF-token', 'integer', 'length', 'percentage']
 
-// Overriden properties/types
+/**
+ * Legacy, custom, or missing type definitions
+ *
+ * Missing type definitions are defined in prose in specifications instead of
+ * with the CSS syntax.
+ *
+ * Legacy and extended types are only defined in prose in specifications. They
+ * should be supported either as simple aliases with an identical behavior than
+ * the target type (legacy types), or with a specific behavior (extended types).
+ *
+ * Custom types are only defined in this library, to simplify parsing.
+ *
+ * This map is normalized into entries of multi-value field entries for further
+ * processing.
+ */
+const initialTypes = Object.entries({
+    // Legacy types
+    'hsla()': '<hsl()>',
+    'rgba()': '<rgb()>',
+    // Extended types
+    'repeating-conic-gradient()': '<conic-gradient()>',
+    'repeating-linear-gradient()': '<linear-gradient()>',
+    'repeating-radial-gradient()': '<radial-gradient()>',
+    // Custom types
+    'css-wide-keyword': cssWideKeywords.join(' | '),
+    'math-function': '<calc()> | <min()> | <max()> | <clamp()> | <round()> | <mod()> | <rem()> | <sin()> | <cos()> | <tan()> | <asin()> | <acos()> | <atan()> | <atan2()> | <pow()> | <sqrt()> | <hypot()> | <log()> | <exp()> | <abs()> | <sign()>',
+    // TODO: report @webref/css issue related to missing definitions (written in prose)
+    'absolute-size': 'xx-small | x-small | small | medium | large | x-large | xx-large',
+    'basic-shape': '<inset()> | <circle()> | <ellipse()> | <polygon()> | <path()>',
+    'bottom': '<length> | auto',
+    'colorspace-params': '<custom-params> | <predefined-rgb-params> | <xyz-params>',
+    'content-level': 'element | content | text',
+    'counter-name': '<custom-ident>',
+    'counter-style-name': '<custom-ident>',
+    'custom-params': '<dashed-ident> [ <number> | <percentage> ]#',
+    'dimension': '<length> | <time> | <frequency> | <resolution> | <angle>',
+    'dimension-unit': '"%" | <angle> | <flex> | <frequency> | <length> | <time>',
+    'extent-keyword': 'closest-corner | closest-side | farthest-corner | farthest-side',
+    'lang': '<ident> | <string>',
+    'left': '<length> | auto',
+    'named-color': namedColors.join(' | '),
+    'outline-line-style': '<line-style> | auto',
+    'predefined-rgb-params': '<predefined-rgb> [ <number> | <percentage> ]{3}',
+    'predefined-rgb': 'srgb | display-p3 | a98-rgb | prophoto-rgb | rec2020',
+    'relative-size': 'larger | smaller',
+    'right': '<length> | auto',
+    'system-color': systemColors.join(' | '),
+    'top': '<length> | auto',
+    'transform-function': '<matrix()> | <translate()> | <translateX()> | <translateY()> | <scale()> | <scaleX()> | <scaleY()> | <rotate()> | <skew()> | <skewX()> | <skewY()>',
+    'url-modifier': '<custom-ident> | <function-token>',
+    'x': '<number>',
+    'xyz-params': 'xyz <number>{3}',
+    'y': '<number>',
+    // TODO: report spec issue "replace `<number-percentage>` by `<number> | <percentage>`"
+    'number-percentage': '<number> | <percentage>',
+    // TODO: report spec issue "replace `<uri>` by `<url-token>`"
+    'uri': '<url-token>',
+}).map(([type, value]) => [type, [['value', [[value]]]]])
+
+/**
+ * Overriden property/type definitions
+ */
 const replaced = {
     properties: {
         // Implementation dependent
@@ -80,11 +100,7 @@ const replaced = {
         // TODO: resolve to inital `background-position-x` or `background-position-y` depending on `writing-mode`
         'background-position-block': { initial: '0%' },
         'background-position-inline': { initial: '0%' },
-        // TODO: report @webref/css issue related to missing field values (written in prose)
-        '-webkit-line-clamp': {
-            initial: 'see individual properties',
-            value: 'none | <integer>',
-        },
+        // TODO: report @webref/css issue related to missing definitions (written in prose)
         'stop-color': {
             initial: 'black',
             value: "<'color'>",
@@ -93,57 +109,46 @@ const replaced = {
             initial: '1',
             value: "<'opacity'>",
         },
-        // TODO: report spec issue "replace initial value by `see individual properties`"
-        // 'background-position': {
-        //     initial: 'see individual properties',
-        // },
-        'fill': { initial: 'see individual properties' },
-        'line-clamp': { initial: 'see individual properties' },
-        'stroke': {
-            initial: 'see individual properties',
-            // TODO: figure out the meaning of `"<'background'> with modifications"`
-            value: "<'background'>",
-        },
-        'text-decoration': { initial: 'see individual properties' },
+        // TODO: report spec issue "replace `n/a` by `auto` (defined in SVG 1.1)"
+        'glyph-orientation-vertical': { initial: 'auto' },
         // TODO: report spec issue "replace `same as border-top-left-radius` by the initial value of `border-top-left-radius`"
         'border-start-start-radius': { initial: '0' },
         'border-start-end-radius': { initial: '0' },
         'border-end-start-radius': { initial: '0' },
         'border-end-end-radius': { initial: '0' },
-        // TODO: report spec issue "replace `n/a` by `auto` (defined in SVG 1.1)"
-        'glyph-orientation-vertical': { initial: 'auto' },
+        // TODO: report spec issue "replace initial value by `see individual properties`"
+        'line-clamp': { initial: 'see individual properties' },
+        'text-decoration': { initial: 'see individual properties' },
         // TODO: report spec issue "the grammar of `-webkit-background-clip` is missing `none`"
         '-webkit-background-clip': { value: 'border-box | padding-box | content-box | text | none' },
-        'shape-padding': { value: '<length> | none' },
         // TODO: report spec issue "the grammar of `border-limit` is missing `round`"
         'border-limit': { value: 'all | round | [sides | corners] <length-percentage [0,∞]>? | [top | right | bottom | left] <length-percentage [0,∞]>' },
-        // TODO: report spec issue "the grammar of `white-space` is missing `auto`"
-        'white-space': { value: 'normal | pre | nowrap | pre-wrap | break-spaces | pre-line | auto' },
         // TODO: report spec issue "the grammar of `clear` is missing `both`"
         'clear': { value: 'inline-start | inline-end | block-start | block-end | left | right | top | bottom | both | none' },
         // TODO: report spec issue "the grammar of `flow-into` is missing whitespaces"
         'flow-into': { value: 'none | <ident> [element | content]?' },
+        // TODO: report spec issue "the grammar of `shape-padding` is missing `none`"
+        'shape-padding': { value: '<length> | none' },
+        // TODO: report spec issue "the grammar of `white-space` is missing `auto`"
+        'white-space': { value: 'normal | pre | nowrap | pre-wrap | break-spaces | pre-line | auto' },
+        // TODO: support new border syntax from Background 4
+        'border-bottom-color': { value: '<color>' },
+        'border-left-color': { value: '<color>' },
+        'border-right-color': { value: '<color>' },
+        'border-top-color': { value: '<color>' },
     },
     types: {
-        // Written in prose
-        'age': 'child | young | old',
-        'ending-shape': 'circle | ellipse',
-        'family-name': '<string> | <custom-ident>',
-        'gender': 'male | female | neutral',
-        'generic-family': 'cursive | emoji | fangsong | fantasy | math | monospace | sans-serif | serif | system-ui | ui-monospace | ui-rounded | ui-sans-serif | ui-serif',
-        'id': '<id-selector>',
-        'page-size': 'A5 | A4 | A3 | B5 | B4 | JIS-B5 | JIS-B4 | letter | legal | ledger',
-        'palette-identifier': '<custom-ident>',
-        'shape': "rect(<'top'>, <'right'>, <'bottom'>, <'left'>)",
-        'target-name': '<string>',
-        // Written in prose and modified to fix https://github.com/w3c/csswg-drafts/issues/6425
-        'size': 'closest-side | closest-corner | farthest-side | farthest-corner | sides | <length-percentage [0,∞]>{1,2}',
         // Modified to be consistent with `polygon()`
         'path()': "path(<'fill-rule'>? , <string>)",
         // Modified to include legacy `<url-token>`
         'url': '<url-token> | url(<string> <url-modifier>*) | src(<string> <url-modifier>*)',
+        // TODO: fix https://github.com/w3c/webref/issues/333
+        'selector()': 'selector(<id-selector>)',
+        // TODO: fix https://github.com/w3c/csswg-drafts/issues/6425
+        'angular-color-stop-list': '<angular-color-stop> , [<angular-color-hint>? , <angular-color-stop>]#?',
+        'color-stop-list': '<linear-color-stop> , [<linear-color-hint>? , <linear-color-stop>]#?',
         /**
-         * TODO: report spec issue "define grammars with explicit channel keywords" (CSS Color 5)
+         * TODO: report spec issue "define color function grammars with explicit channel keywords" (CSS Color 5)
          * TODO: report spec issue "replace `<number-percentage>` by `<number> | <percentage>`"
          *
          * CSS Color 5: color([from <color>]? <colorspace-params> [/ <alpha-value>]?)
@@ -152,35 +157,35 @@ const replaced = {
          */
         'color()': 'color([<ident> | <dashed-ident>] [<number> | <percentage>]+ [/ <alpha-value>]?)',
         /**
-         * TODO: report spec issue "define grammars with explicit channel keywords" (CSS Color 5)
+         * TODO: report spec issue "define color function grammars with explicit channel keywords" (CSS Color 5)
          *
          * CSS Color 5: hsl([from <color>]? <hue> <percentage> <percentage> [/ <alpha-value>]?)
          * CSS Color 4 + legacy definition (comma-separated arguments):
          */
         'hsl()': 'hsl(<hue> <percentage> <percentage> [/ <alpha-value>]? | <hue> , <percentage> , <percentage> , <alpha-value>?)',
         /**
-         * TODO: report spec issue "define grammars with explicit channel keywords" (CSS Color 5)
+         * TODO: report spec issue "define color function grammars with explicit channel keywords" (CSS Color 5)
          *
          * CSS Color 5: hwb([from <color>]? <hue> <percentage> <percentage> [/ <alpha-value>]?)
          * CSS Color 4:
          */
         'hwb()': 'hwb(<hue> <percentage> <percentage> [/ <alpha-value>]?)',
         /**
-         * TODO: report spec issue "define grammars with explicit channel keywords" (CSS Color 5)
+         * TODO: report spec issue "define color function grammars with explicit channel keywords" (CSS Color 5)
          *
          * CSS Color 5: lab([from <color>]? <percentage> <number> <number> [/ <alpha-value>]?)
          * CSS Color 4:
          */
         'lab()': 'lab(<percentage> <number> <number> [/ <alpha-value>]?)',
         /**
-         * TODO: report spec issue "define grammars with explicit channel keywords" (CSS Color 5)
+         * TODO: report spec issue "define color function grammars with explicit channel keywords" (CSS Color 5)
          *
          * CSS Color 5: lch([from <color>]? <percentage> <number> <hue> [/ <alpha-value>]?)
          * CSS Color 4:
          */
         'lch()': 'lch(<percentage> <number> <hue> [/ <alpha-value>]?)',
         /**
-         * TODO: report spec issue "define grammars with explicit channel keywords" (CSS Color 5)
+         * TODO: report spec issue "define color function grammars with explicit channel keywords" (CSS Color 5)
          * TODO: handle repeated function name in definition value
          *
          * CSS Color 5: rgb(<percentage>{3} [/ <alpha-value>]?) | rgb(<number>{3} [/ <alpha-value>]?) | rgb([from <color>]? [<number> | <percentage>]{3} [/ <alpha-value>]?)
@@ -188,56 +193,45 @@ const replaced = {
          * CSS Color 4 + legacy definition (comma-separated arguments) + fix to handle repeated function name
          */
         'rgb()': 'rgb(<percentage>{3} [/ <alpha-value>]? | <number>{3} [/ <alpha-value>]? | <percentage>#{3} , <alpha-value>? | <number>#{3} , <alpha-value>?)',
-        // TODO: report spec issue "the grammar of `blend-mode` is missing a space before `color-burn`"
-        'blend-mode': 'normal | multiply | screen | overlay | darken | lighten | color-dodge | color-burn | hard-light | soft-light | difference | exclusion | hue | saturation | color | luminosity',
         // TODO: report spec issue "the grammar of `content-list` is missing `content()`
         'content-list': '[<string> | <content()> | contents | <image> | <counter> | <quote> | <target> | <leader()>]+',
-        // TODO: fix https://github.com/w3c/webref/issues/333
-        'selector()': 'selector(<id-selector>)',
-        // TODO: fix https://github.com/w3c/csswg-drafts/issues/6425
-        'angular-color-stop-list': '<angular-color-stop> , [<angular-color-hint>? , <angular-color-stop>]#?',
-        'color-stop-list': '<linear-color-stop> , [<linear-color-hint>? , <linear-color-stop>]#?',
+        // TODO: report spec issue "the grammar of `blend-mode` is missing a space before `color-burn`"
+        'blend-mode': 'normal | multiply | screen | overlay | darken | lighten | color-dodge | color-burn | hard-light | soft-light | difference | exclusion | hue | saturation | color | luminosity',
+        // TODO: report spec issue "the grammar of `start-color` and `end-color` are missing"
+        'end-value': '<number> | <dimension> | <percentage>',
+        'start-value': '<number> | <dimension> | <percentage>',
+        // TODO: support new gradient syntax from Images 4
+        'conic-gradient()': 'conic-gradient([from <angle>]? [at <position>]?, <angular-color-stop-list>)',
+        'linear-gradient()': 'linear-gradient([<angle> | to <side-or-corner>]? , <color-stop-list>)',
+        'radial-gradient()': 'radial-gradient([<ending-shape> || <size>]? [at <position>]? , <color-stop-list>)',
+        // Written in prose
+        'age': 'child | young | old',
+        'ending-shape': 'circle | ellipse',
+        'family-name': '<string> | <custom-ident>',
+        'gender': 'male | female | neutral',
+        'generic-family': 'cursive | emoji | fangsong | fantasy | math | monospace | sans-serif | serif | system-ui | ui-monospace | ui-rounded | ui-sans-serif | ui-serif',
+        'id': '<id-selector>',
+        'page-size': 'A5 | A4 | A3 | B5 | B4 | JIS-B5 | JIS-B4 | letter | legal | ledger',
+        'paint': 'none | <color> | <url> [none | <color>]? | context-fill | context-stroke',
+        'palette-identifier': '<custom-ident>',
+        'shape': "rect(<'top'>, <'right'>, <'bottom'>, <'left'>)",
+        'target-name': '<string>',
+        // Written in prose and modified to fix https://github.com/w3c/csswg-drafts/issues/6425
+        'size': 'closest-side | closest-corner | farthest-side | farthest-corner | sides | <length-percentage [0,∞]>{1,2}',
     },
 }
 
-const aliases = [
-    ['column-gap', ['grid-column-gap']],
-    ['gap', ['grid-gap']],
-    ['row-gap', ['grid-row-gap']],
-].concat(webKitAliases.map(property => [property, [`-webkit-${property}`]]))
-
-// Add mapped webkit properties to aliases
-Object.entries(propertyMap).forEach(([property, target]) => {
-    const map = aliases.find(([property]) => property === target)
-    if (map) {
-        const [, aliases] = map
-        aliases.push(`-webkit-${property}`)
-    } else {
-        const map = [property, [`-webkit-${property}`]]
-        aliases.push(map)
-    }
-})
-
-const terminals = ['EOF-token', 'length', 'percentage']
-
 /**
- * @param {*[]} entries
+ * @param {string[][]} entries [[field, value]]
  * @returns {string}
- *
- * PropertyDefinition => [
- *   String,
- *   {
- *     initial: String|[[String, URL]],
- *     newValues: String|[[String, URL]],
- *     value: String|[[String, URL]],
- *   }
- * ]
- * TypeDefinition => [String, String|[[String, URL]]]
  */
 function serializeEntries(entries, depth = 1) {
     return entries.reduce((string, [key, value]) => {
         const tabs = tab(depth)
-        // [[String, URL]]
+        /**
+         * The definition field `value` should have been reduced to a single
+         * value at this point but process it for further inspection.
+         */
         if (Array.isArray(value)) {
             const altTabs = tab(depth + 1)
             const altValueTabs = tab(depth + 2)
@@ -251,11 +245,11 @@ function serializeEntries(entries, depth = 1) {
 }
 
 /**
- * @param {*[]} definitions
+ * @param {*[]} properties [[name, [[field, value]]]]
  * @returns {string}
  */
-function serializeProperties(definitions) {
-    return definitions.reduce(
+function serializeProperties(properties) {
+    return properties.reduce(
         (string, [property, fields]) => {
             const tabs = tab(1)
             property = addQuotes(property)
@@ -266,19 +260,19 @@ function serializeProperties(definitions) {
 }
 
 /**
- * @param {*[]} definitions
+ * @param {*[][]} types [[name, [[field, value]]]]
  * @returns {string}
  */
-function serializeTypes(definitions) {
-    return definitions.reduce(
+function serializeTypes(types) {
+    return types.reduce(
         (string, [type, [[, value]]]) =>
             `${string}${serializeEntries([[addQuotes(type), value]])}`,
         '')
 }
 
 /**
- * @param {*[]} aa
- * @param {*[]} bb
+ * @param {*[]} aa [name, [field, [[value]]]]
+ * @param {*[]} bb [name, [field, [[value]]]]
  * @returns {number}
  */
 function sortByName([a], [b]) {
@@ -293,69 +287,107 @@ function sortByName([a], [b]) {
 }
 
 /**
- * @param {*[]} definition [PropertyName, { [Field]: String }]
+ * @param {*[]} definition [name, [[field, value]]]
  * @returns {*[]}
  */
 function concatNewValues(definition) {
     const [name, fields] = definition
+    let initial
     let newValues
     let value
-    fields.forEach(([field, v]) => {
-        if (field === 'newValues' && typeof v === 'string') {
-            newValues = v
-        } else if (field === 'value' && typeof v === 'string') {
-            value = v
+    /**
+     * The definition field `value` should have been reduced to a single value
+     * at this point but ignore it otherwise for further inspection.
+     */
+    for (const [field, v] of fields) {
+        if (Array.isArray(v)) {
+            return definition
         }
-    })
-    // TODO: `value` and `newValues` should be a single `String` at this point
-    if (!value || !newValues) {
-        return definition
+        switch (field) {
+            case 'newValues':
+                newValues = v.split(' | ')
+                break
+            case 'value':
+                value = v.split(' | ')
+                break
+            case 'initial':
+                initial = v
+                break
+        }
     }
-    const newAlternatives = newValues.split(' | ')
-    const currentAlternatives = value.split(' | ')
-    if (newAlternatives.every(alt => currentAlternatives.some(value => value.includes(alt)))) {
-        // `value` already includes `newValues`: remove `newValues`
-        return [name, fields.filter(([field]) => field !== 'newValues')]
-    } else if (newAlternatives.every(alt => currentAlternatives.every(value => value !== alt))) {
-        // `value` is missing all `newValues`: append them to `value` and remove `newValues`
-        return [
-            name,
-            fields.reduce((fields, [field, value]) => {
-                if (field === 'initial') {
-                    fields.push(['initial', value])
-                } else if (field === 'value') {
-                    fields.push(['value', value += ` | ${newValues}`])
-                }
-                return fields
-            }, []),
-        ]
+    if (newValues) {
+        newValues.forEach(alt => {
+            if (!value.includes(alt)) {
+                value.push(alt)
+            }
+        })
+        return [name, [['initial', initial], ['value', value.join(' | ')]]]
     }
     return definition
-}
-
-/**
- * @param {*[]} definition
- * @returns {*[]}
- */
-function flattenFieldValues([name, fields]) {
-    return [name, fields.map(([field, values]) => {
-        if (values.length === 1) {
-            const [[value]] = values
-            return [field, value]
-        }
-        console.error(`"${name}" has still multiple "${field}" values.`)
-        return [field, values]
-    })]
 }
 
 /**
  * @param {string} url
  * @param {string[]} values
  * @returns {boolean}
+ *
+ * These properties/types are defined in different specifications and sometimes
+ * with different values, for different reasons:
+ * - some definitions are simply duplicated instead of linking to the definition
+ * in the authoritative specification
+ * - some definitions exist in two different levels of a specification but the
+ * last level does not include all definitions from the previous level, which
+ * means that definitions should be extracted from both levels
+ * - some specification are partially superseded by another new authoritative
+ * specification
  */
-function isOutdatedSpecification(url, values) {
+function isSupersededSpecification(name, url, values) {
+    // Specific cases
+    switch (name) {
+        case 'content()':
+        case 'string-set':
+        case 'string()':
+            return !url.includes('css-content')
+        case 'display':
+            return !url.includes('css-display')
+        case 'dasharray':
+        case 'fill':
+        case 'fill-opacity':
+        case 'fill-rule':
+        case 'pointer-events':
+        case 'stroke':
+        case 'stroke-dasharray':
+        case 'stroke-dashoffset':
+        case 'stroke-linecap':
+        case 'stroke-linejoin':
+        case 'stroke-miterlimit':
+        case 'stroke-opacity':
+        case 'stroke-width':
+            return url !== 'https://svgwg.org/svg2-draft/'
+        case 'element()':
+        case 'image-rendering':
+            return !url.includes('css-images')
+        case 'fit-content()':
+            return !url.includes('css-sizing')
+        case 'font-tech':
+            return !url.includes('css-fonts')
+        case 'float':
+            return !url.includes('css-page-floats') && !url.includes('css-gcpm')
+        case 'inline-size':
+            return !url.includes('css-logical')
+        case 'url':
+        case 'position':
+            return !url.includes('css-position')
+                && !url.includes('css-gcpm')
+                // TODO: parse `background-position` as a shorthand (CSS Background 4)
+                && !url.includes('css-values')
+        case 'path()':
+        case 'shape-inside':
+        case 'shape-margin':
+            return !url.includes('css-shapes')
+    }
+    // General cases
     return url === 'https://drafts.csswg.org/css2/'
-        || url === 'https://svgwg.org/svg2-draft/'
         || (url === 'https://drafts.csswg.org/css-logical-1/' && values.some(([, url]) =>
             url === 'https://drafts.csswg.org/css-position/'))
         || (url === 'https://drafts.csswg.org/css-flexbox-1/' && values.some(([, url]) =>
@@ -363,52 +395,53 @@ function isOutdatedSpecification(url, values) {
 }
 
 /**
- * @param {*[]} definition [PropertyName|TypeName, [[String, URL]]]
- * @returns {*[]}
+ * @param {*[][]} definitions [[name, [[field, [[value, URL]]]]]]
+ * @param {*[]} definition
+ * @returns {*[][]} [[name, [[field, value]]]]
  *
- * It removes a type item when type has more than one item and item URL is:
- * (1) https://drafts.csswg.org/css2/
- * (2) https://svgwg.org/svg2-draft/
- * (3) https://drafts.csswg.org/css-logical-1/ and some item URL is
- * https://drafts.csswg.org/css-position/
- * (4) https://drafts.csswg.org/css-flexbox-1/ and some item URL is
- * https://drafts.csswg.org/css-align/
- * (5) referencing a lower specification version than some other item URL
+ * It reduces each definition field to a single value by removing field values
+ * from superseded/outdated specifications, and append `newValues` to `value`.
  */
-function removeOutdatedFieldValues([name, fields]) {
-    // TODO: flatten while iterating (reduce)
-    return [
-        name,
-        fields.map(([field, values]) => {
-            if (values.length === 1) {
-                return [field, values]
-            }
-            return [
-                field,
-                values.filter(([, url], index) => {
-                    // (1-5)
-                    if (isOutdatedSpecification(url, values)) {
+function reduceFieldValues(definitions, [name, fields]) {
+    fields = fields.reduce((fields, [field, values]) => {
+        if (1 < values.length) {
+            values = values.filter(([, url], index) => {
+                // Filter out superseded specification
+                if (isSupersededSpecification(name, url, values)) {
+                    return false
+                }
+                // Filter out previous levels of the specification
+                const [baseURL, v1 = 1] = url.slice(0, -1).split(/-(\d)$/)
+                const specUrls = values.filter(([, url], i) => i !== index && url.startsWith(baseURL))
+                for (const [, url] of specUrls) {
+                    const [, v2 = 1] = url.split(/-(\d)\/$/)
+                    if (v1 < v2) {
                         return false
                     }
-                    // (6)
-                    const [baseURL, v1 = 1] = url.slice(0, -1).split(/-(\d)$/)
-                    const specUrls = values.filter(([, url], i) => i !== index && url.startsWith(baseURL))
-                    for (const [, url] of specUrls) {
-                        const [, v2 = 1] = url.split(/-(\d)\/$/)
-                        if (v1 < v2) {
-                            return false
-                        }
-                    }
-                    return true
-                }),
-            ]
-        }),
-    ]
+                }
+                return true
+            })
+        }
+        if (values.length === 1) {
+            const [[value]] = values
+            fields.push([field, value])
+        } else if (1 < values.length) {
+            const urls = values.map(([, url]) => url).join('\n  • ')
+            // TODO: run in development mode only.
+            console.error(`"${name}" has still multiple "${field}" values from:\n  • ${urls}`)
+            fields.push([field, values])
+        }
+        return fields
+    }, [])
+    definitions.push(concatNewValues([name, fields]))
+    return definitions
 }
 
 /**
  * @param {string} value
  * @returns {string}
+ *
+ * TODO: remove extra grouping `[]` around function arguments.
  */
 function removeExtraGroup(value) {
     if (!(value.startsWith('[') && value.endsWith(']'))) {
@@ -429,15 +462,7 @@ function removeExtraGroup(value) {
 }
 
 /**
- * @param {string} property
- * @returns {boolean}
- */
-function isAlias(property) {
-    return aliases.some(([, aliases]) => aliases.some(alias => alias === property))
-}
-
-/**
- * @param {object} definitions
+ * @param {*[][]} definitions [[name, [[field, [[value, URL]]]]]]
  * @param {string} name
  * @param {string} field
  * @param {string} value
@@ -450,10 +475,7 @@ function addFieldValue(definitions, name, field, value, url) {
         const current = fields.find(([name]) => name === field)
         if (current) {
             const [, values] = current
-            // Skip duplicated field value
-            if (values.every(([v]) => v !== value)) {
-                values.push([value, url])
-            }
+            values.push([value, url])
         } else {
             fields.push([field, [[value, url]]])
         }
@@ -463,42 +485,48 @@ function addFieldValue(definitions, name, field, value, url) {
 }
 
 /**
- * @param {*[]} types
+ * @param {*[][]} types [[name, [[field, [[value, URL]]]]]]
  * @param {object} definitions
  * @param {string} url
- * @returns {*[]}
+ * @returns {*[][]}
  */
 function extractTypeDefinitions(types, definitions, url) {
     return Object.entries(definitions).reduce((types, [type, { value }]) => {
-        // Remove wrapping brackets <>
+        // Strip `<type>` to `type`
         type = type.slice(1, -1)
-        // Skip terminal types
         if (terminals.includes(type)) {
             return types
+        }
+        // TODO: run in development mode only.
+        if (types.some(t => t === type)) {
+            console.error(`"${type}" has been defined as a missing/custom/legacy type but is now defined in: ${url}`)
         }
         const replacement = replaced.types[type]
         if (replacement) {
             value = replacement
+        } else if (!value) {
+            throw Error(`Missing value to replace the definition of "<${type}>" written in prose (${url})`)
         } else {
             // Remove extra whitespaces and angled brackets
             value = removeExtraGroup(value.replace(/([([]) | [)\]]/g, match => match.trim()))
         }
-        if (value) {
-            addFieldValue(types, type, 'value', value, url)
-            return types
-        }
-        throw Error(`Missing value to replace the definition of "<${type}>" written in prose (${url})`)
+        addFieldValue(types, type, 'value', value, url)
+        return types
     }, types)
 }
 
 /**
- * @param {*[]} properties
+ * @param {*[][]} properties [[name, [[field, [[value, URL]]]]]]
  * @param {object} definitions
  * @param {string} url
- * @returns {*[]}
+ * @returns {*[][]}
  */
 function extractPropertyDefinitions(properties, definitions, url) {
     return Object.entries(definitions).reduce((properties, [property, { initial, newValues, value }]) => {
+        if (aliases.has(property)) {
+            return properties
+        }
+        // It is assumed that definitions do not define both `value` and `newValues`
         if (newValues) {
             addFieldValue(properties, property, 'newValues', newValues, url)
             return properties
@@ -507,12 +535,13 @@ function extractPropertyDefinitions(properties, definitions, url) {
         if (replacement) {
             ({ initial = initial, value = value } = replacement)
         }
-        if (isAlias(property)) {
-            return properties
-        } else if (!initial) {
-            throw Error(`Missing "initial" field in the definition of "${property}"`)
+        if (!initial) {
+            throw Error(`The "initial" field is missing in the definition of "${property}"`)
         } else if (!value) {
-            throw Error(`Missing "value" field in the definition of "${property}"`)
+            throw Error(`The "value" field is missing in the definition of "${property}"`)
+        } else {
+            // Remove extra whitespaces
+            value = value.replace(/([([]) | [)\]]/g, match => match.trim())
         }
         // Skip initial shorthand value
         if (!/(individual|shorthand)/.test(initial.toLowerCase())) {
@@ -522,8 +551,6 @@ function extractPropertyDefinitions(properties, definitions, url) {
         if (url === 'https://drafts.csswg.org/css2/') {
             value = value.replace(' | inherit', '')
         }
-        // Remove extra whitespaces
-        value = value.replace(/([([]) | [)\]]/g, match => match.trim())
         addFieldValue(properties, property, 'value', value, url)
         return properties
     }, properties)
@@ -531,34 +558,20 @@ function extractPropertyDefinitions(properties, definitions, url) {
 
 /**
  * @param {object} specifications
- * @returns {object}
+ * @returns {Promise}
  */
 function build(specifications) {
 
-    // Format initial definitions
-    const initialProperties = Object.entries(initial.properties)
-        .map(([property, fields]) => [
-            property,
-            Object.entries(fields).map(([field, value]) => [field, [[value]]]),
-        ])
-    const initialTypes = Object.entries(initial.types)
-        .map(([type, value]) => [type, [['value', [[value]]]]])
-
     const [properties, types] = Object.values(specifications)
-        // Extract definition fields from the list exported by `@webref/css`
+        // Extract property/type definitions from the record exported by `@webref/css`
         .reduce(
             ([initialProperties, initialTypes], { properties, spec: { url }, valuespaces = {} }) => [
                 extractPropertyDefinitions(initialProperties, properties, url),
                 extractTypeDefinitions(initialTypes, valuespaces, url),
             ],
-            [initialProperties, initialTypes])
+            [[], initialTypes])
         // Cleanup definitions
-        .map(definitions => definitions
-            .map(removeOutdatedFieldValues)
-            .map(flattenFieldValues)
-            .map(concatNewValues)
-            // TODO: add alias properties
-            .sort(sortByName))
+        .map(definitions => definitions.reduce(reduceFieldValues, []).sort(sortByName))
 
     const typesOuput = `\n${header}\nmodule.exports = {\n${serializeTypes(types)}}\n`
     const propertiesOuput = `\n${header}\nmodule.exports = {\n${serializeProperties(properties)}}\n`
