@@ -1,4 +1,6 @@
 
+// https://drafts.csswg.org/cssom/#cssstylesheet
+[Exposed=Window]
 interface CSSStyleSheet : StyleSheet {
   constructor(optional CSSStyleSheetInit options = {});
 

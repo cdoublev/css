@@ -1,4 +1,5 @@
 
+// https://drafts.csswg.org/cssom/#cssrule
 [Exposed=Window]
 interface CSSRule {
   attribute CSSOMString cssText;
