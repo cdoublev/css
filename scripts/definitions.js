@@ -395,14 +395,13 @@ function isSupersededSpecification(name, url, values) {
 }
 
 /**
- * @param {*[][]} definitions [[name, [[field, [[value, URL]]]]]]
- * @param {*[]} definition
- * @returns {*[][]} [[name, [[field, value]]]]
+ * @param {*[]} definition [name, [[field, [[value, URL]]]]]
+ * @returns {*[]} [[name, [[field, value]]]]
  *
  * It reduces each definition field to a single value by removing field values
- * from superseded/outdated specifications, and append `newValues` to `value`.
+ * from superseded/outdated specifications.
  */
-function reduceFieldValues(definitions, [name, fields]) {
+function reduceFieldValues([name, fields]) {
     fields = fields.reduce((fields, [field, values]) => {
         if (1 < values.length) {
             values = values.filter(([, url], index) => {
@@ -433,8 +432,7 @@ function reduceFieldValues(definitions, [name, fields]) {
         }
         return fields
     }, [])
-    definitions.push(concatNewValues([name, fields]))
-    return definitions
+    return [name, fields]
 }
 
 /**
@@ -562,16 +560,22 @@ function extractPropertyDefinitions(properties, definitions, url) {
  */
 function build(specifications) {
 
-    const [properties, types] = Object.values(specifications)
-        // Extract property/type definitions from the record exported by `@webref/css`
-        .reduce(
-            ([initialProperties, initialTypes], { properties, spec: { url }, valuespaces = {} }) => [
-                extractPropertyDefinitions(initialProperties, properties, url),
-                extractTypeDefinitions(initialTypes, valuespaces, url),
-            ],
-            [[], initialTypes])
-        // Cleanup definitions
-        .map(definitions => definitions.reduce(reduceFieldValues, []).sort(sortByName))
+    // Extract property/type definitions from the record exported by `@webref/css`
+    let [properties, types] = Object.values(specifications).reduce(
+        ([initialProperties, initialTypes], { properties, spec: { url }, valuespaces = {} }) => [
+            extractPropertyDefinitions(initialProperties, properties, url),
+            extractTypeDefinitions(initialTypes, valuespaces, url),
+        ],
+        [[], initialTypes])
+
+    // Cleanup definitions
+    properties = properties
+        .map(reduceFieldValues)
+        .map(concatNewValues)
+        .sort(sortByName)
+    types = types
+        .map(reduceFieldValues)
+        .sort(sortByName)
 
     const typesOuput = `\n${header}\nmodule.exports = {\n${serializeTypes(types)}}\n`
     const propertiesOuput = `\n${header}\nmodule.exports = {\n${serializeProperties(properties)}}\n`
