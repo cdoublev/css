@@ -1,7 +1,7 @@
 
 const webidlCSSStyleDeclarationWrapper = require('./lib/CSSStyleDeclaration.js')
 
-const sharedGlobalObject = {}
+const sharedGlobalObject = { Array, Object, Promise, String, TypeError }
 webidlCSSStyleDeclarationWrapper.install(sharedGlobalObject, ['Window'])
 
 const origCSSStyleDeclaration = sharedGlobalObject.CSSStyleDeclaration
