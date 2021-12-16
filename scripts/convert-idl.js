@@ -1,9 +1,14 @@
 
 const Transformer = require('webidl2js')
+const { aliases } = require('../lib/properties/compatibility.js')
 const { cssPropertyToIDLAttribute } = require('../lib/utils/script.js')
 const fs = require('fs')
 const path = require('path')
-const properties = Object.keys(require('../lib/properties/definitions.js'))
+
+const properties = [
+    ...aliases.keys(),
+    ...Object.keys(require('../lib/properties/definitions.js')),
+]
 const webkitProperties = properties.filter(property => property.startsWith('-webkit'))
 
 const srcDir = path.resolve(__dirname, '../src')

@@ -75,6 +75,15 @@ describe('CSSStyleDeclaration', () => {
         style.removeProperty('color')
         expect(style[0]).toBe('background-color')
     })
+    it('mirrors legacy vendor prefixed properties', () => {
+        const style = new CSSStyleDeclaration()
+        style.order = '1'
+        expect(style.webkitOrder).toBe('1')
+        expect(style.getPropertyValue('-webkit-order')).toBe('1')
+        style.cssText = '-webkit-order: 2'
+        expect(style.order).toBe('2')
+        expect(style.webkitOrder).toBe('2')
+    })
     it.skip('handles a shorthand property value with embedded spaces', () => {
         const style = new CSSStyleDeclaration()
         style.background = '  rgb(0, 0, 0)   url(/something/somewhere.jpg)  '
