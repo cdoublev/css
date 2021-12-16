@@ -81,8 +81,7 @@ describe('CSSStyleDeclaration', () => {
         expect(style.webkitOrder).toBe('1')
         expect(style.getPropertyValue('-webkit-order')).toBe('1')
         style.cssText = '-webkit-order: 2'
-        expect(style.order).toBe('2')
-        expect(style.webkitOrder).toBe('2')
+        expect(style.cssText).toBe('order: 2;')
     })
     it.skip('handles a shorthand property value with embedded spaces', () => {
         const style = new CSSStyleDeclaration()
