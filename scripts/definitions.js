@@ -1,15 +1,13 @@
 /**
- * This script generates:
+ * This script generates definitions extracted by `@webref/css` from latest W3C
+ * Editor's Drafts specifications:
  * - `./lib/values/types.js`: CSS type definitions
- * - `./lib/properties/definitions.js`: CSS property definitions (`value` and
- * `initial` fields)
- *
- * Definitions are extracted by `@webref/css` from latest W3C Editor's Drafts
- * specifications.
+ * - `./lib/properties/definitions.js`: CSS property definitions
  */
 const { addQuotes, logError, tab } = require('../lib/utils/script.js')
 const { aliases } = require('../lib/properties/compatibility.js')
 const cssWideKeywords = require('../lib/values/cssWideKeywords.js')
+const { units: dimensionUnits } = require('../lib/values/dimensions.js')
 const fs = require('fs')
 const { listAll } = require('@webref/css')
 const namedColors = require('../lib/values/namedColors.js')
@@ -62,19 +60,19 @@ const initialTypes = Object.entries({
     'basic-shape': '<inset()> | <circle()> | <ellipse()> | <polygon()> | <path()>',
     'bottom': '<length> | auto',
     'colorspace-params': '<custom-params> | <predefined-rgb-params> | <xyz-params>',
-    'content-level': 'element | content | text',
+    'content-level': 'element | content | text | attr(<custom-ident>) | counter() | counters()',
     'counter-name': '<custom-ident>',
     'counter-style-name': '<custom-ident>',
-    'custom-params': '<dashed-ident> [ <number> | <percentage> ]#',
-    'dimension': '<length> | <time> | <frequency> | <resolution> | <angle>',
-    'dimension-unit': '"%" | <angle> | <flex> | <frequency> | <length> | <time>',
+    'custom-params': '<dashed-ident> [<number> | <percentage> | none]#',
+    'dimension': '<length> | <time> | <frequency> | <resolution> | <angle> | <decibel> | <flex> | <semitones>',
+    'dimension-unit': `"%" | ${dimensionUnits.join(' | ')}`,
     'extent-keyword': 'closest-corner | closest-side | farthest-corner | farthest-side',
     'lang': '<ident> | <string>',
     'left': '<length> | auto',
     'named-color': namedColors.join(' | '),
-    'outline-line-style': '<line-style> | auto',
-    'predefined-rgb-params': '<predefined-rgb> [ <number> | <percentage> ]{3}',
-    'predefined-rgb': 'srgb | display-p3 | a98-rgb | prophoto-rgb | rec2020',
+    'outline-line-style': 'none | hidden | dotted | dashed | solid | double | groove | ridge | inset | outset | auto',
+    'predefined-rgb-params': '<predefined-rgb> [<number> | <percentage> | none]{3}',
+    'predefined-rgb': 'srgb | srgb-linear | display-p3 | a98-rgb | prophoto-rgb | rec2020',
     'relative-size': 'larger | smaller',
     'right': '<length> | auto',
     'system-color': systemColors.join(' | '),
@@ -82,7 +80,8 @@ const initialTypes = Object.entries({
     'transform-function': '<matrix()> | <translate()> | <translateX()> | <translateY()> | <scale()> | <scaleX()> | <scaleY()> | <rotate()> | <skew()> | <skewX()> | <skewY()>',
     'url-modifier': '<custom-ident> | <function-token>',
     'x': '<number>',
-    'xyz-params': 'xyz <number>{3}',
+    'xyz': 'xyz | xyz-d50 | xyz-d65',
+    'xyz-params': '<xyz> [<number> | none]{3}',
     'y': '<number>',
     // TODO: report spec issue "replace `<number-percentage>` by `<number> | <percentage>`"
     'number-percentage': '<number> | <percentage>',

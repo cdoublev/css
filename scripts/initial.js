@@ -1,7 +1,7 @@
 /**
  * This script replaces the `initial` field value of each property definition in
  *  `./lib/properties/definitions.js` by the data structure that would result
- * from parsing the initial string value against the definition `value` field.
+ * from parsing it against the definition `value`.
  */
 const { addQuotes, logError, tab } = require('../lib/utils/script.js')
 const fs = require('fs')
