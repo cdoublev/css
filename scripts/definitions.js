@@ -14,6 +14,7 @@ const fs = require('fs')
 const { listAll } = require('@webref/css')
 const namedColors = require('../lib/values/namedColors.js')
 const path = require('path')
+const shorthands = require('../lib/properties/shorthands.js')
 const systemColors = require('../lib/values/systemColors.js')
 
 const outputPaths = {
@@ -131,11 +132,6 @@ const replaced = {
         'shape-padding': { value: '<length> | none' },
         // TODO: report spec issue "the grammar of `white-space` is missing `auto`"
         'white-space': { value: 'normal | pre | nowrap | pre-wrap | break-spaces | pre-line | auto' },
-        // TODO: support new border syntax from Background 4
-        'border-bottom-color': { value: '<color>' },
-        'border-left-color': { value: '<color>' },
-        'border-right-color': { value: '<color>' },
-        'border-top-color': { value: '<color>' },
     },
     types: {
         // Modified to be consistent with `polygon()`
@@ -147,52 +143,6 @@ const replaced = {
         // TODO: fix https://github.com/w3c/csswg-drafts/issues/6425
         'angular-color-stop-list': '<angular-color-stop> , [<angular-color-hint>? , <angular-color-stop>]#?',
         'color-stop-list': '<linear-color-stop> , [<linear-color-hint>? , <linear-color-stop>]#?',
-        /**
-         * TODO: report spec issue "define color function grammars with explicit channel keywords" (CSS Color 5)
-         * TODO: report spec issue "replace `<number-percentage>` by `<number> | <percentage>`"
-         *
-         * CSS Color 5: color([from <color>]? <colorspace-params> [/ <alpha-value>]?)
-         * CSS Color 4: color([<ident> | <dashed-ident>] [<number-percentage>+] [/ <alpha-value>]?)
-         * CSS Color 4 + fix of `<number-percentage>`:
-         */
-        'color()': 'color([<ident> | <dashed-ident>] [<number> | <percentage>]+ [/ <alpha-value>]?)',
-        /**
-         * TODO: report spec issue "define color function grammars with explicit channel keywords" (CSS Color 5)
-         *
-         * CSS Color 5: hsl([from <color>]? <hue> <percentage> <percentage> [/ <alpha-value>]?)
-         * CSS Color 4 + legacy definition (comma-separated arguments):
-         */
-        'hsl()': 'hsl(<hue> <percentage> <percentage> [/ <alpha-value>]? | <hue> , <percentage> , <percentage> , <alpha-value>?)',
-        /**
-         * TODO: report spec issue "define color function grammars with explicit channel keywords" (CSS Color 5)
-         *
-         * CSS Color 5: hwb([from <color>]? <hue> <percentage> <percentage> [/ <alpha-value>]?)
-         * CSS Color 4:
-         */
-        'hwb()': 'hwb(<hue> <percentage> <percentage> [/ <alpha-value>]?)',
-        /**
-         * TODO: report spec issue "define color function grammars with explicit channel keywords" (CSS Color 5)
-         *
-         * CSS Color 5: lab([from <color>]? <percentage> <number> <number> [/ <alpha-value>]?)
-         * CSS Color 4:
-         */
-        'lab()': 'lab(<percentage> <number> <number> [/ <alpha-value>]?)',
-        /**
-         * TODO: report spec issue "define color function grammars with explicit channel keywords" (CSS Color 5)
-         *
-         * CSS Color 5: lch([from <color>]? <percentage> <number> <hue> [/ <alpha-value>]?)
-         * CSS Color 4:
-         */
-        'lch()': 'lch(<percentage> <number> <hue> [/ <alpha-value>]?)',
-        /**
-         * TODO: report spec issue "define color function grammars with explicit channel keywords" (CSS Color 5)
-         * TODO: handle repeated function name in definition value
-         *
-         * CSS Color 5: rgb(<percentage>{3} [/ <alpha-value>]?) | rgb(<number>{3} [/ <alpha-value>]?) | rgb([from <color>]? [<number> | <percentage>]{3} [/ <alpha-value>]?)
-         * CSS Color 4: rgb(<percentage>{3} [/ <alpha-value>]?) | rgb(<number>{3} [/ <alpha-value>]?)
-         * CSS Color 4 + legacy definition (comma-separated arguments) + fix to handle repeated function name
-         */
-        'rgb()': 'rgb(<percentage>{3} [/ <alpha-value>]? | <number>{3} [/ <alpha-value>]? | <percentage>#{3} , <alpha-value>? | <number>#{3} , <alpha-value>?)',
         // TODO: report spec issue "the grammar of `content-list` is missing `content()`
         'content-list': '[<string> | <content()> | contents | <image> | <counter> | <quote> | <target> | <leader()>]+',
         // TODO: report spec issue "the grammar of `blend-mode` is missing a space before `color-burn`"
@@ -200,10 +150,68 @@ const replaced = {
         // TODO: report spec issue "the grammar of `start-color` and `end-color` are missing"
         'end-value': '<number> | <dimension> | <percentage>',
         'start-value': '<number> | <dimension> | <percentage>',
-        // TODO: support new gradient syntax from Images 4
+        // TODO: support new gradient grammars from Images 4
         'conic-gradient()': 'conic-gradient([from <angle>]? [at <position>]?, <angular-color-stop-list>)',
         'linear-gradient()': 'linear-gradient([<angle> | to <side-or-corner>]? , <color-stop-list>)',
         'radial-gradient()': 'radial-gradient([<ending-shape> || <size>]? [at <position>]? , <color-stop-list>)',
+        /**
+         * TODO: support new color grammars from Color 4/5
+         * TODO: report spec issue "define color function grammars with explicit channel keywords" (Color 5)
+         * TODO: report spec issue "replace `<number-percentage>` by `<number> | <percentage>`"
+         *
+         * Color 5: color([from <color>]? <colorspace-params> [/ <alpha-value>]?)
+         * Color 4:
+         */
+        'color()': 'color(<colorspace-params> [/ <alpha-value>]?)',
+        /**
+         * TODO: support new color grammars from Color 4/5
+         * TODO: report spec issue "define color function grammars with explicit channel keywords" (Color 5)
+         * TODO: report spec issue "`none` is already allowed by `<hue>`"
+         *
+         * Color 5: hsl([from <color>]? [<hue> | none] [<percentage> | none] [<percentage> | none] [/ [<alpha-value> | none]]?)
+         * Color 4: hsl([<hue> | none] [<percentage> | none] [<percentage> | none] [/ [<alpha-value> | none]]?) | hsl([<hue> | none] , [<percentage> | none] , [<percentage> | none] , [<alpha-value> | none]?)
+         * Color 4 without `none` + legacy definition (comma-separated arguments):
+         */
+        'hsl()': 'hsl(<hue> <percentage> <percentage> [/ <alpha-value>]? | <hue> , <percentage> , <percentage> , <alpha-value>?)',
+        /**
+         * TODO: support new color grammars from Color 4/5
+         * TODO: report spec issue "define color function grammars with explicit channel keywords" (Color 5)
+         * TODO: report spec issue "`none` is already allowed by `<hue>`"
+         *
+         * Color 5: hwb([from <color>]? [<hue> | none] [<percentage> | none] [<percentage> | none] [/ [<alpha-value> | none]]?)
+         * Color 4: hwb([<hue> | none] [<percentage> | none] [<percentage> | none] [/ [<alpha-value> | none]]?)
+         * Color 4 without `none`:
+         */
+        'hwb()': 'hwb(<hue> <percentage> <percentage> [/ <alpha-value>]?)',
+        /**
+         * TODO: support new color grammars from Color 4/5
+         * TODO: report spec issue "define color function grammars with explicit channel keywords" (Color 5)
+         *
+         * Color 5: lab([from <color>]? [<percentage> | none] [<number> | none] [<number> | none] [/ [<alpha-value> | none]]?)
+         * Color 4: lab([<percentage> | none] [<number> | none] [<number> | none] [/ [<alpha-value> | none]]?)
+         * Color 4 without `none`:
+         */
+        'lab()': 'lab(<percentage> <number> <number> [/ <alpha-value>]?)',
+        /**
+         * TODO: support new color grammars from Color 4/5
+         * TODO: report spec issue "define color function grammars with explicit channel keywords" (Color 5)
+         * TODO: report spec issue "`none` is already allowed by `<hue>`"
+         *
+         * Color 5: lch([from <color>]? [<percentage> | none] [<number> | none] [<hue> | none] [/ [<alpha-value> | none]]?)
+         * Color 4: lch([<percentage> | none] [<number> | none] [<hue> | none] [/ [<alpha-value> | none]]?)
+         * Color 4 without `none`:
+         */
+        'lch()': 'lch(<percentage> <number> <hue> [/ <alpha-value>]?)',
+        /**
+         * TODO: support new color grammars from Color 4/5
+         * TODO: report spec issue "define color function grammars with explicit channel keywords" (Color 5)
+         * TODO: handle repeated function name in definition value
+         *
+         * Color 5: rgb([<percentage> | none]{3} [/ [<alpha-value> | none]]?) | rgb([<number> | none]{3} [/ [<alpha-value> | none]]?) | rgb([from <color>]? [<number> | <percentage> | none]{3} [/ <alpha-value>]?)
+         * Color 4: rgb([<percentage> | none]{3} [/ [<alpha-value> | none]]?) | rgb([<number> | none]{3} [/ [<alpha-value> | none]]?)
+         * Color 4 without `none` + legacy syntax (comma-separated arguments) + fix to handle repeated function name
+         */
+        'rgb()': 'rgb(<percentage>{3} [/ <alpha-value>]? | <number>{3} [/ <alpha-value>]? | <percentage>#{3} , <alpha-value>? | <number>#{3} , <alpha-value>?)',
         // Written in prose
         'age': 'child | young | old',
         'ending-shape': 'circle | ellipse',
@@ -296,8 +304,8 @@ function concatNewValues(definition) {
     let newValues
     let value
     /**
-     * The definition field `value` should have been reduced to a single value
-     * at this point but ignore it otherwise for further inspection.
+     * `value` and `initial` should have been reduced to a single value at this
+     * point but keep it for further inspection.
      */
     for (const [field, v] of fields) {
         if (Array.isArray(v)) {
@@ -316,12 +324,17 @@ function concatNewValues(definition) {
         }
     }
     if (newValues) {
+        const fields = []
+        definition = [name, fields]
+        if (initial) {
+            fields.push(['initial', initial])
+        }
         newValues.forEach(alt => {
             if (!value.includes(alt)) {
                 value.push(alt)
             }
         })
-        return [name, [['initial', initial], ['value', value.join(' | ')]]]
+        fields.push(['value', value.join(' | ')])
     }
     return definition
 }
@@ -338,18 +351,34 @@ function concatNewValues(definition) {
  * - some definitions exist in two different levels of a specification but the
  * last level does not include all definitions from the previous level, which
  * means that definitions should be extracted from both levels
- * - some specification are partially superseded by another new authoritative
+ * - some specifications are partially superseded by another new authoritative
  * specification
+ *
+ * The current strategy is to always favor the last level of the authoritative
+ * specification, and fallback to the previous level when required.
  */
-function isSupersededSpecification(name, url, values) {
-    // Specific cases
+function isAuthoritativeSpecification(name, url, values) {
+    // Incompatible/unsupported definition values
     switch (name) {
+        case 'align-content':
+        case 'align-items':
+        case 'align-self':
+        case 'justify-content':
+            return url.includes('css-align')
+        case 'background-position':
+        case 'border-bottom-color':
+        case 'border-left-color':
+        case 'border-right-color':
+        case 'border-top-color':
+            /**
+             * TODO: support new `background-position` grammar (as shorthand) from Background 4
+             * TODO: support new border grammars from Background 4
+             */
+            return url === 'https://drafts.csswg.org/css-backgrounds/'
         case 'content()':
         case 'string-set':
         case 'string()':
-            return !url.includes('css-content')
-        case 'display':
-            return !url.includes('css-display')
+            return url.includes('css-content')
         case 'dasharray':
         case 'fill':
         case 'fill-opacity':
@@ -363,35 +392,51 @@ function isSupersededSpecification(name, url, values) {
         case 'stroke-miterlimit':
         case 'stroke-opacity':
         case 'stroke-width':
-            return url !== 'https://svgwg.org/svg2-draft/'
+            return url === 'https://svgwg.org/svg2-draft/'
+        case 'display':
+            return url.includes('css-display')
         case 'element()':
         case 'image-rendering':
-            return !url.includes('css-images')
+            return url.includes('css-images')
+        case 'inset':
+        case 'inset-block':
+        case 'inset-block-start':
+        case 'inset-block-end':
+        case 'inset-inline':
+        case 'inset-inline-start':
+        case 'inset-inline-end':
+            return url.includes('css-position')
         case 'fit-content()':
-            return !url.includes('css-sizing')
+            return url.includes('css-sizing')
         case 'font-tech':
-            return !url.includes('css-fonts')
-        case 'float':
-            return !url.includes('css-page-floats') && !url.includes('css-gcpm')
+            return url === 'https://drafts.csswg.org/css-fonts-5/'
         case 'inline-size':
-            return !url.includes('css-logical')
+            return url.includes('css-logical')
         case 'url':
         case 'position':
-            return !url.includes('css-position')
-                && !url.includes('css-gcpm')
-                // TODO: parse `background-position` as a shorthand (CSS Background 4)
-                && !url.includes('css-values')
+            return url.includes('css-position')
+                || url.includes('css-gcpm')
+                || url.includes('css-values')
         case 'path()':
         case 'shape-inside':
         case 'shape-margin':
-            return !url.includes('css-shapes')
+            return url.includes('css-shapes')
     }
     // General cases
-    return url === 'https://drafts.csswg.org/css2/'
-        || (url === 'https://drafts.csswg.org/css-logical-1/' && values.some(([, url]) =>
-            url === 'https://drafts.csswg.org/css-position/'))
-        || (url === 'https://drafts.csswg.org/css-flexbox-1/' && values.some(([, url]) =>
-            url === 'https://drafts.csswg.org/css-align/'))
+    if (url === 'https://drafts.csswg.org/css2/') {
+        return false
+    }
+    // Default to definition values from the last level of the specification
+    const [baseURL, v1 = 1] = url.slice(0, -1).split(/-(\d)$/)
+    for (const [, otherURL] of values) {
+        if (otherURL !== url && otherURL.startsWith(baseURL)) {
+            const [, v2 = 1] = otherURL.split(/-(\d)\/$/)
+            if (v1 < v2) {
+                return false
+            }
+        }
+    }
+    return true
 }
 
 /**
@@ -399,40 +444,31 @@ function isSupersededSpecification(name, url, values) {
  * @returns {*[]} [[name, [[field, value]]]]
  *
  * It reduces each definition field to a single value by removing field values
- * from superseded/outdated specifications.
+ * from superseded/outdated specifications, and joining `newValues`.
  */
 function reduceFieldValues([name, fields]) {
-    fields = fields.reduce((fields, [field, values]) => {
+    return [name, fields.reduce((fields, [field, values]) => {
+        // Remove values from outdated/superseded/unsupported specifications
         if (1 < values.length) {
-            values = values.filter(([, url], index) => {
-                // Filter out superseded specification
-                if (isSupersededSpecification(name, url, values)) {
-                    return false
-                }
-                // Filter out previous levels of the specification
-                const [baseURL, v1 = 1] = url.slice(0, -1).split(/-(\d)$/)
-                const specUrls = values.filter(([, url], i) => i !== index && url.startsWith(baseURL))
-                for (const [, url] of specUrls) {
-                    const [, v2 = 1] = url.split(/-(\d)\/$/)
-                    if (v1 < v2) {
-                        return false
-                    }
-                }
-                return true
-            })
+            values = values.filter(([, url]) => isAuthoritativeSpecification(name, url, values))
         }
-        if (values.length === 1) {
+        const { length } = values
+        if (length === 1) {
             const [[value]] = values
             fields.push([field, value])
-        } else if (1 < values.length) {
-            const urls = values.map(([, url]) => url).join('\n  • ')
-            // TODO: run in development mode only.
-            console.error(`"${name}" has still multiple "${field}" values from:\n  • ${urls}`)
+        } else if (1 < length) {
+            // Join `newValues`
+            if (field === 'newValues') {
+                values = values.map(([value]) => value).join(' | ')
+            } else {
+                // TODO: run in development mode only.
+                const urls = values.map(([, url]) => url).join('\n  • ')
+                console.error(`"${name}" has still multiple "${field}" values from:\n  • ${urls}`)
+            }
             fields.push([field, values])
         }
         return fields
-    }, [])
-    return [name, fields]
+    }, [])]
 }
 
 /**
@@ -542,7 +578,7 @@ function extractPropertyDefinitions(properties, definitions, url) {
             value = value.replace(/([([]) | [)\]]/g, match => match.trim())
         }
         // Skip initial shorthand value
-        if (!/(individual|shorthand)/.test(initial.toLowerCase())) {
+        if (!shorthands.has(property) && property !== 'all') {
             addFieldValue(properties, property, 'initial', initial, url)
         }
         // Remove CSS-wide keyword `inherit`
