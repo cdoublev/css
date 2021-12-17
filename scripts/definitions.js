@@ -55,7 +55,7 @@ const initialTypes = Object.entries({
     // Custom types
     'css-wide-keyword': cssWideKeywords.join(' | '),
     'math-function': '<calc()> | <min()> | <max()> | <clamp()> | <round()> | <mod()> | <rem()> | <sin()> | <cos()> | <tan()> | <asin()> | <acos()> | <atan()> | <atan2()> | <pow()> | <sqrt()> | <hypot()> | <log()> | <exp()> | <abs()> | <sign()>',
-    // TODO: report @webref/css issue related to missing definitions (written in prose)
+    // TODO: report @webref/css issue "`value` written in prose and not extracted"
     'absolute-size': 'xx-small | x-small | small | medium | large | x-large | xx-large',
     'basic-shape': '<inset()> | <circle()> | <ellipse()> | <polygon()> | <path()>',
     'bottom': '<length> | auto',
@@ -85,7 +85,7 @@ const initialTypes = Object.entries({
     'y': '<number>',
     // TODO: report spec issue "replace `<number-percentage>` by `<number> | <percentage>`"
     'number-percentage': '<number> | <percentage>',
-    // TODO: report spec issue "replace `<uri>` by `<url-token>`"
+    // TODO: report spec issue "replace `<uri>` (defined in prose in CSS2) by `<url-token>`"
     'uri': '<url-token>',
 }).map(([type, value]) => [type, [['value', [[value]]]]])
 
@@ -97,10 +97,7 @@ const replaced = {
         // Implementation dependent
         'font-family': { initial: 'monospace' },
         'voice-family': { initial: 'female' },
-        // TODO: resolve to inital `background-position-x` or `background-position-y` depending on `writing-mode`
-        'background-position-block': { initial: '0%' },
-        'background-position-inline': { initial: '0%' },
-        // TODO: report @webref/css issue related to missing definitions (written in prose)
+        // TODO: report @webref/css issue "`value` not extracted (but only `name`)"
         'stop-color': {
             initial: 'black',
             value: "<'color'>",
@@ -109,28 +106,28 @@ const replaced = {
             initial: '1',
             value: "<'opacity'>",
         },
-        // TODO: report spec issue "replace `n/a` by `auto` (defined in SVG 1.1)"
-        'glyph-orientation-vertical': { initial: 'auto' },
-        // TODO: report spec issue "replace `same as border-top-left-radius` by the initial value of `border-top-left-radius`"
-        'border-start-start-radius': { initial: '0' },
-        'border-start-end-radius': { initial: '0' },
+        // TODO: report spec issue "`clear` is missing `both-inline | both-block | both`"
+        'clear': { value: 'inline-start | inline-end | block-start | block-end | left | right | top | bottom | both-inline | both-block | both | all | none' },
+        /**
+         * TODO: report spec issue "`content` uses `[<content-replacement> | <content-list>]` instead of `<content-list>`"
+         * TODO: report spec issue "`content` uses `element()` instead of `<element()>`"
+         */
+        'content': { value: 'normal | none | <content-list> [/ [<string> | <counter>]+]? | <element()>' },
+        // TODO: report spec issue "`initial` does not match `value`"
+        '-webkit-background-clip': { value: 'border-box | padding-box | content-box | text | none' },
         'border-end-start-radius': { initial: '0' },
         'border-end-end-radius': { initial: '0' },
-        // TODO: report spec issue "replace initial value by `see individual properties`"
-        'line-clamp': { initial: 'see individual properties' },
-        'text-decoration': { initial: 'see individual properties' },
-        // TODO: report spec issue "the grammar of `-webkit-background-clip` is missing `none`"
-        '-webkit-background-clip': { value: 'border-box | padding-box | content-box | text | none' },
-        // TODO: report spec issue "the grammar of `border-limit` is missing `round`"
         'border-limit': { value: 'all | round | [sides | corners] <length-percentage [0,∞]>? | [top | right | bottom | left] <length-percentage [0,∞]>' },
-        // TODO: report spec issue "the grammar of `clear` is missing `both`"
-        'clear': { value: 'inline-start | inline-end | block-start | block-end | left | right | top | bottom | both | none' },
-        // TODO: report spec issue "the grammar of `flow-into` is missing whitespaces"
-        'flow-into': { value: 'none | <ident> [element | content]?' },
-        // TODO: report spec issue "the grammar of `shape-padding` is missing `none`"
+        'border-start-start-radius': { initial: '0' },
+        'border-start-end-radius': { initial: '0' },
+        'glyph-orientation-vertical': { initial: 'auto' },
         'shape-padding': { value: '<length> | none' },
-        // TODO: report spec issue "the grammar of `white-space` is missing `auto`"
         'white-space': { value: 'normal | pre | nowrap | pre-wrap | break-spaces | pre-line | auto' },
+        // TODO: report spec issue "`value` is missing whitespace"
+        'flow-into': { value: 'none | <ident> [element | content]?' },
+        // TODO: resolve to inital `background-position-x` or `background-position-y` depending on `writing-mode`
+        'background-position-block': { initial: '0%' },
+        'background-position-inline': { initial: '0%' },
     },
     types: {
         // Modified to be consistent with `polygon()`
@@ -142,21 +139,20 @@ const replaced = {
         // TODO: fix https://github.com/w3c/csswg-drafts/issues/6425
         'angular-color-stop-list': '<angular-color-stop> , [<angular-color-hint>? , <angular-color-stop>]#?',
         'color-stop-list': '<linear-color-stop> , [<linear-color-hint>? , <linear-color-stop>]#?',
-        // TODO: report spec issue "the grammar of `content-list` is missing `content()`
-        'content-list': '[<string> | <content()> | contents | <image> | <counter> | <quote> | <target> | <leader()>]+',
-        // TODO: report spec issue "the grammar of `blend-mode` is missing a space before `color-burn`"
-        'blend-mode': 'normal | multiply | screen | overlay | darken | lighten | color-dodge | color-burn | hard-light | soft-light | difference | exclusion | hue | saturation | color | luminosity',
-        // TODO: report spec issue "the grammar of `start-color` and `end-color` are missing"
+        'size': 'closest-side | closest-corner | farthest-side | farthest-corner | sides | <length-percentage [0,∞]>{1,2}',
+        // TODO: report spec issue "`<end|start-value>` should be defined (marked) with CSS syntax or in prose"
         'end-value': '<number> | <dimension> | <percentage>',
         'start-value': '<number> | <dimension> | <percentage>',
+        // TODO: report spec issue "`initial` does not match `value`"
+        'content-list': '[<string> | <content()> | contents | <image> | <counter> | <quote> | <target> | <leader()>]+',
+        // TODO: report spec issue "`value` is missing whitespace"
+        'blend-mode': 'normal | multiply | screen | overlay | darken | lighten | color-dodge | color-burn | hard-light | soft-light | difference | exclusion | hue | saturation | color | luminosity',
         // TODO: support new gradient grammars from Images 4
         'conic-gradient()': 'conic-gradient([from <angle>]? [at <position>]?, <angular-color-stop-list>)',
         'linear-gradient()': 'linear-gradient([<angle> | to <side-or-corner>]? , <color-stop-list>)',
         'radial-gradient()': 'radial-gradient([<ending-shape> || <size>]? [at <position>]? , <color-stop-list>)',
         /**
          * TODO: support new color grammars from Color 4/5
-         * TODO: report spec issue "define color function grammars with explicit channel keywords" (Color 5)
-         * TODO: report spec issue "replace `<number-percentage>` by `<number> | <percentage>`"
          *
          * Color 5: color([from <color>]? <colorspace-params> [/ <alpha-value>]?)
          * Color 4:
@@ -164,8 +160,7 @@ const replaced = {
         'color()': 'color(<colorspace-params> [/ <alpha-value>]?)',
         /**
          * TODO: support new color grammars from Color 4/5
-         * TODO: report spec issue "define color function grammars with explicit channel keywords" (Color 5)
-         * TODO: report spec issue "`none` is already allowed by `<hue>`"
+         * TODO: report spec issue "`<hue>` already includes `<none>`"
          *
          * Color 5: hsl([from <color>]? [<hue> | none] [<percentage> | none] [<percentage> | none] [/ [<alpha-value> | none]]?)
          * Color 4: hsl([<hue> | none] [<percentage> | none] [<percentage> | none] [/ [<alpha-value> | none]]?) | hsl([<hue> | none] , [<percentage> | none] , [<percentage> | none] , [<alpha-value> | none]?)
@@ -174,8 +169,7 @@ const replaced = {
         'hsl()': 'hsl(<hue> <percentage> <percentage> [/ <alpha-value>]? | <hue> , <percentage> , <percentage> , <alpha-value>?)',
         /**
          * TODO: support new color grammars from Color 4/5
-         * TODO: report spec issue "define color function grammars with explicit channel keywords" (Color 5)
-         * TODO: report spec issue "`none` is already allowed by `<hue>`"
+         * TODO: report spec issue "`<hue>` already includes `<none>`"
          *
          * Color 5: hwb([from <color>]? [<hue> | none] [<percentage> | none] [<percentage> | none] [/ [<alpha-value> | none]]?)
          * Color 4: hwb([<hue> | none] [<percentage> | none] [<percentage> | none] [/ [<alpha-value> | none]]?)
@@ -184,7 +178,6 @@ const replaced = {
         'hwb()': 'hwb(<hue> <percentage> <percentage> [/ <alpha-value>]?)',
         /**
          * TODO: support new color grammars from Color 4/5
-         * TODO: report spec issue "define color function grammars with explicit channel keywords" (Color 5)
          *
          * Color 5: lab([from <color>]? [<percentage> | none] [<number> | none] [<number> | none] [/ [<alpha-value> | none]]?)
          * Color 4: lab([<percentage> | none] [<number> | none] [<number> | none] [/ [<alpha-value> | none]]?)
@@ -193,8 +186,7 @@ const replaced = {
         'lab()': 'lab(<percentage> <number> <number> [/ <alpha-value>]?)',
         /**
          * TODO: support new color grammars from Color 4/5
-         * TODO: report spec issue "define color function grammars with explicit channel keywords" (Color 5)
-         * TODO: report spec issue "`none` is already allowed by `<hue>`"
+         * TODO: report spec issue "`<hue>` already includes `<none>`"
          *
          * Color 5: lch([from <color>]? [<percentage> | none] [<number> | none] [<hue> | none] [/ [<alpha-value> | none]]?)
          * Color 4: lch([<percentage> | none] [<number> | none] [<hue> | none] [/ [<alpha-value> | none]]?)
@@ -203,7 +195,6 @@ const replaced = {
         'lch()': 'lch(<percentage> <number> <hue> [/ <alpha-value>]?)',
         /**
          * TODO: support new color grammars from Color 4/5
-         * TODO: report spec issue "define color function grammars with explicit channel keywords" (Color 5)
          * TODO: handle repeated function name in definition value
          *
          * Color 5: rgb([<percentage> | none]{3} [/ [<alpha-value> | none]]?) | rgb([<number> | none]{3} [/ [<alpha-value> | none]]?) | rgb([from <color>]? [<number> | <percentage> | none]{3} [/ <alpha-value>]?)
@@ -223,8 +214,6 @@ const replaced = {
         'palette-identifier': '<custom-ident>',
         'shape': "rect(<'top'>, <'right'>, <'bottom'>, <'left'>)",
         'target-name': '<string>',
-        // Written in prose and modified to fix https://github.com/w3c/csswg-drafts/issues/6425
-        'size': 'closest-side | closest-corner | farthest-side | farthest-corner | sides | <length-percentage [0,∞]>{1,2}',
     },
 }
 
@@ -407,19 +396,16 @@ function isAuthoritativeSpecification(name, url, values) {
             return url.includes('css-position')
         case 'fit-content()':
             return url.includes('css-sizing')
-        case 'font-tech':
-            return url === 'https://drafts.csswg.org/css-fonts-5/'
         case 'inline-size':
             return url.includes('css-logical')
-        case 'url':
         case 'position':
-            return url.includes('css-position')
-                || url.includes('css-gcpm')
-                || url.includes('css-values')
+            return url.includes('css-position') || url.includes('css-values')
         case 'path()':
         case 'shape-inside':
         case 'shape-margin':
             return url.includes('css-shapes')
+        case 'url':
+            return url.includes('css-values')
     }
     // General cases
     if (url === 'https://drafts.csswg.org/css2/') {
