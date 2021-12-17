@@ -473,25 +473,37 @@ function reduceFieldValues([name, fields]) {
 /**
  * @param {string} value
  * @returns {string}
- *
- * TODO: remove extra grouping `[]` around function arguments.
  */
 function removeExtraGroup(value) {
-    if (!(value.startsWith('[') && value.endsWith(']'))) {
-        return value
-    }
-    let depth = 0
-    let i = 0
-    while (++i < value.length - 2) {
-        const char = value[i]
-        if (char === ']' && depth-- === 0) {
-            return value
+    if (value.startsWith('[') && value.endsWith(']')) {
+        const { length } = value
+        const end = length - 2
+        let depth = 0
+        let i = 0
+        while (++i < end) {
+            const char = value[i]
+            if (char === ']' && depth-- === 0) {
+                return value
+            }
+            if (char === '[') {
+                ++depth
+            }
         }
-        if (char === '[') {
-            ++depth
+        return removeExtraGroup(value.slice(1, -1))
+    }
+    if (value.endsWith(')')) {
+        const { length } = value
+        for (let index = 0; index < length; ++index) {
+            const left = value[index]
+            if (left === ' ') {
+                break
+            }
+            if (left === '(') {
+                return `${value.slice(0, index)}(${removeExtraGroup(value.slice(index + 1, -1))})`
+            }
         }
     }
-    return value.slice(1, -1)
+    return value
 }
 
 /**
