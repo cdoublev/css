@@ -248,17 +248,6 @@ describe('background', () => {
         style.background = 'center'
         /* Chrome */ expect(style.background).toBe('center center')
         /* Firefox expect(style.background).toBe('rgba(0, 0, 0, 0) none repeat scroll center center');*/
-        // // No whitespace(s) around separator for <position> and <size>
-        // style.background = 'left/cover'
-        // /* Chrome */ expect(style.background).toBe('left center / cover')
-        // style.background = 'center/ contain'
-        // /* Chrome */ expect(style.background).toBe('center center / contain')
-        // style.background = 'left /cover'
-        // /* Chrome */ expect(style.background).toBe('left center / cover')
-        // style.background = 'center/ 100% 100%'
-        // /* Chrome */ expect(style.background).toBe('center center / 100% 100%')
-        // style.background = 'left center /100% 100%'
-        // /* Chrome */ expect(style.background).toBe('left center / 100% 100%')
     })
     it('shorthand propagates to longhands', () => {
         const style = new CSSStyleDeclaration()
@@ -687,7 +676,7 @@ describe('bottom, left, right, top', () => {
         expect(style.right).toBe('5em')
         expect(style.bottom).toBe('12pt')
         expect(style).toHaveLength(4)
-        expect(style.cssText).toBe('top: 0px; left: 0%; right: 5em; bottom: 12pt;')
+        expect(style.cssText).toBe('inset: 0px 0% 5em 12pt;')
     })
 })
 describe('clear', () => {
