@@ -14,20 +14,13 @@ const namedColors = require('../lib/values/namedColors.js')
 const path = require('path')
 const shorthands = require('../lib/properties/shorthands.js')
 const systemColors = require('../lib/values/systemColors.js')
+const terminals = ['EOF-token', ...Object.keys(require('../lib/parse/terminals.js'))]
 
 const outputPaths = {
     properties: path.resolve(__dirname, '../lib/properties/definitions.js'),
     type: path.resolve(__dirname, '../lib/values/types.js'),
 }
 const header = `// Generated from ${__filename}`
-
-/**
- * Terminal types
- *
- * These types are and always will be defined only in prose and therefore can
- * not but be replaced by a definition using the CSS syntax.
- */
-const terminals = ['EOF-token', 'integer', 'length', 'percentage']
 
 /**
  * Legacy, custom, or missing type definitions
@@ -64,17 +57,24 @@ const initialTypes = Object.entries({
     'counter-name': '<custom-ident>',
     'counter-style-name': '<custom-ident>',
     'custom-params': '<dashed-ident> [<number> | <percentage> | none]#',
+    'dashndashdigit-ident': '<ident-token>',
     'dimension': '<length> | <time> | <frequency> | <resolution> | <angle> | <decibel> | <flex> | <semitones>',
     'dimension-unit': `"%" | ${dimensionUnits.join(' | ')}`,
     'extent-keyword': 'closest-corner | closest-side | farthest-corner | farthest-side',
     'lang': '<ident> | <string>',
     'left': '<length> | auto',
+    'n-dimension': '<dimension-token>',
+    'ndash-dimension': '<dimension-token>',
+    'ndashdigit-dimension': '<dimension-token>',
+    'ndashdigit-ident': '<ident-token>',
     'named-color': namedColors.join(' | '),
     'outline-line-style': 'none | hidden | dotted | dashed | solid | double | groove | ridge | inset | outset | auto',
     'predefined-rgb-params': '<predefined-rgb> [<number> | <percentage> | none]{3}',
     'predefined-rgb': 'srgb | srgb-linear | display-p3 | a98-rgb | prophoto-rgb | rec2020',
     'relative-size': 'larger | smaller',
     'right': '<length> | auto',
+    'signed-integer': '<number-token>',
+    'signless-integer': '<number-token>',
     'system-color': systemColors.join(' | '),
     'top': '<length> | auto',
     'transform-function': '<matrix()> | <translate()> | <translateX()> | <translateY()> | <scale()> | <scaleX()> | <scaleY()> | <rotate()> | <skew()> | <skewX()> | <skewY()>',
