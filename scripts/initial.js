@@ -1,7 +1,7 @@
 /**
- * This script replaces the `initial` field value of each property definition in
- *  `./lib/properties/definitions.js` by the data structure that would result
- * from parsing it against the definition `value`.
+ * This script parses the `initial` field value of each longhand property in
+ *  `./lib/properties/definitions.js`, serializes the resulting value, and
+ * assign it to a `representation` property in the definition.
  */
 const { addQuotes, logError, tab } = require('../lib/utils/script.js')
 const fs = require('fs')
@@ -95,13 +95,13 @@ function getInitialValue(property, value) {
 function serialize(entries, property) {
     return Object.entries(entries).reduce((string, [key, value]) => {
         if (property) {
-            const tab = tab(2)
+            const tabs = tab(2)
             if (key === 'initial') {
-                value = `${addQuotes(value)},\n${tab}representation: ${getInitialValue(property, value)}`
+                value = `${addQuotes(value)},\n${tabs}representation: ${getInitialValue(property, value)}`
             } else {
                 value = addQuotes(value)
             }
-            return `${string}${tab}${key}: ${value},\n`
+            return `${string}${tabs}${key}: ${value},\n`
         }
         const tabs = tab(1)
         return `${string}${tabs}${addQuotes(key)}: {\n${serialize(value, key)}${tabs}},\n`
