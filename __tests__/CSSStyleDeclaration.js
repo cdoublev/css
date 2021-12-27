@@ -212,6 +212,15 @@ describe('CSSStyleDeclaration', () => {
         expect(style.getPropertyValue('--foo')).toBe('')
         expect(style.getPropertyValue('--fOo')).toBe('purple')
     })
+    it('handles declaration priority', () => {
+        const style = new CSSStyleDeclaration()
+        style.cssText = 'color: red !important'
+        expect(style.cssText).toBe('color: red !important;')
+        style.setProperty('color', 'orange')
+        expect(style.cssText).toBe('color: orange;')
+        style.setProperty('color', 'green', 'important')
+        expect(style.cssText).toBe('color: green !important;')
+    })
 })
 
 describe('background', () => {
