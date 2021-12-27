@@ -83,12 +83,12 @@ describe('CSSStyleDeclaration', () => {
         style.cssText = '-webkit-order: 2'
         expect(style.cssText).toBe('order: 2;')
     })
-    it.skip('handles a shorthand property value with embedded spaces', () => {
+    it('handles a shorthand property value with embedded spaces', () => {
         const style = new CSSStyleDeclaration()
         style.background = '  rgb(0, 0, 0)   url(/something/somewhere.jpg)  '
         expect(style.backgroundColor).toBe('rgb(0, 0, 0)')
         expect(style.backgroundImage).toBe('url("/something/somewhere.jpg")')
-        expect(style.cssText).toBe('background: url("/something/somewhere.jpg") center center rgb(0, 0, 0);')
+        expect(style.cssText).toBe('background: url("/something/somewhere.jpg") 0% 0% rgb(0, 0, 0);')
     })
     it('clears longhand properties when setting shorthand to an empty string', () => {
         const style = new CSSStyleDeclaration()
