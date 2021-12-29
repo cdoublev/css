@@ -1,3 +1,4 @@
+
 // https://drafts.css-houdini.org/css-typed-om-1/#cssstylevalue
 [Exposed=(Window, Worker, PaintWorklet, LayoutWorklet)]
 interface CSSStyleValue {
