@@ -260,14 +260,13 @@ describe('background', () => {
     })
     it('shorthand propagates to longhands', () => {
         const style = new CSSStyleDeclaration()
-        style.background = 'blue url(http://www.example.com/some_img.jpg)'
-        // CSS 3: <color> <image> <repeat>[ <repeat>]? <attachment> <position>[ <position>]? [/ <size>]? <clip> <origin>
+        style.background = 'blue url(img.jpg)'
         expect(style).toHaveLength(8)
-        expect(style.background).toBe('url("http://www.example.com/some_img.jpg") 0% 0% blue')
-        expect(style.getPropertyValue('background')).toBe('url("http://www.example.com/some_img.jpg") 0% 0% blue')
-        expect(style.cssText).toBe('background: url("http://www.example.com/some_img.jpg") 0% 0% blue;')
+        expect(style.background).toBe('url("img.jpg") 0% 0% blue')
+        expect(style.getPropertyValue('background')).toBe('url("img.jpg") 0% 0% blue')
+        expect(style.cssText).toBe('background: url("img.jpg") 0% 0% blue;')
         expect(style.backgroundColor).toBe('blue')
-        expect(style.backgroundImage).toBe('url("http://www.example.com/some_img.jpg")')
+        expect(style.backgroundImage).toBe('url("img.jpg")')
         expect(style.backgroundRepeat).toBe('repeat')
         expect(style.backgroundAttachment).toBe('scroll')
         expect(style.backgroundPosition).toBe('0% 0%')
@@ -288,7 +287,7 @@ describe('background', () => {
         expect(style.backgroundSize).toBe('')
         expect(style.backgroundOrigin).toBe('')
         expect(style.backgroundClip).toBe('')
-        // CSS wide keywords
+        // CSS wide keyword
         style.background = 'inherit'
         expect(style.background).toBe('inherit')
         expect(style.getPropertyValue('background')).toBe('inherit')
@@ -301,19 +300,6 @@ describe('background', () => {
         expect(style.backgroundSize).toBe('inherit')
         expect(style.backgroundOrigin).toBe('inherit')
         expect(style.backgroundClip).toBe('inherit')
-        style.backgroundColor = 'red'
-        style.background = 'initial'
-        expect(style.background).toBe('initial')
-        expect(style.getPropertyValue('background')).toBe('initial')
-        expect(style.cssText).toBe('background: initial;')
-        expect(style.backgroundColor).toBe('initial')
-        expect(style.backgroundImage).toBe('initial')
-        expect(style.backgroundRepeat).toBe('initial')
-        expect(style.backgroundAttachment).toBe('initial')
-        expect(style.backgroundPosition).toBe('initial')
-        expect(style.backgroundSize).toBe('initial')
-        expect(style.backgroundOrigin).toBe('initial')
-        expect(style.backgroundClip).toBe('initial')
     })
     it('longhand propagates to shorthand', () => {
         const style = new CSSStyleDeclaration()
@@ -389,7 +375,7 @@ describe('border', () => {
     it('shorthand propagates to longhands', () => {
         const style = new CSSStyleDeclaration()
         style.border = '1px solid black'
-        expect(style).toHaveLength(12) // longhands of border-image are missing (total should be 17)
+        expect(style).toHaveLength(12)
         expect(style.border).toBe('1px solid black')
         expect(style.getPropertyValue('border')).toBe('1px solid black')
         expect(style.cssText).toBe('border: 1px solid black;')
@@ -415,7 +401,7 @@ describe('border', () => {
         expect(style.borderBottomColor).toBe('')
         // CSS wide keyword
         style.border = 'inherit'
-        expect(style).toHaveLength(12) // longhands of border-image are missing (total should be 17)
+        expect(style).toHaveLength(12)
         expect(style.border).toBe('inherit')
         expect(style.getPropertyValue('border')).toBe('inherit')
         expect(style.cssText).toBe('border: inherit;')
@@ -426,21 +412,9 @@ describe('border', () => {
         expect(style.borderTopWidth).toBe('inherit')
         expect(style.borderLeftStyle).toBe('inherit')
         expect(style.borderBottomColor).toBe('inherit')
-        style.border = 'initial'
-        expect(style).toHaveLength(12) // longhands of border-image are missing (total should be 17)
-        expect(style.border).toBe('initial')
-        expect(style.getPropertyValue('border')).toBe('initial')
-        expect(style.cssText).toBe('border: initial;')
-        expect(style.borderWidth).toBe('initial')
-        expect(style.borderStyle).toBe('initial')
-        expect(style.borderColor).toBe('initial')
-        expect(style.borderRight).toBe('initial')
-        expect(style.borderTopWidth).toBe('initial')
-        expect(style.borderLeftStyle).toBe('initial')
-        expect(style.borderBottomColor).toBe('initial')
         // none
         style.border = 'none'
-        expect(style).toHaveLength(12) // longhands of border-image are missing (total should be 17)
+        expect(style).toHaveLength(12)
         expect(style.border).toBe('medium')
         expect(style.cssText).toBe('border: medium;')
         expect(style.getPropertyValue('border')).toBe('medium')
@@ -502,7 +476,7 @@ describe('border-bottom, border-left, border-right, border-top', () => {
         expect(style.borderTopWidth).toBe('')
         expect(style.borderTopStyle).toBe('')
         expect(style.borderTopColor).toBe('')
-        // CSS wide keywords
+        // CSS wide keyword
         style.borderTop = 'inherit'
         expect(style.borderTop).toBe('inherit')
         expect(style.getPropertyValue('border-top')).toBe('inherit')
@@ -510,13 +484,6 @@ describe('border-bottom, border-left, border-right, border-top', () => {
         expect(style.borderTopWidth).toBe('inherit')
         expect(style.borderTopStyle).toBe('inherit')
         expect(style.borderTopColor).toBe('inherit')
-        style.borderTop = 'initial'
-        expect(style.borderTop).toBe('initial')
-        expect(style.getPropertyValue('border-top')).toBe('initial')
-        expect(style.cssText).toBe('border-top: initial;')
-        expect(style.borderTopWidth).toBe('initial')
-        expect(style.borderTopStyle).toBe('initial')
-        expect(style.borderTopColor).toBe('initial')
         // none
         style.borderTop = 'none'
         expect(style.borderTop).toBe('medium')
