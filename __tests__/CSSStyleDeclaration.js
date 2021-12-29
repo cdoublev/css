@@ -313,6 +313,16 @@ describe('background', () => {
         style.backgroundOrigin = 'content-box'
         style.backgroundClip = 'padding-box'
         expect(style.background).toBe('url("img.jpg") center center / cover repeat-x fixed content-box padding-box black')
+        style.background = 'initial'
+        style.backgroundColor = 'initial'
+        style.backgroundImage = 'initial'
+        style.backgroundRepeat = 'initial'
+        style.backgroundAttachment = 'initial'
+        style.backgroundPosition = 'initial'
+        style.backgroundSize = 'initial'
+        style.backgroundOrigin = 'initial'
+        style.backgroundClip = 'initial'
+        expect(style.background).toBe('initial')
     })
 })
 describe('background-color', () => {
