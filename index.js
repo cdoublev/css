@@ -19,12 +19,12 @@ const privateData = { ownerNode: sharedGlobalObject }
 
 /**
  * @constructor
- * @see https://drafts.csswg.org/cssom/#css-declaration-blocks
- * @see https://drafts.csswg.org/cssom/#the-elementcssinlinestyle-mixin
- * @see https://drafts.csswg.org/cssom/#dom-window-getcomputedstyle
- * @see https://drafts.csswg.org/cssom/#dom-cssstylerule-style
- * @see https://drafts.csswg.org/cssom/#dom-cssgroupingrule-style
- * @see https://drafts.csswg.org/cssom/#dom-cssmarginrule-style
+ * @see {@link https://drafts.csswg.org/cssom/#css-declaration-blocks}
+ * @see {@link https://drafts.csswg.org/cssom/#the-elementcssinlinestyle-mixin}
+ * @see {@link https://drafts.csswg.org/cssom/#dom-window-getcomputedstyle}
+ * @see {@link https://drafts.csswg.org/cssom/#dom-cssstylerule-style}
+ * @see {@link https://drafts.csswg.org/cssom/#dom-cssgroupingrule-style}
+ * @see {@link https://drafts.csswg.org/cssom/#dom-cssmarginrule-style}
  *
  * TODO: figure out how to create an instance of `CSSStyleDeclaration` with the
  * expected underlying state initialized from `privateData`, ie.:
