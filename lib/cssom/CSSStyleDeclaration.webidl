@@ -1,5 +1,3 @@
-// https://drafts.csswg.org/cssom/#cssomstring
-typedef DOMString CSSOMString;
 
 // https://drafts.csswg.org/cssom/#cssstyledeclaration
 [Exposed=Window]
