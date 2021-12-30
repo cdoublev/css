@@ -1,5 +1,5 @@
 
-const webidlCSSStyleDeclarationWrapper = require('./lib/CSSStyleDeclaration.js')
+const webidlCSSStyleDeclarationWrapper = require('./lib/cssom/CSSStyleDeclaration.js')
 
 const sharedGlobalObject = {
     // Used by webidl2js (lib/utils.js)
