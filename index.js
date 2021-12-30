@@ -14,11 +14,9 @@ webidlCSSStyleDeclarationWrapper.install(sharedGlobalObject, ['Window'])
 
 const origCSSStyleDeclaration = sharedGlobalObject.CSSStyleDeclaration
 
-// Underlying state of `Element.style`
-const privateData = { ownerNode: sharedGlobalObject }
-
 /**
- * @constructor
+ * @param {object} privateData
+ * @returns {CSSStyleDeclaration}
  * @see {@link https://drafts.csswg.org/cssom/#css-declaration-blocks}
  * @see {@link https://drafts.csswg.org/cssom/#the-elementcssinlinestyle-mixin}
  * @see {@link https://drafts.csswg.org/cssom/#dom-window-getcomputedstyle}
@@ -26,22 +24,21 @@ const privateData = { ownerNode: sharedGlobalObject }
  * @see {@link https://drafts.csswg.org/cssom/#dom-cssgroupingrule-style}
  * @see {@link https://drafts.csswg.org/cssom/#dom-cssmarginrule-style}
  *
- * TODO: figure out how to create an instance of `CSSStyleDeclaration` with the
- * expected underlying state initialized from `privateData`, ie.:
+ * `privateData` should define the underlying state ie.:
  * - for `StyleRule.style`, `PageRule.style`, `MarginRule.style`:
  *   - computed: false
- *   - parentRule: context object (this)
+ *   - parentRule: context object
  *   - ownerNode: null
  * - for `Element.style`:
  *   - computed: false
  *   - parentRule: null
- *   - ownerNode: context object (this, ie. window)
+ *   - ownerNode: context object
  * - for `getComputedStyle(element)`:
  *   - computed: true
  *   - parentRule: null
  *   - ownerNode: element
  */
-function CSSStyleDeclaration() {
+function CSSStyleDeclaration(privateData) {
     if (new.target === undefined) {
         throw new TypeError("Class constructor CSSStyleDeclaration cannot be invoked without 'new'")
     }
