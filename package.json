@@ -29,6 +29,7 @@
     "build:definitions": "node ./scripts/definitions.js",
     "build:initial": "node ./scripts/initial.js",
     "build:interface": "node ./scripts/convert-idl.js",
+    "build:report": "node ./scripts/report.js",
     "lint": "eslint --report-unused-disable-directives .",
     "safe-publish": "npm run lint && npm run test && npm publish",
     "test": "npm run prepare && jest",
@@ -36,7 +37,7 @@
     "test:inspect": "node --inspect-brk=0.0.0.0:9222 ./node_modules/.bin/jest --watchAll -b"
   },
   "dependencies": {
-    "@webref/css": "^2.1.10",
+    "@webref/css": "^3.0.0",
     "webidl-conversions": "^7.0.0"
   },
   "devDependencies": {
@@ -44,8 +45,8 @@
     "@babel/eslint-parser": "^7.16.5",
     "@babel/preset-env": "^7.16.5",
     "@cdoublev/eslint-config": "^0.9.0",
-    "eslint": "^8.4.1",
-    "eslint-plugin-jest": "^25.3.0",
+    "eslint": "^8.5.0",
+    "eslint-plugin-jest": "^25.3.2",
     "eslint-plugin-node": "^11.1.0",
     "jest": "^27.4.5",
     "jest-junit": "^13.0.0",

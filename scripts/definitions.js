@@ -28,9 +28,10 @@ const header = `// Generated from ${__filename}`
  * Missing type definitions are defined in prose in specifications instead of
  * with the CSS syntax.
  *
- * Legacy and extended types are only defined in prose in specifications. They
- * should be supported either as simple aliases with an identical behavior than
- * the target type (legacy types), or with a specific behavior (extended types).
+ * Legacy types, terminal types corresponding to the token production, extended
+ * types, are only defined in prose in specifications. They should be supported
+ * either as simple aliases with an identical behavior than the target type
+ * (legacy and terminal types), or with a specific behavior (extended types).
  *
  * Custom types are only defined in this library, to simplify parsing.
  *
@@ -41,6 +42,11 @@ const initialTypes = Object.entries({
     // Legacy types
     'hsla()': '<hsl()>',
     'rgba()': '<rgb()>',
+    // Terminal types corresponding to the token production
+    'dimension-token': '<dimension>',
+    'ident-token': '<ident>',
+    'number-token': '<number>',
+    'string-token': '<string>',
     // Extended types
     'repeating-conic-gradient()': '<conic-gradient()>',
     'repeating-linear-gradient()': '<linear-gradient()>',
@@ -60,7 +66,7 @@ const initialTypes = Object.entries({
     'dashndashdigit-ident': '<ident-token>',
     'dimension': '<length> | <time> | <frequency> | <resolution> | <angle> | <decibel> | <flex> | <semitones>',
     'dimension-unit': `"%" | ${dimensionUnits.join(' | ')}`,
-    'extent-keyword': 'closest-corner | closest-side | farthest-corner | farthest-side',
+    'extension-name': '<dashed-ident>',
     'lang': '<ident> | <string>',
     'left': '<length> | auto',
     'n-dimension': '<dimension-token>',
@@ -71,10 +77,13 @@ const initialTypes = Object.entries({
     'outline-line-style': 'none | hidden | dotted | dashed | solid | double | groove | ridge | inset | outset | auto',
     'predefined-rgb-params': '<predefined-rgb> [<number> | <percentage> | none]{3}',
     'predefined-rgb': 'srgb | srgb-linear | display-p3 | a98-rgb | prophoto-rgb | rec2020',
+    'q-name': '<wq-name>',
     'relative-size': 'larger | smaller',
     'right': '<length> | auto',
     'signed-integer': '<number-token>',
     'signless-integer': '<number-token>',
+    'size-feature': '<media-feature>',
+    'style-feature': '<declaration>',
     'system-color': systemColors.join(' | '),
     'top': '<length> | auto',
     'transform-function': '<matrix()> | <translate()> | <translateX()> | <translateY()> | <scale()> | <scaleX()> | <scaleY()> | <rotate()> | <skew()> | <skewX()> | <skewY()>',
@@ -85,8 +94,8 @@ const initialTypes = Object.entries({
     'y': '<number>',
     // TODO: report spec issue "replace `<number-percentage>` by `<number> | <percentage>`"
     'number-percentage': '<number> | <percentage>',
-    // TODO: report spec issue "replace `<uri>` (defined in prose in CSS2) by `<url-token>`"
-    'uri': '<url-token>',
+    // TODO: report spec issue "replace `<uri>` (defined in prose in CSS2) by `<url>`"
+    'uri': '<url>',
 }).map(([type, value]) => [type, [['value', [[value]]]]])
 
 /**
@@ -106,13 +115,13 @@ const replaced = {
             initial: '1',
             value: "<'opacity'>",
         },
-        // TODO: report spec issue "`clear` is missing `both-inline | both-block | both`"
+        // TODO: report spec issue "`clear` is missing `both-inline | both-block | both` (defined in prose)"
         'clear': { value: 'inline-start | inline-end | block-start | block-end | left | right | top | bottom | both-inline | both-block | both | all | none' },
         /**
-         * TODO: report spec issue "`content` uses `[<content-replacement> | <content-list>]` instead of `<content-list>`"
+         * TODO: report spec issue "`content` uses `[<content-replacement> | <content-list>]` instead of `<content-list>` (duplicate `<image>` in expansions)"
          * TODO: report spec issue "`content` uses `element()` instead of `<element()>`"
          */
-        'content': { value: 'normal | none | <content-list> [/ [<string> | <counter>]+]? | <element()>' },
+        'content': { newValues: '', value: 'normal | none | <content-list> [/ [<string> | <counter>]+]? | <element()>' },
         // TODO: report spec issue "`initial` does not match `value`"
         '-webkit-background-clip': { value: 'border-box | padding-box | content-box | text | none' },
         'border-end-start-radius': { initial: '0' },
@@ -123,6 +132,15 @@ const replaced = {
         'glyph-orientation-vertical': { initial: 'auto' },
         'shape-padding': { value: '<length> | none' },
         'white-space': { value: 'normal | pre | nowrap | pre-wrap | break-spaces | pre-line | auto' },
+        // TODO: report spec issue "`newValues` of `[[max|min]-][block|inline]-size` already defined by `<'[[max|min]-][width|height]'>`"
+        'block-size': { newValues: '' },
+        'inline-size': { newValues: '' },
+        'max-block-size': { newValues: '' },
+        'max-inline-size': { newValues: '' },
+        'min-block-size': { newValues: '' },
+        'min-inline-size': { newValues: '' },
+        // TODO: report spec issue "`newValues` of `contain` is ambiguous"
+        'contain': { newValues: '', value: 'none | strict | content | [[size | inline-size] || layout || style || paint]' },
         // TODO: report spec issue "`value` is missing whitespace"
         'flow-into': { value: 'none | <ident> [element | content]?' },
         // TODO: resolve to inital `background-position-x` or `background-position-y` depending on `writing-mode`
@@ -140,13 +158,14 @@ const replaced = {
         'angular-color-stop-list': '<angular-color-stop> , [<angular-color-hint>? , <angular-color-stop>]#?',
         'color-stop-list': '<linear-color-stop> , [<linear-color-hint>? , <linear-color-stop>]#?',
         'size': 'closest-side | closest-corner | farthest-side | farthest-corner | sides | <length-percentage [0,∞]>{1,2}',
-        // TODO: report spec issue "`<end|start-value>` should be defined (marked) with CSS syntax or in prose"
-        'end-value': '<number> | <dimension> | <percentage>',
-        'start-value': '<number> | <dimension> | <percentage>',
         // TODO: report spec issue "`initial` does not match `value`"
         'content-list': '[<string> | <content()> | contents | <image> | <counter> | <quote> | <target> | <leader()>]+',
+        // TODO: report spec issue "`value` has extra whitespace"
+        'supports-font-format-fn': 'font-format(<font-format>)',
+        'supports-font-tech-fn': 'font-tech(<font-tech>)',
         // TODO: report spec issue "`value` is missing whitespace"
         'blend-mode': 'normal | multiply | screen | overlay | darken | lighten | color-dodge | color-burn | hard-light | soft-light | difference | exclusion | hue | saturation | color | luminosity',
+        'mask-layer': '<mask-reference> || <position> [/ <bg-size>]? || <repeat-style> || <geometry-box> || [<geometry-box> | no-clip] || <compositing-operator> || <masking-mode>',
         // TODO: support new gradient grammars from Images 4
         'conic-gradient()': 'conic-gradient([from <angle>]? [at <position>]?, <angular-color-stop-list>)',
         'linear-gradient()': 'linear-gradient([<angle> | to <side-or-corner>]? , <color-stop-list>)',
@@ -204,6 +223,7 @@ const replaced = {
         'rgb()': 'rgb(<percentage>{3} [/ <alpha-value>]? | <number>{3} [/ <alpha-value>]? | <percentage>#{3} , <alpha-value>? | <number>#{3} , <alpha-value>?)',
         // Written in prose
         'age': 'child | young | old',
+        'end-value': '<number> | <dimension> | <percentage>',
         'ending-shape': 'circle | ellipse',
         'family-name': '<string> | <custom-ident>',
         'gender': 'male | female | neutral',
@@ -213,6 +233,7 @@ const replaced = {
         'paint': 'none | <color> | <url> [none | <color>]? | context-fill | context-stroke',
         'palette-identifier': '<custom-ident>',
         'shape': "rect(<'top'>, <'right'>, <'bottom'>, <'left'>)",
+        'start-value': '<number> | <dimension> | <percentage>',
         'target-name': '<string>',
     },
 }
@@ -318,7 +339,8 @@ function concatNewValues(definition) {
             fields.push(['initial', initial])
         }
         newValues.forEach(alt => {
-            if (!value.includes(alt)) {
+            // `alt` can be defined as a falsy value to discard `newValues`
+            if (alt && !value.includes(alt)) {
                 value.push(alt)
             }
         })
@@ -331,38 +353,42 @@ function concatNewValues(definition) {
  * @param {string} url
  * @param {string[]} values
  * @returns {boolean}
- *
- * These properties/types are defined in different specifications and sometimes
- * with different values, for different reasons:
- * - some definitions are simply duplicated instead of linking to the definition
- * in the authoritative specification
- * - some definitions exist in two different levels of a specification but the
- * last level does not include all definitions from the previous level, which
- * means that definitions should be extracted from both levels
- * - some specifications are partially superseded by another new authoritative
- * specification
- *
- * The current strategy is to always favor the last level of the authoritative
- * specification, and fallback to the previous level when required.
  */
-function isAuthoritativeSpecification(name, url, values) {
-    // Incompatible/unsupported definition values
+function isLastSpecificationVersion(url, values) {
+    const [baseURL, v1 = 1] = url.slice(0, -1).split(/-(\d)$/)
+    return values.every(([, otherURL]) => {
+        if (otherURL !== url && otherURL.startsWith(baseURL)) {
+            const [, v2 = 1] = otherURL.split(/-(\d)\/$/)
+            if (v1 < v2) {
+                return false
+            }
+        }
+        return true
+    })
+}
+
+/**
+ * @param {string} name
+ * @param {string} url
+ * @returns {boolean}
+ */
+function isAuthoritativeSpecification(name, url) {
+    if (url === 'https://drafts.csswg.org/css2/') {
+        return false
+    }
+    /**
+     * TODO: support new `background-position` grammar (as shorthand) from Background 4
+     * TODO: support new border grammars from Background 4
+     */
+    if (url === 'https://drafts.csswg.org/css-backgrounds-4/') {
+        return false
+    }
     switch (name) {
         case 'align-content':
         case 'align-items':
         case 'align-self':
         case 'justify-content':
             return url.includes('css-align')
-        case 'background-position':
-        case 'border-bottom-color':
-        case 'border-left-color':
-        case 'border-right-color':
-        case 'border-top-color':
-            /**
-             * TODO: support new `background-position` grammar (as shorthand) from Background 4
-             * TODO: support new border grammars from Background 4
-             */
-            return url === 'https://drafts.csswg.org/css-backgrounds/'
         case 'content()':
         case 'string-set':
         case 'string()':
@@ -396,6 +422,8 @@ function isAuthoritativeSpecification(name, url, values) {
             return url.includes('css-position')
         case 'fit-content()':
             return url.includes('css-sizing')
+        case 'font-tech':
+            return url.includes('css-font')
         case 'inline-size':
             return url.includes('css-logical')
         case 'position':
@@ -407,20 +435,6 @@ function isAuthoritativeSpecification(name, url, values) {
         case 'url':
             return url.includes('css-values')
     }
-    // General cases
-    if (url === 'https://drafts.csswg.org/css2/') {
-        return false
-    }
-    // Default to definition values from the last level of the specification
-    const [baseURL, v1 = 1] = url.slice(0, -1).split(/-(\d)$/)
-    for (const [, otherURL] of values) {
-        if (otherURL !== url && otherURL.startsWith(baseURL)) {
-            const [, v2 = 1] = otherURL.split(/-(\d)\/$/)
-            if (v1 < v2) {
-                return false
-            }
-        }
-    }
     return true
 }
 
@@ -430,12 +444,25 @@ function isAuthoritativeSpecification(name, url, values) {
  *
  * It reduces each definition field to a single value by removing field values
  * from superseded/outdated specifications, and joining `newValues`.
+ *
+ * Some properties/types are defined in different specifications, sometimes with
+ * different values, for different reasons:
+ * - the definitions are duplicated instead of linking to the definition in the
+ * authoritative specification
+ * - the last level of the specification does not include all definitions from
+ * the "canonical" level
+ * - the definitions are superseded by an authoritative specification
+ *
+ * The strategy is to favor the last level of the authoritative specification,
+ * otherwise fallback to its canonical level.
  */
 function reduceFieldValues([name, fields]) {
     return [name, fields.reduce((fields, [field, values]) => {
         // Remove values from outdated/superseded/unsupported specifications
         if (1 < values.length) {
-            values = values.filter(([, url]) => isAuthoritativeSpecification(name, url, values))
+            values = values
+                .filter(([, url]) => isAuthoritativeSpecification(name, url))
+                .filter(([, url], _, values) => isLastSpecificationVersion(url, values))
         }
         const { length } = values
         if (length === 1) {
@@ -454,6 +481,29 @@ function reduceFieldValues([name, fields]) {
         }
         return fields
     }, [])]
+}
+
+/**
+ * @param {*[][]} definitions [[name, [[field, [[value, URL]]]]]]
+ * @param {string} name
+ * @param {string} field
+ * @param {string} value
+ * @param {string} url
+ */
+function addFieldValue(definitions, name, field, value, url) {
+    const definition = definitions.find(([property]) => property === name)
+    if (definition) {
+        const [, fields] = definition
+        const current = fields.find(([name]) => name === field)
+        if (current) {
+            const [, values] = current
+            values.push([value, url])
+        } else {
+            fields.push([field, [[value, url]]])
+        }
+    } else {
+        definitions.push([name, [[field, [[value, url]]]]])
+    }
 }
 
 /**
@@ -493,26 +543,13 @@ function removeExtraGroup(value) {
 }
 
 /**
- * @param {*[][]} definitions [[name, [[field, [[value, URL]]]]]]
- * @param {string} name
- * @param {string} field
  * @param {string} value
- * @param {string} url
+ * @returns {string}
+ *
+ * It removes extra whitespaces and angled brackets from `value`.
  */
-function addFieldValue(definitions, name, field, value, url) {
-    const definition = definitions.find(([property]) => property === name)
-    if (definition) {
-        const [, fields] = definition
-        const current = fields.find(([name]) => name === field)
-        if (current) {
-            const [, values] = current
-            values.push([value, url])
-        } else {
-            fields.push([field, [[value, url]]])
-        }
-    } else {
-        definitions.push([name, [[field, [[value, url]]]]])
-    }
+function normalizeValue(value) {
+    return removeExtraGroup(value.replace(/([([]) | [)\]]/g, match => match.trim()))
 }
 
 /**
@@ -537,11 +574,8 @@ function extractTypeDefinitions(types, definitions, url) {
             value = replacement
         } else if (!value) {
             throw Error(`Missing value to replace the definition of "<${type}>" written in prose (${url})`)
-        } else {
-            // Remove extra whitespaces and angled brackets
-            value = removeExtraGroup(value.replace(/([([]) | [)\]]/g, match => match.trim()))
         }
-        addFieldValue(types, type, 'value', value, url)
+        addFieldValue(types, type, 'value', normalizeValue(value), url)
         return types
     }, types)
 }
@@ -557,12 +591,15 @@ function extractPropertyDefinitions(properties, definitions, url) {
         if (aliases.has(property)) {
             return properties
         }
+        const replacement = replaced.properties[property]
         // It is assumed that definitions do not define both `value` and `newValues`
         if (newValues) {
-            addFieldValue(properties, property, 'newValues', newValues, url)
+            if (replacement) {
+                ({ newValues = newValues } = replacement)
+            }
+            addFieldValue(properties, property, 'newValues', normalizeValue(newValues), url)
             return properties
         }
-        const replacement = replaced.properties[property]
         if (replacement) {
             ({ initial = initial, value = value } = replacement)
         }
@@ -570,9 +607,6 @@ function extractPropertyDefinitions(properties, definitions, url) {
             throw Error(`The "initial" field is missing in the definition of "${property}"`)
         } else if (!value) {
             throw Error(`The "value" field is missing in the definition of "${property}"`)
-        } else {
-            // Remove extra whitespaces
-            value = value.replace(/([([]) | [)\]]/g, match => match.trim())
         }
         // Skip initial shorthand value
         if (!shorthands.has(property) && property !== 'all') {
@@ -582,7 +616,7 @@ function extractPropertyDefinitions(properties, definitions, url) {
         if (url === 'https://drafts.csswg.org/css2/') {
             value = value.replace(' | inherit', '')
         }
-        addFieldValue(properties, property, 'value', value, url)
+        addFieldValue(properties, property, 'value', normalizeValue(value), url)
         return properties
     }, properties)
 }
