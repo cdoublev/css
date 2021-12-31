@@ -158,27 +158,6 @@ describe('CSSStyleDeclaration', () => {
         expect(style.fontSize).toBe('12px')
         expect(style.getPropertyValue('font-size')).toBe('12px')
     })
-    it('getPropertyValue for custom properties in cssText', () => {
-        const style = new CSSStyleDeclaration()
-        style.cssText = '--foo: red'
-        expect(style.getPropertyValue('--foo')).toBe('red')
-    })
-    it('getPropertyValue for custom properties with setProperty', () => {
-        const style = new CSSStyleDeclaration()
-        style.setProperty('--bar', 'blue')
-        expect(style.getPropertyValue('--bar')).toBe('blue')
-    })
-    it('getPropertyValue for custom properties with object setter', () => {
-        const style = new CSSStyleDeclaration()
-        style['--baz'] = 'yellow'
-        expect(style.getPropertyValue('--baz')).toBe('')
-    })
-    it('custom properties are case-sensitive', () => {
-        const style = new CSSStyleDeclaration()
-        style.cssText = '--fOo: purple'
-        expect(style.getPropertyValue('--foo')).toBe('')
-        expect(style.getPropertyValue('--fOo')).toBe('purple')
-    })
     it('handles a shorthand property value with embedded spaces', () => {
         const style = new CSSStyleDeclaration()
         style.background = '  rgb(0, 0, 0)   url(/something/somewhere.jpg)  '
@@ -196,6 +175,28 @@ describe('CSSStyleDeclaration', () => {
     })
 })
 
+describe('--custom-property', () => {
+    it('inserts and returns the declaration value of a custom property', () => {
+
+        const style = new CSSStyleDeclaration()
+
+        style.setProperty('--custom', 'red')
+        expect(style.getPropertyValue('--custom')).toBe('red')
+        style.cssText = '--custom: green'
+        expect(style.getPropertyValue('--custom')).toBe('green')
+        style.removeProperty('--custom')
+        expect(style.getPropertyValue('--custom')).toBe('')
+
+        // Custom properties are not interface attribute
+        style['--custom'] = 'blue'
+        expect(style.getPropertyValue('--custom')).toBe('')
+
+        // Custom properties are case-sensitive
+        style.setProperty('--Custom', 'purple')
+        expect(style.getPropertyValue('--Custom')).toBe('purple')
+        expect(style.getPropertyValue('--custom')).toBe('')
+    })
+})
 describe('background', () => {
     it('invalid', () => {
         const style = new CSSStyleDeclaration()
