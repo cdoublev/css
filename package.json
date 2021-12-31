@@ -1,6 +1,6 @@
 {
   "name": "@cdoublev/css",
-  "description": "CSSStyleDeclaration implementation",
+  "description": "CSS Object Model implementation in JavaScript",
   "author": "Guillaume Lebas",
   "license": "MIT",
   "keywords": [
@@ -22,8 +22,10 @@
     "lib",
     "index.js"
   ],
+  "type": "commonjs",
   "exports": {
-    ".": "./index.js"
+    ".": "./index.js",
+    "./CSSStyleDeclaration.js": "./lib/cssom/standalone/CSSStyleDeclaration.js"
   },
   "scripts": {
     "build:definitions": "node ./scripts/definitions.js",

@@ -1,5 +1,5 @@
 
-const CSSStyleDeclaration = require('../index.js')
+const CSSStyleDeclaration = require('../lib/cssom/standalone/CSSStyleDeclaration.js')
 const { cssPropertyToIDLAttribute } = require('../lib/utils/script.js')
 const properties = Object.keys(require('../lib/properties/definitions.js'))
 
