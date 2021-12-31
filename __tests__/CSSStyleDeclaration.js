@@ -194,6 +194,19 @@ describe('CSSStyleDeclaration', () => {
         const style = wrapper.create(globalObject, undefined, { ownerNode: element })
         expect(style.fontSize).toBe('10px')
     })
+    it('constructs a new instance with the declarations from `getComputedStyle()` and prevents modifying them', () => {
+
+        const declarations = new Map([['font-size', { name: 'font-size', value: '10px' }]])
+        wrapper.install(globalObject, ['Window'])
+        const style = wrapper.create(globalObject, undefined, { computed: true, declarations, ownerNode: {} })
+
+        expect(style.fontSize).toBe('10px')
+        expect(style.cssText).toBe('')
+        expect(() => style.cssText = 'font-size: 20px;').toThrow('Can not set "cssText" on read-only computed style declaration"')
+        expect(() => style.setProperty('font-size', '20px')).toThrow('Can not set "font-size" on read-only computed style declaration"')
+        expect(() => style.removeProperty('font-size', '20px')).toThrow('Can not remove "font-size" on read-only computed style declaration"')
+
+    })
 })
 
 describe('--custom-property', () => {
