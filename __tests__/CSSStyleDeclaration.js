@@ -92,14 +92,14 @@ describe('CSSStyleDeclaration', () => {
         expect(style.fontSize).toBe('')
         expect(style.cssText).toBe('')
     })
-    it('setting a property with a value that can not be converted to string should throw an error', () => {
+    it('throws an error when setting a declaration with a value that can not be converted to string', () => {
         const style = new CSSStyleDeclaration()
         expect(() => (style.opacity = Symbol('0')))
             .toThrow("Failed to set the 'opacity' property on 'CSSStyleDeclaration': The provided value is a symbol, which cannot be converted to a string.")
         expect(() => (style.opacity = { toString: () => [0] }))
             .toThrow('Cannot convert object to primitive value')
     })
-    it('setting a property with a value that can be converted to string should work', () => {
+    it('sets a declaration with a non-string value that can be converted to string', () => {
         const style = new CSSStyleDeclaration()
 
         // Property with custom setter
@@ -147,12 +147,12 @@ describe('CSSStyleDeclaration', () => {
         style.webkitOrder = '2'
         expect(style.order).toBe('2')
     })
-    it('camelcase properties are not assigned with `.setproperty()`', () => {
+    it('does not set a camelcased property with `.setProperty()`', () => {
         const style = new CSSStyleDeclaration()
         style.setProperty('fontSize', '12px')
         expect(style.cssText).toBe('')
     })
-    it('casing is ignored in `.setproperty()`', () => {
+    it('normalizes a property to lowercase with `.setProperty()`', () => {
         const style = new CSSStyleDeclaration()
         style.setProperty('FoNt-SiZe', '12px')
         expect(style.fontSize).toBe('12px')
@@ -186,7 +186,7 @@ describe('CSSStyleDeclaration', () => {
         expect(style.backgroundImage).toBe('url("/something/somewhere.jpg")')
         expect(style.cssText).toBe('background: url("/something/somewhere.jpg") 0% 0% rgb(0, 0, 0);')
     })
-    it('setting improper css to csstext should not throw', () => {
+    it('does not throw when failing to parse the input value assigned to `csstext`', () => {
         const style = new CSSStyleDeclaration()
         style.cssText = 'color: '
         expect(style.cssText).toBe('')
