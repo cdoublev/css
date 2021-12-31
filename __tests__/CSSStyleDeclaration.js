@@ -6,36 +6,40 @@ const properties = Object.keys(require('../lib/properties/definitions.js'))
 describe('CSSStyleDeclaration', () => {
     it('has all CSS (dashed) properties', () => {
         const style = new CSSStyleDeclaration()
+        const prototype = Object.getPrototypeOf(style)
         properties.forEach(property => {
-            expect(style.__lookupGetter__(property)).toBeTruthy()
-            expect(style.__lookupSetter__(property)).toBeTruthy()
+            expect(Object.getOwnPropertyDescriptor(prototype, property).get).toBeDefined()
+            expect(Object.getOwnPropertyDescriptor(prototype, property).set).toBeDefined()
         })
     })
     it('has all CSS properties as camel cased IDL attributes', () => {
         const style = new CSSStyleDeclaration()
+        const prototype = Object.getPrototypeOf(style)
         properties.forEach(property => {
             const dashPrefix = property.startsWith('-webkit-')
             const attribute = cssPropertyToIDLAttribute(property, dashPrefix)
-            expect(style.__lookupGetter__(attribute)).toBeTruthy()
-            expect(style.__lookupSetter__(attribute)).toBeTruthy()
+            expect(Object.getOwnPropertyDescriptor(prototype, attribute).get).toBeDefined()
+            expect(Object.getOwnPropertyDescriptor(prototype, attribute).set).toBeDefined()
         })
     })
     it('has all webkit prefixed CSS properties as pascal cased IDL attributes', () => {
         const style = new CSSStyleDeclaration()
-        properties
-            .filter(property => property.startsWith('-webkit'))
-            .forEach(property => {
+        const prototype = Object.getPrototypeOf(style)
+        properties.forEach(property => {
+            if (property.startsWith('-webkit')) {
                 const attribute = cssPropertyToIDLAttribute(property)
-                expect(style.__lookupGetter__(attribute)).toBeTruthy()
-                expect(style.__lookupSetter__(attribute)).toBeTruthy()
-            })
+                expect(Object.getOwnPropertyDescriptor(prototype, attribute).get).toBeDefined()
+                expect(Object.getOwnPropertyDescriptor(prototype, attribute).set).toBeDefined()
+            }
+        })
     })
     it('has all properties', () => {
         const style = new CSSStyleDeclaration()
-        expect(style.__lookupGetter__('cssText')).toBeTruthy()
-        expect(style.__lookupSetter__('cssText')).toBeTruthy()
-        expect(style.__lookupGetter__('length')).toBeTruthy()
-        expect(style.__lookupGetter__('parentRule')).toBeTruthy()
+        const prototype = Object.getPrototypeOf(style)
+        expect(Object.getOwnPropertyDescriptor(prototype, 'cssText').get).toBeDefined()
+        expect(Object.getOwnPropertyDescriptor(prototype, 'cssText').set).toBeDefined()
+        expect(Object.getOwnPropertyDescriptor(prototype, 'length').get).toBeDefined()
+        expect(Object.getOwnPropertyDescriptor(prototype, 'parentRule').get).toBeDefined()
     })
     it('has all methods', () => {
         const style = new CSSStyleDeclaration()
