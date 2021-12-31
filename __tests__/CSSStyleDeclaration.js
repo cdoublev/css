@@ -92,21 +92,6 @@ describe('CSSStyleDeclaration', () => {
         expect(style.fontSize).toBe('')
         expect(style.cssText).toBe('')
     })
-    it('mirrors legacy vendor prefixed properties', () => {
-        const style = new CSSStyleDeclaration()
-        style.order = '1'
-        expect(style.webkitOrder).toBe('1')
-        expect(style.getPropertyValue('-webkit-order')).toBe('1')
-        style.cssText = '-webkit-order: 2'
-        expect(style.cssText).toBe('order: 2;')
-    })
-    it('handles a shorthand property value with embedded spaces', () => {
-        const style = new CSSStyleDeclaration()
-        style.background = '  rgb(0, 0, 0)   url(/something/somewhere.jpg)  '
-        expect(style.backgroundColor).toBe('rgb(0, 0, 0)')
-        expect(style.backgroundImage).toBe('url("/something/somewhere.jpg")')
-        expect(style.cssText).toBe('background: url("/something/somewhere.jpg") 0% 0% rgb(0, 0, 0);')
-    })
     it('setting a property with a value that can not be converted to string should throw an error', () => {
         const style = new CSSStyleDeclaration()
         expect(() => (style.opacity = Symbol('0')))
@@ -154,13 +139,13 @@ describe('CSSStyleDeclaration', () => {
         style.setProperty('--custom', { toString: () => true })
         expect(style.getPropertyValue('--custom')).toBe('true')
     })
-    it('setting improper css to csstext should not throw', () => {
+    it('mirrors legacy vendor prefixed properties', () => {
         const style = new CSSStyleDeclaration()
-        style.cssText = 'color: '
-        expect(style.cssText).toBe('')
-        style.color = 'black'
-        style.cssText = 'float: '
-        expect(style.cssText).toBe('')
+        style.order = '1'
+        expect(style.webkitOrder).toBe('1')
+        expect(style.getPropertyValue('-webkit-order')).toBe('1')
+        style.webkitOrder = '2'
+        expect(style.order).toBe('2')
     })
     it('camelcase properties are not assigned with `.setproperty()`', () => {
         const style = new CSSStyleDeclaration()
@@ -193,6 +178,21 @@ describe('CSSStyleDeclaration', () => {
         style.cssText = '--fOo: purple'
         expect(style.getPropertyValue('--foo')).toBe('')
         expect(style.getPropertyValue('--fOo')).toBe('purple')
+    })
+    it('handles a shorthand property value with embedded spaces', () => {
+        const style = new CSSStyleDeclaration()
+        style.background = '  rgb(0, 0, 0)   url(/something/somewhere.jpg)  '
+        expect(style.backgroundColor).toBe('rgb(0, 0, 0)')
+        expect(style.backgroundImage).toBe('url("/something/somewhere.jpg")')
+        expect(style.cssText).toBe('background: url("/something/somewhere.jpg") 0% 0% rgb(0, 0, 0);')
+    })
+    it('setting improper css to csstext should not throw', () => {
+        const style = new CSSStyleDeclaration()
+        style.cssText = 'color: '
+        expect(style.cssText).toBe('')
+        style.color = 'black'
+        style.cssText = 'float: '
+        expect(style.cssText).toBe('')
     })
 })
 
