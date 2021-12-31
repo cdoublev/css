@@ -42,42 +42,55 @@ describe('CSSStyleDeclaration', () => {
         expect(Object.getOwnPropertyDescriptor(prototype, 'parentRule').get).toBeDefined()
     })
     it('has all methods', () => {
+
         const style = new CSSStyleDeclaration()
-        expect(typeof style.item).toBe('function')
-        expect(typeof style.getPropertyValue).toBe('function')
-        expect(typeof style.setProperty).toBe('function')
-        expect(typeof style.getPropertyPriority).toBe('function')
-        expect(typeof style.removeProperty).toBe('function')
-    })
-    it('sets properties with cssText', () => {
-        const style = new CSSStyleDeclaration()
-        style.cssText = 'color: blue; background-color: red; width: 78%; height: 50vh;'
-        expect(style).toHaveLength(4)
-        expect(style.cssText).toBe('color: blue; background-color: red; width: 78%; height: 50vh;')
-        expect(style.getPropertyValue('color')).toBe('blue')
-        expect(style.item(0)).toBe('color')
-        expect(style[1]).toBe('background-color')
-        expect(style.backgroundColor).toBe('red')
+
+        expect(style[0]).toBeUndefined()
+        expect(style.item(0)).toBe('')
+        expect(style.length).toBe(0)
+
+        style['font-size'] = '20px'
+
+        expect(style[0]).toBe('font-size')
+        expect(style.item(0)).toBe('font-size')
+        expect(style.length).toBe(1)
+        expect(style.fontSize).toBe('20px')
+        expect(style.cssText).toBe('font-size: 20px;')
+
+        style.fontSize = '10px'
+
+        expect(style['font-size']).toBe('10px')
+        expect(style.cssText).toBe('font-size: 10px;')
+
+        style.fontSize = ''
+
+        expect(style.fontSize).toBe('')
+
+        style.cssText = 'font-size: 20px'
+
+        expect(style.cssText).toBe('font-size: 20px;')
+        expect(style.fontSize).toBe('20px')
+
         style.cssText = ''
+
         expect(style.cssText).toBe('')
-        expect(style).toHaveLength(0)
-    })
-    it('sets properties from CSS property setter', () => {
-        const style = new CSSStyleDeclaration()
-        style.color = 'blue'
-        expect(style).toHaveLength(1)
-        expect(style[0]).toBe('color')
-        expect(style.cssText).toBe('color: blue;')
-        expect(style.item(0)).toBe('color')
-        expect(style.color).toBe('blue')
-        style.backgroundColor = 'red'
-        expect(style).toHaveLength(2)
-        expect(style[0]).toBe('color')
-        expect(style[1]).toBe('background-color')
-        expect(style.cssText).toBe('color: blue; background-color: red;')
-        expect(style.backgroundColor).toBe('red')
-        style.removeProperty('color')
-        expect(style[0]).toBe('background-color')
+        expect(style.fontSize).toBe('')
+
+        style.setProperty('font-size', '10px', 'important')
+
+        expect(style.getPropertyValue('font-size')).toBe('10px')
+        expect(style.getPropertyPriority('font-size')).toBe('important')
+        expect(style.cssText).toBe('font-size: 10px !important;')
+
+        style.setProperty('font-size', '10px')
+
+        expect(style.getPropertyPriority('font-size')).toBe('')
+        expect(style.cssText).toBe('font-size: 10px;')
+
+        style.removeProperty('font-size')
+
+        expect(style.fontSize).toBe('')
+        expect(style.cssText).toBe('')
     })
     it('mirrors legacy vendor prefixed properties', () => {
         const style = new CSSStyleDeclaration()
@@ -93,41 +106,6 @@ describe('CSSStyleDeclaration', () => {
         expect(style.backgroundColor).toBe('rgb(0, 0, 0)')
         expect(style.backgroundImage).toBe('url("/something/somewhere.jpg")')
         expect(style.cssText).toBe('background: url("/something/somewhere.jpg") 0% 0% rgb(0, 0, 0);')
-    })
-    it('clears longhand properties when setting shorthand to an empty string', () => {
-        const style = new CSSStyleDeclaration()
-        style.borderWidth = '1px'
-        expect(style.cssText).toBe('border-width: 1px;')
-        style.border = ''
-        expect(style.cssText).toBe('')
-    })
-    it('clears implicit shorthand property when setting some of its longhand to an empty string', () => {
-        const style = new CSSStyleDeclaration()
-        style.borderTopWidth = '1px'
-        expect(style.cssText).toBe('border-top-width: 1px;')
-        style.borderWidth = ''
-        expect(style.cssText).toBe('')
-    })
-    it('clears parent shorthand property when setting some of its child implicit longhand to an empty string', () => {
-        const style = new CSSStyleDeclaration()
-        style.borderTopWidth = '1px'
-        expect(style.cssText).toBe('border-top-width: 1px;')
-        style.border = ''
-        expect(style.cssText).toBe('')
-        style.borderTop = '1px solid black'
-        expect(style.cssText).toBe('border-top: 1px solid black;')
-        style.border = ''
-        expect(style.cssText).toBe('')
-    })
-    it('setting values implicit and shorthand properties via csstext and setproperty should propagate to dependent properties', () => {
-        const style = new CSSStyleDeclaration()
-        style.cssText = 'border: 1px solid black;'
-        expect(style.cssText).toBe('border: 1px solid black;')
-        expect(style.borderTop).toBe('1px solid black')
-        style.border = ''
-        expect(style.cssText).toBe('')
-        style.setProperty('border', '1px solid black')
-        expect(style.cssText).toBe('border: 1px solid black;')
     })
     it('setting a property with a value that can not be converted to string should throw an error', () => {
         const style = new CSSStyleDeclaration()
@@ -215,15 +193,6 @@ describe('CSSStyleDeclaration', () => {
         style.cssText = '--fOo: purple'
         expect(style.getPropertyValue('--foo')).toBe('')
         expect(style.getPropertyValue('--fOo')).toBe('purple')
-    })
-    it('handles declaration priority', () => {
-        const style = new CSSStyleDeclaration()
-        style.cssText = 'color: red !important'
-        expect(style.cssText).toBe('color: red !important;')
-        style.setProperty('color', 'orange')
-        expect(style.cssText).toBe('color: orange;')
-        style.setProperty('color', 'green', 'important')
-        expect(style.cssText).toBe('color: green !important;')
     })
 })
 
