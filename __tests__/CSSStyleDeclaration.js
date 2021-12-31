@@ -2,6 +2,17 @@
 const CSSStyleDeclaration = require('../lib/cssom/standalone/CSSStyleDeclaration.js')
 const { cssPropertyToIDLAttribute } = require('../lib/utils/script.js')
 const properties = Object.keys(require('../lib/properties/definitions.js'))
+const wrapper = require('../lib/cssom/CSSStyleDeclaration.js')
+
+const globalObject = {
+    // Used by webidl2js (lib/cssom/utils.js)
+    Array,
+    Object,
+    // Used by webidl-conversions
+    Number,
+    String,
+    TypeError,
+}
 
 describe('CSSStyleDeclaration', () => {
     it('has all CSS (dashed) properties', () => {
@@ -172,6 +183,16 @@ describe('CSSStyleDeclaration', () => {
         style.color = 'black'
         style.cssText = 'float: '
         expect(style.cssText).toBe('')
+    })
+    it('constructs a new instance with the declarations resulting from parsing the `style` attribute of `Element`', () => {
+        const element = {
+            getAttribute() {
+                return 'font-size: 10px;'
+            }
+        }
+        wrapper.install(globalObject, ['Window'])
+        const style = wrapper.create(globalObject, undefined, { ownerNode: element })
+        expect(style.fontSize).toBe('10px')
     })
 })
 
