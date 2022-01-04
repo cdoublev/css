@@ -14,7 +14,7 @@ const namedColors = require('../lib/values/namedColors.js')
 const path = require('path')
 const shorthands = require('../lib/properties/shorthands.js')
 const systemColors = require('../lib/values/systemColors.js')
-const terminals = Object.keys(require('../lib/parse/terminals.js'))
+const terminals = require('../lib/parse/terminals.js')
 
 const outputPaths = {
     properties: path.resolve(__dirname, '../lib/properties/definitions.js'),
@@ -22,23 +22,38 @@ const outputPaths = {
 }
 const header = `// Generated from ${__filename}`
 
-const excludeTypes = ['EOF-token', ...terminals, ...terminals.map(type => `${type}-token`)]
+/**
+ * Excluded types
+ *
+ * Terminal types which are not defined with the CSS syntax and are associated
+ * to a dedicated parse function.
+ */
+const excludedTypes = [
+    'EOF-token',
+    'function-token',
+    'hash-token',
+    'ident-token',
+    'number-token',
+    'percentage-token',
+    'string-token',
+    ...Object.keys(terminals),
+]
 
 /**
- * Legacy, custom, or missing type definitions
+ * Legacy, extended, custom, or missing type definitions
  *
- * Missing type definitions are defined in prose in specifications instead of
- * with the CSS syntax.
+ * Legacy and extended types, are only defined in prose in specifications.
+ * They should be supported either as simple aliases with an identical
+ * behavior than the target type (legacy and terminal types), or with a
+ * specific behavior (extended types).
  *
- * Legacy types, terminal types corresponding to the token production, extended
- * types, are only defined in prose in specifications. They should be supported
- * either as simple aliases with an identical behavior than the target type
- * (legacy and terminal types), or with a specific behavior (extended types).
+ * Custom types only exist in this library to simplify parsing.
  *
- * Custom types are only defined in this library, to simplify parsing.
+ * Missing type definitions are defined in prose in specifications instead
+ * of with the CSS syntax.
  *
- * This map is normalized into entries of multi-value field entries for further
- * processing.
+ * This object is normalized into entries of multi-value field entries for
+ * further processing.
  */
 const initialTypes = Object.entries({
     // Legacy types
@@ -97,6 +112,8 @@ const initialTypes = Object.entries({
 
 /**
  * Overriden property/type definitions
+ *
+ * Only fields whose value is defined with a replacement are overriden.
  */
 const replaced = {
     properties: {
@@ -104,14 +121,8 @@ const replaced = {
         'font-family': { initial: 'monospace' },
         'voice-family': { initial: 'female' },
         // TODO: report @webref/css issue "`value` not extracted (but only `name`)"
-        'stop-color': {
-            initial: 'black',
-            value: "<'color'>",
-        },
-        'stop-opacity': {
-            initial: '1',
-            value: "<'opacity'>",
-        },
+        'stop-color': { initial: 'black', value: "<'color'>" },
+        'stop-opacity': { initial: '1', value: "<'opacity'>" },
         // TODO: report spec issue "`clear` is missing `both-inline | both-block | both` (defined in prose)"
         'clear': { value: 'inline-start | inline-end | block-start | block-end | left | right | top | bottom | both-inline | both-block | both | all | none' },
         /**
@@ -559,7 +570,7 @@ function extractTypeDefinitions(types, definitions, url) {
     return Object.entries(definitions).reduce((types, [type, { value }]) => {
         // Strip `<type>` to `type`
         type = type.slice(1, -1)
-        if (excludeTypes.includes(type)) {
+        if (excludedTypes.includes(type)) {
             return types
         }
         // TODO: run in development mode only.
