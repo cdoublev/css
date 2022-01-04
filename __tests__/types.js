@@ -2370,7 +2370,7 @@ describe('<color>', () => {
             value: 'red',
         })
         expect(parse('<color>', '#000', false, false)).toEqual({
-            type: new Set(['hash-token', 'hex-color', 'absolute-color-base', 'color']),
+            type: new Set(['hash', 'hex-color', 'absolute-color-base', 'color']),
             value: '000',
         })
         expect(parse('<color>', 'rgb(0, 0, 0)', false, false)).toEqual({

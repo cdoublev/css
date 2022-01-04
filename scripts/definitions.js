@@ -14,13 +14,15 @@ const namedColors = require('../lib/values/namedColors.js')
 const path = require('path')
 const shorthands = require('../lib/properties/shorthands.js')
 const systemColors = require('../lib/values/systemColors.js')
-const terminals = ['EOF-token', ...Object.keys(require('../lib/parse/terminals.js'))]
+const terminals = Object.keys(require('../lib/parse/terminals.js'))
 
 const outputPaths = {
     properties: path.resolve(__dirname, '../lib/properties/definitions.js'),
     type: path.resolve(__dirname, '../lib/values/types.js'),
 }
 const header = `// Generated from ${__filename}`
+
+const excludeTypes = ['EOF-token', ...terminals, ...terminals.map(type => `${type}-token`)]
 
 /**
  * Legacy, custom, or missing type definitions
@@ -42,11 +44,6 @@ const initialTypes = Object.entries({
     // Legacy types
     'hsla()': '<hsl()>',
     'rgba()': '<rgb()>',
-    // Terminal types corresponding to the token production
-    'dimension-token': '<dimension>',
-    'ident-token': '<ident>',
-    'number-token': '<number>',
-    'string-token': '<string>',
     // Extended types
     'repeating-conic-gradient()': '<conic-gradient()>',
     'repeating-linear-gradient()': '<linear-gradient()>',
@@ -63,16 +60,16 @@ const initialTypes = Object.entries({
     'counter-name': '<custom-ident>',
     'counter-style-name': '<custom-ident>',
     'custom-params': '<dashed-ident> [<number> | <percentage> | none]#',
-    'dashndashdigit-ident': '<ident-token>',
+    'dashndashdigit-ident': '<ident>',
     'dimension': '<length> | <time> | <frequency> | <resolution> | <angle> | <decibel> | <flex> | <semitones>',
     'dimension-unit': `"%" | ${dimensionUnits.join(' | ')}`,
     'extension-name': '<dashed-ident>',
     'lang': '<ident> | <string>',
     'left': '<length> | auto',
-    'n-dimension': '<dimension-token>',
-    'ndash-dimension': '<dimension-token>',
-    'ndashdigit-dimension': '<dimension-token>',
-    'ndashdigit-ident': '<ident-token>',
+    'n-dimension': '<dimension>',
+    'ndash-dimension': '<dimension>',
+    'ndashdigit-dimension': '<dimension>',
+    'ndashdigit-ident': '<ident>',
     'named-color': namedColors.join(' | '),
     'outline-line-style': 'none | hidden | dotted | dashed | solid | double | groove | ridge | inset | outset | auto',
     'predefined-rgb-params': '<predefined-rgb> [<number> | <percentage> | none]{3}',
@@ -80,14 +77,14 @@ const initialTypes = Object.entries({
     'q-name': '<wq-name>',
     'relative-size': 'larger | smaller',
     'right': '<length> | auto',
-    'signed-integer': '<number-token>',
-    'signless-integer': '<number-token>',
+    'signed-integer': '<number>',
+    'signless-integer': '<number>',
     'size-feature': '<media-feature>',
     'style-feature': '<declaration>',
     'system-color': systemColors.join(' | '),
     'top': '<length> | auto',
     'transform-function': '<matrix()> | <translate()> | <translateX()> | <translateY()> | <scale()> | <scaleX()> | <scaleY()> | <rotate()> | <skew()> | <skewX()> | <skewY()>',
-    'url-modifier': '<custom-ident> | <function-token>',
+    'url-modifier': '<custom-ident> | <function>',
     'x': '<number>',
     'xyz': 'xyz | xyz-d50 | xyz-d65',
     'xyz-params': '<xyz> [<number> | none]{3}',
@@ -562,17 +559,19 @@ function extractTypeDefinitions(types, definitions, url) {
     return Object.entries(definitions).reduce((types, [type, { value }]) => {
         // Strip `<type>` to `type`
         type = type.slice(1, -1)
-        if (terminals.includes(type)) {
+        if (excludeTypes.includes(type)) {
             return types
         }
         // TODO: run in development mode only.
         if (types.some(t => t === type)) {
-            console.error(`"${type}" has been defined as a missing/custom/legacy type but is now defined in: ${url}`)
+            console.error(`"${type}" (defined in initial types) is now defined in: ${url}`)
         }
         const replacement = replaced.types[type]
         if (replacement) {
             value = replacement
-        } else if (!value) {
+        } else if (value) {
+            value = value.replaceAll('-token', '')
+        } else {
             throw Error(`Missing value to replace the definition of "<${type}>" written in prose (${url})`)
         }
         addFieldValue(types, type, 'value', normalizeValue(value), url)
