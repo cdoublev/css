@@ -6,7 +6,7 @@
 const { addQuotes, logError, tab } = require('../lib/utils/script.js')
 const fs = require('fs')
 const path = require('path')
-const { parseValue } = require('../lib/parse/value.js')
+const { parseValue } = require('../lib/cssom/CSSStyleDeclaration-impl.js')
 const properties = require('../lib/properties/definitions.js')
 
 const outputPath = path.resolve(__dirname, '../lib/properties/definitions.js')

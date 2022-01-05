@@ -3,7 +3,7 @@ const { toDegrees, toRadians } = require('../lib/utils/math.js')
 const createList = require('../lib/values/value.js')
 const createOmitted = require('../lib/values/omitted.js')
 const parseDefinition = require('../lib/parse/definition.js')
-const { parseValue } = require('../lib/parse/value.js')
+const { parseValue } = require('../lib/cssom/CSSStyleDeclaration-impl.js')
 const { serializeValue } = require('../lib/serialize.js')
 
 /**
