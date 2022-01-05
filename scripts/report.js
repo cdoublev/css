@@ -57,14 +57,14 @@ function testParseAllDefinitionValues() {
                     value = newValues
                 }
                 if (value) {
-                    const context = { spec, field: newValues ? 'newValues' : 'value', value }
+                    const context = { field: newValues ? 'newValues' : 'value', spec, value }
                     tryParseDefinition(property, value, context)
                 }
                 // Some properties have neither `value` or `newValues`, eg. aliases
             })
             Object.entries(valuespaces).forEach(([type, { value }]) => {
                 if (value) {
-                    const context = { spec, field: 'value', value }
+                    const context = { field: 'value', spec, value }
                     tryParseDefinition(type, value, context)
                 }
                 // Some types do not have `value`, eg. when written in prose

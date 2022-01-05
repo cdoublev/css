@@ -67,9 +67,8 @@ function list(components = [], separator = ' ', location = -1, position) {
  * tail call optimization.
  */
 it('<final-bg-layer>', () => {
-    const definition = "a || b || c || d || e || f || g"
+    const definition = 'a || b || c || d || e || f || g'
     const input = 'a b d e c'
-    debugger
     expect(parse(definition, input)).toBe('a b c d e')
 })
 

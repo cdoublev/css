@@ -58,13 +58,13 @@ describe('CSSStyleDeclaration', () => {
 
         expect(style[0]).toBeUndefined()
         expect(style.item(0)).toBe('')
-        expect(style.length).toBe(0)
+        expect(style).toHaveLength(0)
 
         style['font-size'] = '20px'
 
         expect(style[0]).toBe('font-size')
         expect(style.item(0)).toBe('font-size')
-        expect(style.length).toBe(1)
+        expect(style).toHaveLength(1)
         expect(style.fontSize).toBe('20px')
         expect(style.cssText).toBe('font-size: 20px;')
 
@@ -188,7 +188,7 @@ describe('CSSStyleDeclaration', () => {
         const element = {
             getAttribute() {
                 return 'font-size: 10px;'
-            }
+            },
         }
         wrapper.install(globalObject, ['Window'])
         const style = wrapper.create(globalObject, undefined, { ownerNode: element })

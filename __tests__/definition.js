@@ -39,20 +39,18 @@ describe('single type', () => {
         expect(parse('<number>')).toEqual({ type: 'basic', value: 'number' })
     })
     it('represents <number [0,1]>', () => {
-        const ast = {
+        expect(parse('<number [0,1]>')).toEqual({
             range: { max: 1, min: 0 },
             type: 'basic',
             value: 'number',
-        }
-        expect(parse('<number [0,1]>')).toEqual(ast)
+        })
     })
     it('represents <number [0,∞]>', () => {
-        const ast = {
+        expect(parse('<number [0,∞]>')).toEqual({
             range: { max: Infinity, min: 0 },
             type: 'basic',
             value: 'number',
-        }
-        expect(parse('<number [0,∞]>')).toEqual(ast)
+        })
     })
     it('represents <length-percentage> (non-terminal type)', () => {
         expect(parse('<length-percentage>')).toEqual({ type: 'non-terminal', value: 'length-percentage' })
@@ -106,14 +104,14 @@ describe('repeated type', () => {
     })
     it('represents <calc-sum># with a custom `repeat.max`', () => {
         expect(parse('<calc-sum>#', { repeat: { max: 32 } })).toEqual({
-            repeat: { min: 1, max: 32, separator: ',' },
+            repeat: { max: 32, min: 1, separator: ',' },
             type: 'non-terminal',
             value: 'calc-sum',
         })
     })
     it("represents [['+' | '-'] <calc-product>]* with a custom `repeat.max`", () => {
         expect(parse("[['+' | '-'] <calc-product>]*", { repeat: { max: 32 } })).toEqual({
-            repeat: { min: 0, max: 32 },
+            repeat: { max: 32, min: 0 },
             type: ' ',
             value: [
                 {
@@ -142,18 +140,17 @@ describe('combined types', () => {
         expect(parse('a | b | c')).toEqual({ type: '|', value: [a, b, c] })
     })
     it('represents a b c && a c b && b a c', () => {
-        const ast = {
+        expect(parse('a b c && a c b && b a c')).toEqual({
             type: '&&',
             value: [
                 { type: ' ', value: [a, b, c] },
                 { type: ' ', value: [a, c, b] },
                 { type: ' ', value: [b, a, c] },
             ],
-        }
-        expect(parse('a b c && a c b && b a c')).toEqual(ast)
+        })
     })
     it('represents a b c && a c b | a', () => {
-        const ast = {
+        expect(parse('a b c && a c b | a')).toEqual({
             type: '|',
             value: [
                 {
@@ -165,75 +162,71 @@ describe('combined types', () => {
                 },
                 a,
             ],
-        }
-        expect(parse('a b c && a c b | a')).toEqual(ast)
+        })
     })
 })
 describe('group of types', () => {
     it('represents a [a | b]', () => {
-        const ast = { type: ' ', value: [a, { type: '|', value: [a, b] }] }
-        expect(parse('a [a | b]')).toEqual(ast)
+        expect(parse('a [a | b]')).toEqual({ type: ' ', value: [a, { type: '|', value: [a, b] }] })
     })
     it('represents [a | b] a', () => {
-        const ast = { type: ' ', value: [{ type: '|', value: [a, b] }, a] }
-        expect(parse('[a | b] a')).toEqual(ast)
+        expect(parse('[a | b] a')).toEqual({ type: ' ', value: [{ type: '|', value: [a, b] }, a] })
     })
     it('represents [a | b]? c', () => {
-        const ast = {
+        expect(parse('[a | b]? c')).toEqual({
             type: ' ',
             value: [{ repeat: { max: 1, min: 1, optional: true }, type: '|', value: [a, b] }, c],
-        }
-        expect(parse('[a | b]? c')).toEqual(ast)
+        })
     })
     it('represents [a{2}]?', () => {
-        const ast = {
+        expect(parse('[a{2}]?')).toEqual({
             repeat: { max: 2, min: 2, optional: true },
             type: 'keyword',
             value: 'a',
-        }
-        expect(parse('[a{2}]?')).toEqual(ast)
+        })
     })
     it('represents [a?]!', () => {
-        const ast = {
+        expect(parse('[a?]!')).toEqual({
             repeat: { max: 1, min: 1, optional: false },
             type: 'keyword',
             value: 'a',
-        }
-        expect(parse('[a?]!')).toEqual(ast)
+        })
     })
     it('represents [a? b?]!', () => {
-        const ast = {
+        expect(parse('[a? b?]!')).toEqual({
             repeat: { max: 1, min: 1, optional: false },
             type: ' ',
             value: [
                 repeat(a, { max: 1, min: 1, optional: true }),
                 repeat(b, { max: 1, min: 1, optional: true }),
             ],
-        }
-        expect(parse('[a? b?]!')).toEqual(ast)
+        })
     })
 })
 describe('block of types', () => {
     it("(<number> '+'|'-' <number>)", () => {
-        const ast = {
+        expect(parse("(<number> '+'|'-' <number>)")).toEqual({
             type: 'simple-block',
             value: "<number> '+'|'-' <number>",
-        }
-        expect(parse("(<number> '+'|'-' <number>)")).toEqual(ast)
+        })
     })
 })
 describe('comma-separated types', () => {
     // Subject to comma-ellision rules
     it('represents a, b? c', () => {
-        const ast = { type: ' ', value: [a, comma, repeat(b, { max: 1, min: 1, optional: true }), c] }
-        expect(parse('a, b? c')).toEqual(ast)
+        expect(parse('a, b? c')).toEqual({
+            type: ' ',
+            value: [a, comma, repeat(b, { max: 1, min: 1, optional: true }), c],
+        })
     })
     it('represents a b?, c', () => {
-        const ast = { type: ' ', value: [a, repeat(b, { max: 1, min: 1, optional: true }), comma, c] }
-        expect(parse('a b?, c')).toEqual(ast)
+        expect(parse('a b?, c')).toEqual({
+            type: ' ',
+            value: [a, repeat(b, { max: 1, min: 1, optional: true }), comma, c],
+        })
     })
     it('represents a [b?, c]#', () => {
-        const ast = {
+        expect(parse('a [b?, c]#')).toEqual({
             type: ' ',
             value: [
                 a,
@@ -243,12 +236,11 @@ describe('comma-separated types', () => {
                     value: [repeat(b, { max: 1, min: 1, optional: true }), comma, c],
                 },
             ],
-        }
-        expect(parse('a [b?, c]#')).toEqual(ast)
+        })
     })
     // Not subject to comma-ellision rules
     it('represents [a, | b,] c', () => {
-        const ast = {
+        expect(parse('[a, | b,] c')).toEqual({
             type: ' ',
             value: [
                 {
@@ -260,11 +252,10 @@ describe('comma-separated types', () => {
                 },
                 c,
             ],
-        }
-        expect(parse('[a, | b,] c')).toEqual(ast)
+        })
     })
     it('represents a [, b | , c]', () => {
-        const ast = {
+        expect(parse('a [, b | , c]')).toEqual({
             type: ' ',
             value: [
                 a,
@@ -276,11 +267,10 @@ describe('comma-separated types', () => {
                     ],
                 },
             ],
-        }
-        expect(parse('a [, b | , c]')).toEqual(ast)
+        })
     })
     it('represents [a && b, | a && c,] a', () => {
-        const ast = {
+        expect(parse('[a && b, | a && c,] a')).toEqual({
             type: ' ',
             value: [
                 {
@@ -292,11 +282,10 @@ describe('comma-separated types', () => {
                 },
                 a,
             ],
-        }
-        expect(parse('[a && b, | a && c,] a')).toEqual(ast)
+        })
     })
     it('represents a [, a && b | , a && c]', () => {
-        const ast = {
+        expect(parse('a [, a && b | , a && c]')).toEqual({
             type: ' ',
             value: [
                 a,
@@ -308,7 +297,6 @@ describe('comma-separated types', () => {
                     ],
                 },
             ],
-        }
-        expect(parse('a [, a && b | , a && c]')).toEqual(ast)
+        })
     })
 })
