@@ -15,7 +15,7 @@ const globalObject = {
 }
 
 describe('CSSStyleDeclaration', () => {
-    it('has all CSS (dashed) properties', () => {
+    it('has all CSS properties', () => {
         const style = new CSSStyleDeclaration()
         const prototype = Object.getPrototypeOf(style)
         properties.forEach(property => {
@@ -194,9 +194,10 @@ describe('CSSStyleDeclaration', () => {
         const style = wrapper.create(globalObject, undefined, { ownerNode: element })
         expect(style.fontSize).toBe('10px')
     })
+    it.todo('constructs a new instance with the declarations from a parent CSS rule')
     it('constructs a new instance with the declarations from `getComputedStyle()` and prevents modifying them', () => {
 
-        const declarations = new Map([['font-size', { name: 'font-size', value: '10px' }]])
+        const declarations = [{ name: 'font-size', value: '10px' }]
         wrapper.install(globalObject, ['Window'])
         const style = wrapper.create(globalObject, undefined, { computed: true, declarations, ownerNode: {} })
 

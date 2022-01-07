@@ -33,6 +33,7 @@
     "build:interface": "node ./scripts/interface.js",
     "build:report": "node ./scripts/report.js",
     "lint": "eslint --report-unused-disable-directives .",
+    "prepare": "npm run build:definitions && npm run build:initial && npm run build:interface",
     "safe-publish": "npm run lint && npm run test && npm publish",
     "test": "npm run prepare && jest",
     "test:watch": "jest --watchAll -b",
