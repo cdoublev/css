@@ -41,6 +41,11 @@ describe('consume()', () => {
         expect(stream.current).toBe('h')
         expect(stream.index).toBe(0)
     })
+    it('consumes n items at the front of the stream', () => {
+        expect(stream.consume(2)).toBe('he')
+        expect(stream.consume(string.length)).toBe('llo')
+        expect(stream.index).toBe(string.length - 1)
+    })
     it('returns the specified fallback item when the specified item is not found at the front of the stream', () => {
         expect(stream.consume('_', 'H')).toBe('H')
         expect(stream.current).toBeUndefined()
@@ -68,12 +73,9 @@ describe('consumeRunOf()', () => {
         expect(stream.current).toBe('l')
         expect(stream.index).toBe(3)
     })
-})
-
-describe('consumeAny()', () => {
     it('consumes all consecutive occurrences of the specified items in the remaining stream items', () => {
         const stream = create('csscsscss.')
-        stream.consumeAny('c', 's')
+        stream.consumeRunOf('c', 's')
         expect(stream.current).toBe('s')
         expect(stream.index).toBe(8)
     })
@@ -211,14 +213,14 @@ it('works with array', () => {
     stream.reset()
 
     expect(stream.current).toBeUndefined()
-    expect(stream.consumeUntil('!')).toBe('hello world')
+    expect(stream.consumeUntil('!')).toEqual(['hello', ' ', 'world'])
     expect(stream.consume()).toBe('!')
     expect(stream.consume('!')).toBeUndefined()
 
     stream.moveTo(1)
     stream.insert(['beautiful', ' '])
     stream.reset()
-    expect(stream.consumeUntil('!')).toBe('hello beautiful world')
+    expect(stream.consumeUntil('!')).toEqual(['hello', ' ', 'beautiful', ' ', 'world'])
     expect(stream).toHaveLength(6)
 
     stream.reset()
