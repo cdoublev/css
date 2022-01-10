@@ -25,10 +25,17 @@ const header = `// Generated from ${__filename}`
 /**
  * Excluded types
  *
- * Terminal types which are not defined with the CSS syntax and are associated
- * to a dedicated parse function.
+ * Excluded types are not defined with the CSS value definition syntax but are
+ * instead associated to a dedicated parse function.
  */
 const excludedTypes = [
+    // CSS grammars
+    'declaration',
+    'declaration-list',
+    'rule-list',
+    'stylesheet',
+    'style-block',
+    // CSS tokens
     'EOF-token',
     'function-token',
     'hash-token',
