@@ -43,15 +43,14 @@ const excludedTypes = [
     'number-token',
     'percentage-token',
     'string-token',
+    // CSS values
     ...Object.keys(terminals),
 ]
 
 /* eslint-disable sort-keys */
 
 /**
- * Rule, legacy, extended, custom, or missing type definitions
- *
- * Rule types are not extracted by `@webref/css`.
+ * Legacy, extended, custom, or missing type definitions
  *
  * Legacy and extended types, are only defined in prose in specifications.
  * They should be supported either as simple aliases with an identical
@@ -67,31 +66,6 @@ const excludedTypes = [
  * further processing.
  */
 const initialTypes = Object.entries({
-    // Rule types
-    'import-rule': "@import [<url> | <string>] [supports([<supports-condition> | <declaration>])]? <media-query-list>? ';'",
-    'qualified-rule': "<selector-list> '{' <style-block> '}'",
-    'margin-rule': [
-        "@top-left-corner '{' <declaration-list> '}'",
-        "@top-left '{' <declaration-list> '}'",
-        "@top-center '{' <declaration-list> '}'",
-        "@top-right '{' <declaration-list> '}'",
-        "@top-right-corner '{' <declaration-list> '}'",
-        "@bottom-left-corner '{' <declaration-list> '}'",
-        "@bottom-left '{' <declaration-list> '}'",
-        "@bottom-center '{' <declaration-list> '}'",
-        "@bottom-right '{' <declaration-list> '}'",
-        "@bottom-right-corner '{' <declaration-list> '}'",
-        "@left-top '{' <declaration-list> '}'",
-        "@left-middle '{' <declaration-list> '}'",
-        "@left-bottom '{' <declaration-list> '}'",
-        "@right-top '{' <declaration-list> '}'",
-        "@right-middle '{' <declaration-list> '}'",
-        "@right-bottom '{' <declaration-list> '}'",
-    ].join(' | '),
-    'media-rule': "@media <media-query-list> '{' <stylesheet> '}'",
-    'namespace-rule': '@namespace <namespace-prefix>? [ <string> | <url> ] ;',
-    'page-rule': "@page <page-selector-list>? '{' <declaration-list> '}'",
-    'supports-rule': "@supports <supports-condition> '{' <stylesheet> '}'",
     // Legacy types
     'hsla()': '<hsl()>',
     'rgba()': '<rgb()>',
