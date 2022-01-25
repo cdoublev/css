@@ -1,7 +1,7 @@
 /**
  * What should be tested?
  *
- * - the object tree resulting from parsing a stylesheet according to the rules
+ * - the object tree resulting from parsing a style sheet according to the rules
  * of the CSS grammar defining where statements (rules and/or declarations) are
  * allowed or not
  * - the `CSSStyleSheet` interface to interact with this object tree
@@ -9,16 +9,16 @@
  * What are the corresponding interfaces?
  *
  * - `parseCSSStyleSheet()`: returns a high-level object tree from parsing a
- * stylesheet
+ * style sheet
  * - `CSSStyleSheet.create()`: returns an interface to read and interact with
- * the high-level object representing an existing stylesheet
+ * the high-level object representing an existing style sheet
  * - `new CSSStyleSheet()`: returns an interface to construct a new object tree
  *
  * A CSSStyleSheet is created when parsing:
  *   - a Link HTTP header
  *   - <link>
  *   - <style>
- *   - a stylesheet referenced by `@import`?
+ *   - a style sheet referenced by `@import`?
  *
  * A constructed CSSStyleSheet is created only by an end user?
  */
@@ -29,10 +29,13 @@ const { CSSImportRule, CSSStyleRule, CSSRuleList, CSSStyleSheet, MediaList } = c
 
 beforeAll(() => {
     install()
+    globalThis.document = {
+        href: 'http://github.com/cdoublev/',
+    }
 })
 
 describe('CSSStyleSheet', () => {
-    it.only('creates a non-constructed CSSStyleSheet', () => {
+    it('creates a non-constructed CSSStyleSheet', () => {
 
         const input = `
             @import "./stylesheet.css";
@@ -59,33 +62,88 @@ describe('CSSStyleSheet', () => {
 
         // StyleSheet properties
         expect(styleSheet.disabled).toBeFalsy()
-        expect(styleSheet.type).toBe('text/css')
         expect(styleSheet.href).toBe(location)
-        expect(styleSheet.ownerNode).toBe(ownerNode)
-        expect(styleSheet.parentStyleSheet).toBeNull()
-        expect(styleSheet.title).toBe(title)
         expect(MediaList.is(styleSheet.media)).toBeTruthy()
         expect(styleSheet.media.mediaText).toBe(media)
+        expect(styleSheet.ownerNode).toBe(ownerNode)
+        expect(styleSheet.parentStyleSheet).toBeNull() // TODO: test non-null `parentStyleSheet` with `@import`
+        expect(styleSheet.title).toBe(title)
+        expect(styleSheet.type).toBe('text/css')
 
         // CSSStyleSheet properties
         expect(CSSRuleList.is(styleSheet.cssRules)).toBeTruthy()
         expect(CSSImportRule.is(styleSheet.cssRules[0])).toBeTruthy()
         expect(CSSStyleRule.is(styleSheet.cssRules[1])).toBeTruthy()
-        expect(styleSheet.ownerRule).toBeNull()
+        expect(styleSheet.ownerRule).toBeNull()  // TODO: test non-null `ownerRule` with `@import`
 
         // Temporary assertions
         expect(styleSheet.cssRules[0].href).toBe('./stylesheet.css')
         expect(styleSheet.cssRules[1].style.color).toBe('red')
     })
-    it.todo('creates a constructed CSSStyleSheet')
-    it.todo('inserts a rule with CSSStyleSheet.insertRule()')
-    it.todo('deletes a rule with CSSStyleSheet.deleteRule()')
+    it('creates a constructed CSSStyleSheet', () => {
+
+        const media = 'all'
+        const options = { baseURL: 'css', media, disabled: true }
+        const { CSSStyleSheet } = globalThis
+        const styleSheet = new CSSStyleSheet(options)
+
+        // StyleSheet properties
+        expect(styleSheet.disabled).toBeTruthy()
+        expect(styleSheet.href).toBe(globalThis.document.href)
+        expect(MediaList.is(styleSheet.media)).toBeTruthy()
+        expect(styleSheet.media.mediaText).toBe(media)
+        expect(styleSheet.ownerNode).toBeNull()
+        expect(styleSheet.parentStyleSheet).toBeNull()
+        expect(styleSheet.title).toBe('')
+        expect(styleSheet.type).toBe('text/css')
+
+        styleSheet.disabled = false
+        expect(styleSheet.disabled).toBeFalsy()
+
+        // CSSStyleSheet properties
+        expect(styleSheet.ownerRule).toBeNull()
+    })
+})
+
+describe('CSSStyleSheet.insertRule(), CSSStyleSheet.deleteRule()', () => {
+    it('inserts and deletes a rule', () => {
+
+        const { CSSStyleSheet } = globalThis
+        const styleSheet = new CSSStyleSheet()
+
+        styleSheet.insertRule('.selector { color: red }')
+
+        const { cssRules } = styleSheet
+
+        expect(CSSRuleList.is(cssRules)).toBeTruthy()
+        expect(cssRules).toHaveLength(1)
+
+        const [styleRule] = cssRules
+        const { parentStyleSheet } = styleRule
+
+        expect(CSSStyleRule.is(styleRule)).toBeTruthy()
+        expect(parentStyleSheet).toBe(styleSheet)
+
+        styleSheet.deleteRule(0)
+
+        expect(cssRules).toHaveLength(0)
+        // TODO: figure out how read-only `rule.parentRule` and `rule.parentStyleSheet` can be set to `null`
+        // expect(styleRule.parentStyleSheet).toBeNull()
+        // TODO: add a case to assert against `styleRule.parentRule === null`
+    })
+    it.todo("throws an error when trying to insert/delete a rule at an index greater or equal than rule's length")
+    it.todo('throws an error when failing to insert an invalid rule')
+    it.todo('throws an error when failing to insert a rule that can not appear before an import or namespace rule')
+    it.todo('throws an error when trying to insert a namespace rule after a style rule that is not an import rule')
+})
+
+describe('CSSStyleSheet.replace(), CSSStyleSheet.replaceSync()', () => {
     it.todo('synchronously replaces a rule with CSSStyleSheet.replaceSync()')
     it.todo('asynchronously replaces a rule with CSSStyleSheet.replace()')
 })
 
 describe('grammar rules', () => {
-    it('discards a declaration at the top level of the stylesheet', () => {
+    it('discards a declaration at the top level of the style sheet', () => {
 
         const input = `
             color: red;
@@ -209,10 +267,10 @@ describe('grammar rules', () => {
     // otherwise specify a <statement-rule> as a <block-rule> and vice-versa
     it.todo('discards a rule whose prelude or value is invalid according to its production rule')
     // any at-rule that is not @nest: containing <stylesheet> or <rule-list>
-    it.todo('discards a qualified rule whose selector starts with `&` at the top level of the stylesheet or any at-rule that is not @nest')
+    it.todo('discards a qualified rule whose selector starts with `&` at the top level of the style sheet or any at-rule that is not @nest')
     it.todo('discards a qualified rule whose selector does not start with `&` in a style rule')
     // any rule that is not @keyframes: containing <stylesheet> or <rule-list>
-    it.todo('discards a qualified rule whose selector matches <keyframe-selector> at the top level of the stylesheet or any rule that is not @keyframes')
+    it.todo('discards a qualified rule whose selector matches <keyframe-selector> at the top level of the style sheet or any rule that is not @keyframes')
     it.todo('discards any at-rule that is not @nest in style rule')
     it('discards @import preceded by another rule that is not @charset', () => {
 
@@ -231,7 +289,7 @@ describe('grammar rules', () => {
     // any at-rule that is not @page: containing <stylesheet>, <rule-list>, or <declaration-list>
     it.todo('discards @charset, @import, or @namespace in any at-rule')
     // any at-rule that is not @page: containing <stylesheet>, <rule-list>, or <declaration-list>
-    it.todo('discards a margin rule at the top level of the stylesheet or any at-rule that is not @page')
+    it.todo('discards a margin rule at the top level of the style sheet or any at-rule that is not @page')
     // `@media` in `@page`, any at-rule in `@top-left`, `@media` in `@keyframes`, ...to complete when adding new at-rules whose content is <declaration-list>
     it.todo('discards any rule that is not allowed in a rule containing <declaration-list>')
     /**
@@ -250,8 +308,8 @@ describe('grammar rules', () => {
      *     - ... to complete when adding new at-rules whose content is <style-block>
      * - rules in:
      *   - <stylesheet>
-     *     - style rule in stylesheet, `@media`, `@supports`
-     *     - any top-level at-rule in stylesheet, `@media`, `@supports`
+     *     - style rule in style sheet, `@media`, `@supports`
+     *     - any top-level at-rule in style sheet, `@media`, `@supports`
      *     - ... to complete when adding new at-rules whose content is <stylesheet>
      *   - <rule-list>
      *     - qualified rule nested in `@keyframes` and matching `<keyframe-selector>#`
