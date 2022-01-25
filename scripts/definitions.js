@@ -81,7 +81,6 @@ const initialTypes = Object.entries({
     'absolute-size': 'xx-small | x-small | small | medium | large | x-large | xx-large',
     'basic-shape': '<inset()> | <circle()> | <ellipse()> | <polygon()> | <path()>',
     'bottom': '<length> | auto',
-    'colorspace-params': '<custom-params> | <predefined-rgb-params> | <xyz-params>',
     'content-level': 'element | content | text | attr(<custom-ident>) | counter() | counters()',
     'counter-name': '<custom-ident>',
     'counter-style-name': '<custom-ident>',
@@ -98,8 +97,6 @@ const initialTypes = Object.entries({
     'ndashdigit-ident': '<ident>',
     'named-color': namedColors.join(' | '),
     'outline-line-style': 'none | hidden | dotted | dashed | solid | double | groove | ridge | inset | outset | auto',
-    'predefined-rgb-params': '<predefined-rgb> [<number> | <percentage> | none]{3}',
-    'predefined-rgb': 'srgb | srgb-linear | display-p3 | a98-rgb | prophoto-rgb | rec2020',
     'q-name': '<wq-name>',
     'relative-size': 'larger | smaller',
     'right': '<length> | auto',
@@ -113,7 +110,6 @@ const initialTypes = Object.entries({
     'url-modifier': '<custom-ident> | <function>',
     'x': '<number>',
     'xyz': 'xyz | xyz-d50 | xyz-d65',
-    'xyz-params': '<xyz> [<number> | none]{3}',
     'y': '<number>',
     // TODO: report spec issue "replace `<number-percentage>` by `<number> | <percentage>`"
     'number-percentage': '<number> | <percentage>',
@@ -235,7 +231,7 @@ const replaced = {
          * TODO: support new color grammars from Color 4/5
          * TODO: handle repeated function name in definition value
          *
-         * Color 5: rgb([<percentage> | none]{3} [/ [<alpha-value> | none]]?) | rgb([<number> | none]{3} [/ [<alpha-value> | none]]?) | rgb([from <color>]? [<number> | <percentage> | none]{3} [/ <alpha-value>]?)
+         * Color 5: rgb([<percentage> | none]{3} [/ [<alpha-value> | none]]?) | rgb([<number> | none]{3} [/ [<alpha-value> | none]]?) | rgb([from <color>]? [<number> | <percentage> | none]{3} [/ [<alpha-value> | none]]?)
          * Color 4: rgb([<percentage> | none]{3} [/ [<alpha-value> | none]]?) | rgb([<number> | none]{3} [/ [<alpha-value> | none]]?)
          * Color 4 without `none` + legacy syntax (comma-separated arguments) + fix to handle repeated function name
          */
