@@ -17,3 +17,14 @@ interface CSSRule {
     const unsigned short MARGIN_RULE = 9;
     const unsigned short NAMESPACE_RULE = 10;
 };
+
+// https://drafts.csswg.org/css-animations-1/#interface-cssrule-idl
+partial interface CSSRule {
+    const unsigned short KEYFRAMES_RULE = 7;
+    const unsigned short KEYFRAME_RULE = 8;
+};
+
+// https://drafts.csswg.org/css-conditional-3/#extensions-to-cssrule-interface
+partial interface CSSRule {
+    const unsigned short SUPPORTS_RULE = 12;
+};

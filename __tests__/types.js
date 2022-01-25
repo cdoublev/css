@@ -1,10 +1,11 @@
 
 const { toDegrees, toRadians } = require('../lib/utils/math.js')
+const { serializeSelectorGroup, serializeValue } = require('../lib/serialize.js')
 const createList = require('../lib/values/value.js')
 const createOmitted = require('../lib/values/omitted.js')
 const parseDefinition = require('../lib/parse/definition.js')
-const { parseValue } = require('../lib/cssom/CSSStyleDeclaration-impl.js')
-const { serializeValue } = require('../lib/serialize.js')
+const { parseCSSValue } = require('../lib/parse/syntax.js')
+const { parseSelectorGroup } = require('../lib/parse/syntax.js')
 
 /**
  * @param {string} definition
@@ -12,12 +13,12 @@ const { serializeValue } = require('../lib/serialize.js')
  * @param {boolean} [parseGlobals]
  * @returns {function|string}
  *
- * Helper to call `parseValue()` by feeding it the grammar to use for parsing
+ * Helper to call `parseCSSValue()` by feeding it the grammar to use for parsing
  * the given input, and to return the serialized string result instead of the
  * parsed component values.
  */
 function parse(definition, input, parseGlobals = false, serialize = true) {
-    const parsed = parseValue(input, '', definition, parseGlobals)
+    const parsed = parseCSSValue(input, '', definition, parseGlobals)
     if (parsed === null) {
         if (serialize) {
             return ''
@@ -2755,4 +2756,39 @@ describe('<gradient>', () => {
             'radial-gradient(var(--config))',
         ].forEach(input => expect(parse('<gradient>', input, true)).toBe(input))
     })
+})
+
+describe.skip('<selector-list>', () => {
+
+    function parse(input) {
+        const parsed = parseSelectorGroup(input)
+        return parsed ? serializeSelectorGroup(parsed) : ''
+    }
+
+    const selectors = [
+        // [title, input]
+        ['column separated types', 'col || td'],
+        ['namespaced type', 'ns|type'],
+        ['class', '.class'],
+        ['type qualified with a class', 'type.class'],
+        ['attribute', '[checked]'],
+        ['type qualified with an attribute', 'type[checked]'],
+        ['an attribute match', '[name^=foo]'],
+        ['type qualified with an attribute match', 'type[name^=foo]'],
+        ['pseudo-element', '::before'],
+        ['type qualified with a pseudo-element', 'type::before'],
+        ['pseudo-class', ':hover'],
+        ['type qualified with a pseudo-class', 'type:hover'],
+        ['pseudo-element qualified with a pseudo-class', '::before:hover'],
+        ['type qualified with a pseudo-element qualified with a pseudo-class selector', 'type::before:hover'],
+    ]
+
+    it.each(selectors)('parses and serializes a selector as %s', (title, input) => {
+        expect(parse(input)).toBe(input)
+    })
+})
+describe('<media-query>', () => {
+    it.todo('parses (color) to a representation with the expected properties')
+    it.todo('parses (aspect-ratio: 4/3) to a representation with the expected properties')
+    it.todo('parses (width < 1px) to a representation with the expected properties')
 })

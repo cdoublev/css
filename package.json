@@ -24,8 +24,7 @@
   ],
   "type": "commonjs",
   "exports": {
-    ".": "./index.js",
-    "./CSSStyleDeclaration.js": "./lib/cssom/standalone/CSSStyleDeclaration.js"
+    ".": "./lib/index.js"
   },
   "scripts": {
     "build:definitions": "node ./scripts/definitions.js",

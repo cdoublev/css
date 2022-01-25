@@ -29,9 +29,10 @@ const header = `// Generated from ${__filename}`
  * instead associated to a dedicated parse function.
  */
 const excludedTypes = [
-    // CSS grammars
+    // CSS structures (rule, prelude, block)
     'declaration',
     'declaration-list',
+    'media-query-list',
     'rule-list',
     'stylesheet',
     'style-block',
@@ -43,7 +44,7 @@ const excludedTypes = [
     'number-token',
     'percentage-token',
     'string-token',
-    // CSS values
+    // CSS declaration values
     ...Object.keys(terminals),
 ]
 

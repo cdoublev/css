@@ -1,7 +1,5 @@
 /lib/cssom/*.js
 !/lib/cssom/*-impl.js
-!/lib/cssom/helpers.js
-!/lib/cssom/index.js
 /lib/cssom/CSSStyleDeclaration-properties.webidl
 /node_modules
 /test-results.xml
