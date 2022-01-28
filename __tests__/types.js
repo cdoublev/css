@@ -1,10 +1,18 @@
+/**
+ * Which production types should be tested here?
+ *
+ * - combined/repeated types
+ * - terminal types
+ * - non-terminal types with specific parsing/serialization rule
+ * - not supported (yet?): structures (rules and declarations)
+ */
 
 const { toDegrees, toRadians } = require('../lib/utils/math.js')
 const { serializeSelectorGroup, serializeValue } = require('../lib/serialize.js')
 const createList = require('../lib/values/value.js')
 const createOmitted = require('../lib/values/omitted.js')
 const parseDefinition = require('../lib/parse/definition.js')
-const { parseCSSValue } = require('../lib/parse/syntax.js')
+const { parseCSSGrammar, parseCSSValue } = require('../lib/parse/syntax.js')
 const { parseSelectorGroup } = require('../lib/parse/syntax.js')
 
 /**
@@ -13,12 +21,11 @@ const { parseSelectorGroup } = require('../lib/parse/syntax.js')
  * @param {boolean} [parseGlobals]
  * @returns {function|string}
  *
- * Helper to call `parseCSSValue()` by feeding it the grammar to use for parsing
- * the given input, and to return the serialized string result instead of the
- * parsed component values.
+ * Helper to call `parseCSSValue()` for matching a CSS wide keyword or a custom
+ * variable instead of the production type for the property.
  */
 function parse(definition, input, parseGlobals = false, serialize = true) {
-    const parsed = parseCSSValue(input, '', definition, parseGlobals)
+    const parsed = parseGlobals ? parseCSSValue(input) : parseCSSGrammar(input, definition)
     if (parsed === null) {
         if (serialize) {
             return ''
@@ -1277,6 +1284,7 @@ describe('<string>', () => {
         })
     })
     it('parses and serializes bad strings to empty string', () => {
+        // TODO: do not parse `<bad-string>` as a valid `<string>` (spec/browser compliance)
         const bad = ['"', "'", '"\\']
         bad.forEach(input => expect(parse('<string>', input)).toBe('""'))
     })
@@ -1332,18 +1340,20 @@ describe('<url>', () => {
         })
     })
     it('parses and serializes bad URLs to empty URLs', () => {
+        // TODO: do not parse `<bad-url>` as valid `<url>` (spec/browser compliance)
         const bad = [
             // Unexpected whitepsace
-            'url(val id.url)',    // '' in Chrome
-            'url(val\nid.url)',   // '' in Chrome
-            'url(val\tid.url)',   // '' in Chrome
-            // Unexpected EOF, quote, open parenthesis, or whitespace (parse error)
+            'url(val id.url)',
+            'url(val\nid.url)',
+            'url(val\tid.url)',
+            // Unexpected EOF, quote, open parenthesis, whitespace, or non-printable character (parse error)
             'url(',
-            'url(val"id.url)',    // '' in Chrome
-            "url(val'id.url)",    // '' in Chrome
-            'url(val(id.url)',    // '' in Chrome
+            'url(val"id.url)',
+            "url(val'id.url)",
+            'url(val(id.url)',
+            'url(val\u0001id.url)',
             // Invalid escape sequence (parse error)
-            'url(val\\\nid.url)', // '' in Chrome
+            'url(val\\\nid.url)',
         ]
         bad.forEach(input => expect(parse('<url>', input)).toBe('url("")'))
     })
