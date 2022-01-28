@@ -6,12 +6,15 @@ JavaScript implementation of the CSS object model.
 # Usage
 
 ```js
-const cssom = require('@cdoublev/css')
+const { cssom, install } = require('@cdoublev/css')
 const myGlobalObject = {} // Array, Object, Number, String, TypeError, are required
 
-cssom.install(myGlobalObject)
+install(myGlobalObject)
 
-// Usage with CSSStyleDeclaration
-const { CSSStyleDeclaration } = myGlobalObject
-const style = new CSSStyleDeclaration()
+// Usage:
+const { CSSStyleSheet } = myGlobalObject
+const styleSheet = new CSSStyleSheet()
+
+// Or via `webidl2js` wrappers stored in `cssom`:
+const style = cssom.CSSStyleDeclaration.create(myGlobalObject)
 ```
