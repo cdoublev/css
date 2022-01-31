@@ -233,7 +233,6 @@ describe('repeated types (serialized)', () => {
     })
 })
 describe('repeated types (data structure)', () => {
-
     it('parses a{2}', () => {
         const definition = 'a{2}'
         expect(parse(definition, 'a a', false, false)).toEqual(createList([keyword('a'), keyword('a', 0)]))
