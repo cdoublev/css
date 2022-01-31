@@ -7,13 +7,12 @@
  *
  * What are the corresponding interfaces?
  *
- * - `parseCSSStyleSheet()`: abstraction of `CSSStyleSheet.create()`
- * - `CSSStyleSheet.create()`: creates a CSSOM tree from a style sheet
+ * - `CSSStyleSheetWrapper.create()`: creates a CSSOM tree from a style sheet
  * - `new CSSStyleSheet()`: creates a new (empty) CSSOM tree
  *
  * What is the context of these interfaces? Who uses it?
  *
- * A CSSStyleSheet is created when parsing:
+ * A non-constructed CSSStyleSheet is created when parsing:
  *   - a Link HTTP header
  *   - <link>
  *   - <style>
@@ -22,8 +21,8 @@
  * A constructed CSSStyleSheet is created only by an end user?
  */
 
-const { cssom, install, parseCSSStyleSheet } = require('../lib/index.js')
-// Do not import CSSOM implementation before the above main package entry point
+const { cssom, install } = require('../lib/index.js')
+// Do not import CSSOM implementations before the above main package entry point
 const {
     ACCESS_THIRD_PARTY_STYLESHEET_ERROR,
     INSERT_INVALID_IMPORT_ERROR,
@@ -33,7 +32,7 @@ const {
     INSERT_RULE_INVALID_GRAMMAR_ERROR,
     INSERT_RULE_INVALID_INDEX_ERROR,
     INSERT_RULE_INVALID_POSITION_ERROR,
-    INSERT_RULE_UNEXPECTED_NAMESPACE_ERROR,
+    INVALID_NAMESPACE_STATE_ERROR,
     INVALID_RULE_SYNTAX_ERROR,
 } = require('../lib/parse/syntax.js')
 const createError = require('../lib/error.js')
@@ -44,6 +43,7 @@ const {
     CSSKeyframesRule,
     CSSMarginRule,
     CSSMediaRule,
+    CSSNamespaceRule,
     CSSNestingRule,
     CSSPageRule,
     CSSStyleRule,
@@ -57,16 +57,18 @@ const {
  * @param {object} [properties]
  * @returns {CSSStyleSheet}
  *
- * It returns a CSSStyleSheet using the minimal default values.
+ * It returns a non-constructed `CSSStyleSheet` using minimal default property
+ * values.
  */
 function createStyleSheet(cssRules = '', properties = {}) {
-    return parseCSSStyleSheet({
+    properties = {
         cssRules,
         location: 'https://github.com/cdoublev/stylesheet.css',
         media: '',
         originClean: true,
         ...properties,
-    })
+    }
+    return CSSStyleSheet.create(globalThis, undefined, properties)
 }
 
 beforeAll(() => {
@@ -74,50 +76,6 @@ beforeAll(() => {
     globalThis.document = {
         href: 'https://github.com/cdoublev/',
     }
-})
-
-describe('parseStyleSheet()', () => {
-    it('creates a non-constructed CSSStyleSheet', () => {
-
-        const input = `
-            @import "./stylesheet.css";
-
-            .selector {
-                color: red;
-            }
-        `
-        const location = 'http://github.com/cdoublev/css/'
-        const media = 'all'
-        const ownerNode = { type: 'HTMLLinkElement' }
-        const title = 'Main CSS'
-        const properties = {
-            cssRules: input,
-            location,
-            media,
-            originClean: true,
-            ownerNode,
-            title,
-        }
-        const styleSheet = parseCSSStyleSheet(properties)
-
-        expect(CSSStyleSheet.is(styleSheet)).toBeTruthy()
-
-        // StyleSheet properties
-        expect(styleSheet.disabled).toBeFalsy()
-        expect(styleSheet.href).toBe(location)
-        expect(MediaList.is(styleSheet.media)).toBeTruthy()
-        expect(styleSheet.media.mediaText).toBe(media)
-        expect(styleSheet.ownerNode).toBe(ownerNode)
-        expect(styleSheet.parentStyleSheet).toBeNull() // TODO: test non-null `parentStyleSheet` with `@import`
-        expect(styleSheet.title).toBe(title)
-        expect(styleSheet.type).toBe('text/css')
-
-        // CSSStyleSheet properties
-        expect(CSSRuleList.is(styleSheet.cssRules)).toBeTruthy()
-        expect(CSSImportRule.is(styleSheet.cssRules[0])).toBeTruthy()
-        expect(CSSStyleRule.is(styleSheet.cssRules[1])).toBeTruthy()
-        expect(styleSheet.ownerRule).toBeNull() // TODO: test non-null `ownerRule` with `@import`
-    })
 })
 
 describe('CSSStyleSheet', () => {
@@ -140,6 +98,46 @@ describe('CSSStyleSheet', () => {
 
         // CSSStyleSheet properties
         expect(styleSheet.ownerRule).toBeNull()
+    })
+    it('creates a non-constructed CSSStyleSheet', () => {
+
+        const input = `
+            @import "./stylesheet.css";
+
+            .selector {
+                color: red;
+            }
+        `
+        const location = 'http://github.com/cdoublev/css/'
+        const media = 'all'
+        const ownerNode = { type: 'HTMLLinkElement' }
+        const title = 'Main CSS'
+        const properties = {
+            location,
+            media,
+            originClean: true,
+            ownerNode,
+            title,
+        }
+        const styleSheet = createStyleSheet(input, properties)
+
+        expect(CSSStyleSheet.is(styleSheet)).toBeTruthy()
+
+        // StyleSheet properties
+        expect(styleSheet.disabled).toBeFalsy()
+        expect(styleSheet.href).toBe(location)
+        expect(MediaList.is(styleSheet.media)).toBeTruthy()
+        expect(styleSheet.media.mediaText).toBe(media)
+        expect(styleSheet.ownerNode).toBe(ownerNode)
+        expect(styleSheet.parentStyleSheet).toBeNull() // TODO: test non-null `parentStyleSheet` with `@import`
+        expect(styleSheet.title).toBe(title)
+        expect(styleSheet.type).toBe('text/css')
+
+        // CSSStyleSheet properties
+        expect(CSSRuleList.is(styleSheet.cssRules)).toBeTruthy()
+        expect(CSSImportRule.is(styleSheet.cssRules[0])).toBeTruthy()
+        expect(CSSStyleRule.is(styleSheet.cssRules[1])).toBeTruthy()
+        expect(styleSheet.ownerRule).toBeNull() // TODO: test non-null `ownerRule` with `@import`
     })
 })
 
@@ -187,7 +185,7 @@ describe('CSSStyleSheet.insertRule(), CSSStyleSheet.deleteRule()', () => {
         expect(() => styleSheet.insertRule('.selector { color: green }')).toThrow(error)
         expect(() => styleSheet.deleteRule(0)).toThrow(error)
     })
-    it('throws an error when trying to insert/delete a rule while modification on the stylesheet are not allowed', () => {
+    it('throws an error when trying to insert/delete a rule while modifications on the stylesheet are not allowed', () => {
 
         const { CSSStyleSheet } = globalThis
         const styleSheet = new CSSStyleSheet()
@@ -230,18 +228,12 @@ describe('CSSStyleSheet.insertRule(), CSSStyleSheet.deleteRule()', () => {
         const styleSheet = createStyleSheet()
         const error = createError(INSERT_RULE_INVALID_POSITION_ERROR)
 
-        // styleSheet.insertRule('@charset "utf-8";')
-
-        // expect(() => styleSheet.insertRule('@import "./stylesheet.css";')).toThrow(error)
-        // expect(() => styleSheet.insertRule('@namespace "./stylesheet.css";')).toThrow(error)
-        // expect(() => styleSheet.insertRule('.selector { color: red }')).toThrow(error)
-
         styleSheet.insertRule('@import "./stylesheet.css";')
 
-        expect(() => styleSheet.insertRule('@namespace "design-system";')).toThrow(error)
+        expect(() => styleSheet.insertRule('@namespace svg "http://www.w3.org/2000/svg";')).toThrow(error)
         expect(() => styleSheet.insertRule('.selector { color: red }')).toThrow(error)
 
-        styleSheet.insertRule('@namespace "design-system";', 1)
+        styleSheet.insertRule('@namespace svg "http://www.w3.org/2000/svg";', 1)
 
         expect(() => styleSheet.insertRule('.selector { color: red }', 1)).toThrow(error)
         expect(() => styleSheet.insertRule('@import "./stylesheet.css";', 2)).toThrow(error)
@@ -249,7 +241,7 @@ describe('CSSStyleSheet.insertRule(), CSSStyleSheet.deleteRule()', () => {
         styleSheet.insertRule('.selector { color: red }', 2)
 
         expect(() => styleSheet.insertRule('@import "./stylesheet.css";', 3)).toThrow(error)
-        expect(() => styleSheet.insertRule('@namespace "design-system";', 3)).toThrow(error)
+        expect(() => styleSheet.insertRule('@namespace svg "http://www.w3.org/2000/svg";', 3)).toThrow(error)
     })
     it('throws an error when trying to insert a namespace rule if any rule that is not a namespace or import rule exists', () => {
 
@@ -258,7 +250,8 @@ describe('CSSStyleSheet.insertRule(), CSSStyleSheet.deleteRule()', () => {
 
         styleSheet.insertRule('.selector { color: red }')
 
-        expect(() => styleSheet.insertRule('@namespace "design-system";')).toThrow(INSERT_RULE_UNEXPECTED_NAMESPACE_ERROR)
+        expect(() => styleSheet.insertRule('@namespace svg "http://www.w3.org/2000/svg";'))
+            .toThrow(INVALID_NAMESPACE_STATE_ERROR)
     })
 })
 
@@ -294,24 +287,20 @@ describe('CSSStyleSheet.replace(), CSSStyleSheet.replaceSync()', () => {
 
         const { CSSStyleSheet } = globalThis
         const styleSheet = new CSSStyleSheet()
+        const error = createError(UPDATE_LOCKED_STYLESHEET_ERROR)
 
         styleSheet.replace('')
 
-        try {
-            await styleSheet.replace('')
-        } catch (error) {
-            const { message, name } = UPDATE_LOCKED_STYLESHEET_ERROR
-            expect(error.name).toBe(name)
-            expect(error.message).toBe(message)
-        }
+        return expect(styleSheet.replace('')).rejects.toMatchObject(error)
     })
-    it('ignores invalid rules and import rules', () => {
+    it('ignores import rules and invalid statements', () => {
 
         const { CSSStyleSheet } = globalThis
         const styleSheet = new CSSStyleSheet()
         const { cssRules } = styleSheet
         const rules = `
             @import "./stylesheet.css";
+            @namespace <bad-string-or-url>;
             .selector { color: green }
             color: red
         `
@@ -322,12 +311,68 @@ describe('CSSStyleSheet.replace(), CSSStyleSheet.replaceSync()', () => {
 
         const [styleRule] = cssRules
 
+        expect(CSSStyleRule.is(styleRule)).toBeTruthy()
         expect(styleRule.style.color).toBe('green')
     })
 })
 
 describe('grammar rules', () => {
-    it('discards a declaration at the top level of the style sheet', () => {
+    it('ignores @charset', () => {
+
+        const { cssRules: [styleRule1, styleRule2] } = createStyleSheet(`
+            @charset "utf-8";
+            .selector { color: green }
+            @charset "utf-8";
+            .selector { color: green }
+        `)
+
+        expect(CSSStyleRule.is(styleRule1)).toBeTruthy()
+        expect(CSSStyleRule.is(styleRule2)).toBeTruthy()
+    })
+    it('ignores @import preceded by any other valid rule than @charset', () => {
+
+        const { cssRules: [styleRule1, styleRule2] } = createStyleSheet(`
+            .selector { color: green }
+            @import "./stylesheet.css";
+            .selector { color: green }
+        `)
+
+        expect(CSSStyleRule.is(styleRule1)).toBeTruthy()
+        expect(CSSStyleRule.is(styleRule2)).toBeTruthy()
+    })
+    it('does not ignore @import preceded by invalid rule(s) or followed by @charset', () => {
+
+        const { cssRules: [importRule] } = createStyleSheet(`
+            @namespace <bad-string-or-url>;
+            @import "./stylesheet.css";
+        `)
+
+        expect(CSSImportRule.is(importRule)).toBeTruthy()
+    })
+    it('ignores @namespace preceded by any other valid rules than @import', () => {
+
+        const { cssRules: [styleRule1, styleRule2] } = createStyleSheet(`
+            .selector { color: green }
+            @namespace svg "http://www.w3.org/2000/svg";
+            .selector { color: green }
+        `)
+
+        expect(CSSStyleRule.is(styleRule1)).toBeTruthy()
+        expect(CSSStyleRule.is(styleRule2)).toBeTruthy()
+    })
+    it('does not ignore @namespace preceded by an invalid rule or followed by @charset or an invalid @import', () => {
+
+        const { cssRules: [namespaceRule, ...otherRules] } = createStyleSheet(`
+            @import <bad-string-or-url>;
+            @namespace svg "http://www.w3.org/2000/svg";
+            @charset "UTF-8";
+            @import <bad-string-or-url>;
+        `)
+
+        expect(CSSNamespaceRule.is(namespaceRule)).toBeTruthy()
+        expect(otherRules).toHaveLength(0)
+    })
+    it('ignores a declaration at the top level of the style sheet', () => {
 
         // It looks like a declaration but `{}` allows to parse it as a (invalid) qualified rule
         const { cssRules: [styleRule] } = createStyleSheet(`
@@ -341,7 +386,7 @@ describe('grammar rules', () => {
         expect(CSSStyleRule.is(styleRule)).toBeTruthy()
         expect(styleRule.style.color).toBe('green')
     })
-    it('discards a declaration with an unknown property in a style rule', () => {
+    it('ignores a declaration with an unknown property in a style rule', () => {
 
         const { cssRules: [styleRule] } = createStyleSheet(`
             .selector {
@@ -355,7 +400,7 @@ describe('grammar rules', () => {
         expect(styleRule.style).toHaveLength(1)
         expect(styleRule.style.color).toBe('green')
     })
-    it('discards a declaration with an invalid value in a style rule', () => {
+    it('ignores a declaration with an invalid value in a style rule', () => {
 
         const { cssRules: [styleRule] } = createStyleSheet(`
             .selector {
@@ -369,7 +414,7 @@ describe('grammar rules', () => {
         expect(styleRule.style).toHaveLength(1)
         expect(styleRule.style.color).toBe('green')
     })
-    it('discards a declaration in a rule containing <stylesheet>', () => {
+    it('ignores a declaration in a rule containing <stylesheet>', () => {
 
         // It looks like a declaration but `{}` allows to parse it as a (invalid) qualified rule
         const { cssRules: [mediaRule] } = createStyleSheet(`
@@ -389,7 +434,7 @@ describe('grammar rules', () => {
 
         expect(CSSStyleRule.is(styleRule)).toBeTruthy()
     })
-    it('discards a declaration in a rule containing <rule-list>', () => {
+    it('ignores a declaration in a rule containing <rule-list>', () => {
 
         // It looks like a declaration but `{}` allows to parse it as a (invalid) qualified rule
         const { cssRules: [keyframesRule] } = createStyleSheet(`
@@ -411,7 +456,7 @@ describe('grammar rules', () => {
         expect(CSSKeyframeRule.is(keyframeRule)).toBeTruthy()
         expect(keyframeRule.style.color).toBe('green')
     })
-    it('discards a declaration of a property not allowed in (nested) keyframe rules', () => {
+    it('ignores a declaration with a property not allowed in (nested) keyframe rules', () => {
 
         const { cssRules: [{ cssRules: [keyframeRule] }] } = createStyleSheet(`
             @keyframes myAnimation {
@@ -426,7 +471,7 @@ describe('grammar rules', () => {
         expect(CSSKeyframeRule.is(keyframeRule)).toBeTruthy()
         expect(keyframeRule.style.color).toBe('green')
     })
-    it('discards a declaration of a property not allowed in @page', () => {
+    it('ignores a declaration with a property not allowed in @page', () => {
 
         const { cssRules: [pageRule] } = createStyleSheet(`
             @page {
@@ -440,7 +485,7 @@ describe('grammar rules', () => {
         expect(pageRule.style).toHaveLength(1)
         expect(pageRule.style.fontSize).toBe('16px')
     })
-    it('discards a declaration of a property not allowed in margin at-rules', () => {
+    it('ignores a declaration with a property not allowed in margin at-rules', () => {
 
         const { cssRules: [{ cssRules: [marginRule] }] } = createStyleSheet(`
             @page {
@@ -454,9 +499,9 @@ describe('grammar rules', () => {
 
         expect(CSSMarginRule.is(marginRule)).toBeTruthy()
         expect(marginRule.style).toHaveLength(1)
-        expect(marginRule.style.content).toBe('\"allowed\"')
+        expect(marginRule.style.content).toBe('"allowed"')
     })
-    it('discards a rule whose name is unrecognized', () => {
+    it('ignores a rule whose name is unrecognized', () => {
 
         const { cssRules } = createStyleSheet(`
             @unknown {}
@@ -465,7 +510,7 @@ describe('grammar rules', () => {
 
         expect(cssRules).toHaveLength(0)
     })
-    it('discards a rule whose prelude or value is invalid according to its production rule', () => {
+    it('ignores a rule whose prelude or value is invalid according to its production rule', () => {
 
         const { cssRules } = createStyleSheet(`
             @namespace ns {
@@ -477,7 +522,7 @@ describe('grammar rules', () => {
 
         expect(cssRules).toHaveLength(0)
     })
-    it('discards @nest or a style rule whose selector starts with `&` at the top level of the style sheet', () => {
+    it('ignores @nest or a style rule whose selector starts with `&` at the top level of the style sheet', () => {
 
         const { cssRules } = createStyleSheet(`
             & .selector {
@@ -498,7 +543,7 @@ describe('grammar rules', () => {
         expect(CSSStyleRule.is(styleRule)).toBeTruthy()
         expect(styleRule.style.color).toBe('green')
     })
-    it('discards a (qualified) keyframe rule anywhere outside @keyframes', () => {
+    it('ignores a (qualified) keyframe rule anywhere outside @keyframes', () => {
 
         /* `from` and `to` are valid selectors for style rules */
         const { cssRules } = createStyleSheet(`
@@ -519,7 +564,7 @@ describe('grammar rules', () => {
         expect(CSSMediaRule.is(mediaRule)).toBeTruthy()
         expect(mediaRule.cssRules).toHaveLength(0)
     })
-    it('discards any rule that is not a nested style rule, @nest, or @media, in a style rule', () => {
+    it('ignores any other rules than a nested style rule, @nest, or @media, in a style rule', () => {
 
         // CSS Syntax throws away everything that is invalid until reading `;`
         const { cssRules: [{ cssRules }] } = createStyleSheet(`
@@ -549,42 +594,34 @@ describe('grammar rules', () => {
         expect(CSSMediaRule.is(mediaRule)).toBeTruthy()
 
     })
-    it.skip('discards @import preceded by another rule that is not @charset', () => {
+    it('ignores @charset, @import, or @namespace in any at-rule', () => {
 
-        const { cssRules: [styleRule1, styleRule2] } = createStyleSheet(`
-            .selector { color: green }
-            @import "./stylesheet.css";
-            .selector { color: green }
-        `)
-
-        expect(CSSStyleRule.is(styleRule1)).toBeTruthy()
-        expect(CSSStyleRule.is(styleRule2)).toBeTruthy()
-    })
-    it.skip('discards @charset, @import, or @namespace in any at-rule', () => {
-
-        const { cssRules } = createStyleSheet(`
+        const { cssRules: [mediaRule, keyframesRule, pageRule] } = createStyleSheet(`
             /* <stylesheet> */
             @media all {
                 @import "./stylesheet.css";
-                @namespace "design-system";
+                @namespace svg "http://www.w3.org/2000/svg";
             }
             /* <rule-list> */
             @keyframes myAnimation {
                 @import "./stylesheet.css";
-                @namespace "design-system";
+                @namespace svg "http://www.w3.org/2000/svg";
             }
             /* <declaration-list> */
             @page {
                 @import "./stylesheet.css";
-                @namespace "design-system";
+                @namespace svg "http://www.w3.org/2000/svg";
             }
         `)
 
-        expect(cssRules).toHaveLength(0)
+        expect(mediaRule.cssRules).toHaveLength(0)
+        expect(keyframesRule.cssRules).toHaveLength(0)
+        expect(pageRule.cssRules).toHaveLength(0)
     })
-    it.skip('discards a margin rule at the top level of the style sheet or any at-rule that is not @page', () => {
+    it('ignores a margin rule at the top level of the style sheet or in any other rule than @page', () => {
 
-        const { cssRules } = createStyleSheet(`
+        // TODO: add case using a top-level rule containing <declaration-list> and that is not @page
+        const { cssRules: [mediaRule, keyframesRule] } = createStyleSheet(`
             @top-left {
                 color: red;
             }
@@ -600,14 +637,16 @@ describe('grammar rules', () => {
                     color: red;
                 }
             }
-            /* TODO: case with top-level rule containing <declaration-list> */
         `)
 
-        expect(cssRules).toHaveLength(0)
+        expect(CSSMediaRule.is(mediaRule)).toBeTruthy()
+        expect(mediaRule.cssRules).toHaveLength(0)
+        expect(CSSKeyframesRule.is(keyframesRule)).toBeTruthy()
+        expect(keyframesRule.cssRules).toHaveLength(0)
     })
-    it.skip('discards any rule that is not allowed in a rule containing <declaration-list>', () => {
+    it('ignores any rule not allowed in a rule containing <declaration-list>', () => {
 
-        const { cssRules } = createStyleSheet(`
+        const { cssRules: [{ cssRules: [marginRule] }, { cssRules: [keyframeRule] }] } = createStyleSheet(`
             @page {
                 /* Invalid: */
                 @media all {
@@ -630,9 +669,15 @@ describe('grammar rules', () => {
             }
         `)
 
-        expect(cssRules).toHaveLength(0)
+        expect(CSSMarginRule.is(marginRule)).toBeTruthy()
+        expect(marginRule.cssRules).toBeUndefined()
+        expect(CSSKeyframeRule.is(keyframeRule)).toBeTruthy()
+        expect(keyframeRule.cssRules).toBeUndefined()
     })
     /**
+     * TODO: add tests for the following cases (most if not all are already
+     * included in the above tests).
+     *
      * Allow:
      *
      * - declarations in:

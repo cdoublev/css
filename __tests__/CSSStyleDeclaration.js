@@ -187,7 +187,7 @@ describe('CSSStyleDeclaration', () => {
         style.cssText = 'float: '
         expect(style.cssText).toBe('')
     })
-    it('constructs a new instance a reference to a parent CSS rule', () => {
+    it('constructs a new instance with a reference to a parent CSS rule', () => {
 
         const parentRule = {}
         const style = createStyleDeclaration({ parentRule })
