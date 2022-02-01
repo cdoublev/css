@@ -205,7 +205,7 @@ describe('CSSStyleDeclaration', () => {
     })
     it('constructs a new instance with the declarations from `getComputedStyle()` and prevents modifying them', () => {
 
-        const declarations = [{ name: 'font-size', value: '10px' }]
+        const declarations = new Map([['font-size', { name: 'font-size', value: '10px' }]])
         const style = createStyleDeclaration({ computed: true, declarations, ownerNode: {} })
         const error = createError(UPDATE_COMPUTED_STYLE_DECLARATION_ERROR)
 
