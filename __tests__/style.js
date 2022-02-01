@@ -80,9 +80,9 @@ describe('CSSStyleDeclaration', () => {
 
         expect(style.fontSize).toBe('')
 
-        style.cssText = 'font-size: 20px'
+        style.cssText = 'font-size: 16px; font-size: 20px !important; font-size: 24px;'
 
-        expect(style.cssText).toBe('font-size: 20px;')
+        expect(style.cssText).toBe('font-size: 20px !important;')
         expect(style.fontSize).toBe('20px')
 
         style.cssText = ''
