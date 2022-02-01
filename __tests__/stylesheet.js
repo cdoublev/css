@@ -278,7 +278,6 @@ describe('CSSStyleSheet.replace(), CSSStyleSheet.replaceSync()', () => {
         expect(styleRule2.style.color).toBe('green')
     })
     it('throws an error when trying to replace rules of a non-constructed stylesheet', () => {
-
         const styleSheet = createStyleSheet('.selector { color: red }')
 
         expect(() => styleSheet.replaceSync('')).toThrow(UPDATE_LOCKED_STYLESHEET_ERROR)
@@ -456,14 +455,16 @@ describe('grammar rules', () => {
         expect(CSSKeyframeRule.is(keyframeRule)).toBeTruthy()
         expect(keyframeRule.style.color).toBe('green')
     })
-    it('ignores a declaration with a property not allowed in (nested) keyframe rules', () => {
+    it('ignores a declaration with a property not allowed or an invalid value in (nested) keyframe rules', () => {
 
+        // A declaration value with `!important` is invalid in keyframe rules
         const { cssRules: [{ cssRules: [keyframeRule] }] } = createStyleSheet(`
             @keyframes myAnimation {
                 to {
                     animation-delay: 1s;
                     color: green;
                     animation-duration: 1s;
+                    color: red !important;
                 }
             }
         `)
@@ -471,21 +472,23 @@ describe('grammar rules', () => {
         expect(CSSKeyframeRule.is(keyframeRule)).toBeTruthy()
         expect(keyframeRule.style.color).toBe('green')
     })
-    it('ignores a declaration with a property not allowed in @page', () => {
+    it('ignores a declaration with a property not allowed or an invalid value in @page', () => {
 
         const { cssRules: [pageRule] } = createStyleSheet(`
             @page {
                 top: 1px;
                 font-size: 16px;
                 bottom: 1px;
+                invalid: value;
+                font-size: 20px !important;
             }
         `)
 
         expect(CSSPageRule.is(pageRule)).toBeTruthy()
         expect(pageRule.style).toHaveLength(1)
-        expect(pageRule.style.fontSize).toBe('16px')
+        expect(pageRule.style.fontSize).toBe('20px')
     })
-    it('ignores a declaration with a property not allowed in margin at-rules', () => {
+    it('ignores a declaration with a property not allowed or an invalid value in margin at-rules', () => {
 
         const { cssRules: [{ cssRules: [marginRule] }] } = createStyleSheet(`
             @page {
@@ -493,13 +496,15 @@ describe('grammar rules', () => {
                     top: 1px;
                     content: "allowed";
                     bottom: 1px;
+                    invalid: value;
+                    content: "important" !important;
                 }
             }
         `)
 
         expect(CSSMarginRule.is(marginRule)).toBeTruthy()
         expect(marginRule.style).toHaveLength(1)
-        expect(marginRule.style.content).toBe('"allowed"')
+        expect(marginRule.style.content).toBe('"important"')
     })
     it('ignores a rule whose name is unrecognized', () => {
 
