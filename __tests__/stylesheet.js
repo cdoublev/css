@@ -4,6 +4,8 @@
  * - the CSSOM tree resulting from parsing a style sheet according to the CSS
  * grammar defining where statements (rules/declarations) are allowed or not
  * - the `CSSStyleSheet` interface to interact with (read/write) the CSSOM tree
+ * - the `CSSRule` subclasses because they can not be instantiated and are only
+ * accessible via an instance of `CSSStyleSheet` or `CSSRule`
  *
  * What are the corresponding interfaces?
  *
@@ -279,7 +281,6 @@ describe('CSSStyleSheet.replace(), CSSStyleSheet.replaceSync()', () => {
     })
     it('throws an error when trying to replace rules of a non-constructed stylesheet', () => {
         const styleSheet = createStyleSheet('.selector { color: red }')
-
         expect(() => styleSheet.replaceSync('')).toThrow(UPDATE_LOCKED_STYLESHEET_ERROR)
     })
     it('throws an error when trying to replace rules concurrently', async () => {
@@ -571,7 +572,7 @@ describe('grammar rules', () => {
     })
     it('ignores any other rules than a nested style rule, @nest, or @media, in a style rule', () => {
 
-        // CSS Syntax throws away everything that is invalid until reading `;`
+        // CSS Syntax throws away every invalid tokens until reading `;`
         const { cssRules: [{ cssRules }] } = createStyleSheet(`
             .selector {
                 @nest .nested {
@@ -712,4 +713,29 @@ describe('grammar rules', () => {
      *     - `@top-left` in `@page`
      *     - ... to complete when adding new at-rules whose content is <declaration-list>
      */
+})
+describe('CSSImportRule', () => {
+    it('has all properties', () => {
+
+        const input = '@import "./stylesheet.css";'
+        const styleSheet = createStyleSheet(input, { media: 'all' })
+        const { cssRules: [rule] } = styleSheet
+
+        expect(CSSImportRule.is(rule)).toBeTruthy()
+
+        const { cssText, href, media, parentRule, parentStyleSheet, styleSheet: importedStyleSheet } = rule
+
+        // expect(cssText).toBe(input)
+        expect(href).toBe('./stylesheet.css')
+        // expect(media).toBe('all') // === importedStyleSheet.media
+        expect(parentRule).toBeNull()
+        expect(parentStyleSheet).toBe(styleSheet)
+        // TODO: implement fetching a stylesheet referenced by @import
+        // expect(CSSStyleSheet.is(importedStyleSheet)).toBeTruthy()
+
+        // const { ownerRule, parentStyleSheet } = importedStyleSheet
+
+        // expect(importedStyleSheet.ownerRule).toBe(rule)
+        // expect(importedStyleSheet.parentStyleSheet).toBe(parentStyleSheet)
+    })
 })
