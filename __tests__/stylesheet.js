@@ -725,6 +725,7 @@ describe('CSSImportRule', () => {
 
         const { cssText, href, media, parentRule, parentStyleSheet, styleSheet: importedStyleSheet } = rule
 
+        // TODO: implement serializing a CSS rule
         // expect(cssText).toBe(input)
         expect(href).toBe('./stylesheet.css')
         // expect(media).toBe('all') // === importedStyleSheet.media
@@ -737,5 +738,31 @@ describe('CSSImportRule', () => {
 
         // expect(importedStyleSheet.ownerRule).toBe(rule)
         // expect(importedStyleSheet.parentStyleSheet).toBe(parentStyleSheet)
+    })
+})
+describe('CSSKeyframeRule', () => {
+    it('has all properties', () => {
+
+        const input = '@keyframes myAnimation { to { color: red; color: orange; } }'
+        const styleSheet = createStyleSheet(input)
+        const { cssRules: [keyframesRule] } = styleSheet
+        const { cssRules: [rule] } = keyframesRule
+
+        expect(CSSKeyframeRule.is(rule)).toBeTruthy()
+
+        const { cssText, keyText, style, parentRule, parentStyleSheet } = rule
+
+        // TODO: implement serializing a CSS rule
+        // expect(cssText).toBe('to { color: orange; }')
+        expect(keyText).toBe('to')
+        expect(CSSStyleDeclaration.is(style)).toBeTruthy()
+        expect(style).toHaveLength(1)
+        expect(parentRule).toBe(keyframesRule)
+        expect(parentStyleSheet).toBe(styleSheet)
+
+        style.color = 'green'
+
+        // Declarations should be shared with `CSSStyleDeclaration`
+        // expect(rule.cssText).toBe('to { color: green; }')
     })
 })
