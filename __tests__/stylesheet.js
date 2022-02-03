@@ -50,6 +50,7 @@ const {
     CSSPageRule,
     CSSStyleRule,
     CSSRuleList,
+    CSSStyleDeclaration,
     CSSStyleSheet,
     MediaList,
 } = cssom
@@ -714,24 +715,27 @@ describe('grammar rules', () => {
      *     - ... to complete when adding new at-rules whose content is <declaration-list>
      */
 })
+
+describe('CSSCounterStyleRule', () => {})
+describe('CSSFontFaceRule', () => {})
+describe('CSSFontFeatureValuesRule', () => {})
 describe('CSSImportRule', () => {
     it('has all properties', () => {
 
         const input = '@import "./stylesheet.css";'
         const styleSheet = createStyleSheet(input, { media: 'all' })
         const { cssRules: [rule] } = styleSheet
-
-        expect(CSSImportRule.is(rule)).toBeTruthy()
-
         const { cssText, href, media, parentRule, parentStyleSheet, styleSheet: importedStyleSheet } = rule
 
-        // TODO: implement serializing a CSS rule
-        // expect(cssText).toBe(input)
-        expect(href).toBe('./stylesheet.css')
-        // expect(media).toBe('all') // === importedStyleSheet.media
+        // CSSRule properties
+        expect(cssText).toBe('@import url("./stylesheet.css");')
         expect(parentRule).toBeNull()
         expect(parentStyleSheet).toBe(styleSheet)
-        // TODO: implement fetching a stylesheet referenced by @import
+
+        // CSSImportRule proeprties
+        expect(href).toBe('./stylesheet.css')
+        // TODO: implement fetching the stylesheet referenced by @import
+        // expect(media).toBe(importedStyleSheet.media)
         // expect(CSSStyleSheet.is(importedStyleSheet)).toBeTruthy()
 
         // const { ownerRule, parentStyleSheet } = importedStyleSheet
@@ -743,26 +747,435 @@ describe('CSSImportRule', () => {
 describe('CSSKeyframeRule', () => {
     it('has all properties', () => {
 
-        const input = '@keyframes myAnimation { to { color: red; color: orange; } }'
+        const input = '@keyframes myAnimation { to { color: red; color: orange } }'
         const styleSheet = createStyleSheet(input)
         const { cssRules: [keyframesRule] } = styleSheet
         const { cssRules: [rule] } = keyframesRule
+        const { cssText, keyText, parentRule, parentStyleSheet, style } = rule
 
-        expect(CSSKeyframeRule.is(rule)).toBeTruthy()
-
-        const { cssText, keyText, style, parentRule, parentStyleSheet } = rule
-
-        // TODO: implement serializing a CSS rule
-        // expect(cssText).toBe('to { color: orange; }')
-        expect(keyText).toBe('to')
-        expect(CSSStyleDeclaration.is(style)).toBeTruthy()
-        expect(style).toHaveLength(1)
+        // CSSRule properties
+        expect(cssText).toBe('to {\n  color: orange;\n}')
         expect(parentRule).toBe(keyframesRule)
         expect(parentStyleSheet).toBe(styleSheet)
 
+        // CSSKeyframeRule properties
+        expect(keyText).toBe('to')
+        expect(CSSStyleDeclaration.is(style)).toBeTruthy()
+        expect(style).toHaveLength(1)
+
         style.color = 'green'
 
-        // Declarations should be shared with `CSSStyleDeclaration`
-        // expect(rule.cssText).toBe('to { color: green; }')
+        // CSSKeyframeRule declarations should be shared with CSSStyleDeclaration
+        expect(rule.cssText).toBe('to {\n  color: green;\n}')
+
+        rule.keyText = 'from'
+
+        expect(rule.keyText).toBe('from')
+        expect(rule.cssText).toBe('from {\n  color: green;\n}')
+    })
+})
+describe('CSSKeyframesRule', () => {
+    it('has all properties', () => {
+
+        const input = '@keyframes myAnimation { to { color: green } }'
+        const styleSheet = createStyleSheet(input)
+        const { cssRules: [rule] } = styleSheet
+        const { cssRules, cssText, name, parentRule, parentStyleSheet } = rule
+
+        // CSSRule properties
+        expect(cssText).toBe('@keyframes myAnimation {\n  to {\n  color: green;\n}\n}')
+        expect(parentRule).toBeNull()
+        expect(parentStyleSheet).toBe(styleSheet)
+
+        // CSSKeyframesRule properties
+        expect(CSSRuleList.is(cssRules)).toBeTruthy()
+        expect(cssRules).toHaveLength(1)
+        expect(name).toBe('myAnimation')
+
+        rule.name = 'myAnimationName'
+
+        expect(rule.name).toBe('myAnimationName')
+        expect(rule.cssText).toBe('@keyframes myAnimationName {\n  to {\n  color: green;\n}\n}')
+    })
+    it('has all methods', () => {
+
+        const { cssRules: [rule] } = createStyleSheet('@keyframes myAnimation {}')
+        const { cssRules: keyframes } = rule
+        const error = createError({ message: 'Failed to parse a rule', type: 'ParseError' })
+
+        expect(keyframes).toHaveLength(0)
+
+        rule.appendRule('to { color: orange }')
+
+        expect(keyframes).toHaveLength(1)
+        expect(keyframes[0].style.color).toBe('orange')
+
+        // TODO: fix https://github.com/w3c/csswg-drafts/issues/6972
+        expect(() => rule.appendRule('invalid')).toThrow(error)
+        expect(keyframes).toHaveLength(1)
+
+        rule.appendRule('to { color: green }')
+
+        expect(keyframes).toHaveLength(2)
+        expect(keyframes[1].style.color).toBe('green')
+        expect(rule.findRule('to')).toBe(keyframes[1])
+
+        rule.deleteRule('to')
+
+        expect(keyframes).toHaveLength(1)
+        expect(keyframes[0].style.color).toBe('orange')
+
+        // TODO: remove eg. `50%` when the keyframe selector is `0%, 50%, 100%` (number and order must match)
+        // TODO: remove eg. `0%,50%` when the keyframe selector is `0%, 50%` (not sensitive to whitespace)
+        // TODO: same requirements for CSSKeyframeRule.findRule()
+    })
+})
+describe('CSSMarginRule', () => {
+    it('has all properties', () => {
+
+        const input = '@page { @top-left { color: red; color: orange } }'
+        const styleSheet = createStyleSheet(input)
+        const { cssRules: [pageRule] } = styleSheet
+        const { cssRules: [{ cssText, name, parentRule, parentStyleSheet, style }] } = pageRule
+
+        // CSSRule properties
+        expect(cssText).toBe('@top-left {\n  color: orange;\n}')
+        expect(parentRule).toBe(pageRule)
+        expect(parentStyleSheet).toBe(styleSheet)
+
+        // CSSMarginRule properties
+        expect(name).toBe('top-left')
+        expect(CSSStyleDeclaration.is(style)).toBeTruthy()
+        expect(style).toHaveLength(1)
+
+        style.fontSize = 'green'
+
+        // CSSMarginRule declarations should be shared with CSSStyleDeclaration
+        expect(style.fontSize).toBe('green')
+    })
+})
+describe('CSSMediaRule', () => {
+    it('has all properties', () => {
+
+        const input = '@media all { .selector { color: green } }'
+        const styleSheet = createStyleSheet(input)
+        const { cssRules: [{ conditionText, cssRules, cssText, media, parentRule, parentStyleSheet }] } = styleSheet
+
+        // CSSRule properties
+        expect(cssText).toBe('@media all {\n  .selector {\n  color: green;\n}\n}')
+        expect(parentRule).toBeNull()
+        expect(parentStyleSheet).toBe(styleSheet)
+
+        // CSSGroupingRule properties
+        expect(CSSRuleList.is(cssRules)).toBeTruthy()
+
+        // CSSConditionRule properties
+        expect(conditionText).toBe('all')
+
+        // CSSMediaRule properties
+        expect(MediaList.is(media)).toBeTruthy()
+    })
+    it('has all methods', () => {
+
+        const { cssRules: [rule] } = createStyleSheet('@media all {}')
+        const { cssRules } = rule
+        const error = createError({ message: 'Failed to parse a rule', type: 'ParseError' })
+
+        expect(cssRules).toHaveLength(0)
+
+        rule.insertRule('.selector { color: orange }')
+
+        expect(cssRules).toHaveLength(1)
+
+        expect(() => rule.insertRule('invalid')).toThrow(error)
+        expect(cssRules).toHaveLength(1)
+
+        rule.insertRule('.selector { color: red }')
+
+        expect(cssRules).toHaveLength(2)
+
+        rule.insertRule('.selector { color: green }', 2)
+
+        expect(cssRules).toHaveLength(3)
+        expect(cssRules[0].style.color).toBe('red')
+        expect(cssRules[1].style.color).toBe('orange')
+        expect(cssRules[2].style.color).toBe('green')
+
+        rule.deleteRule(0)
+
+        expect(cssRules).toHaveLength(2)
+        expect(cssRules[0].style.color).toBe('orange')
+        expect(cssRules[1].style.color).toBe('green')
+    })
+})
+describe('CSSNamespaceRule', () => {
+    it('has all properties', () => {
+
+        const input = '@namespace svg "http://www.w3.org/2000/svg";'
+        const styleSheet = createStyleSheet(input)
+        const { cssRules: [{ cssText, namespaceURI, prefix, parentRule, parentStyleSheet }] } = styleSheet
+
+        // CSSRule properties
+        expect(cssText).toBe('@namespace svg url("http://www.w3.org/2000/svg");')
+        expect(parentRule).toBeNull()
+        expect(parentStyleSheet).toBe(styleSheet)
+
+        // CSSNamespaceRule
+        expect(namespaceURI).toBe('http://www.w3.org/2000/svg')
+        expect(prefix).toBe('svg')
+    })
+})
+describe('CSSNestingRule', () => {
+    it('has all properties', () => {
+
+        const input = '.selector { @nest .child { color: red; color: orange } }'
+        const styleSheet = createStyleSheet(input)
+        const { cssRules: [styleRule] } = styleSheet
+        const { cssRules: [rule] } = styleRule
+        const { cssRules, cssText, parentRule, parentStyleSheet, selectorText, style } = rule
+
+        // CSSRule properties
+        expect(cssText).toBe('@nest .child {\n  color: orange;\n}')
+        expect(parentRule).toBe(styleRule)
+        expect(parentStyleSheet).toBe(styleSheet)
+
+        // CSSNestingRule properties
+        expect(CSSRuleList.is(cssRules)).toBeTruthy()
+        expect(selectorText).toBe('.child')
+        expect(CSSStyleDeclaration.is(style)).toBeTruthy()
+        expect(style).toHaveLength(1)
+
+        style.color = 'green'
+
+        // CSSNestingRule declarations should be shared with CSSStyleDeclaration
+        expect(rule.cssText).toBe('@nest .child {\n  color: green;\n}')
+
+        rule.selectorText = '.child-element'
+
+        expect(rule.selectorText).toBe('.child-element')
+        expect(rule.cssText).toBe('@nest .child-element {\n  color: green;\n}')
+    })
+    it('has all methods', () => {
+
+        const { cssRules: [{ cssRules: [rule] }] } = createStyleSheet('.selector { @nest .child {} }')
+        const { cssRules } = rule
+        const error = createError({ message: 'Failed to parse a rule', type: 'ParseError' })
+
+        expect(cssRules).toHaveLength(0)
+
+        rule.insertRule('@media screen {}')
+
+        expect(cssRules).toHaveLength(1)
+
+        expect(() => rule.insertRule('invalid')).toThrow(error)
+        expect(cssRules).toHaveLength(1)
+
+        rule.insertRule('@media print {}')
+
+        expect(cssRules).toHaveLength(2)
+
+        rule.insertRule('@media all {}', 2)
+
+        expect(cssRules).toHaveLength(3)
+        expect(cssRules[0].conditionText).toBe('print')
+        expect(cssRules[1].conditionText).toBe('screen')
+        expect(cssRules[2].conditionText).toBe('all')
+
+        rule.deleteRule(0)
+
+        expect(cssRules).toHaveLength(2)
+        expect(cssRules[0].conditionText).toBe('screen')
+        expect(cssRules[1].conditionText).toBe('all')
+    })
+})
+describe('CSSPageRule', () => {
+    it('has all properties', () => {
+
+        const input = '@page intro { color: red; color: orange; @top-left {} }'
+        const styleSheet = createStyleSheet(input)
+        const { cssRules: [rule] } = styleSheet
+        const { cssRules, cssText, parentRule, parentStyleSheet, selectorText, style } = rule
+
+        // CSSRule properties
+        expect(cssText).toBe('@page intro {\n  color: orange;\n  @top-left {}\n}')
+        expect(parentRule).toBeNull()
+        expect(parentStyleSheet).toBe(styleSheet)
+
+        // CSSGroupingRule properties
+        expect(CSSRuleList.is(cssRules)).toBeTruthy()
+
+        // CSSPageRule properties
+        expect(selectorText).toBe('intro')
+        expect(CSSStyleDeclaration.is(style)).toBeTruthy()
+        expect(style).toHaveLength(1)
+
+        style.color = 'green'
+
+        // CSSPageRule declarations should be shared with CSSStyleDeclaration
+        expect(rule.cssText).toBe('@page intro {\n  color: green;\n  @top-left {}\n}')
+
+        rule.selectorText = 'outro'
+
+        expect(rule.selectorText).toBe('outro')
+        expect(rule.cssText).toBe('@page outro {\n  color: green;\n  @top-left {}\n}')
+    })
+    it('has all methods', () => {
+
+        const { cssRules: [rule] } = createStyleSheet('@page {}')
+        const { cssRules } = rule
+        const error = createError({ message: 'Failed to parse a rule', type: 'ParseError' })
+
+        expect(cssRules).toHaveLength(0)
+
+        rule.insertRule('@top-left {}')
+
+        expect(cssRules).toHaveLength(1)
+
+        expect(() => rule.insertRule('invalid')).toThrow(error)
+        expect(cssRules).toHaveLength(1)
+
+        rule.insertRule('@top-left-corner {}')
+
+        expect(cssRules).toHaveLength(2)
+
+        rule.insertRule('@top-center {}', 2)
+
+        expect(cssRules).toHaveLength(3)
+        expect(cssRules[0].name).toBe('top-left-corner')
+        expect(cssRules[1].name).toBe('top-left')
+        expect(cssRules[2].name).toBe('top-center')
+
+        rule.deleteRule(0)
+
+        expect(cssRules).toHaveLength(2)
+        expect(cssRules[0].name).toBe('top-left')
+        expect(cssRules[1].name).toBe('top-center')
+    })
+})
+describe('CSSPropertyRule', () => {})
+describe('CSSStyleRule', () => {
+    it('has all properties', () => {
+
+        const input = '.selector { color: red; color: orange; & .child { color: red; color: orange } }'
+        const styleSheet = createStyleSheet(input)
+        const { cssRules: [styleRule] } = styleSheet
+        const { cssRules: [nestedStyleRule] } = styleRule
+
+        // CSSRule properties
+        expect(styleRule.cssText).toBe('.selector {\n  color: orange;\n  & .child {\n  color: orange;\n}\n}')
+        expect(nestedStyleRule.cssText).toBe('& .child {\n  color: orange;\n}')
+        expect(styleRule.parentRule).toBeNull()
+        expect(nestedStyleRule.parentRule).toBe(styleRule)
+        expect(styleRule.parentStyleSheet).toBe(styleSheet)
+        expect(nestedStyleRule.parentStyleSheet).toBe(styleSheet)
+
+        // CSSStyleRule properties
+        expect(CSSRuleList.is(styleRule.cssRules)).toBeTruthy()
+        expect(CSSRuleList.is(nestedStyleRule.cssRules)).toBeTruthy()
+        expect(styleRule.selectorText).toBe('.selector')
+        expect(nestedStyleRule.selectorText).toBe('& .child')
+        expect(CSSStyleDeclaration.is(styleRule.style)).toBeTruthy()
+        expect(CSSStyleDeclaration.is(nestedStyleRule.style)).toBeTruthy()
+        expect(styleRule.style).toHaveLength(1)
+        expect(nestedStyleRule.style).toHaveLength(1)
+
+        styleRule.style.color = 'green'
+        nestedStyleRule.style.color = 'green'
+
+        // CSSStyleRule declarations should be shared with CSSStyleDeclaration
+        expect(styleRule.cssText).toBe('.selector {\n  color: green;\n  & .child {\n  color: green;\n}\n}')
+        expect(nestedStyleRule.cssText).toBe('& .child {\n  color: green;\n}')
+
+        styleRule.selectorText = '.selector-element'
+        nestedStyleRule.selectorText = '& .child-element'
+
+        expect(styleRule.selectorText).toBe('.selector-element')
+        // TODO: fix https://github.com/w3c/csswg-drafts/issues/6927
+        // expect(nestedStyleRule.selectorText).toBe('& .child-element')
+        // expect(styleRule.cssText).toBe('.selector-element {\n  color: green;\n  & .child-element {\n  color: green;\n}\n}')
+        // expect(nestedStyleRule.cssText).toBe('& .child-element {\n  color: green;\n}')
+    })
+    it('has all methods', () => {
+
+        const { cssRules: [rule] } = createStyleSheet('.selector {}')
+        const { cssRules } = rule
+        const error = createError({ message: 'Failed to parse a rule', type: 'ParseError' })
+
+        expect(cssRules).toHaveLength(0)
+
+        rule.insertRule('@media screen {}')
+
+        expect(cssRules).toHaveLength(1)
+
+        expect(() => rule.insertRule('invalid')).toThrow(error)
+        expect(cssRules).toHaveLength(1)
+
+        rule.insertRule('@media print {}')
+
+        expect(cssRules).toHaveLength(2)
+
+        rule.insertRule('@media all {}', 2)
+
+        expect(cssRules).toHaveLength(3)
+        expect(cssRules[0].conditionText).toBe('print')
+        expect(cssRules[1].conditionText).toBe('screen')
+        expect(cssRules[2].conditionText).toBe('all')
+
+        rule.deleteRule(0)
+
+        expect(cssRules).toHaveLength(2)
+        expect(cssRules[0].conditionText).toBe('screen')
+        expect(cssRules[1].conditionText).toBe('all')
+    })
+})
+describe.skip('CSSSupportsRule', () => {
+    it('has all properties', () => {
+
+        const input = '@supports (color: green) { .selector { color: green } }'
+        const styleSheet = createStyleSheet(input)
+        const { cssRules: [{ conditionText, cssRules, cssText,parentRule, parentStyleSheet }] } = styleSheet
+
+        // CSSRule properties
+        expect(cssText).toBe('@media (color: green) {\n  .selector {\n  color: green;\n}\n}')
+        expect(parentRule).toBeNull()
+        expect(parentStyleSheet).toBe(styleSheet)
+
+        // CSSGroupingRule properties
+        expect(CSSRuleList.is(cssRules)).toBeTruthy()
+
+        // CSSConditionRule properties
+        expect(conditionText).toBe('(color: green)')
+    })
+    it('has all methods', () => {
+
+        const { cssRules: [rule] } = createStyleSheet('@supports (color: green) {}')
+        const { cssRules } = rule
+        const error = createError({ message: 'Failed to parse a rule', type: 'ParseError' })
+
+        expect(cssRules).toHaveLength(0)
+
+        rule.insertRule('.selector { color: orange }')
+
+        expect(cssRules).toHaveLength(1)
+
+        expect(() => rule.insertRule('invalid')).toThrow(error)
+        expect(cssRules).toHaveLength(1)
+
+        rule.insertRule('.selector { color: red }')
+
+        expect(cssRules).toHaveLength(2)
+
+        rule.insertRule('.selector { color: green }', 2)
+
+        expect(cssRules).toHaveLength(3)
+        expect(cssRules[0].style.color).toBe('red')
+        expect(cssRules[1].style.color).toBe('orange')
+        expect(cssRules[2].style.color).toBe('green')
+
+        rule.deleteRule(0)
+
+        expect(cssRules).toHaveLength(2)
+        expect(cssRules[0].style.color).toBe('orange')
+        expect(cssRules[1].style.color).toBe('green')
     })
 })
