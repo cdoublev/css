@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Debug</title>
+    <style>
+        :root {
+            --color: red;
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <p id="target"></p>
+    </div>
+    <script>
+        function log(prop) {
+            console.log(prop, `'${target.style.getPropertyValue(prop)}'` || '<empty-string>')
+        }
+
+        // target.style.border = '1px solid black'
+        // target.style.borderColor = 'red'
+        // target.style.borderTop = '2px'
+        // log('border')
+        // console.log(target.style.cssText)
+        // console.log(getComputedStyle(target).width)
+
+        /**
+         * Serialization of shorthands
+         *
+         * All longhands should be set for shorthand to be set, except if some
+         * (but not all) are set with a CSS wide keyword.
+         */
+        const testShorthand1 = () => {
+
+            // Arrange
+            target.style.borderTopWidth = '1px'
+            target.style.borderTopStyle = 'solid'
+
+            // Act
+            target.style.borderTopColor = 'black'
+            target.style.borderTopColor = 'initial'
+            // target.style.borderTopColor = 'inherit'
+            // target.style.borderTopWidth = target.style.borderTopStyle = target.style.borderTopColor = 'inherit'
+
+            // Assert
+            log('border-top')
+            console.log(target.style.length, target.style.cssText)
+        }
+        // testShorthand1();
+        const testShorthand2 = () => {
+            target.style.borderStyle = 'solid'
+            target.style.borderTopStyle = 'initial'
+            log('border-style')
+            target.style.margin = '1px'
+            target.style.marginTop = 'initial'
+            log('margin')
+        }
+        // testShorthand2();
+    </script>
+</body>
+
+</html>
