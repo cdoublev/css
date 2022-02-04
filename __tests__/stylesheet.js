@@ -415,6 +415,7 @@ describe('grammar rules', () => {
         expect(styleRule.style).toHaveLength(1)
         expect(styleRule.style.color).toBe('green')
     })
+    it.todo('ignores a declaration appearing after a rule in a style rule')
     it('ignores a declaration in a rule containing <stylesheet>', () => {
 
         // It looks like a declaration but `{}` allows to parse it as a (invalid) qualified rule
@@ -550,6 +551,8 @@ describe('grammar rules', () => {
         expect(CSSStyleRule.is(styleRule)).toBeTruthy()
         expect(styleRule.style.color).toBe('green')
     })
+    it.todo('ignores @nest with a selector not including `&`')
+    it.todo('ignores a nested style rule with a selector not starting with `&`')
     it('ignores a (qualified) keyframe rule anywhere outside @keyframes', () => {
 
         /* `from` and `to` are valid selectors for style rules */
@@ -681,39 +684,6 @@ describe('grammar rules', () => {
         expect(CSSKeyframeRule.is(keyframeRule)).toBeTruthy()
         expect(keyframeRule.cssRules).toBeUndefined()
     })
-    /**
-     * TODO: add tests for the following cases (most if not all are already
-     * included in the above tests).
-     *
-     * Allow:
-     *
-     * - declarations in:
-     *   - <declaration-list>
-     *     - in `@keyframes` nested qualified rule (including `animation-timing-function`)
-     *     - in `@page`
-     *     - in `@top-left`
-     *     - ... to complete when adding new at-rules whose content is <declaration-list>
-     *   - <style-block>
-     *     - in style rule
-     *     - in nested style rule
-     *     - in `@nest`
-     *     - ... to complete when adding new at-rules whose content is <style-block>
-     * - rules in:
-     *   - <stylesheet>
-     *     - style rule in style sheet, `@media`, `@supports`
-     *     - any top-level at-rule in style sheet, `@media`, `@supports`
-     *     - ... to complete when adding new at-rules whose content is <stylesheet>
-     *   - <rule-list>
-     *     - qualified rule nested in `@keyframes` and matching `<keyframe-selector>#`
-     *     - ... to complete when adding new at-rules whose content is <rule-list>
-     *   - <style-block>
-     *     - in style rule nested in style rule or `@nest`
-     *     - `@nest` in style rule or `@nest`
-     *     - `@media` in style rule or `@nest`
-     *   - <declaration-list>
-     *     - `@top-left` in `@page`
-     *     - ... to complete when adding new at-rules whose content is <declaration-list>
-     */
 })
 
 describe('CSSCounterStyleRule', () => {})
@@ -907,6 +877,8 @@ describe('CSSMediaRule', () => {
         expect(cssRules[0].style.color).toBe('orange')
         expect(cssRules[1].style.color).toBe('green')
     })
+    it.todo('should contain <stylesheet> at the top level of the style sheet')
+    it.todo('should contain <style-block> when nested in a CSSStyleRule or CSSNestingRule')
 })
 describe('CSSNamespaceRule', () => {
     it('has all properties', () => {
@@ -1178,4 +1150,6 @@ describe('CSSSupportsRule', () => {
         expect(cssRules[0].style.color).toBe('orange')
         expect(cssRules[1].style.color).toBe('green')
     })
+    it.todo('should contain <stylesheet> at the top level of the style sheet')
+    it.todo('should contain <style-block> when nested in a CSSStyleRule or CSSNestingRule')
 })
