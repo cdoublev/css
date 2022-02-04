@@ -1128,15 +1128,15 @@ describe('CSSStyleRule', () => {
         expect(cssRules[1].conditionText).toBe('all')
     })
 })
-describe.skip('CSSSupportsRule', () => {
+describe('CSSSupportsRule', () => {
     it('has all properties', () => {
 
         const input = '@supports (color: green) { .selector { color: green } }'
         const styleSheet = createStyleSheet(input)
-        const { cssRules: [{ conditionText, cssRules, cssText,parentRule, parentStyleSheet }] } = styleSheet
+        const { cssRules: [{ conditionText, cssRules, cssText, parentRule, parentStyleSheet }] } = styleSheet
 
         // CSSRule properties
-        expect(cssText).toBe('@media (color: green) {\n  .selector {\n  color: green;\n}\n}')
+        expect(cssText).toBe('@supports (color: green) {\n  .selector {\n  color: green;\n}\n}')
         expect(parentRule).toBeNull()
         expect(parentStyleSheet).toBe(styleSheet)
 

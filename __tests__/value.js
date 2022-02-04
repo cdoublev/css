@@ -8,7 +8,7 @@
  */
 
 const { toDegrees, toRadians } = require('../lib/utils/math.js')
-const { serializeSelectorGroup, serializeValue } = require('../lib/serialize.js')
+const { serializeCSSValue, serializeSelectorGroup } = require('../lib/serialize.js')
 const createList = require('../lib/values/value.js')
 const createOmitted = require('../lib/values/omitted.js')
 const parseDefinition = require('../lib/parse/definition.js')
@@ -33,7 +33,7 @@ function parse(definition, input, parseGlobals = false, serialize = true) {
         return null
     }
     if (serialize) {
-        return serializeValue({ input, value: parsed })
+        return serializeCSSValue({ input, value: parsed })
     }
     return parsed
 }
@@ -2767,6 +2767,33 @@ describe('<gradient>', () => {
     })
 })
 
+describe('<declaration>', () => {
+    it.todo('returns empty string for invalid declarations')
+    it('parses a supported declaration to a representation with the expected CSS types', () => {
+        expect(parse('<declaration>', 'color: green !important', false, false)).toEqual({
+            important: true,
+            name: 'color',
+            type: new Set(['declaration']),
+            value: {
+                type: new Set(['ident', 'keyword', 'named-color', 'absolute-color-base', 'color']),
+                value: 'green',
+            },
+        })
+    })
+    it('parses and serializes a declaration for a custom property', () => {
+        const input = '--custom: green'
+        expect(parse('<declaration>', input, false)).toBe(input)
+    })
+    it('parses and serializes a declaration of a custom variable', () => {
+        const input = 'color: var(--custom)'
+        expect(parse('<declaration>', input, false)).toBe(input)
+    })
+    it('parses and serializes a declaration of a CSS wide keyword', () => {
+        const input = 'color: initial'
+        expect(parse('<declaration>', input, false)).toBe(input)
+    })
+})
+
 describe.skip('<selector-list>', () => {
 
     function parse(input) {
@@ -2802,7 +2829,7 @@ describe('<media-query>', () => {
     it.todo('parses (width < 1px) to a representation with the expected properties')
 })
 
-describe.skip('(future) CSSStyleValue', () => {
+describe.skip('(WIP) CSSValue', () => {
     it('iterates over a single value', () => {
         const single = new CSSValue(1)
         for (const value of single) {
@@ -2821,7 +2848,7 @@ describe.skip('(future) CSSStyleValue', () => {
         }
     })
     it('transforms a single value without side effect but preserving instance properties', () => {
-        const single = new CSSValue(1, ['length'], [['unit', 'px']])
+        const single = new CSSValue(1, ['length'], { unit: 'px' })
         const transformed = single.map(n => n + 1)
         transformed.type.add('two')
         expect(single.value).toBe(1)
@@ -2833,7 +2860,7 @@ describe.skip('(future) CSSStyleValue', () => {
     })
     it('transforms a list of values without side effect but preserving instance properties', () => {
         const parameters = { strategy: 'to-zero' }
-        const list = new CSSValue([1, 2], ' ', ['round'], [['parameters', parameters]])
+        const list = new CSSValue([1, 2], ' ', ['round'], { parameters })
         const transformed = list.map(n => n + 1)
         transformed.type.add('result')
         expect(list).toEqual(expect.arrayContaining([1, 2]))
