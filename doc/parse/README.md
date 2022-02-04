@@ -1,9 +1,9 @@
 
 # Parsing CSS
 
-A CSS input can have different sources: the content of a style sheet referenced by `HTMLLinkElement.href` or an HTTP `Link` header, the inner content of `HTMLStyleElement`, `Element.style`, `Element.querySelector()`, `CSSStyleSheet.insertRule()`, etc.
+A CSS input can have different sources: the content of a style sheet referenced by `HTMLLinkElement` or an HTTP `Link` header, the inner content of `HTMLStyleElement`, the value assigned to `Element.style` or `Element.media`, the argument of `Element.querySelector()`, `CSSStyleSheet.insertRule()`, etc.
 
-This document explains how a CSS input is parsed in this library, by looking first at `Element.style` as the entry point. Narrowing the type of input to a list of CSS declarations will help to understand the CSS parsing model and parsing CSS at a higher level: a rule and a style sheet.
+This document explains how this implementation parses a CSS input by first looking at `Element.style`. Narrowing the input type to a list of CSS declarations will help understand the CSS parsing model before looking at parsing CSS at a higher level: a rule and a style sheet.
 
 Some words may use the [CSS value definition syntax](./value-definition.md), eg. `<foo>`, which represents an input matching a production named `foo` in the CSS grammar, defined in the very first section of this document.
 
@@ -11,9 +11,9 @@ Some words may use the [CSS value definition syntax](./value-definition.md), eg.
 
 The CSS grammar is a set of rules to transform a byte stream or a stream of code points (string) into a structure representing this CSS input: a `CSSStyleSheet` (aka. CSSOM tree), a `CSSStyleDeclaration`, or a list of component values.
 
-The byte stream is transformed into code points, then into tokens, then into objects representing rules, declarations, and component values, first by applying basic syntax rules, then rules and declarations are validated against context rules (defined by the parent rule or style sheet), and declaration values are matched against the production of the declaration property.
+The byte stream is transformed into code points, then into tokens, then into objects representing rules, declarations, and component values, first by applying basic syntax rules, then rules and declarations are validated against context rules (defined by the parent rule or style sheet), and declaration values are matched against the production of the declaration target (a property or a descriptor).
 
-Below is a (incomplete) hierarchical representation of these different values:
+Below is a non-exhaustive list of these different values:
 
   - `<stylesheet>`: `<rule-list>`
   - rule
@@ -30,7 +30,7 @@ Below is a (incomplete) hierarchical representation of these different values:
   - `<declaration>`: `<ident>: <declaration-value>`
   - prelude, `<declaration-value>`: component values
 
-The CSS rules, qualified and at-rules, can not be represented with the CSS value definition syntax in a non-trivial way. Below is a limited representation (some productions are not defined in any CSS specification):
+The CSS rules (qualified and at-rules) can not be represented with the CSS value definition syntax in a non-trivial way. Below is a limited representation (some productions are not defined in any CSS specification):
 
   - `<stylesheet> = <rule-list>`
   - `<rule-list> = [<qualified-rule> | <at-rule>]*`
@@ -43,25 +43,27 @@ The CSS rules, qualified and at-rules, can not be represented with the CSS value
 Below are the principles of the context rules:
 
   - `<stylesheet>` accepts all rules excluding those defined by the parent rule (context)
-  - `<rule-list>` only accepts rules defined by the context (*if a given context is only intended to accept at-rules [..., ie. excluding qualified rules and declarations, `<rule-list>`] is preferred for its more straightforward name*)
+  - `<rule-list>` only accepts rules defined by the context
   - a qualified rule at the top-level of `<stylesheet>` is a style rule
   - a qualified rule always accepts `<declaration>`s and a style rule accepts `<style-block>`
-  - `<style-block>` accepts `<declaration>`s, style rules (whose selectors start with `&`), `@nest`, and `@media`
-  - `<declaration-list>` only accepts `<declaration>`s whose property is defined by the context, and (for back-compatibility with CSS2) at-rules defined by the context
+  - `<style-block>` accepts `<declaration>`s, style rules (whose selectors start with `&`) and `@nest` (whose selectors includes `&`), and `@media`
+  - `<declaration-list>` only accepts `<declaration>`s for properties/descriptors defined by the context, and (for back-compatibility with CSS2) at-rules defined by the context
 
 To sum up, the content of an at-rule (`<stylesheet>`, `<rule-list>`, or `<declaration-list>`) depends on its context, eg.:
 
-  - `@media` accepts `<stylesheet>` excluding non top-level rules
-  - `@keyframes` accepts `<rule-list>` limited to qualified rules matching `<keyframe-selector># { <declaration-list> }`, where `<declaration-list>` excludes at-rules
-  - `@font-feature-values` accepts `<declaration-list>` limited to `font-display` for its declaration property and to at-rules matching `<font-feature-value-type>`
+  - `@media` contains a `<stylesheet>` excluding non top-level rules
+  - `@keyframes` contains a `<rule-list>` limited to qualified rules matching `<keyframe-selector># { <declaration-list> }`, where `<declaration-list>` excludes at-rules
+  - `@font-feature-values` contains a `<declaration-list>` limited to `font-display` for its declaration name and to at-rules matching `<font-feature-value-type>`
 
 ## `Element.style`
 
-`Element.style` is an instance of [`CSSStyleDeclaration`](https://drafts.csswg.org/cssom/#the-cssstyledeclaration-interface) representing a list of *CSS declaration*. A `<declaration>` is a `:` separated property name and value optionally suffixed with `!important`.
+`Element.style` is an instance of [`CSSStyleDeclaration`](https://drafts.csswg.org/cssom/#the-cssstyledeclaration-interface) representing a list of CSS declarations.
 
-It is also named a *CSS declaration block* in CSSOM, but a block implies the presence of the *associated tokens* wrapping its content, while `Element.style` has none. To be precise, `CSSStyleDeclaration` is a CSS declaration block's content.
+A `<declaration>` is a property or descriptor name, `:`, a value, and an optional suffix `!important`. When the `<declaration>` apply to an `Element`, it is a declaration for a property, otherwise it is a descriptor.
 
-`CSSStyleDeclaration` can not represent multiple declarations for the same property: it represents a single *declared value* for the property. `Element.style`, and multiple `CSSRule.style` at different locations, can have different declared values for the property applying on `Element`. The cascade computes a single specified value from these declared values.
+`CSSStyleDeclaration` is also named a *CSS declaration block* in CSSOM, but a block implies the presence of its *associated tokens* (`{}`) wrapping its content, while `Element.style` has none. `CSSStyleDeclaration` is more precisely *the content of a CSS declaration block*.
+
+`CSSStyleDeclaration` can not represent multiple declarations for the same property: it represents a single *declared value* for the property. `Element.style`, and multiple `CSSRule.style` existing at different locations, can have different declared values for the same property that applies to the same `Element`. The CSS cascade defines how to compute a single specified value from these declared values.
 
 - *authored value*: the input value used to set the property
 - [declared value](https://drafts.csswg.org/css-cascade-5/#declared): *each property declaration applied to an element contributes a declared value for that property*
@@ -74,6 +76,8 @@ It is also named a *CSS declaration block* in CSSOM, but a block implies the pre
 
 [`Element.style.getPropertyValue(property)`](https://drafts.csswg.org/cssom/#dom-cssstyledeclaration-getpropertyvalue) should return the serialization of the [CSS declaration](https://drafts.csswg.org/cssom/#css-declaration) value stored in `Element.style` for `property`.
 
+[`Element.style.setProperty(property, value)`](https://drafts.csswg.org/cssom/#dom-cssstyledeclaration-setproperty) should store the CSS declaration(s) in `Element.style` for the `property` (or its longhands) given as its first argument (step 8 or 9). The CSS declaration value is the list of component values resulting from *parse as a CSS value* with the input string `value` given as its second argument (step 5).
+
 > A CSS declaration is an abstract concept that is not exposed as an object in the DOM. A CSS declaration has the following associated properties:
 >
 > - **property name:** the property name of the declaration
@@ -84,9 +88,7 @@ It is also named a *CSS declaration block* in CSSOM, but a block implies the pre
 
 > A component value is one of the preserved tokens, a function, or a simple block.
 
-[`Element.style.setProperty(property, value)`](https://drafts.csswg.org/cssom/#dom-cssstyledeclaration-setproperty) should store the CSS declaration(s) in `Element.style` for the `property` (or its longhands) given as its first argument (step 8 or 9). The CSS declaration value is the list of component values resulting from *parse as a CSS value* with the input string `value` given as its second argument (step 5).
-
-Reading *parse as a CSS value* and subjacent procedures from CSSOM and Syntax, the CSS declaration value is a list of component values that should be nearly identical to the list of tokens resulting from normalizing (tokenizing) the input string `value`:
+Reading *parse a CSS value* and subjacent procedures from CSSOM and Syntax, the CSS declaration value is a list of component values that should be nearly identical to the list of tokens resulting from normalizing (tokenizing) the input string `value`:
 
 - [parse a CSS value](https://drafts.csswg.org/cssom/#parse-a-css-value):
   > 1. Let `list` be the value returned by invoking **parse a list of component values** from `value`.
@@ -113,30 +115,30 @@ These *functions or blocks* objects are assigned tokens when parsing a list of c
 >
 > Otherwise, return the current input token.
 
-Therefore, to match a property defined with `rgb()`, the list of component values should include a single component value that is a function token whose `name` is `rgb` and whose `value` is a list of component values representing its arguments:
+Therefore, to match a property defined with `rgb()`, the list of component values should include a single component value whose `name` is `rgb` and whose `value` is a list of component values representing its arguments:
 
 > To consume a function:
 >
 > Create a function with its name equal to the value of the current input token and with its value initially set to an empty list. [...]
 
-A CSS declaration can not have a shorthand property name, and step 8 of the procedure for `Element.style.setProperty(property, value)` is rather nebulous about its responsibility on [expanding shorthand to longhands declarations](https://drafts.csswg.org/cssom/#concept-declarations-specified-order):
+`CSSStyleDeclaration` does not represent CSS declarations for shorthand properties. They are expanded to CSS declarations for the corresponding longhands *in [specified order*](https://drafts.csswg.org/cssom/#concept-declarations-specified-order).
+
+> The **specified order** for declarations is the same as specified, but with shorthand properties expanded into their longhand properties, in canonical order. If a property is specified more than once (after shorthand expansion), only the one with greatest cascading order must be represented, at the same relative position as it was specified.
+
+`CSSStyleDeclaration.cssText` (setter) is pretty explicit about this responsibility but it is rather nebulous for `Element.style.setProperty(property, value)`:
 
 > 8. If `property` is a shorthand property, then for each longhand property `longhand` that `property` maps to, in canonical order, follow these substeps:
 >   1. Let `longhand result` be the result of set the CSS declaration `longhand` with the appropriate value(s) from `component value list`, with the `important` flag set if `priority` is not the empty string, and unset otherwise, and with the list of declarations being the declarations.
 
 From [this issue of the W3C Github repository](https://github.com/w3c/csswg-drafts/issues/6451):
 
-> Shorthand expansion is not done in "parse a CSS value", it happens in [the above step].
-
-Shorthand expansion is the result of sorting declarations in [specified order](https://drafts.csswg.org/cssom/#concept-declarations-specified-order):
-
-> The **specified order** for declarations is the same as specified, but with shorthand properties expanded into their longhand properties, in canonical order. If a property is specified more than once (after shorthand expansion), only the one with greatest cascading order must be represented, at the same relative position as it was specified.
+> Shorthand expansion is not done in "parse a CSS value", it happens in [the above step 8].
 
 ## Side effects and idempotence
 
-The previous section raises a fundamental question about the result returned from *match `list` against the grammar for the property `property` in the CSS specification* in *parse a CSS value*, or from *parsing `declaration` according to the appropriate CSS specifications, dropping parts that are said to be ignored* in parse a CSS declaration block: should it be a simple boolean or a transformed/mutated list?
+The previous section raises a fundamental question about the result returned from *parse a CSS value* and *parse a CSS declaration block*, respectively *match `list` against the grammar for the property `property` in the CSS specification* and *parsing `declaration` according to the appropriate CSS specifications, dropping parts that are said to be ignored*: should it be a simple boolean or a transformed/mutated list?
 
-Note: matching against the grammar for the `property` is not defined but it means matching against its value definition and any optional specific rules defined in the specification for the property.
+Note: *matching against the grammar for the `property`* or *parsing `declaration` according to the appropriate CSS specifications* are not further defined but they both mean matching against the value definition and any specific rules defined in the specification for the property.
 
 *Parse a CSS value* do not require to replace (or mutate) the list of component values, and [*serialize a CSS value*](https://drafts.csswg.org/cssom/#serialize-a-css-value) only enforces idempotence, ie. `assert.deepStrictEqual(parse(list), parse(serialize(parse(list))))`:
 
@@ -160,7 +162,7 @@ But some properties and productions have specific parsing and serializing rules:
 
 When matching the grammar of a property, replacing (or mutating) the list of component values is neither required nor prohibited but it seems hard or even impossible not to do so: returning `0` from `getPropertyValue('flex-grow')` after running `setProperty('flex', 'none')` is impossible if the result of matching `none` against the grammar for `flex` is not replaced by a result equivalent to parsing `0 0 auto` at a point.
 
-Furthermore, it is not defined how component value(s) can be associated to the matching production(s), some of which have specific serialization rules. Identifying *the appropriate value(s) from `component value list`* to set the CSS declaration of each longhand of a shorthand, and *reorder[ing] the component values to use the canonical order of component values as given in the property definition table*, are similar challenges.
+Furthermore, it is not defined how component value(s) can be associated to the matching production(s) in order to apply its specific serialization rules. Identifying *the appropriate value(s) from `component value list`* to set the CSS declaration of each longhand of a shorthand, and *reorder[ing] the component values to use the canonical order of component values as given in the property definition table*, are similar challenges.
 
 Note: when matching a longhand property, Chrome returns a component value or a list of component values and when matching a shorthand property, it returns a boolean and sets its longhands in a map that can be read later using its parser interface.
 
@@ -257,9 +259,9 @@ bool Flex::ParseShorthand(/*...*/) const {
 
 To overcome these challenges, this library defines the following requirements:
 
-- a component value is implemented as an object¹ with a `type` property as a `Set` filled² with the matching production(s)
+- a component value is implemented as a plain object¹ with a `type` property as a `Set` filled² with the matching production(s)
 - the input list of component values is replaced by the result of matching this list against the grammar for a property³, in which component values are automatically sorted by their position in the value definition
-- specific rules for the property or production are matched in functions (hooks) run after matching against the production, to discard a value breaking a specific rule, to add or remove default component values⁴, or to replace² special meaning keywords by other component value(s)
+- specific rules for the property or the inner productions are matched in functions (hooks) which run after matching against the production, to discard a value failing against a rule, to add or remove default component values⁴, or to replace² special meaning keywords by other component value(s)
 - an omitted value⁵ is represented in the resulting list as a component-like data structure
 
 ¹ Delimiters are tokenized as strings then parsed to objects while matching a production: this makes consuming whitespaces easier, but it is an implementation detail that may change later.
@@ -268,13 +270,13 @@ To overcome these challenges, this library defines the following requirements:
 
 -> TODO: fix productions assigned before backtracking (the previous point is not true in some rare cases)
 
-³ Therefore the input list of component values can be parsed into a single component value, deviating from *parse a CSS value*, but *serialize a CSS value* somewhat handles it with *represent the value of the [single] declaration as a list*, and it is an implementation detail that may change later.
+³ Therefore the input list of component values can be parsed into a single component value instead of a list, which is a deviation from *parse a CSS value*, but *serialize a CSS value* somewhat handles it with *represent the value of the [single] declaration as a list*, and it is an implementation detail that may change later.
 
 ⁴ When the value is for a longhand property, and no specific serialization rules prevents it, default values are removed once at parse time instead of at serialization time, to improve performances.
 
-⁵ Omitted values exist in production value definitions containing the multiplier `?`, `*`, or `{0,n}`, or `||` separated productions.
+⁵ Omitted values exist in value definitions containing the multiplier `?`, `*`, or `{0,n}`, or `||` separated productions.
 
-Learn more about the [data structure used to represent a CSS value](./value-data-structure/README.md).
+Learn more about the [data structure used to represent a CSS value](./value-data-structure.md).
 
 ## Parse a style sheet
 
@@ -300,17 +302,12 @@ Learn more about the [data structure used to represent a CSS value](./value-data
 
 ```
 Input -> Tokenization -> Syntax -> Context and production rules -> CSSOM tree
+Input -> Tokenization -> Syntax -> CSSOM tree -> Context and production rules
 ```
 
-Parsing a style sheet with the corresponding procedures from Syntax is limited to applying syntax rules to get objects representing rules: preludes are not validated according to the production for the rule, declarations and rules nested in rule's blocks are not validated according to the parent rule. Also, it is shallow: this nested rule's content is left unparsed as a list of component values.
+Parsing a style sheet with the corresponding procedures from Syntax is limited to applying syntax rules to get objects representing rules: preludes are not parsed against their value definitions, declarations and rules nested in rule's blocks are not validated according to their context. Also, it is shallow: the content of these nested rules is left unparsed as a list of component values.
 
-This means that these procedures should run recursively from the top to bottom level of the contents of a style sheet, that each level should be validated against the corresponding rules, and that the corresponding CSSOM tree should be constructed either in parallel, by wrapping these procedures in other procedures, or with a second traversal, eg. to avoid constructing then remove a `CSSImportRule` that would be invalid because it is preceding `@charset`.
-
-Note: ignoring `@import` preceding `@charset`, and `@namespace` preceding `@charset` or `@import`, seems to be the only two rules that require to look forward the next items, noting that `@charset` is not very usefull (and is not even defined with a `CSSRule` subclass) as well as `@namespace`, which is only required for XML documents.
-
-Note about constructing the CSSOM tree in parallel vs. with a second traversal:
-  - the first option forces to run the entry point then `CSSStyleSheet.create()` with its result
-  - the second option presents a difference between `CSSStyleSheet` and `CSSRule`, which could be considered as a discordance: a `CSSStyleSheet` validates its content when it is created, and is created even if its content is invalid, while `CSSRule` subclasses get their content validated before their creation, in the constructor of `CSSStyleSheet` or the parent `CSSRule` subclass (as well as in *insert a CSS rule*, run by eg. `CSSStyleSheet.insertRule()`). But a `CSSStyleSheet` is a list of rules, not a rule, therefore this difference is legit: a parent rule (or the style sheet) should validate its content.
+This means that these procedures should run recursively from the top to bottom level of the style sheet contents, that each level should be validated against the corresponding rules, and that the corresponding CSSOM tree should be constructed either in parallel or with a second traversal, eg. to avoid constructing then remove a `CSSImportRule` that would be invalid because it is preceding `@charset`.
 
 ### Parsing the basic syntax
 
@@ -319,8 +316,6 @@ Note about constructing the CSSOM tree in parallel vs. with a second traversal:
 Because *parse something according to a CSS grammar* runs *parse a list of component values*, it can not be used to parse an input that is already an object resulting from other procedures: there would be no such things as a stream of tokens as its input, and it could return unexpected results.
 
 [Related issue](https://github.com/w3c/csswg-drafts/issues/4927#issuecomment-1012127022): *parse a comma separated list according to a CSS grammar* runs *consume a component value* twice but there will be no such thing as a current/next input **token** on the second run when it is a function or block **component value**, and because `<function-token>` is assimilated as `<function>` in this library, an error would occur.
-
-TODO: figure out the productions that can match a function in a rule's prelude or block.
 
 Below could be a partial answer to the above issue, but what does *makes no difference* mean exactly?
 
@@ -359,17 +354,16 @@ Issues in *Examples* of [`<declaration-list>`, `<rule-list>`, and `<stylesheet>`
 > - Similarly, the `<rule-list>` production [...] must be parsed using the *consume a list of rules* algorithm.
 > - Finally, the `<stylesheet>` production [...] is identical to `<rule-list>`, except that blocks using it default to accepting all rules that aren’t otherwise limited to a particular context.
 
-Parsing `<stylesheet>` do not have a procedure explicitly defined but *consume a list of rules* is assumed. It should not be parsed with *parse a stylesheet*, which is only used to parse the content of a style sheet, because HTML comments should only be handled at the top-level of the style sheet, ie. when *consume a list of rules* is run with the top-level flag set, but not in eg. `@media`.
-
-Because `location` is not required in the object resulting from *parse a stylesheet*, but only the rules assigned to its `value`, *parse a stylesheet* can be implemented with *parse a list of rules*, which would receive the `topLevel` flag set (default: unset), and pass it to *consume a list of rules*. This would allow to also parse `<stylesheet>` with it.
--> issue: it would be missing decoding a byte stream into a stream of code points, which is useless to parse `<stylesheet>`
+Parsing `<stylesheet>` does not have a procedure explicitly defined but *consume a list of rules* is assumed. It should not be parsed with *parse a stylesheet*, which is only used to parse the content of a style sheet, because HTML comments should only be handled at the top-level of the style sheet, ie. when *consume a list of rules* is run with the top-level flag set, but not in eg. `@media`.
 
 ### Validation against the context rules
 
 > For rules that use `<style-block>` or `<declaration-list>`, the spec for the rule must define which properties, descriptors, and/or at-rules are valid inside the rule [...]. Any declarations or at-rules found inside the block that are not defined as valid must be removed from the rule’s value.
 >
-> Within a `<style-block>` or `<declaration-list>`, `!important` is automatically invalid on any descriptors. [...]
->
+> Within a `<style-block>` or `<declaration-list>`, `!important` is automatically invalid on any descriptors. If the rule accepts properties, the spec for the rule must define whether the properties interact with the cascade, and with what specificity. If they don’t interact with the cascade, properties containing `!important` are automatically invalid; otherwise using `!important` is valid and causes the declaration to be important for the purposes of the cascade.
+
+Note: the properties accepted in directly nested `CSSStyleRule`, `@nest`, and nested conditional at-rules (`@media` and `@supports`), which are all defined as containing `<style-block>`, are not explicitly defined in Nesting, as well as their interaction with the cascade, but it is assumed that all existing properties are accepted and that they interact "normally" with the cascade.
+
 > For rules that use `<rule-list>`, the spec for the rule must define what types of rules are valid inside the rule, same as `<declaration-list>`, and unrecognized rules must similarly be removed from the rule’s value.
 >
 > For rules that use `<stylesheet>`, all rules are allowed by default, but the spec for the rule may define what types of rules are invalid inside the rule.
@@ -378,23 +372,26 @@ Because `location` is not required in the object resulting from *parse a stylesh
 >
 > The `<any-value>` production is identical to `<declaration-value>`, but also allows top-level `<semicolon-token>` tokens and `<delim-token>` tokens with a value of "!". It represents the entirety of what valid CSS can be in any context.
 
-`<declaration-value>` is used in `<attr()>`, `<env()>`, `<paint()>`, `<var()>`, as the value of the `initial-value` descriptor of `@property`.
+`<declaration-value>` is used in `<attr()>`, `<env()>`, `<paint()>`, `<var()>`, and for the `initial-value` descriptor of `@property`.
 
-`<any-value>` is only used in `<supports-condition>` in the prelude of `@supports` and in `<selector-list>` in the prelude of some at-rules.
+`<any-value>` is only used in `<supports-condition>` for the prelude of `@supports` and in `<selector-list>` for the prelude of some at-rules.
 
 > A CSS processor is considered to support a declaration (consisting of a property and value) if it accepts that declaration (rather than discarding it as a parse error) within a style rule. If a processor does not implement, with a usable level of support, the value given, then it must not accept the declaration or claim support for it.
 
-`<declaration>` is only used in `<supports-condition>`. It should contain a `<declaration-value>` validated according to the production of the declaration property (excluding the production of the CSS global keywords or `<var()>`), which means that `parseDeclaration()` should be used to parse the syntax of the declaration, and `parseCSSDeclaration()` (step 3 of `parseCSSDeclarationBlock()`, and step 3.1 is `parseCSSValue()`, also used in `CSSStyleDeclaration.setProperty()`) should validate the declaration value.
+`<declaration>` is only used in `<supports-condition>` for the prelude of `@supports`. It should represent a `<declaration>` validated according to the production of the declaration property, the CSS global keywords, or `<var()>`, which means that `parseDeclaration()` should be used to parse the syntax of the declaration, and `parseCSSDeclaration()` (step 3 of `parseCSSDeclarationBlock()`, and step 3.1 is `parseCSSValue()`, also used in `CSSStyleDeclaration.setProperty()`) should validate the declaration value.
 
 ### Constructing the CSSOM tree
 
+The scripting interface of the CSSOM is defined with [Web IDL (Interface Definition Language)](https://webidl.spec.whatwg.org/).
+
+[`webidl2js`](https://github.com/jsdom/webidl2js) is a code generator that takes Web IDL as input, and generates JavaScript files as output which implement the specified Web IDL semantics.
+
 **Memos `webidl2js`:**
 
-  - a wrapper class can not be instantiated when the `.webidl` do not define a `constructor()`, even if the implementation class implements a `constructor()`
+  - a wrapper class can not be instantiated when the `.webidl` does not define a `constructor()`, even if the implementation class implements a `constructor()`
   - an implemented property defined as `readonly` does not need to be private because it is read from a getter in the wrapper class, therefore all public properties of an implementation class are kind of private, noting that public properties are inherited while (true) private properties are not (and must be declared), and that some CSS interfaces have (private state) properties that should be inherited from a parent class
   - an instance of an implementation class (eg. created with `wrapper.createImpl()`) returned or received by an implemented method that is run from an instance of the wrapper class, will be converted to a wrapper instance, if this return or argument value is defined appropriately in the `.webidl`, ie. as a type that can be defined with Web IDL
-  - a wrapper file can not be required at the top of the corresponding implementation file, eg. to implement a procedure to *create an object* of the corresponding interface, because the former requires the latter (circular dependency)
-  - `wrapper.install()` should be run before `wrapper.create()` or `wrapper.createImpl()`
+  - `wrapper.install()` should run before `wrapper.create()` or `wrapper.createImpl()`
   - `wrapper.create()` is usefull to create an instance of a wrapper class when the `.webidl` does not define a `constructor()` or when an instance should be created with state values (`privateData`) that are different than when creating a constructed instance
   - `wrapper.createImpl()` is an alias for `wrapper.convert(wrapper.create())` and is usefull to write "private" properties of an instance of the implementation class from outside
   - `wrapper.convert()` converts a wrapper instance to an implementation instance
@@ -411,9 +408,9 @@ Eg. *create a CSS style sheet* should initialize an instance of `CSSStyleSheet` 
 
 Note: a good convention is to only use `constructorArgs` when creating *constructed* object.
 
-*Create a CSS style sheet* also have an additional step (run `addCSSStyleSheet()`) that would be better to run outside of `CSSStyleSheet.constructor()`, to separate concerns but also because *remove a CSS style sheet* should update a property of the document or shadow root that is read-only, therefore this can not be done from inside `CSSStyleSheet` or in an helper function. It would be inconsistent to implement *create a CSS style sheet* inside `CSSStyleSheet` but implement *remove a CSS style sheet* outside. Instead, *create a <interface> object* should be implemented where it needs to run, and only state properties are initialized in the constructor of the interface.
+*Create a CSS style sheet* includes *add a CSS style sheet* that would be better run outside of `CSSStyleSheet.constructor()`, to separate concerns but also because *remove a CSS style sheet* should update a property of the document or shadow root, which is read-only, therefore this can not be done from inside `CSSStyleSheet` or in an helper function. It would be inconsistent to implement *create a CSS style sheet* inside `CSSStyleSheet` but implement *remove a CSS style sheet* outside. Instead, *create a <interface> object* should be implemented where it needs to run, and only state properties are initialized in the constructor of the interface.
 
-Note: if `globalObject` (`Document` or `ShadowRoot`) could be assumed as an instance of a wrapper class generated by `webidl2js`, then it could be converted to an instance of the implementation class, and *remove a CSS style sheet* could be implemented in `CSSStyleSheet` or a utility function (see below), but this would make the implementation brittle because it would be coupled to the use of `webidl2js` and the name of the property in the implementation class of `Document` or `ShadowRoot`.
+Note: if `globalObject` (`Document` or `ShadowRoot`) could be assumed as an instance of a wrapper class generated by `webidl2js`, then it could be converted to an instance of the implementation class, and *remove a CSS style sheet* could be implemented in `CSSStyleSheet` or a utility function (see below), but this would make the implementation brittle because it would be coupled to the use of `webidl2js` and to the name of the property in the implementation class of `Document` or `ShadowRoot`.
 
 ```js
 /**
@@ -428,7 +425,7 @@ function removeCSSStyleSheet(document, styleSheet) {
 
 **What are the main steps to get a `CSSStyleSheet` from parsing a style sheet or `HTMLStyleElement.innerText`?**
 
-Procedure for *parse a CSS Stylesheet*:
+Procedure for [*parse a CSS Stylesheet*](https://drafts.csswg.org/css-syntax-3/#parse-a-css-stylesheet):
 
   > To parse a CSS stylesheet, first parse a stylesheet. Interpret all of the resulting top-level qualified rules as style rules, defined below.
   >
@@ -445,8 +442,6 @@ Procedure for *parse a CSS Stylesheet*:
   > Note: CSS-NESTING-1 defines that `@nest` and conditional group rules are allowed inside of style rules.
   >
   > Declarations for an unknown CSS property or whose value does not match the syntax defined by the property are invalid and must be ignored. The validity of the style rule’s contents have no effect on the validity of the style rule itself. [...]
-
-https://drafts.csswg.org/css-syntax-3/#parse-a-css-stylesheet
 
 The return value is not defined but from a logical point of view, it could be assumed as an instance of `CSSStyleSheet`, similarly as the return value of *parse a CSS rule*, whose type is not defined, could be assumed as an instance of a `CSSRule` subclass. Furthermore:
 
@@ -495,72 +490,8 @@ A strict interpretation of *before you can see the stylesheet* would mean that *
 
 But it rather means that the style sheet should contain all of its rules before appearing outside of the CSS parser.
 
-Notes about using the "parse engine" vs. alogrithms to parse rules and their content:
-
-  - *consume an at-rule* and *consume a qualified rule* handle an at-keyword token followed by a simple-block, which means that *consume a list of rules* can receive an `input` that went through *parse a list of component values* and that parsing `<stylesheet>`, `<rule-list>`, `<style-block>`, `<declaration-list>`, can be implemented as `parseCSSGrammar(input, '<stylesheet>')`, `parseCSSGrammar(input, '<rule-list>')`, etc.
-  - it seems easier and more straightforward to run the *consume* procedures required for parsing `<stylesheet>`, `<rule-list>`, `<style-block>`, `<declaration-list>`, `<declaration>`, and to run `parseCSSRule()`, `parseCSSDeclaration()`, in the outer scope of `parseGrammar()`, as well as for having access to the context rules (parent rule name/definition)
-  - `@webref/css` extracts only "child" at-rule definitions
-
-Solution 1 (current): `matchRule(rule, contextRules)`
-
-Solution 2: solution 1 but using `parseGrammar([cssRule], grammars[rule.name], context)`
-  - con: it adds complexity with no other benefit than centralizing parsing against productions
-
-Solution 3: `parseCSSGrammar(input, '<stylesheet>')`
-  - con: it adds complexity with no other benefit than centralizing parsing against context rules and productions and removing extra work when a new rule is added to a specification
-    - `@webref/css` is currently limited to extracting "child" rules
-  - implementation (call path):
-    1. `parseCSSGrammar(input, '<stylesheet>')`
-    2. `parseNonTerminalType(list, node)` -> `node.value === stylesheet -> <rule-list>`
-    3. `parseTerminalType(list, node)` -> `node.value === rule-list`
-    4. `parseCSSRuleList(list, node)`
-        -> requires `consumeRuleList()` in `syntax.js`
-        -> could be implemented via a hook run with `context.applyRule(list, 'rule-list')` in `parseTerminalType()`, receiving the result of running `consumeRuleList()`, ie. the terminal parse function, and `context`
-        - `parentRule = context.getParentScopeNode()` -> `context.scopes[context.scopes.length - 2]`
-        - `parentRuleDefinition = parentRule ? rules[parentRule.name].value.rules : rules`
-        - `consumeRuleList(list, !!parentRule).reduce((parsed, rule) => ..., [])`
-          - `ruleDefinition = parentRule ? rules[parentRule.name][rule.name].type : rules[rule.name].type`
-          - discard `rule` if not allowed by `parentRuleDefinition`
-          - discard `rule` if `rule = parseGrammar([rule], ruleDefinition, context)` otherwise push it to `parsed`
-            -> issue: `parseGrammar()` runs `context.reset()` which means that `parentRule` will be missing
-            -> workaround: `context.reset()` can be run from outside `parseGrammar()`
-            1. `parseType(list, node)` -> `node.type === 'rule'`
-            2. `parseRule(list, node)`
-                - `rule = list.next()`
-                - `parseType(rule.prelude, node.prelude)`
-                - eg. `context.terminals['rule-list'](rule.value, parentRule.name)`
-                  - `parseCSSRuleList(rule.value, parentRule.name)`
-                - eg. `context.terminals['style-block'](rule.value, parentRule.name)`
-                  - `parseCSSStyleBlock(rule.value, parentRule.name)`
-
-**How `jsdom` makes webidl interfaces available in its code?**
-
-1. `.webidl` and implementations are defined in `<path>`
-2. Wrappers are generated in `<path>/generated`
-3. `wrapper.install(window, ["Window"])` is run for each interfaces when creating an instance of `class JSDOM`
-
-**Usages of this library:**
-
-  - in `jsdom`:
-    - assign interfaces to `Window`
-      -> https://github.com/jsdom/jsdom/blob/master/lib/jsdom/living/interfaces.js#L210
-      -> https://github.com/jsdom/jsdom/blob/master/lib/jsdom/level2/style.js
-      -> replace `style.addToCore(window)` by `Object.values(require('cdoublev/css')).forEach(wrapper => wrapper.install(window, globalNames))`
-    - create a `CSSStyleDeclaration` in `getComputedStyle()`
-      -> https://github.com/jsdom/jsdom/blob/master/lib/jsdom/browser/Window.js#L796
-      -> replace `new CSSStyleDeclaration()` by `wrapper.create(this, undefined, { computed: true, element: elt })`
-    - create a `CSSStyleDeclaration` as `Element.style`
-      -> https://github.com/jsdom/jsdom/blob/master/lib/jsdom/living/nodes/ElementCSSInlineStyle-impl.js#L7
-      -> replace `new cssstyle.CSSStyleDeclaration(...)` by `wrapper.create(???, undefined, { element: this })`
-    - create `CSSStyleSheet` as `HTMLLinkElement.sheet` and `HTMLStyleElement.sheet`
-      -> https://github.com/jsdom/jsdom/blob/master/lib/jsdom/living/helpers/stylesheets.js#L28
-      -> https://github.com/jsdom/jsdom/blob/master/lib/jsdom/living/nodes/HTMLLinkElement-impl.js#L88
-      -> https://github.com/jsdom/jsdom/blob/master/lib/jsdom/living/nodes/HTMLStyleElement-impl.js#L68
-      -> replace all usages by ???
-  - others:
-    - `new CSSStyleDeclaration()`: to test parsing inline CSS (`cssText`) or CSS declarations (`setProperty()`)
-    - `new CSSStyleSheet()`: to test parsing a whole CSS style sheet (style block)
+WIP
 
 ## Recursive descent parser with backtracking (statefull parser)
 
-See [./drafts.md](./drafts.md).
+WIP

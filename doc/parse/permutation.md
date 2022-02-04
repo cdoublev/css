@@ -1,9 +1,9 @@
 
 # Parsing permutations
 
-## Parsing `||` separated types
+One of the only cases for which the parser should be *greedy*, ie. make choices aiming at matching as many types as possible, is when parsing a multiplied type or `||` combined types. This also means that the first result that can be parsed by matching types from left to right (in their canonical order) should be favored.
 
-The only cases for which the parser should be *greedy*, ie. making choices aiming at matching as many types as possible, is when parsing a multiplied type or `||` combined types. This also means that the first result that can be parsed by matching types from left to right (in their canonical order) should be favored. This last requirement prevents eg. `background-origin` and `background-clip` values from being switched when matched against `... || <attachment> || <box> || <box>`, if the `background-attachment` value is placed between the two `<box>` values.
+This last requirement prevents eg. `background-origin` and `background-clip` values from being switched when matched against `... || <attachment> || <box> || <box>`, if the `background-attachment` value is placed between the two `<box>` values.
 
 When the parser can not match a value against one of the `||` combined types, it means that this value is either omitted or placed at a different position, ie. another permutation should be matched. The permutations should be sorted in the canonical order of types starting from the permutation with the most types and ending with the last single type, eg.:
 
@@ -23,7 +23,7 @@ When the parser can not match a value against one of the `||` combined types, it
   14. `b`
   15. `c`
 
-The parser should go from 1 to 3 if it can not find a match for `a`, otherwise it should go from 1 to 2 if it finds a match for `a` but not for `b`, then it should backtrack before `a` if it can not find a match for `c`. While backtracking, the parser should try again to match a type associated to a state, which would mean it can yield itself a different match result. It would not (always) be able to do so when trying another permutation on the first failure.
+The parser should go from 1 to 3 if it can not find a match for `a`, otherwise it should go from 1 to 2 if it finds a match for `a` but not for `b`, then it should backtrack before `a` if it can not find a match for `c`. When backtracking, the parser should try again to match a type associated to a state, which is a hint indicating that it can yield a different match result. This result would not (always) be obtained when trying another permutation on the first failure instead of backtracking.
 
 ## Definitions
 

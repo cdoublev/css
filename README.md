@@ -22,30 +22,34 @@ const style = cssom.CSSStyleDeclaration.create(myGlobalObject, undefined, privat
 
 The `webidl2js` wrappers are intended to implement:
 
-- *create a CSS style sheet*: when processing or updating the content of [`<style>`](https://html.spec.whatwg.org/multipage/semantics.html#the-style-element), when processing the resource referenced by [`<link>`](https://html.spec.whatwg.org/multipage/links.html#link-type-stylesheet), or when processing an HTTP `Link` header including `rel="stylesheet"`
+- *create a CSS style sheet*: when processing or updating the content of [`HTMLStyleElement`](https://html.spec.whatwg.org/multipage/semantics.html#the-style-element), when processing the resource referenced by [`HTMLLinkElement`](https://html.spec.whatwg.org/multipage/links.html#link-type-stylesheet) or an HTTP `Link` header with `rel="stylesheet"`
 - [the `style` attribute of an `HTMLElement`](https://html.spec.whatwg.org/multipage/dom.html#the-style-attribute)
-- *return a live CSS declaration block* when implementing the extension to `Window` that provides [`getComputedStyle()`](https://drafts.csswg.org/cssom/#extensions-to-the-window-interface)
+- *return a live CSS declaration block* for [`Window.getComputedStyle()`](https://drafts.csswg.org/cssom/#extensions-to-the-window-interface)
 
-To sum up, they mostly exist to create a `CSSStyleSheet` and `CSSStyleDeclaration` (CSS declaration block). Below are a map between the properties as defined in the corresponding specification and `privateProperties`:
+To sum up, they mostly exist to create `CSSStyleSheet` and `CSSStyleDeclaration` (block). Below is a map between the properties as defined in the corresponding specification and `privateProperties`:
 
-- `CSSStyleSheet`
+**`CSSStyleSheet`**
+
   - *CSS rules*: `cssRules` (`String` or `ReadableStream`)
-  - *alternate flag*: `alternate` (`Boolean`, optional)
-  - *disabled flag*: `disabled` (`Boolean`, optional)
-  - *location*: `location` (`String`, optional)
+  - *alternate flag*: `alternate` (`Boolean`, optional, default: `false`)
+  - *disabled flag*: `disabled` (`Boolean`, optional, default: `false`)
+  - *location*: `location` (`String`, optional, default: `null`)
   - *media*: `media` (`String` or `MediaList`)
   - *origin-clean flag*: `originClean` (`Boolean`)
-  - *owner CSS rule*: `ownerRule` (`CSSRule`, optional)
+  - *owner CSS rule*: `ownerRule` (`CSSRule`, optional, default: `null`)
   - *owner node*: `ownerNode` (`HTMLElement`)
-  - *parent CSS style sheet*: `parentStyleSheet` (`CSSStyleSheet`, optional)
-  - *title*: `title` (`String`, optional)
-- `CSSStyleDeclaration`
-  - *computed flag*: `computed` (`Boolean`, optional)
-  - *declarations*: `declarations` (`Map`, optional)
-  - *owner node*: `ownerNode` (`HTMLElement`, optional)
-  - *parent CSS rule*: `parentRule` (`CSSRule`, optional)
+  - *parent CSS style sheet*: `parentStyleSheet` (`CSSStyleSheet`, optional, default: `null`)
+  - *title*: `title` (`String`, optional, default: `''`)
 
-The `declarations` for `CSSStyleDeclaration` should be objects with the following properties:
-  - (property) `name`: `String`
+**`CSSStyleDeclaration`**
+
+  - *computed flag*: `computed` (`Boolean`, optional, default: `false`)
+  - *declarations*: `declarations` (`Map`, optional, default: `new Map`)
+  - *owner node*: `ownerNode` (`HTMLElement`, optional, default: `null`)
+  - *parent CSS rule*: `parentRule` (`CSSRule`, optional, default: `null`)
+
+A declaration in `declarations` should be a plain object with the following properties:
+
+  - `name`: `String`
   - `value`: TBD
-  - `important`: `Boolean`
+  - `important`: `Boolean` (optional, default: `false`)

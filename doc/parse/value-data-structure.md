@@ -7,9 +7,9 @@
 
 A component value is the same data structure than the corresponding token, except for a function and a simple block.
 
-A token is implemented as an object with `value` as an `Array` for `<function-token>`, otherwise as a `String`, and `type` as a `Set`.
+A token is implemented as a plain object with `type` as a `Set`, and `value` as an `Array` for `<function-token>`, otherwise as a `String`.
 
-A `<dimension-token>` has an additional `unit` property. It does not have [*the same `type` flag as number*](https://drafts.csswg.org/css-syntax-3/#consume-numeric-token) because it does not bring anything usefull but only additional complexity when looking at the CSS type(s) to decide how a component value should be serialized. Furthermore, a value matching `<number>` can not match `<dimension>` (except `0` for `<length>` and `<angle>`) and vice versa, therefore a `<dimension>` having `number` or `integer` as its `type` is kind of inappropriate.
+A `<dimension-token>` has an additional `unit`. It does not have [*the same `type` flag as number*](https://drafts.csswg.org/css-syntax-3/#consume-numeric-token) because it does not bring anything usefull but only additional complexity when looking at the CSS type(s) to decide how a component value should be serialized. Furthermore, a value matching `<number>` can not match `<dimension>` (except `0` for `<length>` and `<angle>`) and vice versa, therefore a `<dimension>` having `number` or `integer` as its `type` is kind of inappropriate.
 
 A `<function-token>` has an additional `name` property assigned the `string` resulting from *consume an ident-like token*.
 

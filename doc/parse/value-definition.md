@@ -1,21 +1,23 @@
 
 # The CSS value definitions
 
-A CSS input is parsed against a tree data structure resulting from parsing a definition expressed with the [CSS value definition syntax](https://drafts.csswg.org/css-values-4/#value-defs).
+A CSS input is parsed against an abstract syntax tree resulting from parsing a value definition expressed with the [CSS value definition syntax](https://drafts.csswg.org/css-values-4/#value-defs).
 
-## Overview of the CSS value definition syntax
+## The CSS value definition syntax
 
-A terminal value is a token, function, or component.
+The syntax of the CSS value definitions includes terminals and non-terminals: a symbol name wrapped in `<>`, which is a CSS type. With delimiters, multipliers, combinators, they describe how to form a CSS value.
 
-A non-terminal value can be rewriten with one or more terminal and non-terminal values or delimiters (single code points), interleaved with combinators, optionally wrapped in `[]` and eventually suffixed with a multiplier.
+A CSS type may be completed with specific rules that can not be defined with the CSS value definition syntax. A CSS value is most often a `<declaration-value>` that should match the production of the property in the `<declaration>`, but it can also be an input that should match the production of a rule, its prelude, or its block.
 
-Terminal and non-terminal value names are CSS types. In the specification of a formal grammar like CSS, they are called a production (or production rule).
+A terminal value is a CSS basic data type: a single component value (token). A delimiter is also a component value.
 
-A CSS production may be completed with specific rules that can not be defined with the CSS value definition syntax.
+A keyword is a "special" terminal whose value appears literally instead of being represented by a symbol. A keyword represents an `<ident-token>` whose value is the literal value.
 
-A CSS value is most often a `<declaration-value>` that should match the production of the property in the `<declaration>`, but it can also be an input that should match the production of a rule, its prelude, or its block.
+A non-terminal value is a symbol representing one or more terminal and non-terminal values or delimiters (single code points), optionally suffixed with multipliers and interleaved with combinators. In the specification of a formal grammar like CSS, a non-terminal is called a production (or production rule).
 
-**Types:**
+A function is a "special" non-terminal: the function name appears literally and its argument(s) are wrapped in `()`.
+
+**Component value types:**
 
 | Type           | Description                                               |
 | -------------- | --------------------------------------------------------- |
@@ -63,12 +65,12 @@ A whitespace is not meaningfull in a definition value, except in whitespace-sepa
 
 A whitespace is required between component values, except in comma-separated list and around delimiters (excluding `'+'` and `'-'` in `<calc-sum>`).
 
-https://drafts.csswg.org/css-values-4/#component-whitespace
-https://drafts.csswg.org/css-values-4/#calc-syntax
+- https://drafts.csswg.org/css-values-4/#component-whitespace
+- https://drafts.csswg.org/css-values-4/#calc-syntax
 
 **Comma**
 
-Whitespaces around a comma are optional, either in a definition value and in a list of component values.
+Whitespaces around a comma are optional, both in definition values and list of component values.
 
 Parsing a comma is subject to the [comma-elision rule](https://drafts.csswg.org/css-values-4/#comb-comma):
 
@@ -105,7 +107,7 @@ Some cases not subject to comma-elision rules:
 
 ## Generating value definition list
 
-The CSS definitions are generated from `@webref/css`:
+The CSS definitions are generated from [`@webref/css`](https://github.com/w3c/webref):
 
 - /lib/properties/definitions.js: `Export => { [Property]: { initial: String, value: String } }`
 - /lib/values/types.js: `Export => { [Type]: String }`
