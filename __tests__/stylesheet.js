@@ -848,10 +848,10 @@ describe('CSSMarginRule', () => {
         expect(CSSStyleDeclaration.is(style)).toBeTruthy()
         expect(style).toHaveLength(1)
 
-        style.fontSize = 'green'
+        style.color = 'green'
 
         // CSSMarginRule declarations should be shared with CSSStyleDeclaration
-        expect(style.fontSize).toBe('green')
+        expect(style.color).toBe('green')
     })
 })
 describe('CSSMediaRule', () => {
