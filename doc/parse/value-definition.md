@@ -7,13 +7,13 @@ A CSS input is parsed against an abstract syntax tree resulting from parsing a v
 
 The syntax of the CSS value definitions includes terminals and non-terminals: a symbol name wrapped in `<>`, which is a CSS type. With delimiters, multipliers, combinators, they describe how to form a CSS value.
 
-A CSS type may be completed with specific rules that can not be defined with the CSS value definition syntax. A CSS value is most often a `<declaration-value>` that should match the production of the property in the `<declaration>`, but it can also be an input that should match the production of a rule, its prelude, or its block.
+A CSS type may be completed with specific rules that can not be defined with the CSS value definition syntax. A CSS value is most often a `<declaration-value>` that should match the value definition corresponding to the property in the `<declaration>`, but it can also be an input that should match the value definition of a rule, its prelude, or its block.
 
-A terminal value is a CSS basic data type: a single component value (token). A delimiter is also a component value.
+A terminal is a CSS basic data type: a single component value (token). A delimiter (single code point) is also a component value.
 
 A keyword is a "special" terminal whose value appears literally instead of being represented by a symbol. A keyword represents an `<ident-token>` whose value is the literal value.
 
-A non-terminal value is a symbol representing one or more terminal and non-terminal values or delimiters (single code points), optionally suffixed with multipliers and interleaved with combinators. In the specification of a formal grammar like CSS, a non-terminal is called a production (or production rule).
+A non-terminal is a symbol representing one or more terminals or non-terminals, optionally suffixed with multipliers and interleaved with combinators or delimiters. In the specification of a formal grammar like CSS, a non-terminal is named a production (or production rule).
 
 A function is a "special" non-terminal: the function name appears literally and its argument(s) are wrapped in `()`.
 
@@ -31,29 +31,29 @@ A function is a "special" non-terminal: the function name appears literally and 
 
 **Combinators:**
 
-| Syntax   | Description                 | Precedence                       |
-| -------- | --------------------------- | -------------------------------- |
-| `a b`    | `a` and `b` in this order   | `a b` == `[a b]`                 |
-| `a && b` | `a` and `b` in any order    | `a && b c` == `a && [b c]`       |
-| `a || b` | `a` and/or `b` in any order | `a || b && c` == `a || [b && c]` |
-| `a | b`  | `a` (x)or `b`               | `a | b || c` == `a | [b || c]`   |
+| Syntax     | Description                 | Precedence                           |
+| ---------- | --------------------------- | ------------------------------------ |
+| `a b`      | `a` and `b` in this order   | `a b` == `[a b]`                     |
+| `a && b`   | `a` and `b` in any order    | `a && b c` == `a && [b c]`           |
+| `a \|\| b` | `a` and/or `b` in any order | `a \|\| b && c` == `a \|\| [b && c]` |
+| `a \| b`   | `a` (x)or `b`               | `a \| b \|\| c` == `a \| [b \|\| c]` |
 
 A comma between types is a combinator subject to the comma-elision rules (detailed further below).
 
 **Multipliers:**
 
-| Syntax   | Range  | Glue |
-| -------- | ------ | ---- |
-| `?`      | 0 -  1 |      |
-| `*`      | 0 - 20 | ` `  |
-| `+`      | 1 - 20 | ` `  |
-| `{n}`    |      n | ` `  |
-| `{n,}`   | n - 20 | ` `  |
-| `{n,x}`  | n -  x | ` `  |
-| `#`      | 1 - 20 | `,`  |
-| `#{n}`   |      n | `,`  |
-| `#{n,}`  | n - 20 | `,`  |
-| `#{n,x}` | n -  x | `,`  |
+| Syntax   | Range  | Glue  |
+| -------- | ------ | --(-- |
+| `?`      | 0 -  1 |       |
+| `*`      | 0 - 20 | `' '` |
+| `+`      | 1 - 20 | `' '` |
+| `{n}`    |      n | `' '` |
+| `{n,}`   | n - 20 | `' '` |
+| `{n,x}`  | n -  x | `' '` |
+| `#`      | 1 - 20 | `','` |
+| `#{n}`   |      n | `','` |
+| `#{n,}`  | n - 20 | `','` |
+| `#{n,x}` | n -  x | `','` |
 
 `[a? b?]!`: `a` and/or `b` in this order separated by ` `
 

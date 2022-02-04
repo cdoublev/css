@@ -311,17 +311,15 @@ This means that these procedures should run recursively from the top to bottom l
 
 ### Parsing the basic syntax
 
+The parsing procedures are meant to transform a string or(/into) a stream of tokens (then) into a high-level CSS object, or a list of high-level CSS objects, which are component values, declarations, qualified rules, and at-rules.
+
 > *Parse something according to a CSS grammar*, and *parse a comma-separated list according to a CSS grammar*, are usually the only parsing algorithms other specs will want to call. The remaining parsing algorithms are meant mostly for CSSOM and related "explicitly constructing CSS structures" cases.
 
-Because *parse something according to a CSS grammar* runs *parse a list of component values*, it can not be used to parse an input that is already an object resulting from other procedures: there would be no such things as a stream of tokens as its input, and it could return unexpected results.
+Because *parse something according to a CSS grammar* runs *parse a list of component values*, it can not be used to parse an input that is a rule, a declaration, or a list of them, resulting from the other procedures: there would be no such things as a stream of tokens as its input, and it could return unexpected results.
 
-[Related issue](https://github.com/w3c/csswg-drafts/issues/4927#issuecomment-1012127022): *parse a comma separated list according to a CSS grammar* runs *consume a component value* twice but there will be no such thing as a current/next input **token** on the second run when it is a function or block **component value**, and because `<function-token>` is assimilated as `<function>` in this library, an error would occur.
+However a list of tokens and a list of component values makes no difference.
 
-Below could be a partial answer to the above issue, but what does *makes no difference* mean exactly?
-
-> The only difference between a list of tokens and a list of component values is that some objects that "contain" things, like functions or blocks, are a single entity in the component-value list, but are multiple entities in a token list. This makes no difference to any of the algorithms in this specification.
-
-The other procedures are meant to transform a string or(/into) a stream of tokens (then) into a high-level CSS object, or a list of high-level CSS objects:
+> These algorithms may be called with a list of either tokens or of component values.
 
 | Procedure                          | Input
 | ---------------------------------- | ----------------------------------------------------------------------------------

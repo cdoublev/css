@@ -51,5 +51,5 @@ To sum up, they mostly exist to create `CSSStyleSheet` and `CSSStyleDeclaration`
 A declaration in `declarations` should be a plain object with the following properties:
 
   - `name`: `String`
-  - `value`: TBD
+  - `value`: `String`
   - `important`: `Boolean` (optional, default: `false`)
