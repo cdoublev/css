@@ -22,10 +22,12 @@ const { parseSelectorGroup } = require('../lib/parse/syntax.js')
  * @returns {function|string}
  *
  * Helper to call `parseCSSValue()` for matching a CSS wide keyword or a custom
- * variable instead of the production type for the property.
+ * variable instead of only a grammar.
  */
 function parse(definition, input, parseGlobals = false, serialize = true) {
-    const parsed = parseGlobals ? parseCSSValue(input) : parseCSSGrammar(input, definition)
+    const parsed = parseGlobals
+        ? parseCSSValue(input)
+        : parseCSSGrammar(input, definition)
     if (parsed === null) {
         if (serialize) {
             return ''
@@ -38,7 +40,7 @@ function parse(definition, input, parseGlobals = false, serialize = true) {
     return parsed
 }
 
-// Helpers to create component values.
+// Helpers to create component values
 function keyword(value, location = -1, position) {
     const match = { type: new Set(['ident', 'keyword']), value }
     if (typeof location === 'number') {
@@ -110,7 +112,7 @@ it('fn(a) || a || b', () => {
 })
 /**
  * TODO: add generalized test case to `backtracking`.
- * -> the issue was occurring when `parseCombination()` was not trying to parse
+ * -> the issue was occurring when `parseSequence()` was not trying to parse
  * the remaining node types after backtracking from the (outside) next grammar
  * to a type that could yield a different match result.
  */
@@ -2768,8 +2770,17 @@ describe('<gradient>', () => {
 })
 
 describe('<declaration>', () => {
-    it.todo('returns empty string for invalid declarations')
-    it('parses a supported declaration to a representation with the expected CSS types', () => {
+    it('returns empty string for invalid declarations', () => {
+        const invalid = [
+            'color; red',
+            'color: ',
+            'color: ;',
+            'color:: red',
+            'color: red;',
+        ]
+        invalid.forEach(input => expect(parse('<declaration>', input)).toBe(''))
+    })
+    it('parses a supported declaration to a representation with the expected CSS type', () => {
         expect(parse('<declaration>', 'color: green !important', false, false)).toEqual({
             important: true,
             name: 'color',
@@ -2793,7 +2804,6 @@ describe('<declaration>', () => {
         expect(parse('<declaration>', input, false)).toBe(input)
     })
 })
-
 describe.skip('<selector-list>', () => {
 
     function parse(input) {

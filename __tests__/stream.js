@@ -27,13 +27,13 @@ describe('moveTo()', () => {
 
 describe('consume()', () => {
     it('throws an error when the specified item is not found at the front of the stream', () => {
-        expect(() => stream.consume('_', false)).toThrow('"_" is expected at the start of "hello"')
+        expect(() => stream.consume('_', false)).toThrow('"_" was expected')
         expect(stream.index).toBe(-1)
         stream.moveTo(1)
-        expect(() => stream.consume('_', false)).toThrow('"_" is expected between "h" and "ello"')
+        expect(() => stream.consume('_', false)).toThrow('"_" was expected')
         expect(stream.index).toBe(1)
         stream.moveTo(string.length - 1)
-        expect(() => stream.consume('_', false)).toThrow('"_" is expected at the end of "hello"')
+        expect(() => stream.consume('_', false)).toThrow('"_" was expected')
         expect(stream.index).toBe(string.length - 1)
     })
     it('consumes item at the front of the stream', () => {
@@ -83,10 +83,10 @@ describe('consumeRunOf()', () => {
 
 describe('consumeUntil()', () => {
     it('throws an error when the specified item is not found in the remaining stream items', () => {
-        expect(() => stream.consumeUntil('_')).toThrow('"_" is not in "hello"')
+        expect(() => stream.consumeUntil('_')).toThrow('"_" was expected')
         expect(stream.index).toBe(-1)
         stream.moveTo(2)
-        expect(() => stream.consumeUntil('_')).toThrow('"_" is not in "lo"')
+        expect(() => stream.consumeUntil('_')).toThrow('"_" was expected')
         expect(stream.index).toBe(2)
     })
     it('consumes items until the given item is found in the remaining stream items', () => {
