@@ -204,10 +204,20 @@ describe('group of types', () => {
     })
 })
 describe('block of types', () => {
-    it("(<number> '+'|'-' <number>)", () => {
+    it("represents (<number> '+'|'-' <number>)", () => {
         expect(parse("(<number> '+'|'-' <number>)")).toEqual({
+            associatedToken: '(',
             type: 'simple-block',
             value: "<number> '+'|'-' <number>",
+        })
+    })
+    it("represents '[' a ']' | '[' a b ']'", () => {
+        expect(parse("'[' a ']' | '[' a b ']'")).toEqual({
+            type: '|',
+            value: [
+                { associatedToken: '[', type: 'simple-block', value: 'a' },
+                { associatedToken: '[', type: 'simple-block', value: 'a b' },
+            ]
         })
     })
 })
