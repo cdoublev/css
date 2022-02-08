@@ -171,6 +171,26 @@ describe('repeated types (serialized)', () => {
         expect(parse(definition, '')).toBe('')
         expect(parse(definition, 'a')).toBe('a')
     })
+    it('parses a*', () => {
+        const definition = 'a*'
+        expect(parse(definition, '')).toBe('')
+        expect(parse(definition, 'a, a')).toBe('')
+        expect(parse(definition, 'a')).toBe('a')
+        expect(parse(definition, 'a a')).toBe('a a')
+    })
+    it('parses a+', () => {
+        const definition = 'a+'
+        expect(parse(definition, '')).toBe('')
+        expect(parse(definition, 'a, a')).toBe('')
+        expect(parse(definition, 'a')).toBe('a')
+        expect(parse(definition, 'a a')).toBe('a a')
+    })
+    it('parses a [b? c?]!', () => {
+        const definition = 'a [b? c?]!'
+        expect(parse(definition, 'a')).toBe('')
+        expect(parse(definition, 'a b')).toBe('a b')
+        expect(parse(definition, 'a c')).toBe('a c')
+    })
     it('parses a#', () => {
         const definition = 'a#'
         expect(parse(definition, 'a a')).toBe('')
