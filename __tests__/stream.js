@@ -102,12 +102,29 @@ describe('consumeUntil()', () => {
 })
 
 describe('next()', () => {
-    it('returns the next item at current item index + given integer', () => {
+    it('returns the next item(s) at current index + given integer', () => {
         expect(stream.next()).toBe('h')
+        expect(stream.next(1)).toBe('h')
+        expect(stream.next(1, 2)).toBe('h')
         expect(stream.next(2)).toBe('he')
         expect(stream.next(2, 1)).toBe('e')
+        expect(stream.next(2, 2)).toBe('he')
         expect(stream.next(3, 2)).toBe('el')
         expect(stream.index).toBe(-1)
+    })
+})
+
+describe('prev()', () => {
+    it('returns the previous item(s) at current index - given integer', () => {
+        stream.moveTo(string.length)
+        expect(stream.prev()).toBe('o')
+        expect(stream.prev(1)).toBe('o')
+        expect(stream.prev(1, 2)).toBe('o')
+        expect(stream.prev(2)).toBe('lo')
+        expect(stream.prev(2, 1)).toBe('l')
+        expect(stream.prev(2, 2)).toBe('lo')
+        expect(stream.prev(3, 2)).toBe('ll')
+        expect(stream.index).toBe(string.length)
     })
 })
 
