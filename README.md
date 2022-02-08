@@ -48,7 +48,7 @@ To sum up, they mostly exist to create `CSSStyleSheet` and `CSSStyleDeclaration`
   - *owner node*: `ownerNode` (`HTMLElement`, optional, default: `null`)
   - *parent CSS rule*: `parentRule` (`CSSRule`, optional, default: `null`)
 
-A declaration in `declarations` should be a plain object with the following properties:
+A declaration entry in `declarations` should be a plain object associated to its property `name`. This object should have the following properties:
 
   - `name`: `String`
   - `value`: `String`
