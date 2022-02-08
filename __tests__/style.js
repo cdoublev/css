@@ -47,14 +47,6 @@ describe('CSSStyleDeclaration', () => {
             }
         })
     })
-    it('has all properties', () => {
-        const style = createStyleDeclaration()
-        const prototype = Object.getPrototypeOf(style)
-        expect(Object.getOwnPropertyDescriptor(prototype, 'cssText').get).toBeDefined()
-        expect(Object.getOwnPropertyDescriptor(prototype, 'cssText').set).toBeDefined()
-        expect(Object.getOwnPropertyDescriptor(prototype, 'length').get).toBeDefined()
-        expect(Object.getOwnPropertyDescriptor(prototype, 'parentRule').get).toBeDefined()
-    })
     it('has all methods', () => {
 
         const style = createStyleDeclaration()
