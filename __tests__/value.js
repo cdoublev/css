@@ -7,12 +7,12 @@
  * - not supported (yet?): structures (rules and declarations)
  */
 
+const { parseCSSGrammar, parseCSSDeclarationValue } = require('../lib/parse/syntax.js')
 const { toDegrees, toRadians } = require('../lib/utils/math.js')
 const { serializeCSSValue, serializeSelectorGroup } = require('../lib/serialize.js')
 const createList = require('../lib/values/value.js')
 const createOmitted = require('../lib/values/omitted.js')
 const parseDefinition = require('../lib/parse/definition.js')
-const { parseCSSGrammar, parseCSSValue } = require('../lib/parse/syntax.js')
 const { parseSelectorGroup } = require('../lib/parse/syntax.js')
 
 /**
@@ -21,12 +21,12 @@ const { parseSelectorGroup } = require('../lib/parse/syntax.js')
  * @param {boolean} [parseGlobals]
  * @returns {function|string}
  *
- * Helper to call `parseCSSValue()` for matching a CSS wide keyword or a custom
- * variable instead of only a grammar.
+ * Helper to call `parseCSSDeclarationValue()` for matching a CSS wide keyword
+ * or a custom variable instead of only a grammar.
  */
 function parse(definition, input, parseGlobals = false, serialize = true) {
     const parsed = parseGlobals
-        ? parseCSSValue(input)
+        ? parseCSSDeclarationValue(input)
         : parseCSSGrammar(input, definition)
     if (parsed === null) {
         if (serialize) {

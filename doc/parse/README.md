@@ -111,6 +111,8 @@ Reading *parse a CSS value* and subjacent procedures from CSSOM and Syntax, the 
   >
   >   Note: The only difference between a list of tokens and a list of component values is that some objects that "contain" things, like functions or blocks, are a single entity in the component-value list, but are multiple entities in a token list. This makes no difference to any of the algorithms in this specification.
 
+Note: *parse a CSS value* is a procedure to *parse a CSS value `value` for a given `property`*, ie. a declaration value, but a CSS value can also be a rule's prelude which has no property, therefore its implementation is named `parseCSSDeclarationValue()` instead of `parseCSSValue()`.
+
 These *functions or blocks* objects are assigned tokens when parsing a list of component values (step 2, repeatedly [consume a component value](https://drafts.csswg.org/css-syntax-3/#consume-a-component-value)):
 
 > Consume the next input token.
