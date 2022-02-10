@@ -248,7 +248,6 @@ Issues to report on the `w3c/webref` repository:
     - `<dimension-unit>`
     - `<extension-name>`
     - `<lang>`
-    - `<ndashdigit-ident>` (included in `<an+b>`)
     - `<named-color>`
     - `<outline-line-style>`
     - `<q-name>`
