@@ -15,7 +15,7 @@ The byte stream is transformed into code points, then into tokens, then into obj
 
 Below is a non-exhaustive list representing the hierarchy of these different values:
 
-  - `<stylesheet>`: `<rule-list>`
+  - style sheet: `<stylesheet>`
   - rule
     - qualified rule
       - prelude + block
@@ -46,7 +46,7 @@ Below are the principles of the context rules:
   - `<rule-list>` only accepts rules defined by the context
   - a qualified rule at the top-level of `<stylesheet>` is a style rule
   - a qualified rule always accepts a list of `<declaration>`s and a style rule accepts `<style-block>`
-  - `<style-block>` accepts a list of `<declaration>`s, style rules (whose selectors start with `&`) and `@nest` (whose selectors includes `&`), and `@media`
+  - `<style-block>` accepts a list of `<declaration>`s, style rules whose selectors start with `&`, `@nest` whose selectors includes `&`, `@media`, and `@supports`
   - `<declaration-list>` only accepts a list of `<declaration>`s for properties/descriptors defined by the context, and (for back-compatibility with CSS2) at-rules defined by the context
 
 To sum up, the content of an at-rule (`<stylesheet>`, `<rule-list>`, or `<declaration-list>`) depends on its context, eg.:
@@ -336,10 +336,10 @@ However a list of tokens and a list of component values makes no difference.
 | *Parse a style block's contents*   | Content of a style rule or (nested) `@nest`, `@media`, `@supports`, etc.
 | *Parse a list of rules*            | Content of `@keyframes`.
 | *Parse a list of declarations*     | Content of a qualified rule nested in `@keyframes`, value assigned to `Element.style`, etc.
-| *Parse a rule*                     | Argument of `<interface>.insertRule()`
+| *Parse a rule*                     | Argument of `CSSStyleSheet.insertRule()` and `CSSRule.insertRule()`
 | *Parse a declaration*              | Content of `<supports-decl>` in `@supports`, argument of `supports()`, etc.
-| *Parse a list of component values* | Declaration value, `<selector-list>` in style rule, `<media-query-list>` in `@media`, etc.
-| *Parse a component value*          | Content of `attr()`, `<env()>`, `<paint()>`, `<var()>`, etc.
+| *Parse a list of component values* | Declaration value, prelude value
+| *Parse a component value*          | Content of `attr()` and value assigned to `CSSCustomMediaRule.name`
 
 Issues in *Examples* of [`<declaration-list>`, `<rule-list>`, and `<stylesheet>`](https://drafts.csswg.org/css-syntax-3/#declaration-rule-list):
 
@@ -382,11 +382,11 @@ Note: the properties accepted in a directly nested style rule, `@nest`, and cond
 
 `<declaration-value>` is used in `<attr()>`, `<env()>`, `<paint()>`, `<var()>`, and for the `initial-value` descriptor of `@property`.
 
-`<any-value>` is only used in `<supports-condition>` for the prelude of `@supports` and in `<selector-list>` for the prelude of some at-rules.
+`<any-value>` is only used in the prelude of style rules, `@supports`, and `@media`.
 
 > A CSS processor is considered to support a declaration (consisting of a property and value) if it accepts that declaration (rather than discarding it as a parse error) within a style rule. If a processor does not implement, with a usable level of support, the value given, then it must not accept the declaration or claim support for it.
 
-`<declaration>` is only used in `<supports-condition>` for the prelude of `@supports`. It should represent a `<declaration>` validated according to the value definition of the declaration property, or the productions of the CSS global keywords or `<var()>`, which means that *parse a declaration* should be used to parse the syntax of the declaration, and `parseCSSDeclaration()`, ie. step 3 of *parse a CSS declaration block* (and step 3.1 is `parseCSSValue()`, ie. *parse a CSS value*, used in `CSSStyleDeclaration.setProperty()`) should validate the declaration value.
+`<declaration>` is only used in the prelude of `@supports`. It should represent a `<declaration>` validated according to the value definition of the declaration property, or the productions of the CSS global keywords or `<var()>`, which means that *parse a declaration* should be used to parse the syntax of the declaration, and `parseCSSDeclaration()`, ie. step 3 of *parse a CSS declaration block* (and step 3.1 is `parseCSSDeclarationValue()`, ie. *parse a CSS value*, used in `CSSStyleDeclaration.setProperty()`) should validate the declaration value.
 
 ### Constructing the CSSOM tree
 
@@ -404,7 +404,7 @@ The scripting interface of the CSSOM is defined with [Web IDL (Interface Definit
   - `wrapper.createImpl()` is an alias for `wrapper.convert(wrapper.create())` and is usefull to write "private" properties of an instance of the implementation class from outside
   - `wrapper.convert()` converts a wrapper instance to an implementation instance
 
-**What should be implemented for the procedures named *create a <interface> object*?**
+**What should be implemented for the procedures named *create an `<interface>` object*?**
 
 Eg. *create a CSS style sheet* should initialize an instance of `CSSStyleSheet` with different properties and/or values than *create a constructed CSSStyleSheet*. Because some of these properties are read-only or should be considered private (internal state), the appropriate way to implement this procedure is to run `CSSStyleSheetWrapper.create()` with the third `privateData` argument received by `CSSStyleSheet.constructor()`.
 
@@ -420,7 +420,7 @@ Note: a good convention is to only use `constructorArgs` when creating *construc
 
 It would be inconsistent to implement *create a CSS style sheet* inside `CSSStyleSheet` but implement *remove a CSS style sheet* outside. Instead, *create an `<interface>` object* should be implemented where it needs to run, and only state properties are initialized in the constructor of the interface.
 
-If `globalObject` (`Document` or `ShadowRoot`) could be assumed as an instance of a wrapper class generated by `webidl2js`, then it could be converted to an instance of the implementation class, and *remove a CSS style sheet* could be implemented in a utility function (see below). But this would make the implementation brittle because it would be coupled to the use of `webidl2js` and to the name of the property in the implementation class of `Document` or `ShadowRoot`.
+If `globalObject` (`Document` or `ShadowRoot`) could be assumed as an instance of a wrapper class generated by `webidl2js`, then it could be converted to an instance of the implementation class, its read-only property could be updated, and *remove a CSS style sheet* could be implemented in a utility function (see below). But this would make the implementation brittle because it would be coupled to the use of `webidl2js` and to the name of the property in the implementation class of `Document` or `ShadowRoot`.
 
 ```js
 /**
