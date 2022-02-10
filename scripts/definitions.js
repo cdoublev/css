@@ -91,7 +91,6 @@ const initialTypes = Object.entries({
     'extension-name': '<dashed-ident>',
     'lang': '<ident> | <string>',
     'left': '<length> | auto',
-    'ndashdigit-dimension': '<dimension>',
     'ndashdigit-ident': '<ident>',
     'named-color': namedColors.join(' | '),
     'outline-line-style': 'none | hidden | dotted | dashed | solid | double | groove | ridge | inset | outset | auto',

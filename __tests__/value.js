@@ -1752,6 +1752,28 @@ describe('<ndash-dimension>', () => {
         expect(parse('<ndash-dimension>', '1N-')).toBe('1n-')
     })
 })
+describe('<ndashdigit-dimension>', () => {
+    it('returns empty string for invalid n-* dimension', () => {
+        const invalid = ['keyword', '"string"', '1px', '1n-', '1.1n-1', 'calc(1n-1)']
+        invalid.forEach(input => expect(parse('<ndashdigit-dimension>', input)).toBe(''))
+    })
+    it('parses a n-* dimension to a representation with the expected CSS types', () => {
+        expect(parse('<ndashdigit-dimension>', '1n-1', false, false)).toEqual({
+            signed: false,
+            type: new Set(['dimension', 'ndashdigit-dimension']),
+            unit: 'n-1',
+            value: 1,
+        })
+    })
+    it('parses and serializes a valid n-* dimension', () => {
+        expect(parse('<ndashdigit-dimension>', '1n-1')).toBe('1n-1')
+        expect(parse('<ndashdigit-dimension>', '-1n-1')).toBe('-1n-1')
+        expect(parse('<ndashdigit-dimension>', '0n-1')).toBe('0n-1')
+    })
+    it('parses and serializes a n-* dimension case-insensitively', () => {
+        expect(parse('<ndashdigit-dimension>', '1N-1')).toBe('1n-1')
+    })
+})
 
 describe('<calc()>', () => {
     it('returns empty string for invalid calc() values', () => {
