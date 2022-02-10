@@ -1401,6 +1401,7 @@ describe('<zero>', () => {
     })
     it('parses 0 to a representation with the expected CSS type', () => {
         expect(parse('<zero>', '0', false, false)).toEqual({
+            signed: false,
             type: new Set(['integer', 'zero']),
             value: 0,
         })
@@ -1416,10 +1417,12 @@ describe('<integer>', () => {
     })
     it('parses an integer to a representation with the expected CSS type', () => {
         expect(parse('<integer>', '0', false, false)).toEqual({
+            signed: false,
             type: new Set(['integer']),
             value: 0,
         })
         expect(parse('<integer>', '1', false, false)).toEqual({
+            signed: false,
             type: new Set(['integer']),
             value: 1,
         })
@@ -1432,6 +1435,52 @@ describe('<integer>', () => {
         expect(parse('<integer>', 'var(--integer)', true)).toBe('var(--integer)')
     })
 })
+describe('<signless-integer>', () => {
+    it('returns empty string for invalid signless integer', () => {
+        const invalid = ['keyword', '"string"', '1.1', '+1.1', '-1.1']
+        invalid.forEach(input => expect(parse('<signless-integer>', input)).toBe(''))
+    })
+    it('parses an integer to a representation with the expected CSS type', () => {
+        expect(parse('<signless-integer>', '1', false, false)).toEqual({
+            signed: false,
+            type: new Set(['integer', 'signless-integer']),
+            value: 1,
+        })
+        /**
+         * TODO: expect `0` to be represented with types `integer`, `zero`, and
+         * `signless-integer`.
+         */
+    })
+    it('parses and serializes valid signless integers', () => {
+        expect(parse('<signless-integer>', '1')).toBe('1')
+    })
+})
+describe('<signed-integer>', () => {
+    it('returns empty string for invalid signed integer', () => {
+        const invalid = ['keyword', '"string"', '1', '1.1']
+        invalid.forEach(input => expect(parse('<signed-integer>', input)).toBe(''))
+    })
+    it('parses an integer to a representation with the expected CSS type', () => {
+        expect(parse('<signed-integer>', '+1', false, false)).toEqual({
+            signed: true,
+            type: new Set(['integer', 'signed-integer']),
+            value: 1,
+        })
+        expect(parse('<signed-integer>', '-1', false, false)).toEqual({
+            signed: true,
+            type: new Set(['integer', 'signed-integer']),
+            value: -1,
+        })
+        /**
+         * TODO: expect `0+` and `0-` to be represented with types `integer`,
+         * `zero`, and `signless-integer`.
+         */
+    })
+    it('parses and serializes valid signed integers', () => {
+        expect(parse('<signed-integer>', '+1')).toBe('1')
+        expect(parse('<signed-integer>', '-1')).toBe('-1')
+    })
+})
 describe('<number>', () => {
     it('returns empty string for invalid number values', () => {
         const invalid = ['string', '1px', '-1', 'calc(1px)']
@@ -1439,14 +1488,17 @@ describe('<number>', () => {
     })
     it('parses a number to a representation with the expected CSS type(s)', () => {
         expect(parse('<number>', '0', false, false)).toEqual({
+            signed: false,
             type: new Set(['integer', 'number']),
             value: 0,
         })
         expect(parse('<number>', '1', false, false)).toEqual({
+            signed: false,
             type: new Set(['integer', 'number']),
             value: 1,
         })
         expect(parse('<number>', '1.1', false, false)).toEqual({
+            signed: false,
             type: new Set(['number']),
             value: 1.1,
         })
@@ -1473,11 +1525,13 @@ describe('<length>', () => {
     })
     it('parses a length to a representation with the expected CSS types', () => {
         expect(parse('<length>', '0', false, false)).toEqual({
+            signed: false,
             type: new Set(['dimension', 'length']),
             unit: 'px',
             value: 0,
         })
         expect(parse('<length>', '1px', false, false)).toEqual({
+            signed: false,
             type: new Set(['dimension', 'length']),
             unit: 'px',
             value: 1,
@@ -1509,11 +1563,13 @@ describe('<percentage>', () => {
     })
     it('parses a percentage to a representation with the expected CSS type', () => {
         expect(parse('<percentage>', '0%', false, false)).toEqual({
+            signed: false,
             type: new Set(['percentage']),
             unit: '%',
             value: 0,
         })
         expect(parse('<percentage>', '1%', false, false)).toEqual({
+            signed: false,
             type: new Set(['percentage']),
             unit: '%',
             value: 1,
@@ -1544,14 +1600,17 @@ describe('<alpha-value>', () => {
     })
     it('parses an alpha value to a representation with the expected CSS types', () => {
         expect(parse('<alpha-value>', '0', false, false)).toEqual({
+            signed: false,
             type: new Set(['integer', 'number', 'alpha-value']),
             value: 0,
         })
         expect(parse('<alpha-value>', '1', false, false)).toEqual({
+            signed: false,
             type: new Set(['integer', 'number', 'alpha-value']),
             value: 1,
         })
         expect(parse('<alpha-value>', '1%', false, false)).toEqual({
+            signed: false,
             type: new Set(['percentage', 'alpha-value']),
             unit: '%',
             value: 1,
@@ -1588,11 +1647,13 @@ describe('<angle>', () => {
     })
     it('parses an angle to a representation with the expected CSS types', () => {
         expect(parse('<angle>', '0', false, false)).toEqual({
+            signed: false,
             type: new Set(['dimension', 'angle']),
             unit: 'deg',
             value: 0,
         })
         expect(parse('<angle>', '1deg', false, false)).toEqual({
+            signed: false,
             type: new Set(['dimension', 'angle']),
             unit: 'deg',
             value: 1,
@@ -1623,6 +1684,7 @@ describe('<time>', () => {
     })
     it('parses a time to a representation with the expected CSS types', () => {
         expect(parse('<time>', '1s', false, false)).toEqual({
+            signed: false,
             type: new Set(['dimension', 'time']),
             unit: 's',
             value: 1,
@@ -1702,6 +1764,7 @@ describe('<calc()>', () => {
                 value: [
                     {
                         location: -1,
+                        signed: false,
                         type: new Set(['integer', 'number', 'calc-value']),
                         value: 1,
                     },
@@ -1716,11 +1779,13 @@ describe('<calc()>', () => {
                 value: [
                     {
                         location: -1,
+                        signed: false,
                         type: new Set(['integer', 'number', 'calc-value']),
                         value: 1,
                     },
                     {
                         location: 2,
+                        signed: false,
                         type: new Set(['integer', 'number', 'calc-value']),
                         value: 2,
                     },
@@ -1735,6 +1800,7 @@ describe('<calc()>', () => {
                 value: [
                     {
                         location: -1,
+                        signed: false,
                         type: new Set(['integer', 'number', 'calc-value']),
                         value: 1,
                     },
@@ -1743,6 +1809,7 @@ describe('<calc()>', () => {
                         value: [
                             {
                                 location: 2,
+                                signed: false,
                                 type: new Set(['integer', 'number', 'calc-value']),
                                 value: 2,
                             },
@@ -1760,11 +1827,13 @@ describe('<calc()>', () => {
                 value: [
                     {
                         location: -1,
+                        signed: false,
                         type: new Set(['integer', 'number', 'calc-value']),
                         value: 1,
                     },
                     {
                         location: 2,
+                        signed: false,
                         type: new Set(['integer', 'number', 'calc-value']),
                         value: 2,
                     },
@@ -1780,6 +1849,7 @@ describe('<calc()>', () => {
                 value: [
                     {
                         location: -1,
+                        signed: false,
                         type: new Set(['integer', 'number', 'calc-value']),
                         value: 1,
                     },
@@ -1788,6 +1858,7 @@ describe('<calc()>', () => {
                         value: [
                             {
                                 location: 2,
+                                signed: false,
                                 type: new Set(['integer', 'number', 'calc-value']),
                                 value: 2,
                             },
@@ -1805,6 +1876,7 @@ describe('<calc()>', () => {
                 location: -1,
                 range: undefined,
                 round: false,
+                signed: false,
                 type: new Set(['integer', 'number', 'calc-value']),
                 value: 1,
             },
@@ -1817,6 +1889,7 @@ describe('<calc()>', () => {
                 location: -1,
                 range: undefined,
                 round: false,
+                signed: false,
                 type: new Set(['integer', 'number', 'calc-value']),
                 value: 3,
             },
@@ -1936,6 +2009,7 @@ describe('<min()>, <max()>', () => {
                 type: new Set(['calc-sum']),
                 value: [{
                     location: -1,
+                    signed: false,
                     type: new Set(['integer', 'number', 'calc-value']),
                     value: 1,
                 }],
@@ -2409,9 +2483,9 @@ describe('<color>', () => {
             type: new Set(['function', 'rgb()', 'absolute-color-base', 'color']),
             value: createList([
                 list([
-                    { location: -1, type: new Set(['integer', 'number']), value: 0 },
-                    { location: 0, type: new Set(['integer', 'number']), value: 0 },
-                    { location: 3, type: new Set(['integer', 'number']), value: 0 },
+                    { location: -1, signed: false, type: new Set(['integer', 'number']), value: 0 },
+                    { location: 0, signed: false, type: new Set(['integer', 'number']), value: 0 },
+                    { location: 3, signed: false, type: new Set(['integer', 'number']), value: 0 },
                 ], ',', -1),
                 omitted(',', 6),
                 omitted('<alpha-value>', 6),

@@ -256,8 +256,6 @@ Issues to report on the `w3c/webref` repository:
     - `<outline-line-style>`
     - `<q-name>`
     - `<relative-size>`
-    - `<signed-integer>` (included in `<an+b>`)
-    - `<signless-integer>` (included in `<an+b>`)
     - `<size-feature>`
     - `<style-feature>`
     - `<system-color>`

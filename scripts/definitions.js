@@ -100,8 +100,6 @@ const initialTypes = Object.entries({
     'q-name': '<wq-name>',
     'relative-size': 'larger | smaller',
     'right': '<length> | auto',
-    'signed-integer': '<number>',
-    'signless-integer': '<number>',
     'size-feature': '<media-feature>',
     'style-feature': '<declaration>',
     'system-color': systemColors.join(' | '),
