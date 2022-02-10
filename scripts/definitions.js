@@ -85,7 +85,6 @@ const initialTypes = Object.entries({
     'counter-name': '<custom-ident>',
     'counter-style-name': '<custom-ident>',
     'custom-params': '<dashed-ident> [<number> | <percentage> | none]#',
-    'dashndashdigit-ident': '<ident>',
     'dimension': '<length> | <time> | <frequency> | <resolution> | <angle> | <decibel> | <flex> | <semitones>',
     'dimension-unit': `"%" | ${dimensionUnits.join(' | ')}`,
     'extension-name': '<dashed-ident>',

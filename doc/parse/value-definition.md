@@ -243,7 +243,6 @@ Issues to report on the `w3c/webref` repository:
     - `<counter-name>`
     - `<counter-style-name>`
     - `<custom-params>`
-    - `<dashndashdigit-ident>` (included in `<an+b>`)
     - `<dimension>`
     - `<dimension-unit>`
     - `<extension-name>`

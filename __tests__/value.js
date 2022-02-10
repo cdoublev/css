@@ -1308,6 +1308,25 @@ describe('<ndashdigit-ident>', () => {
         expect(parse('<ndashdigit-ident>', 'N-1')).toBe('n-1')
     })
 })
+describe('<dashndashdigit-ident>', () => {
+    it('returns empty string for invalid -n-* identifier', () => {
+        const invalid = ['keyword', '"string"', '1', '1px', '-n-1.1', '-n--1', 'n-1']
+        invalid.forEach(input => expect(parse('<dashndashdigit-ident>', input)).toBe(''))
+    })
+    it('parses a n-* identifier to a representation with the expected CSS types', () => {
+        expect(parse('<dashndashdigit-ident>', '-n-1', false, false)).toEqual({
+            type: new Set(['ident', 'dashndashdigit-ident']),
+            value: '-n-1',
+        })
+    })
+    it('parses and serializes a valid -n-* identifier', () => {
+        expect(parse('<dashndashdigit-ident>', '-n-0')).toBe('-n-0')
+        expect(parse('<dashndashdigit-ident>', '-n-1')).toBe('-n-1')
+    })
+    it('parses and serializes a -n-* identifier case-insensitively', () => {
+        expect(parse('<dashndashdigit-ident>', '-N-1')).toBe('-n-1')
+    })
+})
 describe('<string>', () => {
     it('returns empty string for invalid string values', () => {
         const invalid = [
