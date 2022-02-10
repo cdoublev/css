@@ -91,7 +91,6 @@ const initialTypes = Object.entries({
     'extension-name': '<dashed-ident>',
     'lang': '<ident> | <string>',
     'left': '<length> | auto',
-    'n-dimension': '<dimension>',
     'ndash-dimension': '<dimension>',
     'ndashdigit-dimension': '<dimension>',
     'ndashdigit-ident': '<ident>',
