@@ -217,7 +217,7 @@ describe('block of types', () => {
             value: [
                 { associatedToken: '[', type: 'simple-block', value: 'a' },
                 { associatedToken: '[', type: 'simple-block', value: 'a b' },
-            ]
+            ],
         })
     })
 })

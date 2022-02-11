@@ -1474,7 +1474,7 @@ describe('<integer>', () => {
     })
 })
 describe('<signless-integer>', () => {
-    it('returns empty string for invalid signless integer', () => {
+    it('returns empty string for invalid signless integers', () => {
         const invalid = ['keyword', '"string"', '1.1', '+1.1', '-1.1']
         invalid.forEach(input => expect(parse('<signless-integer>', input)).toBe(''))
     })
@@ -1510,8 +1510,8 @@ describe('<signed-integer>', () => {
             value: -1,
         })
         /**
-         * TODO: expect `0+` and `0-` to be represented with types `integer`,
-         * `zero`, and `signless-integer`.
+         * TODO: expect `0+` and `0-` to be represented with types `integer` and
+         * `signed-integer`.
          */
     })
     it('parses and serializes valid signed integers', () => {
@@ -2705,7 +2705,6 @@ describe('<position>', () => {
         expect(parse('<position>', 'top var(--position)', true)).toBe('top var(--position)')
     })
 })
-
 describe('<basic-shape>', () => {
     it('returns empty string for invalid basic shape values', () => {
         const invalid = [

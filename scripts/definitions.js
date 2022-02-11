@@ -483,7 +483,7 @@ function reduceFieldValues([name, fields]) {
             if (field === 'newValues') {
                 values = values.map(([value]) => value).join(' | ')
             } else {
-                // TODO: run in development mode only.
+                // TODO: run in development mode only
                 const urls = values.map(([, url]) => url).join('\n  • ')
                 console.error(`"${name}" has still multiple "${field}" values from:\n  • ${urls}`)
             }
@@ -575,7 +575,7 @@ function extractTypeDefinitions(types, definitions, url) {
         if (excludedTypes.includes(type)) {
             return types
         }
-        // TODO: run in development mode only.
+        // TODO: run in development mode only
         if (types.some(t => t === type)) {
             console.error(`"${type}" (defined in initial types) is now defined in: ${url}`)
         }

@@ -57,7 +57,7 @@ A comma between types is a combinator subject to the comma-elision rules (detail
 | `#{n,x}` | n -  x |          `','` |
 | `+#`     | 1 - 20 | `' '` or `','` |
 
-`[a? b?]!`: `a` and/or `b` in this order separated by ` `
+`[a? b?]!`: `a` and/or `b` in this order.
 
 Note: delimiters and `fn()` are never defined with a multiplier, eg. `fn(){1,2}`.
 
@@ -65,7 +65,7 @@ Note: delimiters and `fn()` are never defined with a multiplier, eg. `fn(){1,2}`
 
 A whitespace is not meaningfull in a definition value, except in whitespace-separated list, eg. `a b c`.
 
-A whitespace is required between component values, except in comma-separated list and around delimiters (excluding `'+'` and `'-'` in `<calc-sum>`).
+A whitespace is required between component values, except in comma-separated list, around delimiters (excluding `'+'` and `'-'` in `<calc-sum>`), and in some productions (eg. in productions of a selector list).
 
 - https://drafts.csswg.org/css-values-4/#component-whitespace
 - https://drafts.csswg.org/css-values-4/#calc-syntax
