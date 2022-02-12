@@ -114,7 +114,7 @@ Reading *parse a CSS value* and subjacent procedures from CSSOM and Syntax, the 
   >
   >   Note: The only difference between a list of tokens and a list of component values is that some objects that "contain" things, like functions or blocks, are a single entity in the component-value list, but are multiple entities in a token list. This makes no difference to any of the algorithms in this specification.
 
-**Note:** *parse a CSS value* is a procedure to *parse a CSS value `value` for a given `property`*, ie. a declaration value, but a CSS value can also exist in a rule's prelude without any associated property, therefore its implementation is named `parseCSSDeclarationValue()` instead of `parseCSSValue()`.
+**Note:** *parse a CSS value* is a procedure to *parse a CSS value `value` for a given `property`*, ie. a declaration value, but a CSS value can also exist in a rule's prelude without any associated property, therefore its implementation is named `parseCSSPropertyValue()` instead of `parseCSSValue()`.
 
 These *functions or blocks* objects are assigned tokens when parsing a list of component values (step 2, repeatedly [consume a component value](https://drafts.csswg.org/css-syntax-3/#consume-a-component-value)):
 
@@ -380,7 +380,7 @@ Issues in *Examples* of [`<declaration-list>`, `<rule-list>`, and `<stylesheet>`
 
 > A CSS processor is considered to support a declaration (consisting of a property and value) if it accepts that declaration (rather than discarding it as a parse error) within a style rule. If a processor does not implement, with a usable level of support, the value given, then it must not accept the declaration or claim support for it.
 
-`<declaration>` is only used in the prelude of `@supports`. It should represent a `<declaration>` validated according to the value definition of the declaration property, or the productions of the CSS global keywords or `<var()>`, which means that *parse a declaration* should be used to parse the syntax of the declaration, and `parseCSSDeclaration()`, ie. step 3 of *parse a CSS declaration block* (and step 3.1 is `parseCSSDeclarationValue()`, ie. *parse a CSS value*, used in `CSSStyleDeclaration.setProperty()`) should validate the declaration value.
+`<declaration>` is only used in the prelude of `@supports`. It should represent a `<declaration>` validated according to the value definition of the declaration property, or the productions of the CSS global keywords or `<var()>`, which means that *parse a declaration* should be used to parse the syntax of the declaration, and `parseCSSDeclaration()`, ie. step 3 of *parse a CSS declaration block* (and step 3.1 is `parseCSSPropertyValue()`, ie. *parse a CSS value*, used in `CSSStyleDeclaration.setProperty()`) should validate the declaration value.
 
 ### Constructing the CSSOM tree
 

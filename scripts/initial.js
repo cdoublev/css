@@ -6,7 +6,7 @@
 const { addQuotes, logError, tab } = require('../lib/utils/script.js')
 const fs = require('fs')
 const path = require('path')
-const { parseCSSDeclarationValue } = require('../lib/parse/syntax.js')
+const { parseCSSPropertyValue } = require('../lib/parse/syntax.js')
 const properties = require('../lib/properties/definitions.js')
 
 const outputPath = path.resolve(__dirname, '../lib/properties/definitions.js')
@@ -79,7 +79,7 @@ function serializeComponentValue(component, depth = 2) {
  * @returns {string}
  */
 function getInitialValue(property, value) {
-    const parsed = parseCSSDeclarationValue(value, property)
+    const parsed = parseCSSPropertyValue(value, property)
     if (parsed === null) {
         console.error(`Parse error: can not parse initial value "${value}" of property "${property}"`)
         return ''
