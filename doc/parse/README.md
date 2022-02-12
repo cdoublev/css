@@ -333,22 +333,6 @@ However a list of tokens and a list of component values makes no difference.
 
 > These algorithms may be called with a list of either tokens or of component values.
 
-| Procedure                          | Input
-| ---------------------------------- | ----------------------------------------------------------------------------------
-| *Parse a stylesheet*               | Content of a style sheet or (non-nested) `@media`, `@supports`, etc.
-| *Parse a style block's contents*   | Content of a style rule or (nested) `@nest`, `@media`, `@supports`, etc.
-| *Parse a list of rules*            | Content of `@keyframes`.
-| *Parse a list of declarations*     | Content of a qualified rule nested in `@keyframes`, value assigned to `Element.style`, etc.
-| *Parse a rule*                     | Argument of `CSSStyleSheet.insertRule()` and `CSSRule.insertRule()`
-| *Parse a declaration*              | Content of `<supports-decl>` in `@supports`, argument of `supports()`, etc.
-| *Parse a list of component values* | Prelude and declaration value.
-| *Parse a component value*          | Content of `attr()` and value assigned to `CSSCustomMediaRule.name`
-
-Issues in *Examples* of [`<declaration-list>`, `<rule-list>`, and `<stylesheet>`](https://drafts.csswg.org/css-syntax-3/#declaration-rule-list):
-
-  - `@font` (`@font-face`?) is listed as an example for `<declaration-list>` but it does not exist
-  - `@font-feature-values` is listed as an example for `<rule-list>` but it is defined as `@font-feature-values <family-name># { <declaration-list> }` with `font-display` as the only allowed property (descriptor)
-
 | Procedure                          | Steps                                                         | Return type
 | ---------------------------------- | ------------------------------------------------------------- | -----------
 | *Parse a stylesheet*               | Normalize, consume a list of rules (top-level flag set)       | object
@@ -360,6 +344,8 @@ Issues in *Examples* of [`<declaration-list>`, `<rule-list>`, and `<stylesheet>`
 | *Parse a list of component values* | Normalize, map token to consume component value               | array
 | *Parse a component value*          | Normalize, trim ws before/after, consume component value      | object
 
+See the full list of the CSS parsing procedures in [The CSS parser entry points](./entry-points.md).
+
 > - The `<style-block>` production [...] must be parsed using the *consume a style block’s contents* algorithm.
 > - The `<declaration-list>` production [...] must be parsed using the *consume a list of declarations* algorithm.
 > - Similarly, the `<rule-list>` production [...] must be parsed using the *consume a list of rules* algorithm.
@@ -367,9 +353,10 @@ Issues in *Examples* of [`<declaration-list>`, `<rule-list>`, and `<stylesheet>`
 
 The procedure for parsing `<stylesheet>` is not explicitly defined but *consume a list of rules* is assumed. It should not be parsed with *parse a stylesheet*, which is only used to parse the content of a style sheet, because HTML comments should only be handled at the top-level of the style sheet, ie. when *consume a list of rules* is run with the top-level flag set, but not in eg. `@media`.
 
-Because `location` is not required in the object resulting from *parse a stylesheet*, but only the rules assigned to its `value`, *parse a stylesheet* can be implemented with *parse a list of rules* receiving the `topLevel` flag set (default: unset) and passing it down to *consume a list of rules*. This would also allow to parse `<stylesheet>` with it.
+Issues in *Examples* of [`<declaration-list>`, `<rule-list>`, and `<stylesheet>`](https://drafts.csswg.org/css-syntax-3/#declaration-rule-list):
 
--> issue: decoding a byte stream into a stream of code points would have to be implemented somewhere else
+  - `@font` (`@font-face`?) is listed as an example for `<declaration-list>` but it does not exist
+  - `@font-feature-values` is listed as an example for `<rule-list>` but it is defined as `@font-feature-values <family-name># { <declaration-list> }` with `font-display` as the only allowed property (descriptor)
 
 ### Validate context rules
 
