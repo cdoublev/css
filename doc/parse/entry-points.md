@@ -15,9 +15,8 @@
 - [parse a CSS (property) value](#parse-a-CSS-property-value)
 - [parse a CSS declaration](#parse-a-CSS-declaration)
 - [parse a CSS declaration block](#parse-a-CSS-declaration-block)
-- [parse a CSS style block's contents](#parse-a-CSS-style-block-s-contents)
-- [parse a CSS rule list](#parse-a-css-rule-list)
 - [parse a CSS rule](#parse-a-CSS-rule)
+- [parse a CSS rule block contents](#parse-a-css-rule-block-contents)
 - [parse a CSS stylesheet](#parse-a-CSS-stylesheet)
 - [parse a CSS media query](#parse-a-CSS-media-query)
 - [parse a CSS media query list](#parse-a-CSS-media-query-list)
@@ -398,8 +397,8 @@
     <td>
       <ul>
         <li>
-          <a href="#parse-a-css-rule-list">
-            CSS Syntax - parse a CSS rule list</code>
+          <a href="#parse-a-css-rule-block-contents">
+            CSS Syntax - parse a CSS rule block contents</code>
           </a>
         </li>
         <li>
@@ -702,122 +701,6 @@
 
 ***
 
-<table id="parse-a-CSS-style-block-s-contents">
-  <tr><th>Algorithm</th><td>Parse a CSS style block's contents</td></tr>
-  <tr>
-    <th>Definition</th>
-    <td>
-      <a href="https://drafts.csswg.org/css-syntax/#typedef-style-block">
-        Syntax
-      </a>
-    </td>
-  </tr>
-  <tr>
-    <th>Internal uses</th>
-    <td>
-      <ul>
-        <li>
-          <a href="https://drafts.csswg.org/cssom/#parse-a-css-rule">
-            CSSOM - parse a CSS rule
-          </a> (step 3)
-        </li>
-        <li>
-          <a href="https://drafts.csswg.org/cssom/#insert-a-css-rule">
-            CSSOM - insert a CSS rule
-          </a> (via <i>parse a CSS rule</i>)
-        </li>
-        <li>
-          <a href="https://drafts.csswg.org/cssom/#dom-cssstylesheet-insertrule">
-            CSSOM - <code>CSSStyleSheet.insertRule()</code>
-          </a> (via <i>insert a CSS rule</i>)
-        </li>
-        <li>
-          <a href="https://drafts.csswg.org/css-nesting/#dom-cssstylerule-insertrule">
-            CSS Nesting - <code>CSSStyleRule.insertRule()</code>
-          </a> (via <i>insert a CSS rule</i>)
-        </li>
-        <li>
-          <a href="https://drafts.csswg.org/css-nesting/#dom-cssnestingrule-insertrule">
-            CSS Nesting - <code>CSSNestingRule.insertRule()</code>
-          </a> (via <i>insert a CSS rule</i>)
-        </li>
-      </ul>
-    </td>
-  </tr>
-  <tr><th>Public uses</th><td>none</td></tr>
-  <tr>
-    <th>Comments</th>
-    <td>
-      <p>📝: it is equivalent to <i>parse something according to a CSS grammar</i> using <code>&lt;style-block></code>.</p>
-      <p>❌: <code>&lt;style-block></code> is missing in the title of <a href="https://drafts.csswg.org/css-syntax/#declaration-rule-list">8.1. Defining Block Contents: the <code>&lt;declaration-list></code>, <code>&lt;rule-list></code>, and <code>&lt;stylesheet></code> productions</a>.</p>
-    </td>
-  </tr>
-</table>
-
-[Top ↑](#the-css-parser-entry-points)
-
-***
-
-<table id="parse-a-css-rule-list">
-  <tr><th>Algorithm</th><td>Parse a CSS rule list</td></tr>
-  <tr>
-    <th>Definition</th>
-    <td>
-      <a href="https://drafts.csswg.org/css-syntax/#declaration-rule-list">
-        Syntax
-      </a>
-    </td>
-  </tr>
-  <tr>
-    <th>Internal uses</th>
-    <td>
-      <ul>
-        <li>
-          <a href="https://drafts.csswg.org/cssom/#parse-a-css-rule">
-            CSSOM - parse a CSS rule
-          </a> (step 3)
-        </li>
-        <li>
-          <a href="https://drafts.csswg.org/cssom/#insert-a-css-rule">
-            CSSOM - insert a CSS rule
-          </a> (via <i>parse a CSS rule</i>)
-        </li>
-        <li>
-          <a href="https://drafts.csswg.org/cssom/#dom-cssstylesheet-insertrule">
-            CSSOM - <code>CSSStyleSheet.insertRule()</code>
-          </a> (via <i>insert a CSS rule</i>)
-        </li>
-        <li>
-          <a href="https://drafts.csswg.org/cssom/#dom-cssgroupingrule-insertrule">
-            CSSOM - <code>CSSGroupingRule.insertRule()</code>
-          </a> (via <i>insert a CSS rule</i>)
-        </li>
-        <li>
-          <a href="https://drafts.csswg.org/css-nesting/#dom-cssstylerule-insertrule">
-            CSS Nesting - <code>CSSStyleRule.insertRule()</code>
-          </a> (via <i>insert a CSS rule</i>)
-        </li>
-        <li>
-          <a href="https://drafts.csswg.org/css-nesting/#dom-cssnestingrule-insertrule">
-            CSS Nesting - <code>CSSNestingRule.insertRule()</code>
-          </a> (via <i>insert a CSS rule</i>)
-        </li>
-      </ul>
-    </td>
-  </tr>
-  <tr><th>Public uses</th><td>none</td></tr>
-  <tr>
-    <th>Comments</th>
-    <td>
-      <p>📝: it is equivalent to <i>parse something according to a CSS grammar</i> using <code>&lt;rule-list></code>.</p>
-    </td>
-  </tr>
-</table>
-
-[Top ↑](#the-css-parser-entry-points)
-
-***
-
 <table id="parse-a-CSS-rule">
   <tr><th>Algorithm</th><td>Parse a CSS rule</td></tr>
   <tr>
@@ -865,6 +748,78 @@
     <th>Comments</th>
     <td>
       <p>📝: it is equivalent to <i>parse something according to a CSS grammar</i> using the grammar for the rule, eg. <code>@page</code>.</p>
+    </td>
+  </tr>
+</table>
+
+[Top ↑](#the-css-parser-entry-points)
+
+***
+
+<table id="parse-a-css-rule-block-contents">
+  <tr><th>Algorithm</th><td>Parse a CSS rule block contents</td></tr>
+  <tr>
+    <th>Definition</th>
+    <td>
+      Syntax (
+        <a href="https://drafts.csswg.org/css-syntax/#typedef-stylesheet">
+          <code>&lt;stylesheet></code>
+        </a>,
+        <a href="https://drafts.csswg.org/css-syntax/#typedef-rule-list">
+          <code>&lt;rule-list></code>
+        </a>,
+        <a href="https://drafts.csswg.org/css-syntax/#typedef-style-block">
+          <code>&lt;style-block></code>
+        </a>,
+        <a href="https://drafts.csswg.org/css-syntax/#typedef-declaration-list">
+          <code>&lt;declaration-list></code>
+        </a>
+      )
+    </td>
+  </tr>
+  <tr>
+    <th>Internal uses</th>
+    <td>
+      <ul>
+        <li>
+          <a href="https://drafts.csswg.org/cssom/#parse-a-css-rule">
+            CSSOM - parse a CSS rule
+          </a> (step 3)
+        </li>
+        <li>
+          <a href="https://drafts.csswg.org/cssom/#insert-a-css-rule">
+            CSSOM - insert a CSS rule
+          </a> (via <i>parse a CSS rule</i>)
+        </li>
+        <li>
+          <a href="https://drafts.csswg.org/cssom/#dom-cssstylesheet-insertrule">
+            CSSOM - <code>CSSStyleSheet.insertRule()</code>
+          </a> (via <i>insert a CSS rule</i>)
+        </li>
+        <li>
+          <a href="https://drafts.csswg.org/cssom/#dom-cssgroupingrule-insertrule">
+            CSSOM - <code>CSSGroupingRule.insertRule()</code>
+          </a> (via <i>insert a CSS rule</i>)
+        </li>
+        <li>
+          <a href="https://drafts.csswg.org/css-nesting/#dom-cssstylerule-insertrule">
+            CSS Nesting - <code>CSSStyleRule.insertRule()</code>
+          </a> (via <i>insert a CSS rule</i>)
+        </li>
+        <li>
+          <a href="https://drafts.csswg.org/css-nesting/#dom-cssnestingrule-insertrule">
+            CSS Nesting - <code>CSSNestingRule.insertRule()</code>
+          </a> (via <i>insert a CSS rule</i>)
+        </li>
+      </ul>
+    </td>
+  </tr>
+  <tr><th>Public uses</th><td>none</td></tr>
+  <tr>
+    <th>Comments</th>
+    <td>
+      <p>📝: it is equivalent to <i>parse something according to a CSS grammar</i> using <code>&lt;stylesheet></code>, <code>&lt;rule-list></code>, <code>&lt;style-block></code>, or <code>&lt;declaration-list></code>.</p>
+      <p>❌: <code>&lt;style-block></code> is missing in the title of <a href="https://drafts.csswg.org/css-syntax/#declaration-rule-list">8.1. Defining Block Contents: the <code>&lt;declaration-list></code>, <code>&lt;rule-list></code>, and <code>&lt;stylesheet></code> productions</a>.</p>
     </td>
   </tr>
 </table>

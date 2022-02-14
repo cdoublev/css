@@ -11,7 +11,7 @@ Some words may use the [CSS value definition syntax](./value-definition.md), eg.
 
 The CSS grammar is a set of rules to transform a byte stream or a stream of code points (string) into a structure representing this CSS input: a `CSSStyleSheet` (aka. CSSOM tree), a `CSSRule`, a `CSSStyleDeclaration`, or a list of component values (CSS value).
 
-The byte stream is transformed into code points, then into tokens, then into objects representing rules, declarations, and component values, first by applying basic syntax rules, then rules and declarations are validated against context rules (defined by the parent rule or style sheet), and declaration values are matched against the production of the declaration target (a property or a descriptor).
+The byte stream is transformed into code points, then into tokens, then into objects representing rules, declarations, and component values, first by applying basic syntax rules, then rules and declarations are validated against context rules (defined by the parent rule or style sheet), declaration values are matched against the value definition of the declaration target (a property or a descriptor), and the resulting component values are matched against any existing specific property/descriptor or production rules.
 
 Below is a non-exhaustive list representing the hierarchy of these different values:
 
@@ -91,7 +91,7 @@ The CSS cascade defines how to compute a single declared value from these declar
 > - **value:** the value of the declaration represented as a list of component values
 > - **important flag:** either set or unset, can be changed
 
-TODO: figure out if this definition should use *property or descriptor name* instead of *property name*.
+Note: the above quote should use *property or descriptor name* instead of *property name* (see Issue [#5969](https://github.com/w3c/csswg-drafts/issues/5969)).
 
 [Component value](https://drafts.csswg.org/css-syntax-3/#component-value):
 
@@ -114,7 +114,7 @@ Reading *parse a CSS value* and subjacent procedures from CSSOM and Syntax, the 
   >
   >   Note: The only difference between a list of tokens and a list of component values is that some objects that "contain" things, like functions or blocks, are a single entity in the component-value list, but are multiple entities in a token list. This makes no difference to any of the algorithms in this specification.
 
-**Note:** *parse a CSS value* is a procedure to *parse a CSS value `value` for a given `property`*, ie. a declaration value, but a CSS value can also exist in a rule's prelude without any associated property, therefore its implementation is named `parseCSSPropertyValue()` instead of `parseCSSValue()`.
+**Note:** *parse a CSS value* is a procedure to *parse a CSS value `value` for a given `property`*, but a CSS value can also exist in a rule's prelude without any associated property, therefore its implementation is named `parseCSSPropertyValue()` instead of `parseCSSValue()`.
 
 These *functions or blocks* objects are assigned tokens when parsing a list of component values (step 2, repeatedly [consume a component value](https://drafts.csswg.org/css-syntax-3/#consume-a-component-value)):
 
@@ -356,7 +356,7 @@ The procedure for parsing `<stylesheet>` is not explicitly defined but *consume 
 Issues in *Examples* of [`<declaration-list>`, `<rule-list>`, and `<stylesheet>`](https://drafts.csswg.org/css-syntax-3/#declaration-rule-list):
 
   - `@font` (`@font-face`?) is listed as an example for `<declaration-list>` but it does not exist
-  - `@font-feature-values` is listed as an example for `<rule-list>` but it is defined as `@font-feature-values <family-name># { <declaration-list> }` with `font-display` as the only allowed property (descriptor)
+  - `@font-feature-values` is listed as an example for `<rule-list>` but it is defined as `@font-feature-values <family-name># { <declaration-list> }` with `font-display` as the only allowed descriptor
 
 ### Validate context rules
 
@@ -380,7 +380,7 @@ Issues in *Examples* of [`<declaration-list>`, `<rule-list>`, and `<stylesheet>`
 
 > A CSS processor is considered to support a declaration (consisting of a property and value) if it accepts that declaration (rather than discarding it as a parse error) within a style rule. If a processor does not implement, with a usable level of support, the value given, then it must not accept the declaration or claim support for it.
 
-`<declaration>` is only used in the prelude of `@supports`. It should represent a `<declaration>` validated according to the value definition of the declaration property, or the productions of the CSS global keywords or `<var()>`, which means that *parse a declaration* should be used to parse the syntax of the declaration, and `parseCSSDeclaration()`, ie. step 3 of *parse a CSS declaration block* (and step 3.1 is `parseCSSPropertyValue()`, ie. *parse a CSS value*, used in `CSSStyleDeclaration.setProperty()`) should validate the declaration value.
+`<declaration>` is only used in the prelude of `@supports`. It should represent a `<declaration>` matched against the value definition of the declaration property, the CSS global keywords, or `<var()>`, which means that *parse a declaration* should be used to parse the syntax of the declaration, and `parseCSSDeclaration()`, ie. step 3 of *parse a CSS declaration block* (and step 3.1 is `parseCSSPropertyValue()`, ie. *parse a CSS value*, used in `CSSStyleDeclaration.setProperty()`) should validate the declaration value.
 
 ### Constructing the CSSOM tree
 
@@ -469,7 +469,7 @@ Related issue: `CSSStyleSheet.insertRule()` should result to a new instance of a
 
 Other observations:
 
-  - step 3 of *parse a stylesheet* is *create a new stylesheet, with its location set to `location`*, with *location* wrapped in an anchor link pointing to a definition in CSSOM as a *state item* of `CSSStyleSheet`, which would mean that *parse a stylesheet* should return a `CSSStyleSheet`, whose *value* should then be interpreted as defined by *parse a CSS stylesheet*, but returning `CSSStyleSheet` from *parse a stylesheet* would be discordant with *parse a rule*, which should return a plain object
+  - step 3 of *parse a stylesheet* is *create a new stylesheet, with its location set to `location`*, with *location* anchored to its definition in CSSOM as a *state item* of `CSSStyleSheet`, which would mean that *parse a stylesheet* should return a `CSSStyleSheet`, whose *value* should then be interpreted as defined by *parse a CSS stylesheet*, but returning `CSSStyleSheet` from *parse a stylesheet* would be discordant with *parse a rule*, which should return a plain object
   - Cascade 4 defines *fetch an `@import`*, whose step 4 sets `CSSImportRule.styleSheet` to the result of *parse a stylesheet*, confirming that it should return a `CSSStyleSheet`, and the next section defines that *it must be interpreted as a CSS style sheet*, similarly as in *parse a CSS stylesheet*, but the procedure has been removed in Cascade 5
   - Syntax 3 defines that *"parse a stylesheet" is intended to be the normal parser entry point, for parsing stylesheets* but in the HTML specification (see issue below), the procedures for processing `HTMLStyleElement` or `HTMLLinkElement` should create a CSS style sheet object, and initiating the parsing of their CSS content is left undefined (see issue below)
   - CSSOM defines that an HTTP `Link` header referencing a style sheet, should run *create a CSS style sheet*, whose steps neither include *parse a stylesheet* or *parse a CSS stylesheet*
