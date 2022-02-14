@@ -1,11 +1,11 @@
 
 const parse = require('../lib/parse/definition.js')
 
-const a = { type: 'keyword', value: 'a' }
-const b = { type: 'keyword', value: 'b' }
-const c = { type: 'keyword', value: 'c' }
+const a = { type: 'terminal', range: 'a', value: 'keyword' }
+const b = { type: 'terminal', range: 'b', value: 'keyword' }
+const c = { type: 'terminal', range: 'c', value: 'keyword' }
 const comma = { type: 'delimiter', value: ',' }
-const number = { type: 'basic', value: 'number' }
+const number = { type: 'terminal', value: 'number' }
 
 /**
  * @param {object} type
@@ -35,34 +35,37 @@ describe('single type', () => {
     it('represents a (keyword type)', () => {
         expect(parse('a')).toEqual(a)
     })
-    it('represents <number> (basic type)', () => {
-        expect(parse('<number>')).toEqual({ type: 'basic', value: 'number' })
+    it('represents <number> (terminal type)', () => {
+        expect(parse('<number>')).toEqual({ type: 'terminal', value: 'number' })
     })
     it('represents <number [0,1]>', () => {
         expect(parse('<number [0,1]>')).toEqual({
             range: { max: 1, min: 0 },
-            type: 'basic',
+            type: 'terminal',
             value: 'number',
         })
     })
     it('represents <number [0,∞]>', () => {
         expect(parse('<number [0,∞]>')).toEqual({
             range: { max: Infinity, min: 0 },
-            type: 'basic',
+            type: 'terminal',
             value: 'number',
         })
     })
     it('represents <length-percentage> (non-terminal type)', () => {
         expect(parse('<length-percentage>')).toEqual({ type: 'non-terminal', value: 'length-percentage' })
     })
-    it('represents fn(<number>) (terminal function)', () => {
+    it('represents fn(<number>) (terminal function type)', () => {
         expect(parse('fn(<number>)')).toEqual({ name: 'fn', type: 'function', value: '<number>' })
     })
-    it('represents <rotate()> (non-terminal function)', () => {
+    it('represents <rotate()> (non-terminal function type)', () => {
         expect(parse('<rotate()>')).toEqual({ name: 'rotate', type: 'function', value: '<angle> | <zero>' })
     })
     it("represents <'prop'> (property type)", () => {
         expect(parse("<'prop'>")).toEqual({ type: 'property', value: 'prop' })
+    })
+    it('represents <structure> (structure type)', () => {
+        expect(parse('<declaration>')).toEqual({ type: 'structure', value: 'declaration' })
     })
 })
 describe('repeated type', () => {
@@ -181,15 +184,17 @@ describe('group of types', () => {
     it('represents [a{2}]?', () => {
         expect(parse('[a{2}]?')).toEqual({
             repeat: { max: 2, min: 2, optional: true },
-            type: 'keyword',
-            value: 'a',
+            type: 'terminal',
+            range: 'a',
+            value: 'keyword',
         })
     })
     it('represents [a?]!', () => {
         expect(parse('[a?]!')).toEqual({
             repeat: { max: 1, min: 1, optional: false },
-            type: 'keyword',
-            value: 'a',
+            type: 'terminal',
+            range: 'a',
+            value: 'keyword',
         })
     })
     it('represents [a? b?]!', () => {

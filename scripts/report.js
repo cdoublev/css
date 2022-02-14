@@ -2,7 +2,6 @@
 const css = require('@webref/css')
 const parseDefinition = require('../lib/parse/definition.js')
 const properties = require('../lib/properties/definitions.js')
-const terminals = require('../lib/parse/terminals.js')
 const types = require('../lib/values/types.js')
 
 function parseDefinitionDeep(name, { type, value }) {
@@ -14,16 +13,10 @@ function parseDefinitionDeep(name, { type, value }) {
     }
     if (type === 'property') {
         if (!properties[value]) {
-            throw Error(`There is no definition for the property <${value}>`)
+            throw Error(`There is no definition for the property type <${value}>`)
         }
-    } else if (type === 'non-terminal') {
-        if (!types[value]) {
-            throw Error(`There is no definition for the non-terminal type <${value}>`)
-        }
-    } else if (type === 'basic') {
-        if (!terminals[value]) {
-            throw Error(`There is no parse function for the terminal type <${value}>`)
-        }
+    } else {
+        throw Error(`There is no definition for the type <${value}>`)
     }
 }
 
