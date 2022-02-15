@@ -539,7 +539,7 @@ describe('grammar rules', () => {
             .selector {
                 color: green;
             }
-            @nest .selector {
+            @nest .selector & {
                 color: red;
             }
         `)
