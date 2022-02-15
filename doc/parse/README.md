@@ -43,7 +43,7 @@ The CSS rules (qualified and at-rules) can not be represented with the CSS value
   - `<statement-at-rule> = <at-keyword> <rule-specific-prelude>;`
   - `<block-at-rule> = <at-keyword> <rule-specific-prelude>? { <rule-specific-block> }`
 
-Below are the principles of the context rules:
+Below are the main principles of the context rules:
 
   - `<stylesheet>` accepts all rules excluding those defined by the parent rule or style sheet (context)
   - `<rule-list>` only accepts rules defined by the context
@@ -57,6 +57,8 @@ To sum up, the content of an at-rule (`<stylesheet>`, `<rule-list>`, or `<declar
   - `@media` contains `<stylesheet>` excluding non top-level rules, but it contains `<style-block>` when nested in a style rule or `@nest`
   - `@keyframes` contains `<rule-list>` limited to qualified rules matching `<keyframe-selector># { <declaration-list> }`, where `<declaration-list>` excludes at-rules and is limited to declaration names matching animatable properties
   - `@font-feature-values` contains `<declaration-list>` limited to declaration names matching `font-display` and to at-rules matching `<font-feature-value-type>`
+
+Some rules also define in which order they should appear, wether or not their properties or descriptors interact with the cascade, if `!important` is allowed in declaration value, etc.
 
 ## `Element.style`
 

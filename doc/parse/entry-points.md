@@ -96,6 +96,7 @@
           <a href="#parse-a-CSS-page">
             CSS Page - parse a CSS <code>@page</code>
           </a> (via <i>parse something according to a CSS grammar</i>)
+          <p>❌: see issue in <a href="#parse-a-CSS-page">parse a CSS page</a>.</p>
         </li>
         <li>
           <a href="#parse-a-CSS-selector-list">
@@ -155,7 +156,7 @@
   <tr>
     <th>Comments</th>
     <td>
-      <p>❌: CSS Syntax defines <i>parse a list of component values</i> as the entry point to use <a href="https://drafts.csswg.org/css-syntax/#parser-entry-points"><i>for parsing a stand-alone selector</i></a>, but where does a <i>stand-alone selector is used</i>? If it is a style rule's prelude, it should use <a href="#parse-a-CSS-selector-list">parse-a-CSS-selector-list</a>.</p>
+      <p>❌: CSS Syntax defines <i>parse a list of component values</i> as the entry point to use <a href="https://drafts.csswg.org/css-syntax/#parser-entry-points"><i>for parsing a stand-alone selector</i></a>, but where does a <i>stand-alone selector is used</i>? If it is a style rule's prelude, it should use <a href="#parse-a-CSS-selector-list">parse a CSS selector list</a>.</p>
     </td>
   </tr>
 </table>
@@ -481,6 +482,7 @@
           <a href="#parse-a-CSS-page">
             CSS Page - parse a CSS <code>@page</code>
           </a>
+          <p>❌: see issue in <a href="#parse-a-CSS-page">parse a CSS page</a>.</p>
         </li>
         <li>
           <a href="#parse-a-CSS-selector-list">
@@ -1147,12 +1149,18 @@
     <td>
       <ul>
         <li>
-          CSSOM - <a href="#parse-a-css-rule">Parse a CSS rule</a>
+          <a href="#parse-a-css-rule">CSSOM - Parse a CSS rule</a>
         </li>
       </ul>
     </td>
   </tr>
   <tr><th>Public uses</th><td>none</td></tr>
+  <tr>
+    <th>Comments</th>
+    <td>
+      <p>❌: it should use step 3 of <i>parse a CSS rule</i> because <code>@page</code> appears at the top level of the style sheet and <i>parse a CSS stylesheet</i> defines that its input should be parsed with <i>parse a stylesheet</i>, which will <i>consume a list of rules</i>, therefore there will be no such thing as a stream of tokens when <i>parsing a list of component values</i>, the second step of <i>parse something according to a CSS grammar</i>.</p>
+    </td>
+  </tr>
 </table>
 
 [Top ↑](#the-css-parser-entry-points)
