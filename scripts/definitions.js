@@ -120,6 +120,8 @@ const replaced = {
         // Implementation dependent
         'font-family': { initial: 'monospace' },
         'voice-family': { initial: 'female' },
+        // TODO: fix https://github.com/w3c/fxtf-drafts/issues/451
+        'background-blend-mode': { value: "<'mix-blend-mode'>#" },
         // TODO: report @webref/css issue "`value` not extracted (but only `name`)"
         'stop-color': { initial: 'black', value: "<'color'>" },
         'stop-opacity': { initial: '1', value: "<'opacity'>" },
