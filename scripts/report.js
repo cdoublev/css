@@ -2,21 +2,29 @@
 const css = require('@webref/css')
 const parseDefinition = require('../lib/parse/definition.js')
 const properties = require('../lib/properties/definitions.js')
+const structures = require('../lib/values/structures.js')
+const terminals = require('../lib/parse/terminals.js')
 const types = require('../lib/values/types.js')
+
+const nodeTypes = [
+    'function',
+    'non-terminal',
+    'property',
+    'structure',
+    'terminal',
+]
 
 function parseDefinitionDeep(name, { type, value }) {
     if (Array.isArray(value)) {
         return value.forEach(type => parseDefinitionDeep(name, type))
     }
-    if (type === 'function') {
-        return tryParseDefinition(name, value)
-    }
-    if (type === 'property') {
-        if (!properties[value]) {
-            throw Error(`There is no definition for the property type <${value}>`)
+    if (nodeTypes.includes(type)) {
+        if (type === 'function') {
+            return tryParseDefinition(name, value)
         }
-    } else {
-        throw Error(`There is no definition for the type <${value}>`)
+        if (!(structures.includes(value) || properties[value] || types[value] || terminals[value])) {
+            throw Error(`There is no definition for the production type <${value}>`)
+        }
     }
 }
 
@@ -26,12 +34,11 @@ function tryParseDefinition(name, definition, context = {}) {
         if (!context.spec) {
             parseDefinitionDeep(name, ast)
         }
-    } catch (e) {
-        console.log(`Error while parsing "${name}"`)
+    } catch ({ message }) {
+        console.log(`Error while parsing "${name}": ${message}`)
         if (context.spec) {
             console.log(context)
         }
-        console.log(e.message)
     }
 }
 
