@@ -375,7 +375,7 @@ describe('grammar rules', () => {
     })
     it('ignores a declaration at the top level of the style sheet', () => {
 
-        // It looks like a declaration but `{}` allows to parse it as a (invalid) qualified rule
+        // `{}` allows to parse below declarations as (invalid) qualified rules
         const { cssRules: [styleRule] } = createStyleSheet(`
             declaration: value;
             {}
@@ -418,7 +418,7 @@ describe('grammar rules', () => {
     it.todo('ignores a declaration appearing after a rule in a style rule')
     it('ignores a declaration in a rule containing <stylesheet>', () => {
 
-        // It looks like a declaration but `{}` allows to parse it as a (invalid) qualified rule
+        // `{}` allows to parse below declarations as (invalid) qualified rules
         const { cssRules: [mediaRule] } = createStyleSheet(`
             @media all {
                 declaration: value;
@@ -438,7 +438,7 @@ describe('grammar rules', () => {
     })
     it('ignores a declaration in a rule containing <rule-list>', () => {
 
-        // It looks like a declaration but `{}` allows to parse it as a (invalid) qualified rule
+        // `{}` allows to parse below declarations as (invalid) qualified rules
         const { cssRules: [keyframesRule] } = createStyleSheet(`
             @keyframes myAnimation {
                 declaration: value;
@@ -458,7 +458,7 @@ describe('grammar rules', () => {
         expect(CSSKeyframeRule.is(keyframeRule)).toBeTruthy()
         expect(keyframeRule.style.color).toBe('green')
     })
-    it('ignores a declaration with a property not allowed or an invalid value in (nested) keyframe rules', () => {
+    it('ignores a declaration with a disallowed property or an invalid value in (qualified) keyframe rules', () => {
 
         // A declaration value with `!important` is invalid in keyframe rules
         const { cssRules: [{ cssRules: [keyframeRule] }] } = createStyleSheet(`
@@ -475,7 +475,7 @@ describe('grammar rules', () => {
         expect(CSSKeyframeRule.is(keyframeRule)).toBeTruthy()
         expect(keyframeRule.style.color).toBe('green')
     })
-    it('ignores a declaration with a property not allowed or an invalid value in @page', () => {
+    it('ignores a declaration with a disallowed property or an invalid value in @page', () => {
 
         const { cssRules: [pageRule] } = createStyleSheet(`
             @page {
@@ -491,7 +491,7 @@ describe('grammar rules', () => {
         expect(pageRule.style).toHaveLength(1)
         expect(pageRule.style.fontSize).toBe('20px')
     })
-    it('ignores a declaration with a property not allowed or an invalid value in margin at-rules', () => {
+    it('ignores a declaration with a disallowed property or an invalid value in margin at-rules', () => {
 
         const { cssRules: [{ cssRules: [marginRule] }] } = createStyleSheet(`
             @page {
@@ -499,8 +499,8 @@ describe('grammar rules', () => {
                     top: 1px;
                     content: "allowed";
                     bottom: 1px;
-                    invalid: value;
                     content: "important" !important;
+                    invalid: value;
                 }
             }
         `)
@@ -530,7 +530,7 @@ describe('grammar rules', () => {
 
         expect(cssRules).toHaveLength(0)
     })
-    it('ignores @nest or a style rule whose selector starts with `&` at the top level of the style sheet', () => {
+    it('ignores a nested style rule at the top level of the style sheet', () => {
 
         const { cssRules } = createStyleSheet(`
             & .selector {
@@ -551,11 +551,11 @@ describe('grammar rules', () => {
         expect(CSSStyleRule.is(styleRule)).toBeTruthy()
         expect(styleRule.style.color).toBe('green')
     })
-    it.todo('ignores @nest with a selector not including `&`')
-    it.todo('ignores a nested style rule with a selector not starting with `&`')
+    it.todo('ignores a directly nested style rule whose prelude is not a nest-prefixed selector')
+    it.todo('ignores @nest whose prelude is not a nest-containing selector')
     it('ignores a (qualified) keyframe rule anywhere outside @keyframes', () => {
 
-        /* `from` and `to` are valid selectors for style rules */
+        // `from` and `to` are valid selectors for style rules
         const { cssRules } = createStyleSheet(`
             0% {
                 color: red;
@@ -576,20 +576,20 @@ describe('grammar rules', () => {
     })
     it('ignores any other rules than a nested style rule, @nest, or @media, in a style rule', () => {
 
-        // CSS Syntax throws away every invalid tokens until reading `;`
+        // CSS Syntax throws away invalid tokens until reading `;`
         const { cssRules: [{ cssRules }] } = createStyleSheet(`
             .selector {
-                @nest .nested {
-                    color: green;
-                }
                 .nested {
                     color: red;
                 };
+                @nest .container & {
+                    color: green;
+                }
                 @keyframes myAnimation {
                     to {
                         color: red;
                     }
-                };
+                }
                 @media all {
                     color: green;
                 }
@@ -896,40 +896,57 @@ describe('CSSNamespaceRule', () => {
         expect(namespaceURI).toBe('http://www.w3.org/2000/svg')
         expect(prefix).toBe('svg')
     })
+    it('should register namespaces to use in selectors', () => {
+
+        const input = `
+            @namespace svg url("http://www.w3.org/2000/svg");
+            svg|rect { fill: green }
+            SVG|rect { fill: red }
+        `
+        const styleSheet = createStyleSheet(input)
+        const { cssRules } = styleSheet
+
+        expect(cssRules).toHaveLength(2)
+
+        const [, { selectorText, style }] = cssRules
+
+        expect(selectorText).toBe('svg|rect')
+        expect(style.fill).toBe('green')
+    })
 })
 describe('CSSNestingRule', () => {
     it('has all properties', () => {
 
-        const input = '.selector { @nest .child { color: red; color: orange } }'
+        const input = '.selector { @nest .container & { color: red; color: orange } }'
         const styleSheet = createStyleSheet(input)
         const { cssRules: [styleRule] } = styleSheet
         const { cssRules: [rule] } = styleRule
         const { cssRules, cssText, parentRule, parentStyleSheet, selectorText, style } = rule
 
         // CSSRule properties
-        expect(cssText).toBe('@nest .child {\n  color: orange;\n}')
+        expect(cssText).toBe('@nest .container & {\n  color: orange;\n}')
         expect(parentRule).toBe(styleRule)
         expect(parentStyleSheet).toBe(styleSheet)
 
         // CSSNestingRule properties
         expect(CSSRuleList.is(cssRules)).toBeTruthy()
-        expect(selectorText).toBe('.child')
+        expect(selectorText).toBe('.container &')
         expect(CSSStyleDeclaration.is(style)).toBeTruthy()
         expect(style).toHaveLength(1)
 
         style.color = 'green'
 
         // CSSNestingRule declarations should be shared with CSSStyleDeclaration
-        expect(rule.cssText).toBe('@nest .child {\n  color: green;\n}')
+        expect(rule.cssText).toBe('@nest .container & {\n  color: green;\n}')
 
-        rule.selectorText = '.child-element'
+        rule.selectorText = '.container-element &'
 
-        expect(rule.selectorText).toBe('.child-element')
-        expect(rule.cssText).toBe('@nest .child-element {\n  color: green;\n}')
+        expect(rule.selectorText).toBe('.container-element &')
+        expect(rule.cssText).toBe('@nest .container-element & {\n  color: green;\n}')
     })
     it('has all methods', () => {
 
-        const { cssRules: [{ cssRules: [rule] }] } = createStyleSheet('.selector { @nest .child {} }')
+        const { cssRules: [{ cssRules: [rule] }] } = createStyleSheet('.selector { @nest .container & {} }')
         const { cssRules } = rule
         const error = createError({ message: 'Failed to parse a rule', type: 'ParseError' })
 
@@ -1062,10 +1079,9 @@ describe('CSSStyleRule', () => {
         nestedStyleRule.selectorText = '& .child-element'
 
         expect(styleRule.selectorText).toBe('.selector-element')
-        // TODO: fix https://github.com/w3c/csswg-drafts/issues/6927
-        // expect(nestedStyleRule.selectorText).toBe('& .child-element')
-        // expect(styleRule.cssText).toBe('.selector-element {\n  color: green;\n  & .child-element {\n  color: green;\n}\n}')
-        // expect(nestedStyleRule.cssText).toBe('& .child-element {\n  color: green;\n}')
+        expect(nestedStyleRule.selectorText).toBe('& .child-element')
+        expect(styleRule.cssText).toBe('.selector-element {\n  color: green;\n  & .child-element {\n  color: green;\n}\n}')
+        expect(nestedStyleRule.cssText).toBe('& .child-element {\n  color: green;\n}')
     })
     it('has all methods', () => {
 

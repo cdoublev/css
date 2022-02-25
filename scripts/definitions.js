@@ -12,7 +12,9 @@ const fs = require('fs')
 const { listAll } = require('@webref/css')
 const namedColors = require('../lib/values/namedColors.js')
 const path = require('path')
+const { functions: pseudoFunctions } = require('../lib/values/pseudos.js')
 const shorthands = require('../lib/properties/shorthands.js')
+const structures = require('../lib/values/structures.js')
 const systemColors = require('../lib/values/systemColors.js')
 const terminals = require('../lib/parse/terminals.js')
 
@@ -25,26 +27,12 @@ const header = `// Generated from ${__filename}`
 /**
  * Excluded types
  *
- * Excluded types are not defined with the CSS value definition syntax but are
- * instead associated to a dedicated parse function.
+ * These types are parsed with a dedicated function instead of using a CSS value
+ * definition, except `<EOF-token>`, which is not represented in this library.
  */
 const excludedTypes = [
-    // CSS structures (rule, prelude, block)
-    'declaration',
-    'declaration-list',
-    'media-query-list',
-    'rule-list',
-    'stylesheet',
-    'style-block',
-    // CSS tokens
     'EOF-token',
-    'function-token',
-    'hash-token',
-    'ident-token',
-    'number-token',
-    'percentage-token',
-    'string-token',
-    // CSS declaration values
+    ...structures,
     ...Object.keys(terminals),
 ]
 
@@ -77,6 +65,10 @@ const initialTypes = Object.entries({
     // Custom types
     'css-wide-keyword': cssWideKeywords.join(' | '),
     'math-function': '<calc()> | <min()> | <max()> | <clamp()> | <round()> | <mod()> | <rem()> | <sin()> | <cos()> | <tan()> | <asin()> | <acos()> | <atan()> | <atan2()> | <pow()> | <sqrt()> | <hypot()> | <log()> | <exp()> | <abs()> | <sign()>',
+    // TODO: fix https://github.com/w3c/csswg-drafts/issues/7016
+    ...pseudoFunctions,
+    // TODO: fix https://github.com/w3c/csswg-drafts/issues/6927
+    'nesting-selector': "'&'",
     // TODO: report @webref/css issue "`value` written in prose and not extracted"
     'absolute-size': 'xx-small | x-small | small | medium | large | x-large | xx-large',
     'basic-shape': '<inset()> | <circle()> | <ellipse()> | <polygon()> | <path()>',
@@ -162,12 +154,19 @@ const replaced = {
         'path()': "path(<'fill-rule'>? , <string>)",
         // Modified to include legacy `<url-token>`
         'url': '<url-token> | url(<string> <url-modifier>*) | src(<string> <url-modifier>*)',
-        // TODO: fix https://github.com/w3c/webref/issues/333
-        'selector()': 'selector(<id-selector>)',
+        // TODO: fix https://github.com/w3c/csswg-drafts/issues/7030
+        'an+b': "odd | even | <integer> | <n-dimension> | '+'? n | -n | <ndashdigit-dimension> | '+'? <ndashdigit-ident> | <dashndashdigit-ident> | <n-dimension> <signed-integer> | '+'? n <signed-integer> | -n <signed-integer> | <ndash-dimension> <signless-integer> | '+'? n- <signless-integer> | -n- <signless-integer> | <n-dimension> ['+' | '-'] <signless-integer> | '+'? n ['+' | '-'] <signless-integer> | -n ['+' | '-'] <signless-integer>",
         // TODO: fix https://github.com/w3c/csswg-drafts/issues/6425
         'angular-color-stop-list': '<angular-color-stop> , [<angular-color-hint>? , <angular-color-stop>]#?',
         'color-stop-list': '<linear-color-stop> , [<linear-color-hint>? , <linear-color-stop>]#?',
         'size': 'closest-side | closest-corner | farthest-side | farthest-corner | sides | <length-percentage [0,∞]>{1,2}',
+        // TODO: fix https://github.com/w3c/csswg-drafts/issues/6927
+        'complex-selector': '[<compound-selector> | <nesting-selector>] [<combinator>? [<compound-selector> | <nesting-selector>]]*',
+        // TODO: fix https://github.com/w3c/csswg-drafts/issues/7016
+        'general-enclosed': '<function> | (<ident> <any-value>)',
+        'pseudo-class-selector': "':' <ident> | ':' <function>",
+        // TODO: fix https://github.com/w3c/webref/issues/333
+        'selector()': 'selector(<id-selector>)',
         // TODO: report spec issue "`initial` does not match `value`"
         'content-list': '[<string> | <content()> | contents | <image> | <counter> | <quote> | <target> | <leader()>]+',
         // TODO: report spec issue "`value` has extra whitespace"
@@ -584,9 +583,7 @@ function extractTypeDefinitions(types, definitions, url) {
         const replacement = replaced.types[type]
         if (replacement) {
             value = replacement
-        } else if (value) {
-            value = value.replaceAll('-token', '')
-        } else {
+        } else if (!value) {
             throw Error(`Missing value to replace the definition of "<${type}>" written in prose (${url})`)
         }
         addFieldValue(types, type, 'value', normalizeValue(value), url)

@@ -7,27 +7,51 @@
  * - not supported (yet?): structures (rules and declarations)
  */
 
-const { parseCSSGrammar, parseCSSPropertyValue } = require('../lib/parse/syntax.js')
+const { createParser, parseCSSGrammar, parseCSSPropertyValue } = require('../lib/parse/syntax.js')
 const { toDegrees, toRadians } = require('../lib/utils/math.js')
-const { serializeCSSValue, serializeSelectorGroup } = require('../lib/serialize.js')
 const createList = require('../lib/values/value.js')
 const createOmitted = require('../lib/values/omitted.js')
 const parseDefinition = require('../lib/parse/definition.js')
-const { parseSelectorGroup } = require('../lib/parse/syntax.js')
+const { serializeCSSValue } = require('../lib/serialize.js')
+
+/**
+ * Initialize a default context for `Parser` with namespaces to tests against a
+ * namespace prefixed selector.
+ *
+ * Run `context.enter(styleRule)` to tests against a nesting selector.
+ * Run `context.enter({ type: 'nest' })` to tests against a nest-containing
+ * selector.
+ *
+ * Then run `context.exit()` and `context.enter(styleRule)` to move back to the
+ * parent style rule (default context for the tests in this file).
+ */
+const cssRules = []
+const styleSheet = { _rules: cssRules }
+const styleRule = { parentStyleSheet: styleSheet, type: new Set(['style']) }
+
+cssRules.push(
+    { parentStyleSheet: styleSheet, prefix: 'html', type: new Set(['namespace']) },
+    { parentStyleSheet: styleSheet, prefix: 'svg', type: new Set(['namespace']) },
+    styleRule)
+
+const parser = createParser(styleRule)
+const { context, state } = parser
 
 /**
  * @param {string} definition
  * @param {string} input
  * @param {boolean} [parseGlobals]
+ * @param {boolean} [serialize]
  * @returns {function|string}
  *
- * Helper to call `parseCSSPropertyValue()` for matching a CSS wide keyword or a
- * custom variable instead of only a grammar.
+ * Helper to allow parsing a CSS wide keyword or a custom variable replacing a
+ * value matching the given definition, or to assert against the representation
+ * resulting from parsing intead of the string resulting from serialization.
  */
 function parse(definition, input, parseGlobals = false, serialize = true) {
     const parsed = parseGlobals
-        ? parseCSSPropertyValue(input)
-        : parseCSSGrammar(input, definition)
+        ? parseCSSPropertyValue(input, 'color', parser)
+        : parseCSSGrammar(input, definition, parser)
     if (parsed === null) {
         if (serialize) {
             return ''
@@ -42,7 +66,7 @@ function parse(definition, input, parseGlobals = false, serialize = true) {
 
 // Helpers to create component values
 function keyword(value, location = -1, position) {
-    const match = { type: new Set(['ident', 'keyword']), value }
+    const match = { representation: value, type: new Set(['ident', 'keyword']), value }
     if (typeof location === 'number') {
         match.location = location
     }
@@ -70,6 +94,10 @@ function list(components = [], separator = ' ', location = -1, position) {
     }
     return list
 }
+
+beforeEach(() => {
+    state.clear()
+})
 
 /**
  * TODO: add generalized test case guaranteeing that the maximum call stack size
@@ -1156,6 +1184,7 @@ describe('<var()>', () => {
             value: createList([
                 {
                     location: -1,
+                    representation: '--prop',
                     type: new Set(['ident', 'custom-property-name']),
                     value: '--prop',
                 },
@@ -1198,16 +1227,16 @@ describe('keyword', () => {
         const valid = ['solid']
         invalid.forEach(input => expect(parse('solid', input, valid, true)).toBe(''))
     })
-    it('parses a pre-defined keyword to a representation with the expected CSS types', () => {
-        expect(parse('solid', 'solid', false, false)).toEqual({
-            type: new Set(['ident', 'keyword']),
-            value: 'solid',
-        })
-    })
     it('parses a keyword to a representation with the expected CSS types', () => {
         expect(parse('inherit', 'inherit', true, false)).toEqual({
+            representation: 'inherit',
             type: new Set(['ident', 'keyword', 'css-wide-keyword']),
             value: 'inherit',
+        })
+        expect(parse('solid', 'solid', false, false)).toEqual({
+            representation: 'solid',
+            type: new Set(['ident', 'keyword']),
+            value: 'solid',
         })
     })
     it('parses and serializes CSS wide keywords', () => {
@@ -1251,6 +1280,7 @@ describe('<custom-ident>', () => {
     })
     it('parses a custom identifier to a representation with the expected CSS types', () => {
         expect(parse('<custom-ident>', 'myAnimationName', false, false)).toEqual({
+            representation: 'myAnimationName',
             type: new Set(['ident', 'custom-ident']),
             value: 'myAnimationName',
         })
@@ -1281,6 +1311,7 @@ describe('<dashed-ident>', () => {
     it('parses a dashed identifier to a representation with the expected CSS types', () => {
         // TODO: a `<dashed-ident>` should also be a `<custom-ident>` (see CSS Values)
         expect(parse('<dashed-ident>', '--prop', false, false)).toEqual({
+            representation: '--prop',
             type: new Set(['ident', /*'custom-ident', */'dashed-ident']),
             value: '--prop',
         })
@@ -1296,6 +1327,7 @@ describe('<ndashdigit-ident>', () => {
     })
     it('parses a n-* identifier to a representation with the expected CSS types', () => {
         expect(parse('<ndashdigit-ident>', 'n-1', false, false)).toEqual({
+            representation: 'n-1',
             type: new Set(['ident', 'ndashdigit-ident']),
             value: 'n-1',
         })
@@ -1313,8 +1345,9 @@ describe('<dashndashdigit-ident>', () => {
         const invalid = ['keyword', '"string"', '1', '1px', '-n-1.1', '-n--1', 'n-1']
         invalid.forEach(input => expect(parse('<dashndashdigit-ident>', input)).toBe(''))
     })
-    it('parses a n-* identifier to a representation with the expected CSS types', () => {
+    it('parses a -n-* identifier to a representation with the expected CSS types', () => {
         expect(parse('<dashndashdigit-ident>', '-n-1', false, false)).toEqual({
+            representation: '-n-1',
             type: new Set(['ident', 'dashndashdigit-ident']),
             value: '-n-1',
         })
@@ -1328,24 +1361,29 @@ describe('<dashndashdigit-ident>', () => {
     })
 })
 describe('<string>', () => {
-    it('returns empty string for invalid string values', () => {
+    it('returns empty string for invalid or bad string values', () => {
         const invalid = [
             'unquoted',
             '"string" unquoted',
-            '"\n"', // Unquoted newline (results to a bad string and a newline)
+            '"\n"', // Unescaped newline
         ]
         invalid.forEach(input => expect(parse('<string>', input)).toBe(''))
     })
     it('parses a string to a representation with the expected CSS type', () => {
         expect(parse('<string>', '"css"', false, false)).toEqual({
+            representation: '"css"',
+            type: new Set(['string']),
+            value: 'css',
+        })
+        expect(parse('<string>', '"css', false, false)).toEqual({
+            representation: '"css',
             type: new Set(['string']),
             value: 'css',
         })
     })
-    it('parses and serializes bad strings to empty string', () => {
-        // TODO: do not parse `<bad-string>` as a valid `<string>` (spec/browser compliance)
-        const bad = ['"', "'", '"\\']
-        bad.forEach(input => expect(parse('<string>', input)).toBe('""'))
+    it('parses and serializes an unclosed string', () => {
+        expect(parse('<string>', '"css')).toBe('"css"')
+        expect(parse('<string>', "'css")).toBe('"css"')
     })
     it('parses and serializes an empty string', () => {
         expect(parse('<string>', '""')).toBe('""')
@@ -1365,19 +1403,33 @@ describe('<string>', () => {
     })
 })
 describe('<url>', () => {
-    it('returns empty string for invalid url values', () => {
+    it('returns empty string for invalid or bad url values', () => {
         const invalid = [
             'uurl(valid.url)',
             'url(val)id.url)',
             'url(valid.url))',
+            // Unexpected whitepsace
+            'url(val id.url)',
+            'url(val\nid.url)',
+            'url(val\tid.url)',
+            // Unexpected quote (parse error)
+            'url(val"id.url)',
+            "url(val'id.url)",
+            // Unexpected open parenthesis (parse error)
+            'url(val(id.url)',
+            // Unexpected non-printable character (parse error)
+            'url(val\u0001id.url)',
+            // Invalid escape sequence
+            'url(val\\\nid.url)',
+            // Invalid <string>
             'src()',
             'src(unquoted.url)',
-            'url(var(--url))', // Parsed to a bad url (parse error at open parenthesis) and close parenthesis
         ]
         invalid.forEach(input => expect(parse('<url>', input)).toBe(''))
     })
     it('parses an URL to a representation with the expected CSS type', () => {
         expect(parse('<url>', 'url(img.jpg)', false, false)).toEqual({
+            representation: 'url(img.jpg)',
             type: new Set(['url-token', 'url']),
             value: 'img.jpg',
         })
@@ -1385,7 +1437,12 @@ describe('<url>', () => {
             name: 'url',
             type: new Set(['function', 'url()', 'url']),
             value: createList([
-                { location: -1, type: new Set(['string']), value: 'img.jpg' },
+                {
+                    location: -1,
+                    representation: '"img.jpg"',
+                    type: new Set(['string']),
+                    value: 'img.jpg',
+                },
                 list([], ' ', 0),
             ]),
         })
@@ -1393,28 +1450,18 @@ describe('<url>', () => {
             name: 'src',
             type: new Set(['function', 'src()', 'url']),
             value: createList([
-                { location: -1, type: new Set(['string']), value: 'img.jpg' },
+                {
+                    location: -1,
+                    representation: '"img.jpg"',
+                    type: new Set(['string']),
+                    value: 'img.jpg',
+                },
                 list([], ' ', 0),
             ]),
         })
     })
-    it('parses and serializes bad URLs to empty URLs', () => {
-        // TODO: do not parse `<bad-url>` as valid `<url>` (spec/browser compliance)
-        const bad = [
-            // Unexpected whitepsace
-            'url(val id.url)',
-            'url(val\nid.url)',
-            'url(val\tid.url)',
-            // Unexpected EOF, quote, open parenthesis, whitespace, or non-printable character (parse error)
-            'url(',
-            'url(val"id.url)',
-            "url(val'id.url)",
-            'url(val(id.url)',
-            'url(val\u0001id.url)',
-            // Invalid escape sequence (parse error)
-            'url(val\\\nid.url)',
-        ]
-        bad.forEach(input => expect(parse('<url>', input)).toBe('url("")'))
+    it('parses and serializes an unclosed URL', () => {
+        expect(parse('<url>', 'url(valid.url')).toBe('url("valid.url")')
     })
     it('parses and serializes a resource with an escape sequence', () => {
         expect(parse('<url>', 'url(\\1)')).toBe('url("\\u1")')
@@ -1439,7 +1486,7 @@ describe('<zero>', () => {
     })
     it('parses 0 to a representation with the expected CSS type', () => {
         expect(parse('<zero>', '0', false, false)).toEqual({
-            signed: false,
+            representation: '0',
             type: new Set(['integer', 'zero']),
             value: 0,
         })
@@ -1455,12 +1502,12 @@ describe('<integer>', () => {
     })
     it('parses an integer to a representation with the expected CSS type', () => {
         expect(parse('<integer>', '0', false, false)).toEqual({
-            signed: false,
+            representation: '0',
             type: new Set(['integer']),
             value: 0,
         })
         expect(parse('<integer>', '1', false, false)).toEqual({
-            signed: false,
+            representation: '1',
             type: new Set(['integer']),
             value: 1,
         })
@@ -1478,9 +1525,9 @@ describe('<signless-integer>', () => {
         const invalid = ['keyword', '"string"', '1.1', '+1.1', '-1.1']
         invalid.forEach(input => expect(parse('<signless-integer>', input)).toBe(''))
     })
-    it('parses an integer to a representation with the expected CSS type', () => {
+    it('parses a signless integer to a representation with the expected CSS type', () => {
         expect(parse('<signless-integer>', '1', false, false)).toEqual({
-            signed: false,
+            representation: '1',
             type: new Set(['integer', 'signless-integer']),
             value: 1,
         })
@@ -1498,19 +1545,19 @@ describe('<signed-integer>', () => {
         const invalid = ['keyword', '"string"', '1', '1.1']
         invalid.forEach(input => expect(parse('<signed-integer>', input)).toBe(''))
     })
-    it('parses an integer to a representation with the expected CSS type', () => {
+    it('parses a signed integer to a representation with the expected CSS type', () => {
         expect(parse('<signed-integer>', '+1', false, false)).toEqual({
-            signed: true,
+            representation: '+1',
             type: new Set(['integer', 'signed-integer']),
             value: 1,
         })
         expect(parse('<signed-integer>', '-1', false, false)).toEqual({
-            signed: true,
+            representation: '-1',
             type: new Set(['integer', 'signed-integer']),
             value: -1,
         })
         /**
-         * TODO: expect `0+` and `0-` to be represented with types `integer` and
+         * TODO: expect `+0` and `-0` to be represented with types `integer` and
          * `signed-integer`.
          */
     })
@@ -1526,17 +1573,17 @@ describe('<number>', () => {
     })
     it('parses a number to a representation with the expected CSS type(s)', () => {
         expect(parse('<number>', '0', false, false)).toEqual({
-            signed: false,
+            representation: '0',
             type: new Set(['integer', 'number']),
             value: 0,
         })
         expect(parse('<number>', '1', false, false)).toEqual({
-            signed: false,
+            representation: '1',
             type: new Set(['integer', 'number']),
             value: 1,
         })
         expect(parse('<number>', '1.1', false, false)).toEqual({
-            signed: false,
+            representation: '1.1',
             type: new Set(['number']),
             value: 1.1,
         })
@@ -1563,13 +1610,13 @@ describe('<length>', () => {
     })
     it('parses a length to a representation with the expected CSS types', () => {
         expect(parse('<length>', '0', false, false)).toEqual({
-            signed: false,
+            representation: '0',
             type: new Set(['dimension', 'length']),
             unit: 'px',
             value: 0,
         })
         expect(parse('<length>', '1px', false, false)).toEqual({
-            signed: false,
+            representation: '1px',
             type: new Set(['dimension', 'length']),
             unit: 'px',
             value: 1,
@@ -1601,13 +1648,13 @@ describe('<percentage>', () => {
     })
     it('parses a percentage to a representation with the expected CSS type', () => {
         expect(parse('<percentage>', '0%', false, false)).toEqual({
-            signed: false,
+            representation: '0%',
             type: new Set(['percentage']),
             unit: '%',
             value: 0,
         })
         expect(parse('<percentage>', '1%', false, false)).toEqual({
-            signed: false,
+            representation: '1%',
             type: new Set(['percentage']),
             unit: '%',
             value: 1,
@@ -1638,17 +1685,17 @@ describe('<alpha-value>', () => {
     })
     it('parses an alpha value to a representation with the expected CSS types', () => {
         expect(parse('<alpha-value>', '0', false, false)).toEqual({
-            signed: false,
+            representation: '0',
             type: new Set(['integer', 'number', 'alpha-value']),
             value: 0,
         })
         expect(parse('<alpha-value>', '1', false, false)).toEqual({
-            signed: false,
+            representation: '1',
             type: new Set(['integer', 'number', 'alpha-value']),
             value: 1,
         })
         expect(parse('<alpha-value>', '1%', false, false)).toEqual({
-            signed: false,
+            representation: '1%',
             type: new Set(['percentage', 'alpha-value']),
             unit: '%',
             value: 1,
@@ -1685,13 +1732,13 @@ describe('<angle>', () => {
     })
     it('parses an angle to a representation with the expected CSS types', () => {
         expect(parse('<angle>', '0', false, false)).toEqual({
-            signed: false,
+            representation: '0',
             type: new Set(['dimension', 'angle']),
             unit: 'deg',
             value: 0,
         })
         expect(parse('<angle>', '1deg', false, false)).toEqual({
-            signed: false,
+            representation: '1deg',
             type: new Set(['dimension', 'angle']),
             unit: 'deg',
             value: 1,
@@ -1722,7 +1769,7 @@ describe('<time>', () => {
     })
     it('parses a time to a representation with the expected CSS types', () => {
         expect(parse('<time>', '1s', false, false)).toEqual({
-            signed: false,
+            representation: '1s',
             type: new Set(['dimension', 'time']),
             unit: 's',
             value: 1,
@@ -1753,7 +1800,7 @@ describe('<n-dimension>', () => {
     })
     it('parses a n dimension to a representation with the expected CSS types', () => {
         expect(parse('<n-dimension>', '1n', false, false)).toEqual({
-            signed: false,
+            representation: '1n',
             type: new Set(['dimension', 'n-dimension']),
             unit: 'n',
             value: 1,
@@ -1775,7 +1822,7 @@ describe('<ndash-dimension>', () => {
     })
     it('parses a n- dimension to a representation with the expected CSS types', () => {
         expect(parse('<ndash-dimension>', '1n-', false, false)).toEqual({
-            signed: false,
+            representation: '1n-',
             type: new Set(['dimension', 'ndash-dimension']),
             unit: 'n-',
             value: 1,
@@ -1797,7 +1844,7 @@ describe('<ndashdigit-dimension>', () => {
     })
     it('parses a n-* dimension to a representation with the expected CSS types', () => {
         expect(parse('<ndashdigit-dimension>', '1n-1', false, false)).toEqual({
-            signed: false,
+            representation: '1n-1',
             type: new Set(['dimension', 'ndashdigit-dimension']),
             unit: 'n-1',
             value: 1,
@@ -1810,6 +1857,49 @@ describe('<ndashdigit-dimension>', () => {
     })
     it('parses and serializes a n-* dimension case-insensitively', () => {
         expect(parse('<ndashdigit-dimension>', '1N-1')).toBe('1n-1')
+    })
+})
+describe('<urange>', () => {
+    it('returns empty string for invalid unicode ranges', () => {
+        const invalid = [
+            'keyword',
+            '"string"',
+            '1',
+            // U+...
+            'U-0',
+            'U0',
+            // 0 < hex digits < 7
+            'U+',
+            'U+0000001',
+            'U+-1',
+            'U+0-',
+            'U+0-0000001',
+            // ? should appear last
+            'U+?0',
+            'U+0?-1',
+            'U+0-?0',
+            // Invalid start/end value separator
+            'U+0+1',
+            // Missing start/end value
+            'U+0-',
+            // Unconsumed code points
+            'U+0g',
+            'U+0-0g',
+            // Not > U+10FFFF
+            'U+110001',
+            'U+1-0',
+            // Start > End
+            'U-0',
+        ]
+        invalid.forEach(input => expect(parse('<urange>', input)).toBe(''))
+    })
+    it('parses a unicode range to a representation with the expected CSS type', () => {
+        expect(parse('<urange>', 'U+0-f', false, false)).toEqual({
+            end: 15,
+            representation: 'U+0-f',
+            start: 0,
+            type: new Set(['urange']),
+        })
     })
 })
 
@@ -1868,7 +1958,7 @@ describe('<calc()>', () => {
                 value: [
                     {
                         location: -1,
-                        signed: false,
+                        representation: '1',
                         type: new Set(['integer', 'number', 'calc-value']),
                         value: 1,
                     },
@@ -1883,13 +1973,13 @@ describe('<calc()>', () => {
                 value: [
                     {
                         location: -1,
-                        signed: false,
+                        representation: '1',
                         type: new Set(['integer', 'number', 'calc-value']),
                         value: 1,
                     },
                     {
                         location: 2,
-                        signed: false,
+                        representation: '2',
                         type: new Set(['integer', 'number', 'calc-value']),
                         value: 2,
                     },
@@ -1904,7 +1994,7 @@ describe('<calc()>', () => {
                 value: [
                     {
                         location: -1,
-                        signed: false,
+                        representation: '1',
                         type: new Set(['integer', 'number', 'calc-value']),
                         value: 1,
                     },
@@ -1913,7 +2003,7 @@ describe('<calc()>', () => {
                         value: [
                             {
                                 location: 2,
-                                signed: false,
+                                representation: '2',
                                 type: new Set(['integer', 'number', 'calc-value']),
                                 value: 2,
                             },
@@ -1931,13 +2021,13 @@ describe('<calc()>', () => {
                 value: [
                     {
                         location: -1,
-                        signed: false,
+                        representation: '1',
                         type: new Set(['integer', 'number', 'calc-value']),
                         value: 1,
                     },
                     {
                         location: 2,
-                        signed: false,
+                        representation: '2',
                         type: new Set(['integer', 'number', 'calc-value']),
                         value: 2,
                     },
@@ -1953,7 +2043,7 @@ describe('<calc()>', () => {
                 value: [
                     {
                         location: -1,
-                        signed: false,
+                        representation: '1',
                         type: new Set(['integer', 'number', 'calc-value']),
                         value: 1,
                     },
@@ -1962,7 +2052,7 @@ describe('<calc()>', () => {
                         value: [
                             {
                                 location: 2,
-                                signed: false,
+                                representation: '2',
                                 type: new Set(['integer', 'number', 'calc-value']),
                                 value: 2,
                             },
@@ -1979,8 +2069,8 @@ describe('<calc()>', () => {
             value: {
                 location: -1,
                 range: undefined,
+                representation: '1',
                 round: false,
-                signed: false,
                 type: new Set(['integer', 'number', 'calc-value']),
                 value: 1,
             },
@@ -1992,8 +2082,8 @@ describe('<calc()>', () => {
             value: {
                 location: -1,
                 range: undefined,
+                representation: '1',
                 round: false,
-                signed: false,
                 type: new Set(['integer', 'number', 'calc-value']),
                 value: 3,
             },
@@ -2113,7 +2203,7 @@ describe('<min()>, <max()>', () => {
                 type: new Set(['calc-sum']),
                 value: [{
                     location: -1,
-                    signed: false,
+                    representation: '1',
                     type: new Set(['integer', 'number', 'calc-value']),
                     value: 1,
                 }],
@@ -2575,10 +2665,12 @@ describe('<color>', () => {
     })
     it('parses a color to a representation with the expected CSS types', () => {
         expect(parse('<color>', 'red', false, false)).toEqual({
+            representation: 'red',
             type: new Set(['ident', 'keyword', 'named-color', 'absolute-color-base', 'color']),
             value: 'red',
         })
         expect(parse('<color>', '#000', false, false)).toEqual({
+            representation: '#000',
             type: new Set(['hash', 'hex-color', 'absolute-color-base', 'color']),
             value: '000',
         })
@@ -2587,9 +2679,9 @@ describe('<color>', () => {
             type: new Set(['function', 'rgb()', 'absolute-color-base', 'color']),
             value: createList([
                 list([
-                    { location: -1, signed: false, type: new Set(['integer', 'number']), value: 0 },
-                    { location: 0, signed: false, type: new Set(['integer', 'number']), value: 0 },
-                    { location: 3, signed: false, type: new Set(['integer', 'number']), value: 0 },
+                    { location: -1, representation: '0', type: new Set(['integer', 'number']), value: 0 },
+                    { location: 0, representation: '0', type: new Set(['integer', 'number']), value: 0 },
+                    { location: 3, representation: '0', type: new Set(['integer', 'number']), value: 0 },
                 ], ',', -1),
                 omitted(',', 6),
                 omitted('<alpha-value>', 6),
@@ -2837,7 +2929,6 @@ describe('<gradient>', () => {
     })
     it('parses and serializes a conic gradient with valid arguments', () => {
         [
-            // [input, expected]
             ['conic-gradient(red, cyan)', 'conic-gradient(at center center, red, cyan)'],
             ['CONIc-gradient(red, cyan)', 'conic-gradient(at center center, red, cyan)'],
             ['repeating-conic-gradient(red, cyan)', 'repeating-conic-gradient(at center center, red, cyan)'],
@@ -2867,7 +2958,6 @@ describe('<gradient>', () => {
     })
     it('parses and serializes a linear gradient with valid arguments', () => {
         [
-            // [input, expected]
             ['linear-gradient(red, cyan)', 'linear-gradient(red, cyan)'],
             ['LINEAr-gradient(red, cyan)', 'linear-gradient(red, cyan)'],
             ['repeating-linear-gradient(red, cyan)', 'repeating-linear-gradient(red, cyan)'],
@@ -2892,7 +2982,6 @@ describe('<gradient>', () => {
     })
     it('parses and serializes a radial gradient with valid arguments', () => {
         [
-            // [input, expected]
             ['radial-gradient(red, cyan)', 'radial-gradient(at center center, red, cyan)'],
             ['RADIAl-gradient(red, cyan)', 'radial-gradient(at center center, red, cyan)'],
             ['repeating-radial-gradient(red, cyan)', 'repeating-radial-gradient(at center center, red, cyan)'],
@@ -2930,7 +3019,6 @@ describe('<gradient>', () => {
     })
     it('parses and serializes a gradient defined with math function(s)', () => {
         [
-            // [input, expected]
             [
                 'conic-gradient(from calc(0deg) at calc(50%), red calc(5% * 2) calc(50% * 2), calc(25% * 2), cyan)',
                 'conic-gradient(at calc(50%) center, red calc(10%), red calc(100%), calc(50%), cyan)',
@@ -2983,6 +3071,7 @@ describe('<declaration>', () => {
             name: 'color',
             type: new Set(['declaration']),
             value: {
+                representation: 'green',
                 type: new Set(['ident', 'keyword', 'named-color', 'absolute-color-base', 'color']),
                 value: 'green',
             },
@@ -3001,33 +3090,153 @@ describe('<declaration>', () => {
         expect(parse('<declaration>', input, false)).toBe(input)
     })
 })
-describe.skip('<selector-list>', () => {
-
-    function parse(input) {
-        const parsed = parseSelectorGroup(input)
-        return parsed ? serializeSelectorGroup(parsed) : ''
-    }
-
-    const selectors = [
-        // [title, input]
-        ['column separated types', 'col || td'],
-        ['namespaced type', 'ns|type'],
-        ['class', '.class'],
-        ['type qualified with a class', 'type.class'],
-        ['attribute', '[checked]'],
-        ['type qualified with an attribute', 'type[checked]'],
-        ['an attribute match', '[name^=foo]'],
-        ['type qualified with an attribute match', 'type[name^=foo]'],
-        ['pseudo-element', '::before'],
-        ['type qualified with a pseudo-element', 'type::before'],
-        ['pseudo-class', ':hover'],
-        ['type qualified with a pseudo-class', 'type:hover'],
-        ['pseudo-element qualified with a pseudo-class', '::before:hover'],
-        ['type qualified with a pseudo-element qualified with a pseudo-class selector', 'type::before:hover'],
-    ]
-
-    it.each(selectors)('parses and serializes a selector as %s', (title, input) => {
-        expect(parse(input)).toBe(input)
+describe('<selector-list>', () => {
+    it('returns empty string for invalid selector values', () => {
+        const invalid = [
+            '"string"',
+            '1px',
+            '#000',
+            // Invalid whitespace
+            'col | | td',
+            'svg| *',
+            'svg| a',
+            '*| a',
+            '. class',
+            ': hover',
+            ': not(.valid)',
+            ': before',
+            ': :before',
+            ':: before',
+            '[attr~ =value]',
+            '[attr| =value]',
+            '[attr^ =value]',
+            '[attr$ =value]',
+            '[attr* =value]',
+            // Undeclared namespace
+            'undeclared|*',
+            '[undeclared|attr~ =value]',
+            // Invalid pseudo-class name
+            ':hover()',
+            ':marker',
+            ':marker()',
+            ':not',
+            // Invalid pseudo-element name
+            '::hover',
+            '::not',
+            // Invalid pseudo-element data structure
+            '::hover()',
+            '::marker()',
+            '::not()',
+            // Invalid functional pseudo-class arguments
+            ':current(::before)',
+            ':not(::before)',
+            ':nth-child(keyword)',
+            ':nth-child("string")',
+            ':nth-child(1px)',
+            ':nth-child(+ n)',
+            ':nth-child(+ n-1)',
+            ':nth-child(+ n- 1)',
+            ':nth-child(+ n -1)',
+            ':nth-child(+ n - 1)',
+            // Invalid pseudo-classing pseudo-element
+            '::before:root',
+            '::before:lang(fr)',
+            // Invalid sub-pseudo-element
+            '::before::first-line',
+            // Invalid pseudo-element combination (no internal structure)
+            '::first-letter + span',
+        ]
+        invalid.forEach(input => expect(parse('<selector-list>', input)).toBe(''))
+    })
+    it('parses a selector list to a representation with the expected CSS types', () => {
+        const classSelector = list([
+            { location: -1, type: new Set(['delimiter']), value: '.' },
+            { location: 0, representation: 'class', type: new Set(['ident', 'ident-token']), value: 'class' },
+        ])
+        classSelector.type.add('class-selector')
+        classSelector.type.add('subclass-selector')
+        const compoundSelector = list([
+            omitted('<type-selector>', -1),
+            list([classSelector]),
+            list([], ' ', 1),
+        ])
+        compoundSelector.type.add('compound-selector')
+        const complexSelector = list([compoundSelector, list([], ' ', 1)])
+        complexSelector.type.add('complex-selector')
+        expect(parse('<selector-list>', '.class', false, false)).toEqual(createList(
+            [complexSelector],
+            ',',
+            new Set(['complex-selector-list', 'selector-list'])))
+    })
+    it('parses and serializes valid selectors', () => {
+        const valid = [
+            // No extra whitespace
+            ['#id.class[*|attr^=value]:hover > [attr=value]::before'],
+            ['html|*'],
+            ['html|a'],
+            ['*|a'],
+            ['|a'],
+            ['col || td'],
+            // Pseudo-class and pseudo-element name is case-insensitive
+            ['::BEFORE', '::before'],
+            [':HOVER', ':hover'],
+            [':DIR(ltr)', ':dir(ltr)'],
+            // Pseudo-element as pseudo-class (back-compatibility with CSS2)
+            [':after', '::after'],
+            [':before', '::before'],
+            [':first-letter', '::first-letter'],
+            [':first-line', '::first-line'],
+            // Pseudo-classing pseudo-element
+            ['::before:hover'],
+            ['::before:defined'],
+            ['::before:is(:hover)'],
+            ['::before:not(:hover)'],
+            ['::before:where(:hover)'],
+            // Sub-pseudo-element
+            ['::after::marker'],
+            ['::before::marker'],
+            ['::first-letter::postfix'],
+            ['::first-letter::prefix'],
+            // Special parsing of `<forgiving-selector-list>`
+            [':is(, valid, 0, #valid, undeclared|*, .valid, ::before, :hover)', ':is(valid, #valid, .valid, :hover)'],
+            [':where(, valid, 0, #valid, undeclared|*, .valid, ::before, :hover)', ':where(valid, #valid, .valid, :hover)'],
+            // Special parsing of `<forgiving-relative-selector-list>`
+            [':has(, valid, 0, #valid, undeclared|*, .valid, ::before, :hover)', ':has(valid, #valid, .valid, ::before, :hover)'],
+            // Special parsing of `<an+b>`
+            [':nth-child(even)', ':nth-child(2n)'],
+            [':nth-child(odd)', ':nth-child(2n+1)'],
+            [':nth-child(1)'],
+            [':nth-child(1n)', ':nth-child(n)'],
+            [':nth-child(n)'],
+            [':nth-child(+n)', ':nth-child(n)'],
+            [':nth-child(-n)', ':nth-child(-n)'],
+            [':nth-child(1n-1)', ':nth-child(n-1)'],
+            [':nth-child(n-1)'],
+            [':nth-child(+n-1)', ':nth-child(n-1)'],
+            [':nth-child(-n-1)'],
+            [':nth-child(1n -1)', ':nth-child(n-1)'],
+            [':nth-child(n -1)', ':nth-child(n-1)'],
+            [':nth-child(+n -1)', ':nth-child(n-1)'],
+            [':nth-child(-n -1)', ':nth-child(-n-1)'],
+            [':nth-child(1n -1)', ':nth-child(n-1)'],
+            [':nth-child(n- 1)', ':nth-child(n-1)'],
+            [':nth-child(+n- 1)', ':nth-child(n-1)'],
+            [':nth-child(-n- 1)', ':nth-child(-n-1)'],
+            [':nth-child(1n - 1)', ':nth-child(n-1)'],
+            [':nth-child(1n - 1)', ':nth-child(n-1)'],
+            [':nth-child(1n + 1)', ':nth-child(n+1)'],
+            [':nth-child(n - 1)', ':nth-child(n-1)'],
+            [':nth-child(n + 1)', ':nth-child(n+1)'],
+            [':nth-child(+n - 1)', ':nth-child(n-1)'],
+            [':nth-child(+n + 1)', ':nth-child(n+1)'],
+            [':nth-child(-n - 1)', ':nth-child(-n-1)'],
+            [':nth-child(-n + 1)', ':nth-child(-n+1)'],
+            [':nth-child(1 of type)'],
+            [':nth-last-child(1 of type)'],
+        ]
+        valid.forEach(([input, expected = input]) =>
+            expect(parse('<selector-list>', input, false, true, ['*', 'html']))
+                .toBe(expected))
     })
 })
 describe('<media-query>', () => {

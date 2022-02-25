@@ -59,7 +59,7 @@ A comma between types is a combinator subject to the comma-elision rules (detail
 
 `[a? b?]!`: `a` and/or `b` in this order.
 
-Note: delimiters and `fn()` are never defined with a multiplier, eg. `fn(){1,2}`.
+Note: `fn()` are never defined with a multiplier, eg. `fn(){1,2}`.
 
 **Whitespace**
 
@@ -243,11 +243,23 @@ Issues to report on the `w3c/webref` repository:
     - `<counter-name>`
     - `<counter-style-name>`
     - `<custom-params>`
+    - `<current()>`
     - `<dimension>`
     - `<dimension-unit>`
+    - `<dir()>`
     - `<extension-name>`
+    - `<has()>`
+    - `<is()>`
     - `<lang>`
+    - `<lang()>`
     - `<named-color>`
+    - `<not()>`
+    - `<nth-child()>`
+    - `<nth-col()>`
+    - `<nth-last-child()>`
+    - `<nth-last-col()>`
+    - `<nth-last-of-type()>`
+    - `<nth-of-type()>`
     - `<outline-line-style>`
     - `<q-name>`
     - `<relative-size>`
@@ -256,6 +268,7 @@ Issues to report on the `w3c/webref` repository:
     - `<system-color>`
     - `<transform-function>`
     - `<url-modifier>`
+    - `<where()>`
     - `<x>`
     - `<xyz>`
     - `<y>`

@@ -1,9 +1,9 @@
 
 const parse = require('../lib/parse/definition.js')
 
-const a = { type: 'terminal', range: 'a', value: 'keyword' }
-const b = { type: 'terminal', range: 'b', value: 'keyword' }
-const c = { type: 'terminal', range: 'c', value: 'keyword' }
+const a = { range: 'a', type: 'terminal', value: 'keyword' }
+const b = { range: 'b', type: 'terminal', value: 'keyword' }
+const c = { range: 'c', type: 'terminal', value: 'keyword' }
 const comma = { type: 'delimiter', value: ',' }
 const number = { type: 'terminal', value: 'number' }
 
@@ -99,6 +99,9 @@ describe('repeated type', () => {
     it('represents a#{1,}', () => {
         expect(parse('a#{1,}')).toEqual(repeat(a, { max: 20, min: 1, separator: ',' }))
     })
+    it("represents ','?'", () => {
+        expect(parse("','?")).toEqual(repeat(comma, { max: 1, min: 1, optional: true }))
+    })
     it('represents <number>?', () => {
         expect(parse('<number>?')).toEqual(repeat(number, { max: 1, min: 1, optional: true }))
     })
@@ -183,17 +186,17 @@ describe('group of types', () => {
     })
     it('represents [a{2}]?', () => {
         expect(parse('[a{2}]?')).toEqual({
+            range: 'a',
             repeat: { max: 2, min: 2, optional: true },
             type: 'terminal',
-            range: 'a',
             value: 'keyword',
         })
     })
     it('represents [a?]!', () => {
         expect(parse('[a?]!')).toEqual({
+            range: 'a',
             repeat: { max: 1, min: 1, optional: false },
             type: 'terminal',
-            range: 'a',
             value: 'keyword',
         })
     })

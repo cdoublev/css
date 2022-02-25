@@ -107,7 +107,7 @@ describe('next()', () => {
         expect(stream.next(1)).toBe('h')
         expect(stream.next(1, 2)).toBe('h')
         expect(stream.next(2)).toBe('he')
-        expect(stream.next(2, 1)).toBe('e')
+        expect(stream.next(2, 1)).toBe('h')
         expect(stream.next(2, 2)).toBe('he')
         expect(stream.next(3, 2)).toBe('el')
         expect(stream.index).toBe(-1)
@@ -227,7 +227,7 @@ it('works with array', () => {
     expect(stream.current).toBeUndefined()
     expect(stream.consume()).toBe('hello')
     expect(stream.current).toBe('hello')
-    expect(stream.next(2, 1)).toBe('world')
+    expect(stream.next(2, 1)).toBe(' ')
     expect(stream.next(2)).toEqual([' ', 'world'])
 
     stream.reset()
