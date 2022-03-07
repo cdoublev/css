@@ -165,6 +165,8 @@ const replaced = {
         // TODO: fix https://github.com/w3c/csswg-drafts/issues/7016
         'general-enclosed': '<function> | (<ident> <any-value>)',
         'pseudo-class-selector': "':' <ident> | ':' <function>",
+        // TODO: fix https://github.com/w3c/csswg-drafts/issues/7108
+        'import-condition': '[supports([<supports-condition> | <declaration>])]? <media-query-list>?',
         // TODO: fix https://github.com/w3c/webref/issues/333
         'selector()': 'selector(<id-selector>)',
         // TODO: report spec issue "`initial` does not match `value`"
