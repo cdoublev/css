@@ -17,7 +17,7 @@ describe('reset()', () => {
     })
 })
 
-describe('moveTo()', () => {
+describe('moveTo(index)', () => {
     it('sets the item at the given index as the current item', () => {
         stream.moveTo(1)
         expect(stream.current).toBe('e')
@@ -25,7 +25,7 @@ describe('moveTo()', () => {
     })
 })
 
-describe('consume()', () => {
+describe('consume(size, fallback)', () => {
     it('throws an error when the specified item is not found at the front of the stream', () => {
         expect(() => stream.consume('_', false)).toThrow('"_" was expected')
         expect(stream.index).toBe(-1)
@@ -53,7 +53,7 @@ describe('consume()', () => {
     })
 })
 
-describe('reconsume()', () => {
+describe('reconsume(size)', () => {
     it('pushes the current item back onto the front of the stream', () => {
         stream.moveTo(string.length - 1)
         expect(stream.current).toBe('o')
@@ -66,7 +66,7 @@ describe('reconsume()', () => {
     })
 })
 
-describe('consumeRunOf()', () => {
+describe('consumeRunOf(...items)', () => {
     it('consumes all consecutive occurrences of the specified item in the remaining stream items', () => {
         stream.moveTo(1)
         stream.consumeRunOf('l')
@@ -81,7 +81,7 @@ describe('consumeRunOf()', () => {
     })
 })
 
-describe('consumeUntil()', () => {
+describe('consumeUntil(item)', () => {
     it('throws an error when the specified item is not found in the remaining stream items', () => {
         expect(() => stream.consumeUntil('_')).toThrow('"_" was expected')
         expect(stream.index).toBe(-1)
@@ -101,7 +101,7 @@ describe('consumeUntil()', () => {
     })
 })
 
-describe('next()', () => {
+describe('next(end, size)', () => {
     it('returns the next item(s) at current index + given integer', () => {
         expect(stream.next()).toBe('h')
         expect(stream.next(1)).toBe('h')
@@ -114,7 +114,7 @@ describe('next()', () => {
     })
 })
 
-describe('prev()', () => {
+describe('prev(start, size)', () => {
     it('returns the previous item(s) at current index - given integer', () => {
         stream.moveTo(string.length)
         expect(stream.prev()).toBe('o')
@@ -138,7 +138,7 @@ describe('atEnd()', () => {
     })
 })
 
-describe('insert()', () => {
+describe('insert(items)', () => {
     it('inserts the given items after the current item', () => {
         stream.insert('hey, ')
         expect(stream.source).toBe('hey, hello')
@@ -238,7 +238,7 @@ it('works with array', () => {
     expect(stream.consume('!')).toBeUndefined()
 
     stream.moveTo(1)
-    stream.insert(['beautiful', ' '])
+    stream.insert('beautiful', ' ')
     stream.reset()
     expect(stream.consumeUntil('!')).toEqual(['hello', ' ', 'beautiful', ' ', 'world'])
     expect(stream).toHaveLength(6)

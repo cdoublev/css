@@ -27,8 +27,8 @@ const header = `// Generated from ${__filename}`
 /**
  * Excluded types
  *
- * These types are parsed with a dedicated function instead of using a CSS value
- * definition, except `<EOF-token>`, which is not represented in this library.
+ * <EOF-token> is not represented in this library, and the other types are not
+ * parsed using the CSS value definition syntax.
  */
 const excludedTypes = [
     'EOF-token',
@@ -41,18 +41,17 @@ const excludedTypes = [
 /**
  * Legacy, extended, custom, or missing type definitions
  *
- * Legacy and extended types, are only defined in prose in specifications.
- * They should be supported either as simple aliases with an identical
- * behavior than the target type (legacy and terminal types), or with a
- * specific behavior (extended types).
+ * Legacy and extended types are only defined in prose in specifications. They
+ * must be supported as simple aliases either with an identical behavior than
+ * the target type (legacy types) or with a specific behavior (extended types).
  *
  * Custom types only exist in this library to simplify parsing.
  *
- * Missing type definitions are defined in prose in specifications instead
- * of with the CSS syntax.
+ * Missing type definitions are defined in prose in specifications instead of
+ * with the CSS value definition syntax.
  *
- * This object is normalized into entries of multi-value field entries for
- * further processing.
+ * This object is normalized into entries accepting multiple value definitions
+ * for further processing in this script.
  */
 const initialTypes = Object.entries({
     // Legacy types
@@ -105,7 +104,8 @@ const initialTypes = Object.entries({
 /**
  * Overriden property/type definitions
  *
- * Only fields whose value is defined with a replacement are overriden.
+ * Only fields whose value is defined with a replacement are overriden and
+ * `newValues` are ignored when assigned a falsy value here.
  */
 const replaced = {
     properties: {
@@ -150,9 +150,9 @@ const replaced = {
         'background-position-inline': { initial: '0%' },
     },
     types: {
-        // Modified to be consistent with `polygon()`
+        // Modified to be consistent with <polygon()>
         'path()': "path(<'fill-rule'>? , <string>)",
-        // Modified to include legacy `<url-token>`
+        // Modified to include legacy <url-token>
         'url': '<url-token> | url(<string> <url-modifier>*) | src(<string> <url-modifier>*)',
         // TODO: fix https://github.com/w3c/csswg-drafts/issues/7030
         'an+b': "odd | even | <integer> | <n-dimension> | '+'? n | -n | <ndashdigit-dimension> | '+'? <ndashdigit-ident> | <dashndashdigit-ident> | <n-dimension> <signed-integer> | '+'? n <signed-integer> | -n <signed-integer> | <ndash-dimension> <signless-integer> | '+'? n- <signless-integer> | -n- <signless-integer> | <n-dimension> ['+' | '-'] <signless-integer> | '+'? n ['+' | '-'] <signless-integer> | -n ['+' | '-'] <signless-integer>",
@@ -175,19 +175,19 @@ const replaced = {
         // TODO: report spec issue "`value` is missing whitespace"
         'blend-mode': 'normal | multiply | screen | overlay | darken | lighten | color-dodge | color-burn | hard-light | soft-light | difference | exclusion | hue | saturation | color | luminosity',
         'mask-layer': '<mask-reference> || <position> [/ <bg-size>]? || <repeat-style> || <geometry-box> || [<geometry-box> | no-clip] || <compositing-operator> || <masking-mode>',
-        // TODO: support new gradient grammars from Images 4
+        // TODO: support new grammars from Images 4
         'conic-gradient()': 'conic-gradient([from <angle>]? [at <position>]?, <angular-color-stop-list>)',
         'linear-gradient()': 'linear-gradient([<angle> | to <side-or-corner>]? , <color-stop-list>)',
         'radial-gradient()': 'radial-gradient([<ending-shape> || <size>]? [at <position>]? , <color-stop-list>)',
         /**
-         * TODO: support new color grammars from Color 4/5
+         * TODO: support new grammars from Color 4/5
          *
          * Color 5: color([from <color>]? <colorspace-params> [/ <alpha-value>]?)
          * Color 4:
          */
         'color()': 'color(<colorspace-params> [/ <alpha-value>]?)',
         /**
-         * TODO: support new color grammars from Color 4/5
+         * TODO: support new grammars from Color 4/5
          * TODO: report spec issue "`<hue>` already includes `<none>`"
          *
          * Color 5: hsl([from <color>]? [<hue> | none] [<percentage> | none] [<percentage> | none] [/ [<alpha-value> | none]]?)
@@ -196,7 +196,7 @@ const replaced = {
          */
         'hsl()': 'hsl(<hue> <percentage> <percentage> [/ <alpha-value>]? | <hue> , <percentage> , <percentage> , <alpha-value>?)',
         /**
-         * TODO: support new color grammars from Color 4/5
+         * TODO: support new grammars from Color 4/5
          * TODO: report spec issue "`<hue>` already includes `<none>`"
          *
          * Color 5: hwb([from <color>]? [<hue> | none] [<percentage> | none] [<percentage> | none] [/ [<alpha-value> | none]]?)
@@ -205,7 +205,7 @@ const replaced = {
          */
         'hwb()': 'hwb(<hue> <percentage> <percentage> [/ <alpha-value>]?)',
         /**
-         * TODO: support new color grammars from Color 4/5
+         * TODO: support new grammars from Color 4/5
          *
          * Color 5: lab([from <color>]? [<percentage> | none] [<number> | none] [<number> | none] [/ [<alpha-value> | none]]?)
          * Color 4: lab([<percentage> | none] [<number> | none] [<number> | none] [/ [<alpha-value> | none]]?)
@@ -213,7 +213,7 @@ const replaced = {
          */
         'lab()': 'lab(<percentage> <number> <number> [/ <alpha-value>]?)',
         /**
-         * TODO: support new color grammars from Color 4/5
+         * TODO: support new grammars from Color 4/5
          * TODO: report spec issue "`<hue>` already includes `<none>`"
          *
          * Color 5: lch([from <color>]? [<percentage> | none] [<number> | none] [<hue> | none] [/ [<alpha-value> | none]]?)
@@ -222,7 +222,7 @@ const replaced = {
          */
         'lch()': 'lch(<percentage> <number> <hue> [/ <alpha-value>]?)',
         /**
-         * TODO: support new color grammars from Color 4/5
+         * TODO: support new grammars from Color 4/5
          * TODO: handle repeated function name in definition value
          *
          * Color 5: rgb([<percentage> | none]{3} [/ [<alpha-value> | none]]?) | rgb([<number> | none]{3} [/ [<alpha-value> | none]]?) | rgb([from <color>]? [<number> | <percentage> | none]{3} [/ [<alpha-value> | none]]?)
@@ -257,8 +257,8 @@ function serializeEntries(entries, depth = 1) {
     return entries.reduce((string, [key, value]) => {
         const tabs = tab(depth)
         /**
-         * The definition field `value` should have been reduced to a single
-         * value at this point but process it for further inspection.
+         * The definition field `value` must have been reduced to a single value
+         * at this point but process it for further inspection.
          */
         if (Array.isArray(value)) {
             const altTabs = tab(depth + 1)
@@ -324,7 +324,7 @@ function concatNewValues(definition) {
     let newValues
     let value
     /**
-     * `value` and `initial` should have been reduced to a single value at this
+     * `value` and `initial` must have been reduced to a single value at this
      * point but keep it for further inspection.
      */
     for (const [field, v] of fields) {
@@ -387,10 +387,7 @@ function isAuthoritativeSpecification(name, url) {
     if (url === 'https://drafts.csswg.org/css2/') {
         return false
     }
-    /**
-     * TODO: support new `background-position` grammar (as shorthand) from Background 4
-     * TODO: support new border grammars from Background 4
-     */
+    // TODO: support new grammars from Background 4
     if (url === 'https://drafts.csswg.org/css-backgrounds-4/') {
         return false
     }

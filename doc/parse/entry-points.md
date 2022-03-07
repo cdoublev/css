@@ -34,7 +34,7 @@
   <tr>
     <th>Definition</th>
     <td>
-      <a href="https://drafts.csswg.org/css-syntax/#parse-a-component-value">
+      <a href="https://drafts.csswg.org/css-syntax-3/#parse-a-component-value">
         CSS Syntax
       </a>
     </td>
@@ -49,7 +49,7 @@
           </a> (computed value)
         </li>
         <li>
-          <a href="https://drafts.csswg.org/mediaqueries/">
+          <a href="https://drafts.csswg.org/mediaqueries-4/">
             CSS Media Queries - (set) <code>CSSCustomMediaRule.name</code>
           </a> (not published yet)
         </li>
@@ -68,7 +68,7 @@
   <tr>
     <th>Definition</th>
     <td>
-      <a href="https://drafts.csswg.org/css-syntax/#parse-a-list-of-component-values">
+      <a href="https://drafts.csswg.org/css-syntax-3/#parse-a-list-of-component-values">
         CSS Syntax
       </a>
     </td>
@@ -119,18 +119,18 @@
           </a> (<i>via parse a comma-separated list according to a CSS grammar</i>)
         </li>
         <li>
-          <a href="https://drafts.csswg.org/css-counter-styles/#the-csscounterstylerule-interface">
+          <a href="https://drafts.csswg.org/css-counter-styles-3/#the-csscounterstylerule-interface">
             CSS Counter Styles - (set) <code>CSSCounterStyleRule.&lt;descriptor></code>
           </a>
           <p>❌: it should use <i>parse something according to a CSS grammar</i> using <i>the descriptor’s grammar</i></p>
         </li>
         <li>
-          <a href="https://drafts.csswg.org/css-font-loading/#fontface-interface">
+          <a href="https://drafts.csswg.org/css-font-loading-3/#fontface-interface">
             CSS Font Loading - (set) <code>FontFace.&lt;descriptor></code>
           </a> (via <i>parse something according to a CSS grammar</i>)
         </li>
         <li>
-          <a href="https://drafts.csswg.org/css-pseudo/#dom-element-pseudo">
+          <a href="https://drafts.csswg.org/css-pseudo-4/#dom-element-pseudo">
             CSS Pseudo - <code>CSSPseudoElement.pseudo()</code>
           </a> (via <i>parse something according to a CSS grammar</i>)
         </li>
@@ -156,7 +156,7 @@
   <tr>
     <th>Comments</th>
     <td>
-      <p>❌: CSS Syntax defines <i>parse a list of component values</i> as the entry point to use <a href="https://drafts.csswg.org/css-syntax/#parser-entry-points"><i>for parsing a stand-alone selector</i></a>, but where does a <i>stand-alone selector is used</i>? If it is a style rule's prelude, it should use <a href="#parse-a-CSS-selector-list">parse a CSS selector list</a>.</p>
+      <p>❌: CSS Syntax defines <i>parse a list of component values</i> as the entry point to use <a href="https://drafts.csswg.org/css-syntax-3/#parser-entry-points"><i>for parsing a stand-alone selector</i></a>, but where does a <i>stand-alone selector is used</i>? If it is a style rule's prelude, it should use <a href="#parse-a-CSS-selector-list">parse a CSS selector list</a>.</p>
     </td>
   </tr>
 </table>
@@ -170,7 +170,7 @@
   <tr>
     <th>Definition</th>
     <td>
-      <a href="https://drafts.csswg.org/css-syntax/#parse-a-comma-separated-list-of-component-values">
+      <a href="https://drafts.csswg.org/css-syntax-3/#parse-a-comma-separated-list-of-component-values">
         CSS Syntax
       </a>
     </td>
@@ -188,13 +188,13 @@
           <a href="https://drafts.csswg.org/cssom/#parse-a-media-query">
             CSSOM - <code>parse a CSS media query</code>
           </a>
-          <p>❌: see issue in <a href="#parse-a-CSS-media-query">parse a CSS media query</a>.</p>
+          <p>❌: see issue in <a href="#parse-a-CSS-media-query-list">parse a CSS media query list</a>.</p>
         </li>
         <li>
           <a href="#parse-a-CSS-media-query-list">
             CSS Media Queries - parse a CSS media query list</code>
           </a>
-          <p>❌: see issue in <a href="#parse-a-CSS-media-query">parse a CSS media query</a>.</p>
+          <p>❌: see issue in <a href="#parse-a-CSS-media-query-list">parse a CSS media query list</a>.</p>
         </li>
         <li>
           <a href="https://drafts.csswg.org/cssom/#dom-medialist-appendmedium">
@@ -222,7 +222,7 @@
           <a href="https://html.spec.whatwg.org/multipage/common-microsyntaxes.html#valid-media-query-list">
             HTML - valid media query list
           </a> (<code>Element.media</code> should be a valid <code>&lt;media-query-list></code>)
-          <p>❌: CSS Syntax defines <i>parse a list of component values</i> as <a href="https://drafts.csswg.org/css-syntax/#parser-entry-points">the entry point</a> to use, but it should use <i>parse a comma-separated list according to a CSS grammar</i> using <code>&lt;media-query></code> (see issue in <a href="#parse-a-CSS-media-query">parse a CSS media query</a>).</p>
+          <p>❌: CSS Syntax defines <i>parse a list of component values</i> as <a href="https://drafts.csswg.org/css-syntax-3/#parser-entry-points">the entry point</a> to use, but it should use <i>parse a comma-separated list according to a CSS grammar</i> using <code>&lt;media-query></code> (see issue in <a href="#parse-a-CSS-media-query-list">parse a CSS media query list</a>).</p>
         </li>
         <li>
           <a href="https://html.spec.whatwg.org/multipage/images.html#parse-a-sizes-attribute">
@@ -244,7 +244,7 @@
   <tr>
     <th>Definition</th>
     <td>
-      <a href="https://drafts.csswg.org/css-syntax/#parse-a-declaration">
+      <a href="https://drafts.csswg.org/css-syntax-3/#parse-a-declaration">
         CSS Syntax
       </a>
     </td>
@@ -274,7 +274,7 @@
   <tr>
     <th>Definition</th>
     <td>
-      <a href="https://drafts.csswg.org/css-syntax/#parse-a-rule">
+      <a href="https://drafts.csswg.org/css-syntax-3/#parse-a-rule">
         CSS Syntax
       </a>
     </td>
@@ -304,12 +304,12 @@
           </a> (via <i>insert a CSS rule</i>)
         </li>
         <li>
-          <a href="https://drafts.csswg.org/css-nesting/#dom-cssstylerule-insertrule">
+          <a href="https://drafts.csswg.org/css-nesting-1/#dom-cssstylerule-insertrule">
             CSS Nesting - <code>CSSStyleRule.insertRule()</code>
           </a> (via <i>insert a CSS rule</i>)
         </li>
         <li>
-          <a href="https://drafts.csswg.org/css-nesting/#dom-cssnestingrule-insertrule">
+          <a href="https://drafts.csswg.org/css-nesting-1/#dom-cssnestingrule-insertrule">
             CSS Nesting - <code>CSSNestingRule.insertRule()</code>
           </a> (via <i>insert a CSS rule</i>)
         </li>
@@ -328,7 +328,7 @@
   <tr>
     <th>Definition</th>
     <td>
-      <a href="https://drafts.csswg.org/css-syntax/#parse-a-list-of-declarations">
+      <a href="https://drafts.csswg.org/css-syntax-3/#parse-a-list-of-declarations">
         CSS Syntax
       </a>
     </td>
@@ -357,7 +357,7 @@
   <tr>
     <th>Definition</th>
     <td>
-      <a href="https://drafts.csswg.org/css-syntax/#parse-a-style-blocks-contents">
+      <a href="https://drafts.csswg.org/css-syntax-3/#parse-a-style-blocks-contents">
         CSS Syntax
       </a>
     </td>
@@ -370,8 +370,8 @@
           <a href="#parse-a-css-style-block-s-contents">
             CSS Syntax - parse a CSS style block's contents
           </a>
-          <p>❌: CSS Syntax associates "style block" to <i>parse a list of declarations</i> in <a href="https://drafts.csswg.org/css-syntax/#qualified-rule">5. Parsing</a>:</p>
-          <blockquote cite="https://drafts.csswg.org/css-syntax/#qualified-rule">Note: Most qualified rules will be style rules, where the prelude is a selector [SELECT] and the block a <a href="https://drafts.csswg.org/css-syntax/#parse-a-list-of-declarations">list of declarations</a>.</blockquote>
+          <p>❌: CSS Syntax associates "style block" to <i>parse a list of declarations</i> in <a href="https://drafts.csswg.org/css-syntax-3/#qualified-rule">5. Parsing</a>:</p>
+          <blockquote cite="https://drafts.csswg.org/css-syntax-3/#qualified-rule">Note: Most qualified rules will be style rules, where the prelude is a selector [SELECT] and the block a <a href="https://drafts.csswg.org/css-syntax-3/#parse-a-list-of-declarations">list of declarations</a>.</blockquote>
         </li>
       </ul>
     </td>
@@ -388,7 +388,7 @@
   <tr>
     <th>Definition</th>
     <td>
-      <a href="https://drafts.csswg.org/css-syntax/#parse-a-list-of-rules">
+      <a href="https://drafts.csswg.org/css-syntax-3/#parse-a-list-of-rules">
         CSS Syntax
       </a>
     </td>
@@ -429,7 +429,7 @@
   <tr>
     <th>Definition</th>
     <td>
-      <a href="https://drafts.csswg.org/css-syntax/#parse-a-stylesheet">
+      <a href="https://drafts.csswg.org/css-syntax-3/#parse-a-stylesheet">
         CSS Syntax
       </a>
     </td>
@@ -444,7 +444,7 @@
           </a>
         </li>
         <li>
-          <a href="https://drafts.csswg.org/css-cascade/#fetch-an-import">
+          <a href="https://drafts.csswg.org/css-cascade-4/#fetch-an-import">
             CSS Cascade - fetch an <code>@import</code>
           </a>
           <p>❌: it should use <a href="#parse-a-CSS-stylesheet">parse a CSS stylesheet</a> otherwise the rules will not be validated according to the context and production rules, and the rule's block contents will be left unparsed as a list of component values.</p>
@@ -464,7 +464,7 @@
   <tr>
     <th>Definition</th>
     <td>
-      <a href="https://drafts.csswg.org/css-syntax/#css-parse-something-according-to-a-css-grammar">
+      <a href="https://drafts.csswg.org/css-syntax-3/#css-parse-something-according-to-a-css-grammar">
         CSS Syntax
       </a>
     </td>
@@ -505,12 +505,12 @@
           </a>
         </li>
         <li>
-          <a href="https://drafts.csswg.org/css-font-loading/#fontface-interface">
+          <a href="https://drafts.csswg.org/css-font-loading-3/#fontface-interface">
             CSS Font Loading - (set) <code>FontFace.&lt;descriptor></code>
           </a>
         </li>
         <li>
-          <a href="https://drafts.csswg.org/css-pseudo/#CSSPseudoElement-interface">
+          <a href="https://drafts.csswg.org/css-pseudo-4/#CSSPseudoElement-interface">
             CSS Pseudo - <code>CSSPseudoElement.pseudo()</code>
           </a>
         </li>
@@ -545,7 +545,7 @@
   <tr>
     <th>Definition</th>
     <td>
-      <a href="https://drafts.csswg.org/css-syntax/#css-parse-a-comma-separated-list-according-to-a-css-grammar">
+      <a href="https://drafts.csswg.org/css-syntax-3/#css-parse-a-comma-separated-list-according-to-a-css-grammar">
         CSS Syntax
       </a>
     </td>
@@ -733,12 +733,12 @@
           </a> (via <i>insert a CSS rule</i>)
         </li>
         <li>
-          <a href="https://drafts.csswg.org/css-nesting/#dom-cssstylerule-insertrule">
+          <a href="https://drafts.csswg.org/css-nesting-1/#dom-cssstylerule-insertrule">
             CSS Nesting - <code>CSSStyleRule.insertRule()</code>
           </a> (via <i>insert a CSS rule</i>)
         </li>
         <li>
-          <a href="https://drafts.csswg.org/css-nesting/#dom-cssnestingrule-insertrule">
+          <a href="https://drafts.csswg.org/css-nesting-1/#dom-cssnestingrule-insertrule">
             CSS Nesting - <code>CSSNestingRule.insertRule()</code>
           </a> (via <i>insert a CSS rule</i>)
         </li>
@@ -764,16 +764,16 @@
     <th>Definition</th>
     <td>
       Syntax (
-        <a href="https://drafts.csswg.org/css-syntax/#typedef-stylesheet">
+        <a href="https://drafts.csswg.org/css-syntax-3/#typedef-stylesheet">
           <code>&lt;stylesheet></code>
         </a>,
-        <a href="https://drafts.csswg.org/css-syntax/#typedef-rule-list">
+        <a href="https://drafts.csswg.org/css-syntax-3/#typedef-rule-list">
           <code>&lt;rule-list></code>
         </a>,
-        <a href="https://drafts.csswg.org/css-syntax/#typedef-style-block">
+        <a href="https://drafts.csswg.org/css-syntax-3/#typedef-style-block">
           <code>&lt;style-block></code>
         </a>,
-        <a href="https://drafts.csswg.org/css-syntax/#typedef-declaration-list">
+        <a href="https://drafts.csswg.org/css-syntax-3/#typedef-declaration-list">
           <code>&lt;declaration-list></code>
         </a>
       )
@@ -804,12 +804,12 @@
           </a> (via <i>insert a CSS rule</i>)
         </li>
         <li>
-          <a href="https://drafts.csswg.org/css-nesting/#dom-cssstylerule-insertrule">
+          <a href="https://drafts.csswg.org/css-nesting-1/#dom-cssstylerule-insertrule">
             CSS Nesting - <code>CSSStyleRule.insertRule()</code>
           </a> (via <i>insert a CSS rule</i>)
         </li>
         <li>
-          <a href="https://drafts.csswg.org/css-nesting/#dom-cssnestingrule-insertrule">
+          <a href="https://drafts.csswg.org/css-nesting-1/#dom-cssnestingrule-insertrule">
             CSS Nesting - <code>CSSNestingRule.insertRule()</code>
           </a> (via <i>insert a CSS rule</i>)
         </li>
@@ -821,7 +821,7 @@
     <th>Comments</th>
     <td>
       <p>📝: it is equivalent to <i>parse something according to a CSS grammar</i> using <code>&lt;stylesheet></code>, <code>&lt;rule-list></code>, <code>&lt;style-block></code>, or <code>&lt;declaration-list></code>.</p>
-      <p>❌: <code>&lt;style-block></code> is missing in the title of <a href="https://drafts.csswg.org/css-syntax/#declaration-rule-list">8.1. Defining Block Contents: the <code>&lt;declaration-list></code>, <code>&lt;rule-list></code>, and <code>&lt;stylesheet></code> productions</a>.</p>
+      <p>❌: <code>&lt;style-block></code> is missing in the title of <a href="https://drafts.csswg.org/css-syntax-3/#declaration-rule-list">8.1. Defining Block Contents: the <code>&lt;declaration-list></code>, <code>&lt;rule-list></code>, and <code>&lt;stylesheet></code> productions</a>.</p>
     </td>
   </tr>
 </table>
@@ -835,7 +835,7 @@
   <tr>
     <th>Definition</th>
     <td>
-      <a href="https://drafts.csswg.org/css-syntax/#parse-a-css-stylesheet">
+      <a href="https://drafts.csswg.org/css-syntax-3/#parse-a-css-stylesheet">
         Syntax
       </a>
     </td>
@@ -901,7 +901,7 @@
   <tr>
     <th>Comments</th>
     <td>
-      <p>❌: CSS Media Queries defines the procedure with <i>parse a comma-separated list of component values</i> composed with <i>parse something according to a CSS grammar</i> using <code>&lt;media-query></code>, but it should use <i>parse a comma-separated list according to a CSS grammar</i> using <code>&lt;media-query></code>` instead, because a whitespace as input (eg. from <code>Element.media</code>) will be parsed to an empty list instead of <code>not all</code>, and it should define this production specific rule: <i>an empty list should default to <code>all</code> and an invalid <code>&lt;media-query></code> should default to <code>not all</code></i>.</p>
+      <p>See comments in <a href="#parse-a-CSS-media-query-list">parse a CSS media query list</a>.</p>
     </td>
   </tr>
 </table>
@@ -918,7 +918,7 @@
       <a href="https://drafts.csswg.org/cssom/#parse-a-media-query-list">
         CSSOM
       </a>,
-      <a href="https://drafts.csswg.org/mediaqueries/#typedef-media-query-list">
+      <a href="https://drafts.csswg.org/mediaqueries-5/#typedef-media-query-list">
         CSS Media Queries
       </a>
     </td>
@@ -955,7 +955,7 @@
   <tr>
     <th>Comments</th>
     <td>
-      <p>See comments in <a href="#parse-a-CSS-media-query">parse a CSS media query</a>.</p>
+      <p>❌: CSS Media Queries defines the procedure with <i>parse a comma-separated list of component values</i> composed with <i>parse something according to a CSS grammar</i> using <code>&lt;media-query></code>, but it should use <i>parse a comma-separated list according to a CSS grammar</i> using <code>&lt;media-query></code>` instead, because a whitespace as input (eg. from <code>Element.media</code>) will be parsed to an empty list instead of <code>not all</code>, and it should define this production specific rule: <i>an empty list must default to <code>all</code> and an invalid <code>&lt;media-query></code> must default to <code>not all</code></i>.</p>
     </td>
     </td>
   </tr>
@@ -973,7 +973,7 @@
       <a href="https://drafts.csswg.org/cssom/#parse-a-group-of-selectors">
         CSSOM
       </a>,
-      <a href="https://drafts.csswg.org/selectors/#parse-a-selector">
+      <a href="https://drafts.csswg.org/selectors-4/#parse-a-selector">
         CSS Selectors
       </a>
     </td>
@@ -988,7 +988,7 @@
           </a>
         </li>
         <li>
-          <a href="https://drafts.csswg.org/css-nesting/#dom-cssnestingrule-selectortext">
+          <a href="https://drafts.csswg.org/css-nesting-1/#dom-cssnestingrule-selectortext">
             CSS Nesting - <code>CSSNestingRule.selectorText</code>
           </a>
         </li>
@@ -1025,7 +1025,7 @@
   <tr>
     <th>Definition</th>
     <td>
-      <a href="https://drafts.csswg.org/selectors/#parse-as-a-forgiving-selector-list">
+      <a href="https://drafts.csswg.org/selectors-4/#parse-as-a-forgiving-selector-list">
         CSS Selectors
       </a>
     </td>
@@ -1035,7 +1035,7 @@
     <td>
       <ul>
         <li>
-          <a href="https://drafts.csswg.org/selectors/#matches">
+          <a href="https://drafts.csswg.org/selectors-4/#matches">
             CSS Selectors - parse a CSS <code>&lt;:is()></code>
           </a>
         </li>
@@ -1054,7 +1054,7 @@
   <tr>
     <th>Definition</th>
     <td>
-      <a href="https://drafts.csswg.org/selectors/#parse-a-relative-selector">
+      <a href="https://drafts.csswg.org/selectors-4/#parse-a-relative-selector">
         CSS Selectors
       </a>
     </td>
@@ -1081,7 +1081,7 @@
   <tr>
     <th>Definition</th>
     <td>
-      <a href="https://drafts.csswg.org/selectors/#typedef-forgiving-relative-selector-list">
+      <a href="https://drafts.csswg.org/selectors-4/#typedef-forgiving-relative-selector-list">
         CSS Selectors
       </a>
     </td>
@@ -1091,7 +1091,7 @@
     <td>
       <ul>
         <li>
-          <a href="https://drafts.csswg.org/selectors/#relational">
+          <a href="https://drafts.csswg.org/selectors-4/#relational">
             CSS Selectors - parse a CSS <code>&lt;:has()></code>
           </a>
         </li>
@@ -1139,7 +1139,7 @@
   <tr>
     <th>Definition</th>
     <td>
-      <a href="https://drafts.csswg.org/css-page/#ref-for-at-ruledef-page%E2%91%A7">
+      <a href="https://drafts.csswg.org/css-page-3/#ref-for-at-ruledef-page%E2%91%A7">
         CSS Page
       </a>
     </td>
@@ -1158,7 +1158,7 @@
   <tr>
     <th>Comments</th>
     <td>
-      <p>❌: it should use step 3 of <i>parse a CSS rule</i> because <code>@page</code> appears at the top level of the style sheet and <i>parse a CSS stylesheet</i> defines that its input should be parsed with <i>parse a stylesheet</i>, which will <i>consume a list of rules</i>, therefore there will be no such thing as a stream of tokens when <i>parsing a list of component values</i>, the second step of <i>parse something according to a CSS grammar</i>.</p>
+      <p>❌: it should use step 3 of <i>parse a CSS rule</i> because <code>@page</code> appears at the top level of the style sheet and <i>parse a CSS stylesheet</i> defines that its input must be parsed with <i>parse a stylesheet</i>, which will <i>consume a list of rules</i>, therefore there will be no such thing as a stream of tokens when <i>parsing a list of component values</i>, the second step of <i>parse something according to a CSS grammar</i>.</p>
     </td>
   </tr>
 </table>

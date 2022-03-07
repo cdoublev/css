@@ -1,3 +1,9 @@
+/**
+ * This file must be used to test requirements of:
+ *
+ * 1. `CSSStyleDeclaration`
+ * 2. CSS properties/descriptors with specific parsing or serialization rules
+ */
 
 const { cssom: { CSSStyleDeclaration }, install } = require('../lib/index.js')
 const { UPDATE_COMPUTED_STYLE_DECLARATION_ERROR } = require('../lib/cssom/CSSStyleDeclaration-impl.js')
@@ -36,7 +42,7 @@ describe('CSSStyleDeclaration', () => {
             expect(Object.getOwnPropertyDescriptor(prototype, attribute).set).toBeDefined()
         })
     })
-    it('has all webkit prefixed CSS properties as pascal cased IDL attributes', () => {
+    it('has all legacy vendor prefixed CSS properties as pascal cased IDL attributes', () => {
         const style = createStyleDeclaration()
         const prototype = Object.getPrototypeOf(style)
         properties.forEach(property => {
@@ -153,25 +159,25 @@ describe('CSSStyleDeclaration', () => {
         style.webkitOrder = '2'
         expect(style.order).toBe('2')
     })
-    it('does not set a camelcased property with `.setProperty()`', () => {
+    it('ignores a declaration for a camel cased property with `.setProperty()`', () => {
         const style = createStyleDeclaration()
         style.setProperty('fontSize', '12px')
         expect(style.cssText).toBe('')
     })
-    it('normalizes a property to lowercase with `.setProperty()`', () => {
+    it('normalizes a declaration property to lowercase with `.setProperty()`', () => {
         const style = createStyleDeclaration()
         style.setProperty('FoNt-SiZe', '12px')
         expect(style.fontSize).toBe('12px')
         expect(style.getPropertyValue('font-size')).toBe('12px')
     })
-    it('handles a shorthand property value with embedded spaces', () => {
+    it('handles a declaration for a shorthand property value with embedded spaces', () => {
         const style = createStyleDeclaration()
         style.background = '  rgb(0, 0, 0)   url(/something/somewhere.jpg)  '
         expect(style.backgroundColor).toBe('rgb(0, 0, 0)')
         expect(style.backgroundImage).toBe('url("/something/somewhere.jpg")')
         expect(style.cssText).toBe('background: url("/something/somewhere.jpg") 0% 0% rgb(0, 0, 0);')
     })
-    it('does not throw when failing to parse the input value assigned to `csstext`', () => {
+    it('does not throw when failing to parse `cssText`', () => {
         const style = createStyleDeclaration()
         style.cssText = 'color: '
         expect(style.cssText).toBe('')
@@ -180,13 +186,11 @@ describe('CSSStyleDeclaration', () => {
         expect(style.cssText).toBe('')
     })
     it('constructs a new instance with a reference to a parent CSS rule', () => {
-
         const parentRule = {}
         const style = createStyleDeclaration({ parentRule })
-
         expect(style.parentRule).toBe(parentRule)
     })
-    it('constructs a new instance with the declarations resulting from parsing the `style` attribute of `Element`', () => {
+    it('constructs a new instance with the declarations resulting from parsing `Element.style`', () => {
         const element = {
             getAttribute() {
                 return 'font-size: 10px;'
@@ -195,7 +199,7 @@ describe('CSSStyleDeclaration', () => {
         const style = createStyleDeclaration({ ownerNode: element })
         expect(style.fontSize).toBe('10px')
     })
-    it('constructs a new instance with the declarations from `getComputedStyle()` and prevents modifying them', () => {
+    it('constructs a new read-only instance with the declarations from `getComputedStyle()`', () => {
 
         const declarations = new Map([['font-size', { name: 'font-size', value: '10px' }]])
         const style = createStyleDeclaration({ computed: true, declarations, ownerNode: {} })
@@ -211,7 +215,7 @@ describe('CSSStyleDeclaration', () => {
 })
 
 describe('--custom-property', () => {
-    it('inserts and returns the declaration value of a custom property', () => {
+    it('parses and serializes a declaration for a custom property', () => {
 
         const style = createStyleDeclaration()
 
@@ -222,7 +226,7 @@ describe('--custom-property', () => {
         style.removeProperty('--custom')
         expect(style.getPropertyValue('--custom')).toBe('')
 
-        // Custom properties are not interface attribute
+        // Custom properties are not attribute property
         style['--custom'] = 'blue'
         expect(style.getPropertyValue('--custom')).toBe('')
 
@@ -230,10 +234,16 @@ describe('--custom-property', () => {
         style.setProperty('--Custom', 'purple')
         expect(style.getPropertyValue('--Custom')).toBe('purple')
         expect(style.getPropertyValue('--custom')).toBe('')
+
+        // Custom property value is serialized as a list of component values
+        style.setProperty('--custom', '  Red  ,  (  orange  )  ,  green  ')
+        expect(style.getPropertyValue('--custom')).toBe('Red , ( orange ) , green')
+        style.cssText = '--custom:  Green  ,  (  orange  )  ,  red  ;'
+        expect(style.cssText).toBe('--custom: Green , ( orange ) , red;')
     })
 })
 describe('background', () => {
-    it('invalid', () => {
+    it('parses and serializes an invalid declaration value to an empty string', () => {
         const style = createStyleDeclaration()
         const invalid = [
             'black / cover', // <any> / <size>
@@ -249,7 +259,7 @@ describe('background', () => {
             expect(style.background).toBe('')
         })
     })
-    it('valid', () => {
+    it('parses and serializes a valid declaration value', () => {
         const style = createStyleDeclaration()
         const canonical = 'url("bg.jpg") left 10% / 100px 100% no-repeat fixed content-box padding-box red'
         style.background = canonical
@@ -267,8 +277,10 @@ describe('background', () => {
         /* Chrome */ expect(style.background).toBe('center center')
         /* Firefox expect(style.background).toBe('rgba(0, 0, 0, 0) none repeat scroll center center');*/
     })
-    it('shorthand propagates to longhands', () => {
+    it('expands a shorthand declaration to longhand declarations', () => {
+
         const style = createStyleDeclaration()
+
         style.background = 'blue url(img.jpg)'
         expect(style).toHaveLength(8)
         expect(style.background).toBe('url("img.jpg") 0% 0% blue')
@@ -282,7 +294,8 @@ describe('background', () => {
         expect(style.backgroundSize).toBe('auto')
         expect(style.backgroundOrigin).toBe('padding-box')
         expect(style.backgroundClip).toBe('border-box')
-        // empty string
+
+        // Empty string
         style.background = ''
         expect(style).toHaveLength(0)
         expect(style.background).toBe('')
@@ -296,6 +309,7 @@ describe('background', () => {
         expect(style.backgroundSize).toBe('')
         expect(style.backgroundOrigin).toBe('')
         expect(style.backgroundClip).toBe('')
+
         // CSS wide keyword
         style.background = 'inherit'
         expect(style.background).toBe('inherit')
@@ -309,9 +323,25 @@ describe('background', () => {
         expect(style.backgroundSize).toBe('inherit')
         expect(style.backgroundOrigin).toBe('inherit')
         expect(style.backgroundClip).toBe('inherit')
+
+        // Pending-substitution value
+        style.background = 'var(--background)'
+        expect(style.background).toBe('var(--background)')
+        expect(style.getPropertyValue('background')).toBe('var(--background)')
+        expect(style.cssText).toBe('background: var(--background);')
+        expect(style.backgroundColor).toBe('')
+        expect(style.backgroundImage).toBe('')
+        expect(style.backgroundRepeat).toBe('')
+        expect(style.backgroundAttachment).toBe('')
+        expect(style.backgroundPosition).toBe('')
+        expect(style.backgroundSize).toBe('')
+        expect(style.backgroundOrigin).toBe('')
+        expect(style.backgroundClip).toBe('')
     })
-    it('longhand propagates to shorthand', () => {
+    it('serializes a shorthand value using longhand declarations', () => {
+
         const style = createStyleDeclaration()
+
         style.background = 'blue url(img.jpg)'
         style.backgroundColor = 'black'
         style.backgroundImage = 'url(img.jpg)'
@@ -321,7 +351,9 @@ describe('background', () => {
         style.backgroundSize = 'cover'
         style.backgroundOrigin = 'content-box'
         style.backgroundClip = 'padding-box'
+
         expect(style.background).toBe('url("img.jpg") center center / cover repeat-x fixed content-box padding-box black')
+
         style.backgroundColor = 'initial'
         style.backgroundImage = 'initial'
         style.backgroundRepeat = 'initial'
@@ -330,7 +362,28 @@ describe('background', () => {
         style.backgroundSize = 'initial'
         style.backgroundOrigin = 'initial'
         style.backgroundClip = 'initial'
+
         expect(style.background).toBe('initial')
+
+        style.backgroundColor = 'inherit'
+
+        expect(style.background).toBe('')
+
+        style.backgroundColor = 'var(--background)'
+        style.backgroundImage = 'var(--background)'
+        style.backgroundRepeat = 'var(--background)'
+        style.backgroundAttachment = 'var(--background)'
+        style.backgroundPosition = 'var(--background)'
+        style.backgroundSize = 'var(--background)'
+        style.backgroundOrigin = 'var(--background)'
+        style.backgroundClip = 'var(--background)'
+
+        expect(style.background).toBe('')
+
+        style.background = 'var(--background)'
+        style.backgroundColor = 'var(--background)'
+
+        expect(style.cssText).toBe('background-image: ; background-position: ; background-size: ; background-repeat: ; background-attachment: ; background-origin: ; background-clip: ; background-color: var(--background);')
     })
 })
 describe('background-color', () => {
@@ -346,7 +399,7 @@ describe('background-position', () => {
     it.todo('valid (1, 2, 3, 4 values syntax)')
 })
 describe('background-size', () => {
-    it('invalid', () => {
+    it('returns an empty string for an invalid declaration value', () => {
         const style = createStyleDeclaration()
         const invalid = ['full', '100viewport', '100px cover', 'cover auto', 'cover contain']
         invalid.forEach(value => {
@@ -354,7 +407,7 @@ describe('background-size', () => {
             expect(style.backgroundSize).toBe('')
         })
     })
-    it('valid', () => {
+    it('parses and serializes a valid declaration value', () => {
         const style = createStyleDeclaration()
         const valid = ['100px', '100px 100%', 'auto', 'cover', 'contain']
         valid.forEach(value => {
@@ -372,7 +425,7 @@ describe('background-attachment', () => {
     it.todo('valid')
 })
 describe('background-origin and background-clip', () => {
-    it('invalid', () => {
+    it('parses and serializes an invalid declaration value to an empty string', () => {
         const style = createStyleDeclaration()
         const invalid = ['0', '0px', 'left left', 'margin-box', 'border-box border-box']
         invalid.forEach(value => {
@@ -380,7 +433,7 @@ describe('background-origin and background-clip', () => {
             expect(style.backgroundOrigin).toBe('')
         })
     })
-    it('valid', () => {
+    it('parses and serializes a valid declaration value', () => {
         const style = createStyleDeclaration()
         const valid = ['border-box', 'content-box', 'padding-box']
         valid.forEach(value => {
@@ -390,7 +443,7 @@ describe('background-origin and background-clip', () => {
     })
 })
 describe('border', () => {
-    it('shorthand propagates to longhands', () => {
+    it('expands a shorthand declaration to longhand declarations', () => {
         const style = createStyleDeclaration()
         style.border = '1px solid black'
         expect(style).toHaveLength(12)
@@ -444,7 +497,7 @@ describe('border', () => {
         expect(style.borderLeftStyle).toBe('none')
         expect(style.borderBottomColor).toBe('currentcolor')
     })
-    it('longhand propagates to shorthand', () => {
+    it('serializes a shorthand value using longhand declarations', () => {
         const style = createStyleDeclaration()
         style.border = '1px solid black'
         // border-width
@@ -477,7 +530,7 @@ describe('border', () => {
     })
 })
 describe('border-bottom, border-left, border-right, border-top', () => {
-    it('shorthand propagates to longhands', () => {
+    it('expands a shorthand declaration to longhand declarations', () => {
         const style = createStyleDeclaration()
         style.borderTop = '1px solid black'
         expect(style.borderTop).toBe('1px solid black')
@@ -511,7 +564,7 @@ describe('border-bottom, border-left, border-right, border-top', () => {
         expect(style.borderTopStyle).toBe('none')
         expect(style.borderTopColor).toBe('currentcolor')
     })
-    it('longhand propagates to shorthand', () => {
+    it('serializes a shorthand value using longhand declarations', () => {
         const style = createStyleDeclaration()
         style.borderTop = '1px solid black'
         // border-<side>-width
@@ -538,12 +591,12 @@ describe('border-bottom, border-left, border-right, border-top', () => {
     })
 })
 describe('border-color', () => {
-    it('shorthand propagates to longhands', () => {
+    it('expands a shorthand declaration to longhand declarations', () => {
         const style = createStyleDeclaration()
         style.borderColor = 'black'
         expect(style.borderTopColor).toBe('black')
     })
-    it('longhand propagates to shorthand', () => {
+    it('serializes a shorthand value using longhand declarations', () => {
         const style = createStyleDeclaration()
         style.borderColor = 'black'
         style.borderTopColor = 'red'
@@ -551,7 +604,7 @@ describe('border-color', () => {
     })
 })
 describe('border-radius', () => {
-    it('returns empty string for invalid values', () => {
+    it('parses and serializes an invalid declaration value to an empty string', () => {
         const style = createStyleDeclaration()
         const invalid = ['string', '1', '%', '#1%', '1%%', 'calc(1 + 1)']
         invalid.forEach(value => {
@@ -559,10 +612,9 @@ describe('border-radius', () => {
             expect(style.borderRadius).toBe('')
         })
     })
-    it('parses valid values', () => {
+    it('parses and serializes a valid declaration value', () => {
         const style = createStyleDeclaration()
         const valid = [
-            // [input, expected = input]
             ['1px'],
             ['1px 1%'],
             ['1px 1px', '1px'],
@@ -592,7 +644,7 @@ describe('border-radius', () => {
             expect(style.borderRadius).toBe(expected)
         })
     })
-    it('shorthand propagates to longhands', () => {
+    it('expands a shorthand declaration to longhand declarations', () => {
         const style = createStyleDeclaration()
         style.borderRadius = '1px'
         expect(style.borderRadius).toBe('1px')
@@ -613,7 +665,7 @@ describe('border-radius', () => {
         expect(style.borderBottomRightRadius).toBe('3px 1px')
         expect(style.borderBottomLeftRadius).toBe('4px 2px')
     })
-    it('longhand propagates to shorthand', () => {
+    it('serializes a shorthand value using longhand declarations', () => {
         const style = createStyleDeclaration()
         style.borderRadius = '1px 2px 3px 4px / 1px 2px'
         style.borderBottomLeftRadius = '2px 1px'
@@ -633,12 +685,12 @@ describe('border-radius', () => {
     })
 })
 describe('border-style', () => {
-    it('shorthand propagates to longhands', () => {
+    it('expands a shorthand declaration to longhand declarations', () => {
         const style = createStyleDeclaration()
         style.borderStyle = 'dashed'
         expect(style.borderTopStyle).toBe('dashed')
     })
-    it('longhand propagates to shorthand', () => {
+    it('serializes a shorthand value using longhand declarations', () => {
         const style = createStyleDeclaration()
         style.borderStyle = 'solid'
         style.borderTopStyle = 'dashed'
@@ -646,12 +698,12 @@ describe('border-style', () => {
     })
 })
 describe('border-width', () => {
-    it('shorthand propagates to longhands', () => {
+    it('expands a shorthand declaration to longhand declarations', () => {
         const style = createStyleDeclaration()
         style.borderWidth = 0
         expect(style.borderTopWidth).toBe('0px')
     })
-    it('longhand propagates to shorthand', () => {
+    it('serializes a shorthand value using longhand declarations', () => {
         const style = createStyleDeclaration()
         style.borderWidth = '1px'
         style.borderTopWidth = '2px'
@@ -659,7 +711,7 @@ describe('border-width', () => {
     })
 })
 describe('bottom, left, right, top', () => {
-    it('valid', () => {
+    it('parses and serializes a valid declaration value', () => {
         const style = createStyleDeclaration()
         style.top = 0
         style.left = '0%'
@@ -708,9 +760,10 @@ describe('clip', () => {
     })
 })
 describe('clip-path', () => {
-    it('basic shape and geometry box in any order', () => {
+    it('parses and serializes a valid declaration value', () => {
         const style = createStyleDeclaration()
         const valid = [
+            // <basic-shape> and <geometry-box> in any order
             ['fill-box circle()', 'circle(at center center) fill-box'],
             ['circle() fill-box', 'circle(at center center) fill-box'],
         ]
@@ -721,7 +774,7 @@ describe('clip-path', () => {
     })
 })
 describe('color', () => {
-    it('stores and serialize alpha value in a color function as an 8 bit integer', () => {
+    it('parses and serializes an alpha value in a color function as an 8 bit integer', () => {
         const style = createStyleDeclaration()
         style.color = 'rgb(0, 0, 0, 0.499)'
         expect(style.color).toBe('rgba(0, 0, 0, 0.499)')
@@ -735,7 +788,7 @@ describe('color', () => {
 })
 describe.skip('flex', () => {
     it.todo('invalid (with flex-grow or flex-shrink at invalid positions)')
-    it('shorthand propagates to longhands', () => {
+    it('expands a shorthand declaration to longhand declarations', () => {
         const style = createStyleDeclaration()
         style.setProperty('flex', 'none')
         expect(style.getPropertyValue('flex-grow')).toBe('0')
@@ -771,7 +824,7 @@ describe.skip('flex', () => {
     })
 })
 describe('flex-basis', () => {
-    it('valid', () => {
+    it('parses and serializes a valid declaration value', () => {
         const style = createStyleDeclaration()
         style.setProperty('flex-basis', 0)
         expect(style.getPropertyValue('flex-basis')).toBe('0px')
@@ -785,7 +838,7 @@ describe('flex-basis', () => {
     })
 })
 describe('flex-direction', () => {
-    it('valid', () => {
+    it('parses and serializes a valid declaration value', () => {
         const style = createStyleDeclaration()
         style.flexDirection = 'column'
         expect(style.cssText).toBe('flex-direction: column;')
@@ -794,7 +847,7 @@ describe('flex-direction', () => {
     })
 })
 describe('flex-grow', () => {
-    it('valid', () => {
+    it('parses and serializes a valid declaration value', () => {
         const style = createStyleDeclaration()
         style.setProperty('flex-grow', 2)
         expect(style.getPropertyValue('flex-grow')).toBe('2')
@@ -802,7 +855,7 @@ describe('flex-grow', () => {
     })
 })
 describe('flex-shrink', () => {
-    it('valid', () => {
+    it('parses and serializes a valid declaration value', () => {
         const style = createStyleDeclaration()
         style.setProperty('flex-shrink', 0)
         expect(style.getPropertyValue('flex-shrink')).toBe('0')
@@ -812,20 +865,16 @@ describe('flex-shrink', () => {
     })
 })
 describe('float', () => {
-    it('mirrors cssfloat', () => {
+    it('mirrors cssFloat', () => {
         const style = createStyleDeclaration()
         style.float = 'left'
         expect(style.cssFloat).toBe('left')
-    })
-    it('with setproperty()', () => {
-        const style = createStyleDeclaration()
-        style.setProperty('float', 'left')
-        expect(style.float).toBe('left')
-        expect(style.getPropertyValue('float')).toBe('left')
+        style.setProperty('float', 'right')
+        expect(style.getPropertyValue('float')).toBe('right')
     })
 })
 describe('font', () => {
-    it('shorthand propagates to longhands', () => {
+    it('expands a shorthand declaration to longhand declarations', () => {
         const style = createStyleDeclaration()
         style.font = '12em monospace'
         expect(style.fontSize).toBe('12em')
@@ -844,7 +893,7 @@ describe('font-size', () => {
     })
 })
 describe('height, width', () => {
-    it('valid', () => {
+    it('parses and serializes a valid declaration value', () => {
         const style = createStyleDeclaration()
         style.height = 6
         expect(style.height).toBe('')
@@ -871,7 +920,7 @@ describe('height, width', () => {
     })
 })
 describe('margin', () => {
-    it('shorthand propagates to longhands', () => {
+    it('expands a shorthand declaration to longhand declarations', () => {
         const style = createStyleDeclaration()
         const sides = ['top', 'right', 'bottom', 'left']
         function expectSides(...values) {
@@ -890,7 +939,7 @@ describe('margin', () => {
         style.margin = ''
         expectSides('', '', '', '')
     })
-    it('longhand propagates to shorthand', () => {
+    it('serializes a shorthand value using longhand declarations', () => {
         const style = createStyleDeclaration()
         style.margin = '1px 2px 3px 4px'
         expect(style.margin).toBe('1px 2px 3px 4px')
@@ -909,7 +958,7 @@ describe('margin', () => {
     })
 })
 describe('padding', () => {
-    it('shorthand propagates to longhands', () => {
+    it('expands a shorthand declaration to longhand declarations', () => {
         const style = createStyleDeclaration()
         const sides = ['top', 'right', 'bottom', 'left']
         function expectSides(...values) {
@@ -928,7 +977,7 @@ describe('padding', () => {
         style.padding = ''
         expectSides('', '', '', '')
     })
-    it('longhand propagates to shorthand', () => {
+    it('serializes a shorthand value using longhand declarations', () => {
         const style = createStyleDeclaration()
         style.padding = '1px 2px 3px 4px'
         expect(style.padding).toBe('1px 2px 3px 4px')

@@ -34,12 +34,12 @@ partial interface CSSRule {
     const unsigned short SUPPORTS_RULE = 12;
 };
 
-// https://drafts.csswg.org/css-fonts/#om-fontfeaturevalues
+// https://drafts.csswg.org/css-fonts-4/#om-fontfeaturevalues
 partial interface CSSRule {
     const unsigned short FONT_FEATURE_VALUES_RULE = 14;
 };
 
-// https://drafts.csswg.org/css-device-adapt/#css-rule-interface
+// https://drafts.csswg.org/css-device-adapt-1/#css-rule-interface
 partial interface CSSRule {
     const unsigned short VIEWPORT_RULE = 15;
 };

@@ -1,7 +1,7 @@
 
 # CSS
 
-JavaScript implementation of the CSS object model.
+JavaScript implementation of CSS.
 
 ## Usage
 
@@ -16,15 +16,15 @@ const { CSSStyleSheet } = myGlobalObject
 const styleSheet = new CSSStyleSheet()
 
 // Or via `webidl2js` wrappers:
-const style = cssom.CSSStyleSheet.create(myGlobalObject, undefined, privateProperties)
+const stylesheet = cssom.CSSStyleSheet.create(myGlobalObject, undefined, privateProperties)
 const style = cssom.CSSStyleDeclaration.create(myGlobalObject, undefined, privateProperties)
 ```
 
 The `webidl2js` wrappers are intended to implement:
 
 - *create a CSS style sheet*: when processing or updating the content of [`HTMLStyleElement`](https://html.spec.whatwg.org/multipage/semantics.html#the-style-element), when processing the resource referenced by [`HTMLLinkElement`](https://html.spec.whatwg.org/multipage/links.html#link-type-stylesheet) or an HTTP `Link` header with `rel="stylesheet"`
-- [the `style` attribute of an `HTMLElement`](https://html.spec.whatwg.org/multipage/dom.html#the-style-attribute)
-- *return a live CSS declaration block* for [`Window.getComputedStyle()`](https://drafts.csswg.org/cssom/#extensions-to-the-window-interface)
+- (get) [the `style` attribute of an `HTMLElement`](https://html.spec.whatwg.org/multipage/dom.html#the-style-attribute)
+- *return a live CSS declaration block* from [`Window.getComputedStyle()`](https://drafts.csswg.org/cssom/#extensions-to-the-window-interface)
 
 To sum up, they mostly exist to create `CSSStyleSheet` and `CSSStyleDeclaration` (block). Below is a map between the properties as defined in the corresponding specification and `privateProperties`:
 
@@ -48,7 +48,7 @@ To sum up, they mostly exist to create `CSSStyleSheet` and `CSSStyleDeclaration`
   - *owner node*: `ownerNode` (`HTMLElement`, optional, default: `null`)
   - *parent CSS rule*: `parentRule` (`CSSRule`, optional, default: `null`)
 
-A declaration entry in `declarations` should be a plain object associated to its property `name`. This object should have the following properties:
+A declaration entry in `declarations` must be a plain object associated to its property `name`. This object must have the following properties:
 
   - `name`: `String`
   - `value`: `String`

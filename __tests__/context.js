@@ -15,7 +15,7 @@ cssRules.push(
     { parentStyleSheet: styleSheet, prefix: 'svg', type: new Set(['namespace']) },
     styleRule)
 
-it('has the top level (style sheet) context by default as its current context', () => {
+it('has the top-level (style sheet) context by default as its current context', () => {
     const { current } = new ParserContext()
     expect(current).toBe(topLevel)
 })
@@ -33,15 +33,12 @@ it('has the context of the given nested rule as its current context', () => {
 })
 it('enters in the context of a given rule and returns its context', () => {
     const context = new ParserContext()
-    const next = context.enter(styleRule)
-    expect(next).toEqual(styleRuleContext)
+    expect(context.enter(styleRule)).toEqual(styleRuleContext)
     expect(context.current).toEqual(styleRuleContext)
 })
 it('tries to enter in the context of a given unknown rule', () => {
     const context = new ParserContext()
-    // Unknown rule type
-    const next = context.enter({ name: 'unknown', type: new Set() })
-    expect(next).toBeNull()
+    expect(context.enter({ name: 'unknown', type: new Set() })).toBeNull()
     expect(context.current).toEqual(topLevel)
 })
 it('exits from the context of a child rule to the context of its parent rule or style sheet', () => {

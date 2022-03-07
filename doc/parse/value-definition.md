@@ -7,7 +7,7 @@ A CSS input is parsed against an abstract syntax tree resulting from parsing a v
 
 The syntax of the CSS value definitions includes terminals and non-terminals: a symbol name wrapped in `<>`, which is a CSS type. With delimiters, multipliers, combinators, they describe how to form a CSS value.
 
-A CSS type may be completed with specific rules that can not be defined with the CSS value definition syntax. A CSS value is most often a `<declaration-value>` that should match the value definition corresponding to the property in the `<declaration>`, but it can also be an input that should match the value definition of a rule, its prelude, or its block.
+A CSS type may be completed with specific rules that can not be defined with the CSS value definition syntax. A CSS value is most often a `<declaration-value>` that must match the value definition corresponding to the property in the `<declaration>`, but it can also be an input that must match the value definition of a rule, its prelude, or its block.
 
 A terminal is a CSS basic data type: a single component value (token). A delimiter (single code point) is also a component value.
 

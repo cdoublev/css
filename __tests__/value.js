@@ -1,10 +1,26 @@
 /**
- * Which production types should be tested here?
+ * This file must be used to test requirements of:
  *
- * - combined/repeated types
- * - terminal types
- * - non-terminal types with specific parsing/serialization rule
- * - not supported (yet?): structures (rules and declarations)
+ * 1. the production parser
+ *    1. combined types
+ *    2. repeated types
+ *    3. backtracking
+ * 2. the `,` delimiter CSS type (aka. comma-ellision rules)
+ * 3. CSS custom variable (to replace any CSS type)
+ * 4. CSS types defined in CSS Value (aka. basic data types)
+ *    1. textual
+ *    2. numerics (and math functions to replace a numeric)
+ * 5. CSS types with specific parsing or serialization rules
+ *    (CSS types used in a CSS property/descriptor value)
+ *    1. <color>
+ *    2. <image>
+ *    3. <position>
+ *    4. <basic-shape>
+ *    5. <gradient>
+ *    ... (CSS types only used in the prelude of a rule)
+ *    6. <selector-list> (style rule)
+ *    7. <media-query-list> (`@media`)
+ *    8. <supports-condition> (`@supports`)
  */
 
 const { createParser, parseCSSGrammar, parseCSSPropertyValue } = require('../lib/parse/syntax.js')
@@ -15,15 +31,11 @@ const parseDefinition = require('../lib/parse/definition.js')
 const { serializeCSSValue } = require('../lib/serialize.js')
 
 /**
- * Initialize a default context for `Parser` with namespaces to tests against a
- * namespace prefixed selector.
+ * Initialize `Parser` with a default context: a top-level style rule.
  *
- * Run `context.enter(styleRule)` to tests against a nesting selector.
- * Run `context.enter({ type: 'nest' })` to tests against a nest-containing
- * selector.
- *
- * Then run `context.exit()` and `context.enter(styleRule)` to move back to the
- * parent style rule (default context for the tests in this file).
+ * Run eg. `context.enter({ name: 'page', type: new Set(['page']) })` to test
+ * against a declaration value for a descriptors allowed in `@page`, then run
+ * `context.exit()` to move back to the context of a top-level style rule.
  */
 const cssRules = []
 const styleSheet = { _rules: cssRules }
@@ -39,7 +51,7 @@ const { context, state } = parser
 
 /**
  * @param {string} definition
- * @param {string} input
+ * @param {string} value
  * @param {boolean} [parseGlobals]
  * @param {boolean} [serialize]
  * @returns {function|string}
@@ -48,20 +60,20 @@ const { context, state } = parser
  * value matching the given definition, or to assert against the representation
  * resulting from parsing intead of the string resulting from serialization.
  */
-function parse(definition, input, parseGlobals = false, serialize = true) {
-    const parsed = parseGlobals
-        ? parseCSSPropertyValue(input, 'color', parser)
-        : parseCSSGrammar(input, definition, parser)
-    if (parsed === null) {
+function parse(definition, value, parseGlobals = false, serialize = true) {
+    value = parseGlobals
+        ? parseCSSPropertyValue(value, 'color', parser)
+        : parseCSSGrammar(value, definition, parser)
+    if (value === null) {
         if (serialize) {
             return ''
         }
         return null
     }
     if (serialize) {
-        return serializeCSSValue({ input, value: parsed })
+        return serializeCSSValue({ value })
     }
-    return parsed
+    return value
 }
 
 // Helpers to create component values
@@ -78,10 +90,10 @@ function keyword(value, location = -1, position) {
 function omitted(definition, location, position) {
     const node = parseDefinition(definition)
     const value = createOmitted(node)
-    if (typeof location !== 'undefined') {
+    if (location !== undefined) {
         value.location = location
     }
-    if (typeof position !== 'undefined') {
+    if (position !== undefined) {
         value.position = position
     }
     return value
@@ -117,7 +129,7 @@ it('<final-bg-layer>', () => {
 /**
  * TODO: add generalized test case to `backtracking`.
  * -> this is a minimum reproduction of an issue that was occurring while
- * parsing `background-property`, ie. a grammar containing `<bg-position>`
+ * parsing `background-property`, ie. a grammar containing <bg-position>
  * followed by another type
  * -> the issue was about ... ?
  */
@@ -130,9 +142,8 @@ it('[a | a b] || a', () => {
  * backtracking to a function type that was assigned a single component instead
  * of a list as the result from parsing its arguments, which can not be used to
  * create a stream to use for parsing.
- * -> it has been temporarily fixed in `stream()` by wrapping a non-iterable in
- * an array but ideally this should be fixed by implementing an iterable data
- * structure for representing a single component value.
+ * -> it has been fixed by returning a new function with the result from parsing
+ * its arguments as its `value`
  */
 it('fn(a) || a || b', () => {
     const definition = 'fn(a) || a || b'
@@ -164,20 +175,20 @@ it('a || b c? || d', () => {
 })
 
 describe('combined types', () => {
-    it('parses a b', () => {
+    it('parses and serializes a value matched against a b', () => {
         const definition = 'a b'
         expect(parse(definition, 'a')).toBe('')
         expect(parse(definition, 'a b c')).toBe('')
         expect(parse(definition, 'a b')).toBe('a b')
     })
-    it('parses a && b', () => {
+    it('parses and serializes a value matched against a && b', () => {
         const definition = 'a && b'
         expect(parse(definition, 'a')).toBe('')
         expect(parse(definition, 'a b c')).toBe('')
         expect(parse(definition, 'a b')).toBe('a b')
         expect(parse(definition, 'b a')).toBe('a b')
     })
-    it('parses a || b', () => {
+    it('parses and serializes a value matched against a || b', () => {
         const definition = 'a || b'
         expect(parse(definition, 'a b c')).toBe('')
         expect(parse(definition, 'a')).toBe('a')
@@ -185,7 +196,7 @@ describe('combined types', () => {
         expect(parse(definition, 'a b')).toBe('a b')
         expect(parse(definition, 'b a')).toBe('a b')
     })
-    it('parses a | b', () => {
+    it('parses and serializes a value matched against a | b', () => {
         const definition = 'a | b'
         expect(parse(definition, 'c')).toBe('')
         expect(parse(definition, 'a b')).toBe('')
@@ -193,269 +204,266 @@ describe('combined types', () => {
         expect(parse(definition, 'b')).toBe('b')
     })
 })
-describe('repeated types (serialized)', () => {
-    it('parses a?', () => {
+describe('repeated types', () => {
+    it('parses and serializes a value matched against a?', () => {
         const definition = 'a?'
         expect(parse(definition, '')).toBe('')
+        expect(parse(definition, 'a a')).toBe('')
         expect(parse(definition, 'a')).toBe('a')
     })
-    it('parses a*', () => {
+    it('parses a value matched against a? to the expected representation', () => {
+        const definition = 'a?'
+        expect(parse(definition, '', false, false)).toEqual(omitted('a'))
+        expect(parse(definition, 'a', false, false)).toEqual(keyword('a'))
+    })
+    it('parses and serializes a value matched against a*', () => {
         const definition = 'a*'
         expect(parse(definition, '')).toBe('')
         expect(parse(definition, 'a, a')).toBe('')
         expect(parse(definition, 'a')).toBe('a')
         expect(parse(definition, 'a a')).toBe('a a')
     })
-    it('parses a+', () => {
+    it('parses a value matched against a* to the expected representation', () => {
+        const definition = 'a*'
+        expect(parse(definition, '', false, false)).toEqual(createList([]))
+        expect(parse(definition, 'a', false, false)).toEqual(createList([keyword('a')]))
+        expect(parse(definition, 'a a', false, false)).toEqual(createList([keyword('a'), keyword('a', 0)]))
+    })
+    it('parses and serializes a value matched against a+', () => {
         const definition = 'a+'
         expect(parse(definition, '')).toBe('')
         expect(parse(definition, 'a, a')).toBe('')
         expect(parse(definition, 'a')).toBe('a')
         expect(parse(definition, 'a a')).toBe('a a')
     })
-    it('parses a [b? c?]!', () => {
-        const definition = 'a [b? c?]!'
-        expect(parse(definition, 'a')).toBe('')
-        expect(parse(definition, 'a b')).toBe('a b')
-        expect(parse(definition, 'a c')).toBe('a c')
-    })
-    it('parses a#', () => {
+    it('parses and serializes a value matched against a#', () => {
         const definition = 'a#'
+        expect(parse(definition, '')).toBe('')
         expect(parse(definition, 'a a')).toBe('')
         expect(parse(definition, 'a')).toBe('a')
         expect(parse(definition, 'a, a')).toBe('a, a')
     })
-    it('parses a#?', () => {
+    it('parses a value matched against a# to the expected representation', () => {
+        const definition = 'a#'
+        expect(parse(definition, 'a', false, false)).toEqual(createList([keyword('a')], ','))
+        expect(parse(definition, 'a, a', false, false)).toEqual(createList([keyword('a'), keyword('a', 0)], ','))
+    })
+    it('parses and serializes a value matched against <length-percentage>#', () => {
+        const definition = '<length-percentage>#'
+        expect(parse(definition, '1px 1px')).toBe('')
+        expect(parse(definition, '1px')).toBe('1px')
+        expect(parse(definition, '1px, 1px')).toBe('1px, 1px')
+    })
+    it('parses and serializes a value matched against a#?', () => {
         const definition = 'a a#?'
         expect(parse(definition, 'a, a')).toBe('')
         expect(parse(definition, 'a')).toBe('a')
         expect(parse(definition, 'a a')).toBe('a a')
         expect(parse(definition, 'a a, a')).toBe('a a, a')
     })
-    it('parses a+#', () => {
+    it('parses and serializes a value matched against a+#', () => {
         const definition = 'a+#'
+        expect(parse(definition, 'a a, a')).toBe('')
+        expect(parse(definition, 'a, a a')).toBe('')
         expect(parse(definition, 'a')).toBe('a')
         expect(parse(definition, 'a a')).toBe('a a')
         expect(parse(definition, 'a, a')).toBe('a, a')
-        expect(parse(definition, 'a a, a')).toBe('')
     })
-    it('parses a+#?', () => {
+    it('parses and serializes a value matched against a+#?', () => {
         const definition = 'a a+#?'
+        expect(parse(definition, 'a, a')).toBe('')
+        expect(parse(definition, 'a a, a a')).toBe('')
+        expect(parse(definition, 'a a a, a')).toBe('')
         expect(parse(definition, 'a')).toBe('a')
         expect(parse(definition, 'a a')).toBe('a a')
         expect(parse(definition, 'a a a')).toBe('a a a')
         expect(parse(definition, 'a a, a')).toBe('a a, a')
-        expect(parse(definition, 'a, a')).toBe('')
-        expect(parse(definition, 'a a, a a')).toBe('')
-        expect(parse(definition, 'a a a, a')).toBe('')
     })
-    it('parses a{2}', () => {
+    it('parses and serializes a value matched against a{2}', () => {
         const definition = 'a{2}'
         expect(parse(definition, 'a')).toBe('')
         expect(parse(definition, 'a a')).toBe('a a')
         expect(parse(definition, 'a a a')).toBe('')
         expect(parse(definition, 'a, a')).toBe('')
     })
-    it('parses a{2,3}', () => {
+    it('parses a value matched against a{2} to the expected representation', () => {
+        const definition = 'a{2}'
+        expect(parse(definition, 'a', false, false)).toBeNull()
+        expect(parse(definition, 'a a', false, false)).toEqual(createList([keyword('a'), keyword('a', 0)]))
+    })
+    it('parses and serializes a value matched against a{2,3}', () => {
         const definition = 'a{2,3}'
         expect(parse(definition, 'a')).toBe('')
         expect(parse(definition, 'a a')).toBe('a a')
         expect(parse(definition, 'a a a')).toBe('a a a')
         expect(parse(definition, 'a a a a')).toBe('')
     })
-    it('parses a{2,∞}', () => {
+    it('parses and serializes a value matched against a{2,∞}', () => {
         const definition = 'a{2,∞}'
         expect(parse(definition, 'a')).toBe('')
         expect(parse(definition, 'a a')).toBe('a a')
         expect(parse(definition, 'a a a')).toBe('a a a')
     })
-    it('parses a{2,}', () => {
+    it('parses and serializes a value matched against a{2,}', () => {
         const definition = 'a{2,}'
         expect(parse(definition, 'a')).toBe('')
         expect(parse(definition, 'a a')).toBe('a a')
         expect(parse(definition, 'a a a')).toBe('a a a')
     })
-    it('parses <length-percentage>#', () => {
-        const definition = '<length-percentage>#'
-        expect(parse(definition, '1px 1px')).toBe('')
-        expect(parse(definition, '1px')).toBe('1px')
-        expect(parse(definition, '1px, 1px')).toBe('1px, 1px')
-    })
-})
-describe('repeated types (data structure)', () => {
-    it('parses a{2}', () => {
-        const definition = 'a{2}'
-        expect(parse(definition, 'a a', false, false)).toEqual(createList([keyword('a'), keyword('a', 0)]))
-        expect(parse(definition, 'a', false, false)).toBeNull()
-    })
-    it('parses a{0,∞}', () => {
+    it('parses a value matched against a{0,∞} to the expected representation', () => {
         const definition = 'a{0,∞}'
-        expect(parse(definition, 'a a', false, false)).toEqual(createList([keyword('a'), keyword('a', 0)]))
         expect(parse(definition, '', false, false)).toEqual(createList([]))
-    })
-    it('parses a?', () => {
-        const definition = 'a?'
-        expect(parse(definition, 'a', false, false)).toEqual(keyword('a'))
-        expect(parse(definition, '', false, false)).toEqual(omitted('a'))
-    })
-    it('parses a*', () => {
-        const definition = 'a*'
-        expect(parse(definition, 'a', false, false)).toEqual(createList([keyword('a')]))
         expect(parse(definition, 'a a', false, false)).toEqual(createList([keyword('a'), keyword('a', 0)]))
-        expect(parse(definition, '', false, false)).toEqual(createList([]))
     })
-    it('parses a#', () => {
-        const definition = 'a#'
-        expect(parse(definition, 'a', false, false)).toEqual(createList([keyword('a')], ','))
-        expect(parse(definition, 'a, a', false, false)).toEqual(createList([keyword('a'), keyword('a', 0)], ','))
-        expect(parse(definition, '', false, false)).toBeNull()
-    })
-    it('parses [a b?]', () => {
+    it('parses a value matched against [a b?] to the expected representation', () => {
         const definition = '[a b?]'
-        expect(parse(definition, 'a b', false, false)).toEqual(createList([keyword('a'), keyword('b', 0)]))
-        expect(parse(definition, 'a', false, false)).toEqual(createList([keyword('a'), omitted('b', 0)]))
         expect(parse(definition, '', false, false)).toBeNull()
+        expect(parse(definition, 'a', false, false)).toEqual(createList([keyword('a'), omitted('b', 0)]))
+        expect(parse(definition, 'a b', false, false)).toEqual(createList([keyword('a'), keyword('b', 0)]))
     })
-    it('parses [a b?]?', () => {
+    it('parses a value matched against [a b?]? to the expected representation', () => {
         const definition = '[a b?]?'
-        expect(parse(definition, 'a b', false, false)).toEqual(list([keyword('a'), keyword('b', 0)]))
-        expect(parse(definition, 'a', false, false)).toEqual(list([keyword('a'), omitted('b', 0)]))
         expect(parse(definition, '', false, false)).toEqual(omitted('a b?'))
+        expect(parse(definition, 'a', false, false)).toEqual(list([keyword('a'), omitted('b', 0)]))
+        expect(parse(definition, 'a b', false, false)).toEqual(list([keyword('a'), keyword('b', 0)]))
     })
-    it('parses [a b?]*', () => {
+    it('parses a value matched against [a b?]* to the expected representation', () => {
         const definition = '[a b?]*'
-        expect(parse(definition, 'a b', false, false)).toEqual(createList([list([keyword('a'), keyword('b', 0)])]))
-        expect(parse(definition, 'a', false, false)).toEqual(createList([list([keyword('a'), omitted('b', 0)])]))
         expect(parse(definition, '', false, false)).toEqual(createList())
-    })
-    it('parses [a b?]#', () => {
-        const definition = '[a b?]#'
-        expect(parse(definition, 'a b', false, false)).toEqual(createList([list([keyword('a'), keyword('b', 0)])], ','))
-        expect(parse(definition, 'a', false, false)).toEqual(createList([list([keyword('a'), omitted('b', 0)])], ','))
-        expect(parse(definition, '', false, false)).toBeNull()
-    })
-    it('parses [a? b?]', () => {
-        const definition = '[a? b?]'
-        expect(parse(definition, 'a b', false, false)).toEqual(createList([keyword('a'), keyword('b', 0)]))
-        expect(parse(definition, 'a', false, false)).toEqual(createList([keyword('a'), omitted('b', 0)]))
-        expect(parse(definition, '', false, false)).toEqual(createList([omitted('a', -1), omitted('b', -1)]))
-    })
-    it('parses [a? b?]?', () => {
-        const definition = '[a? b?]?'
-        expect(parse(definition, 'a b', false, false)).toEqual(list([keyword('a'), keyword('b', 0)]))
-        expect(parse(definition, 'a', false, false)).toEqual(list([keyword('a'), omitted('b', 0)]))
-        expect(parse(definition, 'b', false, false)).toEqual(list([omitted('a', -1), keyword('b')]))
-        expect(parse(definition, '', false, false)).toEqual(list([omitted('a', -1), omitted('b', -1)]))
-    })
-    it('parses [a? b?]!', () => {
-        const definition = '[a? b?]!'
-        expect(parse(definition, 'a b', false, false)).toEqual(list([keyword('a'), keyword('b', 0)]))
-        expect(parse(definition, 'a', false, false)).toEqual(list([keyword('a'), omitted('b', 0)]))
-        expect(parse(definition, 'b', false, false)).toEqual(list([omitted('a', -1), keyword('b')]))
-        expect(parse(definition, '', false, false)).toBeNull()
-    })
-    it('parses [a? b?]*', () => {
-        const definition = '[a? b?]*'
+        expect(parse(definition, 'a', false, false)).toEqual(createList([list([keyword('a'), omitted('b', 0)])]))
         expect(parse(definition, 'a b', false, false)).toEqual(createList([list([keyword('a'), keyword('b', 0)])]))
+    })
+    it('parses a value matched against [a b?]# to the expected representation', () => {
+        const definition = '[a b?]#'
+        expect(parse(definition, '', false, false)).toBeNull()
+        expect(parse(definition, 'a', false, false)).toEqual(createList([list([keyword('a'), omitted('b', 0)])], ','))
+        expect(parse(definition, 'a b', false, false)).toEqual(createList([list([keyword('a'), keyword('b', 0)])], ','))
+    })
+    it('parses a value matched against [a? b?] to the expected representation', () => {
+        const definition = '[a? b?]'
+        expect(parse(definition, '', false, false)).toEqual(createList([omitted('a', -1), omitted('b', -1)]))
+        expect(parse(definition, 'a', false, false)).toEqual(createList([keyword('a'), omitted('b', 0)]))
+        expect(parse(definition, 'a b', false, false)).toEqual(createList([keyword('a'), keyword('b', 0)]))
+    })
+    it('parses a value matched against [a? b?]? to the expected representation', () => {
+        const definition = '[a? b?]?'
+        expect(parse(definition, '', false, false)).toEqual(list([omitted('a', -1), omitted('b', -1)]))
+        expect(parse(definition, 'a', false, false)).toEqual(list([keyword('a'), omitted('b', 0)]))
+        expect(parse(definition, 'b', false, false)).toEqual(list([omitted('a', -1), keyword('b')]))
+        expect(parse(definition, 'a b', false, false)).toEqual(list([keyword('a'), keyword('b', 0)]))
+    })
+    it('parses and serializes a value matched against a [b? c?]!', () => {
+        const definition = 'a [b? c?]!'
+        expect(parse(definition, 'a')).toBe('')
+        expect(parse(definition, 'a b')).toBe('a b')
+        expect(parse(definition, 'a c')).toBe('a c')
+    })
+    it('parses a value matched against [a? b?]! to the expected representation', () => {
+        const definition = '[a? b?]!'
+        expect(parse(definition, '', false, false)).toBeNull()
+        expect(parse(definition, 'a', false, false)).toEqual(list([keyword('a'), omitted('b', 0)]))
+        expect(parse(definition, 'b', false, false)).toEqual(list([omitted('a', -1), keyword('b')]))
+        expect(parse(definition, 'a b', false, false)).toEqual(list([keyword('a'), keyword('b', 0)]))
+    })
+    it('parses a value matched against [a? b?]* to the expected representation', () => {
+        const definition = '[a? b?]*'
+        expect(parse(definition, '', false, false)).toEqual(createList([list([omitted('a', -1), omitted('b', -1)])]))
         expect(parse(definition, 'a', false, false)).toEqual(createList([list([keyword('a'), omitted('b', 0)])]))
         expect(parse(definition, 'b', false, false)).toEqual(createList([list([omitted('a', -1), keyword('b')])]))
-        expect(parse(definition, '', false, false)).toEqual(createList([list([omitted('a', -1), omitted('b', -1)])]))
+        expect(parse(definition, 'a b', false, false)).toEqual(createList([list([keyword('a'), keyword('b', 0)])]))
     })
-    it('parses [a? b?]#', () => {
+    it('parses a value matched against [a? b?]# to the expected representation', () => {
         const definition = '[a? b?]#'
-        expect(parse(definition, 'a b', false, false)).toEqual(createList([list([keyword('a'), keyword('b', 0)])], ','))
+        expect(parse(definition, '', false, false)).toEqual(createList([list([omitted('a', -1), omitted('b', -1)])], ','))
         expect(parse(definition, 'a', false, false)).toEqual(createList([list([keyword('a'), omitted('b', 0)])], ','))
         expect(parse(definition, 'b', false, false)).toEqual(createList([list([omitted('a', -1), keyword('b')])], ','))
-        expect(parse(definition, '', false, false)).toEqual(createList([list([omitted('a', -1), omitted('b', -1)])], ','))
+        expect(parse(definition, 'a b', false, false)).toEqual(createList([list([keyword('a'), keyword('b', 0)])], ','))
     })
-    it('parses [a b]', () => {
+    it('parses a value matched against [a b] to the expected representation', () => {
         const definition = '[a b]'
-        expect(parse(definition, 'a b', false, false)).toEqual(createList([keyword('a'), keyword('b', 0)]))
-        expect(parse(definition, 'a', false, false)).toBeNull()
-        expect(parse(definition, 'b', false, false)).toBeNull()
         expect(parse(definition, '', false, false)).toBeNull()
+        expect(parse(definition, 'a', false, false)).toBeNull()
+        expect(parse(definition, 'b', false, false)).toBeNull()
+        expect(parse(definition, 'a b', false, false)).toEqual(createList([keyword('a'), keyword('b', 0)]))
     })
-    it('parses [a b]?', () => {
+    it('parses a value matched against [a b]? to the expected representation', () => {
         const definition = '[a b]?'
-        expect(parse(definition, 'a b', false, false)).toEqual(list([keyword('a'), keyword('b', 0)]))
-        expect(parse(definition, 'a', false, false)).toBeNull()
-        expect(parse(definition, 'b', false, false)).toBeNull()
         expect(parse(definition, '', false, false)).toEqual(omitted('a b'))
-    })
-    it('parses [a b]*', () => {
-        const definition = '[a b]*'
-        expect(parse(definition, 'a b', false, false)).toEqual(createList([list([keyword('a'), keyword('b', 0)])]))
         expect(parse(definition, 'a', false, false)).toBeNull()
         expect(parse(definition, 'b', false, false)).toBeNull()
-        expect(parse(definition, '', false, false)).toEqual(createList([]))
+        expect(parse(definition, 'a b', false, false)).toEqual(list([keyword('a'), keyword('b', 0)]))
     })
-    it('parses [a b]#', () => {
+    it('parses a value matched against [a b]* to the expected representation', () => {
+        const definition = '[a b]*'
+        expect(parse(definition, '', false, false)).toEqual(createList([]))
+        expect(parse(definition, 'a', false, false)).toBeNull()
+        expect(parse(definition, 'b', false, false)).toBeNull()
+        expect(parse(definition, 'a b', false, false)).toEqual(createList([list([keyword('a'), keyword('b', 0)])]))
+    })
+    it('parses a value matched against [a b]# to the expected representation', () => {
         const definition = '[a b]#'
+        expect(parse(definition, '', false, false)).toBeNull()
+        expect(parse(definition, 'a', false, false)).toBeNull()
+        expect(parse(definition, 'b', false, false)).toBeNull()
         expect(parse(definition, 'a b', false, false)).toEqual(createList(
             [list([keyword('a'), keyword('b', 0)])],
             ','))
-        expect(parse(definition, 'a', false, false)).toBeNull()
-        expect(parse(definition, 'b', false, false)).toBeNull()
-        expect(parse(definition, '', false, false)).toBeNull()
     })
-    it('parses [a | b]', () => {
+    it('parses a value matched against [a | b] to the expected representation', () => {
         const definition = '[a | b]'
+        expect(parse(definition, '', false, false)).toBeNull()
         expect(parse(definition, 'a', false, false)).toEqual(keyword('a', null))
         expect(parse(definition, 'b', false, false)).toEqual(keyword('b', null))
-        expect(parse(definition, '', false, false)).toBeNull()
     })
-    it('parses [a | b]?', () => {
+    it('parses a value matched against [a | b]? to the expected representation', () => {
         const definition = '[a | b]?'
+        expect(parse(definition, '', false, false)).toEqual(omitted('a | b'))
         expect(parse(definition, 'a', false, false)).toEqual(keyword('a'))
         expect(parse(definition, 'b', false, false)).toEqual(keyword('b'))
-        expect(parse(definition, '', false, false)).toEqual(omitted('a | b'))
     })
-    it('parses [a | b]*', () => {
+    it('parses a value matched against [a | b]* to the expected representation', () => {
         const definition = '[a | b]*'
+        expect(parse(definition, '', false, false)).toEqual(createList([]))
         expect(parse(definition, 'a', false, false)).toEqual(createList([keyword('a')]))
         expect(parse(definition, 'b', false, false)).toEqual(createList([keyword('b')]))
-        expect(parse(definition, '', false, false)).toEqual(createList([]))
     })
-    it('parses [a | b]#', () => {
+    it('parses a value matched against [a | b]# to the expected representation', () => {
         const definition = '[a | b]#'
+        expect(parse(definition, '', false, false)).toBeNull()
         expect(parse(definition, 'a', false, false)).toEqual(createList([keyword('a')], ','))
         expect(parse(definition, 'b', false, false)).toEqual(createList([keyword('b')], ','))
-        expect(parse(definition, '', false, false)).toBeNull()
     })
-    it('parses [a | b b]', () => {
+    it('parses a value matched against [a | b b] to the expected representation', () => {
         const definition = '[a | b b]'
+        expect(parse(definition, '', false, false)).toBeNull()
         expect(parse(definition, 'a', false, false)).toEqual(keyword('a', null))
         expect(parse(definition, 'b b', false, false)).toEqual(createList([keyword('b'), keyword('b', 0)]))
-        expect(parse(definition, '', false, false)).toBeNull()
     })
-    it('parses [a | b b]?', () => {
+    it('parses a value matched against [a | b b]? to the expected representation', () => {
         const definition = '[a | b b]?'
+        expect(parse(definition, '', false, false)).toEqual(omitted('a | b b'))
         expect(parse(definition, 'a', false, false)).toEqual(keyword('a'))
         expect(parse(definition, 'b b', false, false)).toEqual(list([keyword('b'), keyword('b', 0)]))
-        expect(parse(definition, '', false, false)).toEqual(omitted('a | b b'))
     })
-    it('parses [a | b b]*', () => {
+    it('parses a value matched against [a | b b]* to the expected representation', () => {
         const definition = '[a | b b]*'
+        expect(parse(definition, '', false, false)).toEqual(createList([]))
         expect(parse(definition, 'a', false, false)).toEqual(createList([keyword('a')]))
         expect(parse(definition, 'b b', false, false)).toEqual(createList([list([keyword('b'), keyword('b', 0)])]))
-        expect(parse(definition, '', false, false)).toEqual(createList([]))
     })
-    it('parses [a | b b]#', () => {
+    it('parses a value matched against [a | b b]# to the expected representation', () => {
         const definition = '[a | b b]#'
+        expect(parse(definition, '', false, false)).toBeNull()
         expect(parse(definition, 'a', false, false)).toEqual(createList(
             [keyword('a')],
             ','))
         expect(parse(definition, 'b b', false, false)).toEqual(createList(
             [list([keyword('b'), keyword('b', 0)])],
             ','))
-        expect(parse(definition, '', false, false)).toBeNull()
     })
-    it('parses [a || b]', () => {
+    it('parses a value matched against [a || b] to the expected representation', () => {
         const definition = '[a || b]'
-        expect(parse(definition, 'a b', false, false)).toEqual(createList([
-            keyword('a', -1, 0),
-            keyword('b', 0, 1),
-        ]))
+        expect(parse(definition, '', false, false)).toBeNull()
         expect(parse(definition, 'a', false, false)).toEqual(createList([
             keyword('a', -1, 0),
             omitted('b', -1, 1),
@@ -464,14 +472,14 @@ describe('repeated types (data structure)', () => {
             omitted('a', -1, 0),
             keyword('b', -1, 1),
         ]))
-        expect(parse(definition, '', false, false)).toBeNull()
-    })
-    it('parses [a || b]?', () => {
-        const definition = '[a || b]?'
-        expect(parse(definition, 'a b', false, false)).toEqual(list([
+        expect(parse(definition, 'a b', false, false)).toEqual(createList([
             keyword('a', -1, 0),
             keyword('b', 0, 1),
         ]))
+    })
+    it('parses a value matched against [a || b]? to the expected representation', () => {
+        const definition = '[a || b]?'
+        expect(parse(definition, '', false, false)).toEqual(omitted('a || b'))
         expect(parse(definition, 'a', false, false)).toEqual(list([
             keyword('a', -1, 0),
             omitted('b', -1, 1),
@@ -480,16 +488,14 @@ describe('repeated types (data structure)', () => {
             omitted('a', -1, 0),
             keyword('b', -1, 1),
         ]))
-        expect(parse(definition, '', false, false)).toEqual(omitted('a || b'))
-    })
-    it('parses [a || b]*', () => {
-        const definition = '[a || b]*'
-        expect(parse(definition, 'a b', false, false)).toEqual(createList([
-            list([
-                keyword('a', -1, 0),
-                keyword('b', 0, 1),
-            ]),
+        expect(parse(definition, 'a b', false, false)).toEqual(list([
+            keyword('a', -1, 0),
+            keyword('b', 0, 1),
         ]))
+    })
+    it('parses a value matched against [a || b]* to the expected representation', () => {
+        const definition = '[a || b]*'
+        expect(parse(definition, '', false, false)).toEqual(createList([]))
         expect(parse(definition, 'a', false, false)).toEqual(createList([
             list([
                 keyword('a', -1, 0),
@@ -502,21 +508,16 @@ describe('repeated types (data structure)', () => {
                 keyword('b', -1, 1),
             ]),
         ]))
-        expect(parse(definition, '', false, false)).toEqual(createList([]))
+        expect(parse(definition, 'a b', false, false)).toEqual(createList([
+            list([
+                keyword('a', -1, 0),
+                keyword('b', 0, 1),
+            ]),
+        ]))
     })
-    it('parses [a || b]#', () => {
+    it('parses a value matched against [a || b]# to the expected representation', () => {
         const definition = '[a || b]#'
-        expect(parse(definition, 'a b, b', false, false)).toEqual(createList(
-            [
-                list([keyword('a', -1, 0), keyword('b', 0, 1)]),
-                list([omitted('a', 3, 0), keyword('b', 3, 1)], ' ', 2),
-            ],
-            ','))
-        expect(parse(definition, 'a b', false, false)).toEqual(createList(
-            [
-                list([keyword('a', -1, 0), keyword('b', 0, 1)]),
-            ],
-            ','))
+        expect(parse(definition, '', false, false)).toBeNull()
         expect(parse(definition, 'a, b', false, false)).toEqual(createList(
             [
                 list([keyword('a', -1, 0), omitted('b', -1, 1)]),
@@ -533,14 +534,21 @@ describe('repeated types (data structure)', () => {
                 list([omitted('a', -1, 0), keyword('b', -1, 1)]),
             ],
             ','))
-        expect(parse(definition, '', false, false)).toBeNull()
+        expect(parse(definition, 'a b', false, false)).toEqual(createList(
+            [
+                list([keyword('a', -1, 0), keyword('b', 0, 1)]),
+            ],
+            ','))
+        expect(parse(definition, 'a b, b', false, false)).toEqual(createList(
+            [
+                list([keyword('a', -1, 0), keyword('b', 0, 1)]),
+                list([omitted('a', 3, 0), keyword('b', 3, 1)], ' ', 2),
+            ],
+            ','))
     })
-    it('parses [a || b b]', () => {
+    it('parses a value matched against [a || b b] to the expected representation', () => {
         const definition = '[a || b b]'
-        expect(parse(definition, 'a b b', false, false)).toEqual(createList([
-            keyword('a', -1, 0),
-            list([keyword('b', 0), keyword('b', 2)], ' ', 0, 1),
-        ]))
+        expect(parse(definition, '', false, false)).toBeNull()
         expect(parse(definition, 'a', false, false)).toEqual(createList([
             keyword('a', -1, 0),
             omitted('b b', -1, 1),
@@ -549,17 +557,14 @@ describe('repeated types (data structure)', () => {
             omitted('a', -1, 0),
             list([keyword('b', -1), keyword('b', 0)], ' ', -1, 1),
         ]))
-        expect(parse(definition, '', false, false)).toBeNull()
+        expect(parse(definition, 'a b b', false, false)).toEqual(createList([
+            keyword('a', -1, 0),
+            list([keyword('b', 0), keyword('b', 2)], ' ', 0, 1),
+        ]))
     })
-    it('parses [a || b b]?', () => {
+    it('parses a value matched against [a || b b]? to the expected representation', () => {
         const definition = '[a || b b]?'
-        expect(parse(definition, 'a b b', false, false)).toEqual(list(
-            [
-                keyword('a', -1, 0),
-                list([keyword('b', 0), keyword('b', 2)], ' ', 0, 1),
-            ],
-            ' ',
-            -1))
+        expect(parse(definition, '', false, false)).toEqual(omitted('a || b b'))
         expect(parse(definition, 'a', false, false)).toEqual(list(
             [keyword('a', -1, 0), omitted('b b', -1, 1)],
             ' ',
@@ -568,34 +573,33 @@ describe('repeated types (data structure)', () => {
             [omitted('a', -1, 0), list([keyword('b'), keyword('b', 0)], ' ', -1, 1)],
             ' ',
             -1))
-        expect(parse(definition, '', false, false)).toEqual(omitted('a || b b'))
-    })
-    it('parses [a || b b]*', () => {
-        const definition = '[a || b b]*'
-        expect(parse(definition, 'a b b', false, false)).toEqual(createList([
-            list([
+        expect(parse(definition, 'a b b', false, false)).toEqual(list(
+            [
                 keyword('a', -1, 0),
                 list([keyword('b', 0), keyword('b', 2)], ' ', 0, 1),
-            ]),
-        ]))
+            ],
+            ' ',
+            -1))
+    })
+    it('parses a value matched against [a || b b]* to the expected representation', () => {
+        const definition = '[a || b b]*'
+        expect(parse(definition, '', false, false)).toEqual(createList([]))
         expect(parse(definition, 'a', false, false)).toEqual(createList([
             list([keyword('a', -1, 0), omitted('b b', -1, 1)]),
         ]))
         expect(parse(definition, 'b b', false, false)).toEqual(createList([
             list([omitted('a', -1, 0), list([keyword('b', -1), keyword('b', 0)], ' ', -1, 1)]),
         ]))
-        expect(parse(definition, '', false, false)).toEqual(createList([]))
+        expect(parse(definition, 'a b b', false, false)).toEqual(createList([
+            list([
+                keyword('a', -1, 0),
+                list([keyword('b', 0), keyword('b', 2)], ' ', 0, 1),
+            ]),
+        ]))
     })
-    it('parses [a || b b]#', () => {
+    it('parses a value matched against [a || b b]# to the expected representation', () => {
         const definition = '[a || b b]#'
-        expect(parse(definition, 'a b b', false, false)).toEqual(createList(
-            [
-                list([
-                    keyword('a', -1, 0),
-                    list([keyword('b', 0), keyword('b', 2)], ' ', 0, 1),
-                ]),
-            ],
-            ','))
+        expect(parse(definition, '', false, false)).toBeNull()
         expect(parse(definition, 'a', false, false)).toEqual(createList(
             [
                 list([keyword('a', -1, 0), omitted('b b', -1, 1)]),
@@ -609,45 +613,52 @@ describe('repeated types (data structure)', () => {
                 ]),
             ],
             ','))
-        expect(parse(definition, '', false, false)).toBeNull()
+        expect(parse(definition, 'a b b', false, false)).toEqual(createList(
+            [
+                list([
+                    keyword('a', -1, 0),
+                    list([keyword('b', 0), keyword('b', 2)], ' ', 0, 1),
+                ]),
+            ],
+            ','))
     })
 })
 describe('backtracking', () => {
     // Simple backtracking (depth: 1)
-    it('parses a | a a', () => {
+    it('parses and serializes a value matched against a | a a', () => {
         const definition = 'a | a a'
         expect(parse(definition, 'a')).toBe('a')
         expect(parse(definition, 'a a')).toBe('a a')
         expect(parse(definition, 'a a a')).toBe('')
     })
-    it('parses a a | a', () => {
+    it('parses and serializes a value matched against a a | a', () => {
         const definition = 'a a | a'
         expect(parse(definition, 'a')).toBe('a')
         expect(parse(definition, 'a a')).toBe('a a')
         expect(parse(definition, 'a a a')).toBe('')
     })
-    it('parses a || a a', () => {
+    it('parses and serializes a value matched against a || a a', () => {
         const definition = 'a || a a'
         expect(parse(definition, 'a')).toBe('a')
         expect(parse(definition, 'a a')).toBe('a a')
         expect(parse(definition, 'a a a')).toBe('a a a')
         expect(parse(definition, 'a a a a')).toBe('')
     })
-    it('parses a a || a', () => {
+    it('parses and serializes a value matched against a a || a', () => {
         const definition = 'a a || a'
         expect(parse(definition, 'a')).toBe('a')
         expect(parse(definition, 'a a')).toBe('a a')
         expect(parse(definition, 'a a a')).toBe('a a a')
         expect(parse(definition, 'a a a a')).toBe('')
     })
-    it('parses a && a a', () => {
+    it('parses and serializes a value matched against a && a a', () => {
         const definition = 'a && a a'
         expect(parse(definition, 'a')).toBe('')
         expect(parse(definition, 'a a')).toBe('')
         expect(parse(definition, 'a a a')).toBe('a a a')
         expect(parse(definition, 'a a a a')).toBe('')
     })
-    it('parses a a && a', () => {
+    it('parses and serializes a value matched against a a && a', () => {
         const definition = 'a a && a'
         expect(parse(definition, 'a')).toBe('')
         expect(parse(definition, 'a a')).toBe('')
@@ -655,7 +666,7 @@ describe('backtracking', () => {
         expect(parse(definition, 'a a a a')).toBe('')
     })
     // Simple backtracking (depth: 2)
-    it('parses [a | a a]{2}', () => {
+    it('parses and serializes a value matched against [a | a a]{2}', () => {
         const definition = '[a | a a]{2}'
         expect(parse(definition, 'a')).toBe('')
         expect(parse(definition, 'a a')).toBe('a a')
@@ -663,7 +674,7 @@ describe('backtracking', () => {
         expect(parse(definition, 'a a a a')).toBe('a a a a')
         expect(parse(definition, 'a a a a a')).toBe('')
     })
-    it('parses [a | a a] a', () => {
+    it('parses and serializes a value matched against [a | a a] a', () => {
         const definition = '[a | a a] a'
         expect(parse(definition, 'a')).toBe('')
         expect(parse(definition, 'a a')).toBe('a a')
@@ -671,28 +682,28 @@ describe('backtracking', () => {
         expect(parse(definition, 'a a a a')).toBe('')
     })
     // TODO: cleanup and eventually complete the following cases
-    it('parses a? a? | a a a', () => {
+    it('parses and serializes a value matched against a? a? | a a a', () => {
         const definition = 'a? a? | a a a'
         expect(parse(definition, 'a')).toBe('a')
         expect(parse(definition, 'a a')).toBe('a a')
         expect(parse(definition, 'a a a')).toBe('a a a')
         expect(parse(definition, 'a a a a')).toBe('')
     })
-    it('parses a a a | a? a?', () => {
+    it('parses and serializes a value matched against a a a | a? a?', () => {
         const definition = 'a a a | a? a?'
         expect(parse(definition, 'a')).toBe('a')
         expect(parse(definition, 'a a')).toBe('a a')
         expect(parse(definition, 'a a a')).toBe('a a a')
         expect(parse(definition, 'a a a a')).toBe('')
     })
-    it('parses [a? && a?] a', () => {
+    it('parses and serializes a value matched against [a? && a?] a', () => {
         const definition = '[a? && a?] a'
         expect(parse(definition, 'a')).toBe('a')
         expect(parse(definition, 'a a')).toBe('a a')
         expect(parse(definition, 'a a a')).toBe('a a a')
         expect(parse(definition, 'a a a a')).toBe('')
     })
-    it('parses [a? || a a] a', () => {
+    it('parses and serializes a value matched against [a? || a a] a', () => {
         const definition = '[a? || a a] a'
         expect(parse(definition, 'a')).toBe('a')
         expect(parse(definition, 'a a')).toBe('a a')
@@ -700,27 +711,27 @@ describe('backtracking', () => {
         expect(parse(definition, 'a a a a')).toBe('a a a a')
         expect(parse(definition, 'a a a a a')).toBe('')
     })
-    it('parses [a? | b] a', () => {
+    it('parses and serializes a value matched against [a? | b] a', () => {
         const definition = '[a? | a a] a'
         expect(parse(definition, 'a')).toBe('a')
         expect(parse(definition, 'a a')).toBe('a a')
         expect(parse(definition, 'a a a')).toBe('a a a')
         expect(parse(definition, 'a a a a')).toBe('')
     })
-    it('parses [a | <length-percentage>] b', () => {
+    it('parses and serializes a value matched against [a | <length-percentage>] b', () => {
         const definition = '[a | <length-percentage>] b'
         expect(parse(definition, '1px a')).toBe('')
         expect(parse(definition, '1px')).toBe('')
         expect(parse(definition, '1px b')).toBe('1px b')
         expect(parse(definition, '1% b')).toBe('1% b')
     })
-    it('parses <length-percentage>? <length-percentage>{2}', () => {
+    it('parses and serializes a value matched against <length-percentage>? <length-percentage>{2}', () => {
         const definition = '<length-percentage>? <length-percentage>{2}'
         expect(parse(definition, '1px')).toBe('')
         expect(parse(definition, '1px 1px')).toBe('1px 1px')
         expect(parse(definition, '1px 1px 1px')).toBe('1px 1px 1px')
     })
-    it('parses <linear-color-stop> a', () => {
+    it('parses and serializes a value matched against <linear-color-stop> a', () => {
         const definition = '<linear-color-stop>, a'
         expect(parse(definition, 'a')).toBe('')
         expect(parse(definition, '1px, a')).toBe('')
@@ -729,14 +740,14 @@ describe('backtracking', () => {
         expect(parse(definition, 'black 1px 1px, a')).toBe('black 1px 1px, a')
     })
     // Complex backtracking (depth: 1)
-    it('parses a | a a | a a a', () => {
+    it('parses and serializes a value matched against a | a a | a a a', () => {
         const definition = 'a | a a | a a a'
         expect(parse(definition, 'a')).toBe('a')
         expect(parse(definition, 'a a')).toBe('a a')
         expect(parse(definition, 'a a a')).toBe('a a a')
         expect(parse(definition, 'a a a a')).toBe('')
     })
-    it('parses a || a a || a a a', () => {
+    it('parses and serializes a value matched against a || a a || a a a', () => {
         const definition = 'a || a a || a a a'
         expect(parse(definition, 'a')).toBe('a')
         expect(parse(definition, 'a a')).toBe('a a')
@@ -746,7 +757,7 @@ describe('backtracking', () => {
         expect(parse(definition, 'a a a a a a')).toBe('a a a a a a')
         expect(parse(definition, 'a a a a a a a')).toBe('')
     })
-    it('parses a && a b && a b c', () => {
+    it('parses and serializes a value matched against a && a b && a b c', () => {
         const definition = 'a && a b && a b c'
         expect(parse(definition, 'a')).toBe('')
         expect(parse(definition, 'a b')).toBe('')
@@ -767,7 +778,7 @@ describe('backtracking', () => {
         expect(parse(definition, 'a a b a b c a')).toBe('')
     })
     // Complex backtracking (depth: 2)
-    it('parses [a | a a | a a a]{2}', () => {
+    it('parses and serializes a value matched against [a | a a | a a a]{2}', () => {
         const definition = '[a | a a | a a a]{2}'
         expect(parse(definition, 'a')).toBe('')
         expect(parse(definition, 'a a')).toBe('a a')
@@ -777,7 +788,7 @@ describe('backtracking', () => {
         expect(parse(definition, 'a a a a a a')).toBe('a a a a a a')
         expect(parse(definition, 'a a a a a a a')).toBe('')
     })
-    it('parses a [a | a a | a a a]', () => {
+    it('parses and serializes a value matched against a [a | a a | a a a]', () => {
         const definition = 'a [a | a a | a a a]'
         expect(parse(definition, 'a')).toBe('')
         expect(parse(definition, 'a a')).toBe('a a')
@@ -785,7 +796,7 @@ describe('backtracking', () => {
         expect(parse(definition, 'a a a a')).toBe('a a a a')
         expect(parse(definition, 'a a a a a')).toBe('')
     })
-    it('parses a [a || a a || a a a]', () => {
+    it('parses and serializes a value matched against a [a || a a || a a a]', () => {
         const definition = 'a [a || a a || a a a]'
         expect(parse(definition, 'a')).toBe('')
         expect(parse(definition, 'a a')).toBe('a a')
@@ -796,7 +807,7 @@ describe('backtracking', () => {
         expect(parse(definition, 'a a a a a a a')).toBe('a a a a a a a')
         expect(parse(definition, 'a a a a a a a a')).toBe('')
     })
-    it('parses a && [a | a a | a a a]', () => {
+    it('parses and serializes a value matched against a && [a | a a | a a a]', () => {
         const definition = 'a && [a | a a | a a a]'
         expect(parse(definition, 'a')).toBe('')
         expect(parse(definition, 'a a')).toBe('a a')
@@ -804,7 +815,7 @@ describe('backtracking', () => {
         expect(parse(definition, 'a a a a')).toBe('a a a a')
         expect(parse(definition, 'a a a a a')).toBe('')
     })
-    it('parses a && [a || a a || a a a]', () => {
+    it('parses and serializes a value matched against a && [a || a a || a a a]', () => {
         const definition = 'a && [a || a a || a a a]'
         expect(parse(definition, 'a')).toBe('')
         expect(parse(definition, 'a a')).toBe('a a')
@@ -815,7 +826,7 @@ describe('backtracking', () => {
         expect(parse(definition, 'a a a a a a a')).toBe('a a a a a a a')
         expect(parse(definition, 'a a a a a a a a')).toBe('')
     })
-    it('parses a || [a | a a | a a a]', () => {
+    it('parses and serializes a value matched against a || [a | a a | a a a]', () => {
         const definition = 'a || [a | a a | a a a]'
         expect(parse(definition, 'a')).toBe('a')
         expect(parse(definition, 'a a')).toBe('a a')
@@ -823,7 +834,7 @@ describe('backtracking', () => {
         expect(parse(definition, 'a a a a')).toBe('a a a a')
         expect(parse(definition, 'a a a a a')).toBe('')
     })
-    it('parses a | [a || a a || a a a]', () => {
+    it('parses and serializes a value matched against a | [a || a a || a a a]', () => {
         const definition = 'a | [a || a a || a a a]'
         expect(parse(definition, 'a')).toBe('a')
         expect(parse(definition, 'a a')).toBe('a a')
@@ -833,7 +844,7 @@ describe('backtracking', () => {
         expect(parse(definition, 'a a a a a a')).toBe('a a a a a a')
         expect(parse(definition, 'a a a a a a a')).toBe('')
     })
-    it('parses [a | a a | a a a] a', () => {
+    it('parses and serializes a value matched against [a | a a | a a a] a', () => {
         const definition = '[a | a a | a a a] a'
         expect(parse(definition, 'a')).toBe('')
         expect(parse(definition, 'a a')).toBe('a a')
@@ -841,7 +852,7 @@ describe('backtracking', () => {
         expect(parse(definition, 'a a a a')).toBe('a a a a')
         expect(parse(definition, 'a a a a a')).toBe('')
     })
-    it('parses [a || a a || a a a] a', () => {
+    it('parses and serializes a value matched against [a || a a || a a a] a', () => {
         const definition = '[a || a a || a a a] a'
         expect(parse(definition, 'a')).toBe('')
         expect(parse(definition, 'a a')).toBe('a a')
@@ -853,7 +864,7 @@ describe('backtracking', () => {
         expect(parse(definition, 'a a a a a a a a')).toBe('')
     })
     // Complex backtracking (depth: 2 + 2)
-    it('parses [a | a a | a a a] [a | a a]', () => {
+    it('parses and serializes a value matched against [a | a a | a a a] [a | a a]', () => {
         const definition = '[a | a a | a a a] [a | a a]'
         expect(parse(definition, 'a')).toBe('')
         expect(parse(definition, 'a a')).toBe('a a')
@@ -863,14 +874,14 @@ describe('backtracking', () => {
         expect(parse(definition, 'a a a a a a')).toBe('')
     })
     // Complex backtracking (depth: 3)
-    it('parses a | a [a | a a]', () => {
+    it('parses and serializes a value matched against a | a [a | a a]', () => {
         const definition = 'a | a [a | a a]'
         expect(parse(definition, 'a')).toBe('a')
         expect(parse(definition, 'a a')).toBe('a a')
         expect(parse(definition, 'a a a')).toBe('a a a')
         expect(parse(definition, 'a a a a')).toBe('')
     })
-    it('parses a [a && [a | a a]]', () => {
+    it('parses and serializes a value matched against a [a && [a | a a]]', () => {
         const definition = 'a [a && [a | a a]]'
         expect(parse(definition, 'a')).toBe('')
         expect(parse(definition, 'a a')).toBe('')
@@ -881,7 +892,7 @@ describe('backtracking', () => {
 })
 describe('comma-separated types', () => {
     // Comma-ellision rules apply
-    it('parses a?, b', () => {
+    it('parses and serializes a value matched against a?, b', () => {
 
         const definition = 'a?, b'
 
@@ -896,7 +907,7 @@ describe('comma-separated types', () => {
         expect(parse(definition, ', b')).toBe('')
         expect(parse(definition, 'a, b,')).toBe('')
     })
-    it('parses a?, a', () => {
+    it('parses and serializes a value matched against a?, a', () => {
 
         const definition = 'a?, a'
 
@@ -907,7 +918,7 @@ describe('comma-separated types', () => {
         expect(parse(definition, ', a')).toBe('')
         expect(parse(definition, 'a a')).toBe('')
     })
-    it('parses a, b?', () => {
+    it('parses and serializes a value matched against a, b?', () => {
 
         const definition = 'a, b?'
 
@@ -919,7 +930,7 @@ describe('comma-separated types', () => {
         expect(parse(definition, 'b')).toBe('')
         expect(parse(definition, 'a b')).toBe('')
     })
-    it('parses a, a?', () => {
+    it('parses and serializes a value matched against a, a?', () => {
 
         const definition = 'a, a?'
 
@@ -930,7 +941,7 @@ describe('comma-separated types', () => {
         expect(parse(definition, ', a')).toBe('')
         expect(parse(definition, 'a a')).toBe('')
     })
-    it('parses a, b?, c', () => {
+    it('parses and serializes a value matched against a, b?, c', () => {
 
         const definition = 'a, b?, c'
 
@@ -944,7 +955,7 @@ describe('comma-separated types', () => {
         expect(parse(definition, 'a b c')).toBe('')
         expect(parse(definition, 'a, , c')).toBe('')
     })
-    it('parses a, a?, a', () => {
+    it('parses and serializes a value matched against a, a?, a', () => {
 
         const definition = 'a, a?, a'
 
@@ -956,7 +967,7 @@ describe('comma-separated types', () => {
         expect(parse(definition, 'a, a,')).toBe('')
         expect(parse(definition, 'a, , a')).toBe('')
     })
-    it('parses a, b?, c?, d', () => {
+    it('parses and serializes a value matched against a, b?, c?, d', () => {
 
         const definition = 'a, b?, c?, d'
 
@@ -973,7 +984,7 @@ describe('comma-separated types', () => {
         expect(parse(definition, 'a, b c, d')).toBe('')
 
     })
-    it('parses a, a?, a?, a', () => {
+    it('parses and serializes a value matched against a, a?, a?, a', () => {
 
         const definition = 'a, a?, a?, a'
 
@@ -990,7 +1001,7 @@ describe('comma-separated types', () => {
         expect(parse(definition, 'a, a, , a, a')).toBe('')
         expect(parse(definition, 'a a a a')).toBe('')
     })
-    it('parses a, [b?, a]', () => {
+    it('parses and serializes a value matched against a, [b?, a]', () => {
 
         const definition = 'a, [b?, a]'
 
@@ -1002,7 +1013,7 @@ describe('comma-separated types', () => {
         expect(parse(definition, 'a b, a')).toBe('')
         expect(parse(definition, 'a, , a')).toBe('')
     })
-    it('parses a, [a?, a]#', () => {
+    it('parses and serializes a value matched against a, [a?, a]#', () => {
 
         const definition = 'a, [a?, a]#'
 
@@ -1016,7 +1027,7 @@ describe('comma-separated types', () => {
         expect(parse(definition, 'a a, a')).toBe('')
         expect(parse(definition, 'a, , a')).toBe('')
     })
-    it('parses [a?, a?,] a', () => {
+    it('parses and serializes a value matched against [a?, a?,] a', () => {
 
         const definition = '[a?, a?,] a'
 
@@ -1029,7 +1040,7 @@ describe('comma-separated types', () => {
         expect(parse(definition, 'a a, a')).toBe('')
         expect(parse(definition, 'a, , a')).toBe('')
     })
-    it('parses a [, a? , a?]', () => {
+    it('parses and serializes a value matched against a [, a? , a?]', () => {
 
         const definition = 'a [, a? , a?]'
 
@@ -1042,7 +1053,7 @@ describe('comma-separated types', () => {
         expect(parse(definition, 'a a, a')).toBe('')
         expect(parse(definition, 'a, a, , a')).toBe('')
     })
-    it('parses [a, && b?,] a', () => {
+    it('parses and serializes a value matched against [a, && b?,] a', () => {
 
         const definition = '[a, && b?,] a'
 
@@ -1057,7 +1068,7 @@ describe('comma-separated types', () => {
         expect(parse(definition, 'a, , a')).toBe('')
         expect(parse(definition, 'a, b, , a')).toBe('')
     })
-    it('parses a [, a && , b?]', () => {
+    it('parses and serializes a value matched against a [, a && , b?]', () => {
 
         const definition = 'a [, a && , b?]'
 
@@ -1072,7 +1083,7 @@ describe('comma-separated types', () => {
         expect(parse(definition, 'a, , a')).toBe('')
         expect(parse(definition, 'a, a, , b')).toBe('')
     })
-    it('parses [a# ,]? a', () => {
+    it('parses and serializes a value matched against [a# ,]? a', () => {
 
         const definition = '[a# ,]? a'
 
@@ -1085,7 +1096,7 @@ describe('comma-separated types', () => {
         expect(parse(definition, 'a a')).toBe('')
     })
     // Comma-ellision rules do not apply
-    it('parses a a?, a', () => {
+    it('parses and serializes a value matched against a a?, a', () => {
 
         const definition = 'a a?, a'
 
@@ -1099,7 +1110,7 @@ describe('comma-separated types', () => {
         expect(parse(definition, 'a, , a')).toBe('')
         expect(parse(definition, 'a a, , a')).toBe('')
     })
-    it('parses a, a? a', () => {
+    it('parses and serializes a value matched against a, a? a', () => {
 
         const definition = 'a, a? a'
 
@@ -1111,7 +1122,7 @@ describe('comma-separated types', () => {
         expect(parse(definition, 'a, , a')).toBe('')
         expect(parse(definition, 'a, a, , a')).toBe('')
     })
-    it('parses a [a?, a]', () => {
+    it('parses and serializes a value matched against a [a?, a]', () => {
 
         const definition = 'a [a?, a]'
 
@@ -1125,7 +1136,7 @@ describe('comma-separated types', () => {
         expect(parse(definition, 'a, , a')).toBe('')
         expect(parse(definition, 'a a, , a')).toBe('')
     })
-    it('parses a [, a? a]', () => {
+    it('parses and serializes a value matched against a [, a? a]', () => {
 
         const definition = 'a [, a? a]'
 
@@ -1136,7 +1147,7 @@ describe('comma-separated types', () => {
         expect(parse(definition, 'a a')).toBe('')
         expect(parse(definition, 'a, , a')).toBe('')
     })
-    it('parses [a a?,] a', () => {
+    it('parses and serializes a value matched against [a a?,] a', () => {
 
         const definition = '[a a?,] a'
 
@@ -1148,7 +1159,7 @@ describe('comma-separated types', () => {
         expect(parse(definition, 'a, , a')).toBe('')
         expect(parse(definition, 'a a, , a')).toBe('')
     })
-    it('parses [a b?, || c b?, || b?,]? d', () => {
+    it('parses and serializes a value matched against [a b?, || c b?, || b?,]? d', () => {
 
         const definition = '[a b?, || c b?, || b?,] d'
 
@@ -1165,7 +1176,7 @@ describe('comma-separated types', () => {
 })
 
 describe('<var()>', () => {
-    it('returns empty string for invalid var() values', () => {
+    it('parses and serializes an invalid value to an empty string', () => {
         const invalid = [
             'var(--)', // `--` is reserved since 2018/07/04
             'var(, --property)',
@@ -1177,26 +1188,21 @@ describe('<var()>', () => {
         ]
         invalid.forEach(input => expect(parse('<var()>', input, true)).toBe(''))
     })
-    it('parses a custom variable to a representation with the expected CSS type(s)', () => {
-        expect(parse('<var()>', 'var(--prop)', true, false)).toEqual({
-            name: 'var',
-            type: new Set(['function', 'var()']),
-            value: createList([
-                {
-                    location: -1,
-                    representation: '--prop',
-                    type: new Set(['ident', 'custom-property-name']),
-                    value: '--prop',
-                },
-                omitted(',', 0),
-                {
-                    location: 0,
-                    omitted: true,
-                    type: new Set(),
-                    value: '<declaration-value>',
-                },
-            ]),
-        })
+    it('parses a valid value to the expected representation', () => {
+        expect(parse('<var()>', 'var(--prop)', true, false)).toEqual(createList(
+            [{
+                name: 'var',
+                type: new Set(['function', 'var()']),
+                value: createList(
+                    [{
+                        location: -1,
+                        representation: '--prop',
+                        type: new Set(['ident', 'custom-property-name']),
+                        value: '--prop',
+                    }],
+                    ''),
+            }],
+            ''))
     })
     it('parses and serializes a custom variable with fallback value(s)', () => {
         expect(parse('<var()>', 'var(--foo, 100px)', true)).toBe('var(--foo, 100px)')
@@ -1216,18 +1222,18 @@ describe('<var()>', () => {
         ]
         invalid.forEach(input => expect(parse('<var()>', input, true)).toBe(input))
     })
-    it('parses and serializes a custom variable case-sensitively', () => {
+    it('parses and serializes case-sensitively', () => {
         expect(parse('<var()>', 'VAr(--PROPerty)', true)).toBe('var(--PROPerty)')
     })
 })
 
 describe('keyword', () => {
-    it('returns empty string for invalid keyword values', () => {
+    it('parses and serializes an invalid value to an empty string', () => {
         const invalid = ['ninitial', 'initiall', '--initial', 'liquid']
         const valid = ['solid']
         invalid.forEach(input => expect(parse('solid', input, valid, true)).toBe(''))
     })
-    it('parses a keyword to a representation with the expected CSS types', () => {
+    it('parses a valid value to the expected representation', () => {
         expect(parse('inherit', 'inherit', true, false)).toEqual({
             representation: 'inherit',
             type: new Set(['ident', 'keyword', 'css-wide-keyword']),
@@ -1249,19 +1255,19 @@ describe('keyword', () => {
     it('parses and serializes predefined keywords', () => {
         expect(parse('solid', 'SOLId')).toBe('solid')
     })
-    it('parses and serializes a keyword defined with a custom variable', () => {
+    it('parses and serializes a value defined with a custom variable', () => {
         expect(parse('solid', 'var(--keyword)', true)).toBe('var(--keyword)')
     })
 })
 describe('<custom-ident>', () => {
-    it('returns empty string for invalid custom identifier values', () => {
+    it('parses and serializes an invalid value to an empty string', () => {
         const invalid = [
             'initial',
             'inherit',
             'unset',
             'default',
             '-',
-            // Invalid ASCII character: !
+            // Invalid identifier character: !
             '!',
             'a!',
             '-!',
@@ -1278,90 +1284,97 @@ describe('<custom-ident>', () => {
         ]
         invalid.forEach(input => expect(parse('<custom-ident>', input)).toBe(''))
     })
-    it('parses a custom identifier to a representation with the expected CSS types', () => {
+    it('parses a valid value to the expected representation', () => {
         expect(parse('<custom-ident>', 'myAnimationName', false, false)).toEqual({
             representation: 'myAnimationName',
             type: new Set(['ident', 'custom-ident']),
             value: 'myAnimationName',
         })
     })
-    it('parses and serializes valid custom identifier values', () => {
+    it('parses and serializes a valid value', () => {
         const valid = [
+            // Valid start character(s)
+            [' '],
             ['_'],
-            ['\\0 \\g', '�g'], // Valid escape sequences
+            ['-a'],
+            ['--'],
+            ['-\\0 \\g', '-�g'],
+            ['\\0 \\g', '�g'],
+            // Valid identifier characters
+            ['_ '],
+            ['__'],
+            ['_0'],
             ['camelIdentifier'],
             ['snake_identifier'],
             ['kebab-identifier'],
-            ['--'],
-            ['--dashed-camelIdentifier'],
-            ['--dashed-kebab-identifier'],
-            ['--kebab-snake_identifier'],
-            ['--\\0 \\g', '--�g'], // Valid escape sequences
+            ['--camelCustomIdentifier'],
+            ['--kebab-custom-identifier'],
+            ['--snake_custom_identifier'],
         ]
         valid.forEach(([input, expected = input]) => expect(parse('<custom-ident>', input)).toBe(expected))
     })
-    it('parses and serializes a custom identifier defined with a custom variable', () => {
+    it('parses and serializes a value defined with a custom variable', () => {
         expect(parse('<custom-ident>', 'var(--identifier)', true)).toBe('var(--identifier)')
     })
 })
 describe('<dashed-ident>', () => {
-    it('returns empty string for invalid dashed identifier values', () => {
+    it('parses and serializes an invalid value to an empty string', () => {
         expect(parse('<dashed-ident>', 'identifier')).toBe('')
     })
-    it('parses a dashed identifier to a representation with the expected CSS types', () => {
-        // TODO: a `<dashed-ident>` should also be a `<custom-ident>` (see CSS Values)
+    it('parses a valid value to the expected representation', () => {
+        // TODO: a <dashed-ident> must also be a <custom-ident> (see CSS Values)
         expect(parse('<dashed-ident>', '--prop', false, false)).toEqual({
             representation: '--prop',
             type: new Set(['ident', /*'custom-ident', */'dashed-ident']),
             value: '--prop',
         })
     })
-    it('parses and serializes a dashed identifier defined with a custom variable', () => {
+    it('parses and serializes a value defined with a custom variable', () => {
         expect(parse('<dashed-ident>', 'var(--dashed-ident)', true)).toBe('var(--dashed-ident)')
     })
 })
 describe('<ndashdigit-ident>', () => {
-    it('returns empty string for invalid n-* identifier', () => {
+    it('parses and serializes an invalid value to an empty string', () => {
         const invalid = ['keyword', '"string"', '1', '1px', '1n-1', 'n-1.1', 'n--1', '-n-1']
         invalid.forEach(input => expect(parse('<ndashdigit-ident>', input)).toBe(''))
     })
-    it('parses a n-* identifier to a representation with the expected CSS types', () => {
+    it('parses a valid value to the expected representation', () => {
         expect(parse('<ndashdigit-ident>', 'n-1', false, false)).toEqual({
             representation: 'n-1',
             type: new Set(['ident', 'ndashdigit-ident']),
             value: 'n-1',
         })
     })
-    it('parses and serializes a valid n-* identifier', () => {
+    it('parses and serializes a valid value', () => {
         expect(parse('<ndashdigit-ident>', 'n-0')).toBe('n-0')
         expect(parse('<ndashdigit-ident>', 'n-1')).toBe('n-1')
     })
-    it('parses and serializes a n-* identifier case-insensitively', () => {
+    it('parses and serializes case-insensitively', () => {
         expect(parse('<ndashdigit-ident>', 'N-1')).toBe('n-1')
     })
 })
 describe('<dashndashdigit-ident>', () => {
-    it('returns empty string for invalid -n-* identifier', () => {
+    it('parses and serializes an invalid value to an empty string', () => {
         const invalid = ['keyword', '"string"', '1', '1px', '-n-1.1', '-n--1', 'n-1']
         invalid.forEach(input => expect(parse('<dashndashdigit-ident>', input)).toBe(''))
     })
-    it('parses a -n-* identifier to a representation with the expected CSS types', () => {
+    it('parses a valid value to the expected representation', () => {
         expect(parse('<dashndashdigit-ident>', '-n-1', false, false)).toEqual({
             representation: '-n-1',
             type: new Set(['ident', 'dashndashdigit-ident']),
             value: '-n-1',
         })
     })
-    it('parses and serializes a valid -n-* identifier', () => {
+    it('parses and serializes a valid value', () => {
         expect(parse('<dashndashdigit-ident>', '-n-0')).toBe('-n-0')
         expect(parse('<dashndashdigit-ident>', '-n-1')).toBe('-n-1')
     })
-    it('parses and serializes a -n-* identifier case-insensitively', () => {
+    it('parses and serializes case-insensitively', () => {
         expect(parse('<dashndashdigit-ident>', '-N-1')).toBe('-n-1')
     })
 })
 describe('<string>', () => {
-    it('returns empty string for invalid or bad string values', () => {
+    it('parses and serializes an invalid value to an empty string', () => {
         const invalid = [
             'unquoted',
             '"string" unquoted',
@@ -1369,7 +1382,7 @@ describe('<string>', () => {
         ]
         invalid.forEach(input => expect(parse('<string>', input)).toBe(''))
     })
-    it('parses a string to a representation with the expected CSS type', () => {
+    it('parses a valid value to the expected representation', () => {
         expect(parse('<string>', '"css"', false, false)).toEqual({
             representation: '"css"',
             type: new Set(['string']),
@@ -1398,12 +1411,12 @@ describe('<string>', () => {
     it('parses and serializes a string wrapped between double quotes', () => {
         expect(parse('<string>', "'string'")).toBe('"string"')
     })
-    it('parses and serializes a string defined with a custom variable', () => {
+    it('parses and serializes a value defined with a custom variable', () => {
         expect(parse('<string>', 'var(--string)', true)).toBe('var(--string)')
     })
 })
 describe('<url>', () => {
-    it('returns empty string for invalid or bad url values', () => {
+    it('parses and serializes an invalid value to an empty string', () => {
         const invalid = [
             'uurl(valid.url)',
             'url(val)id.url)',
@@ -1427,7 +1440,7 @@ describe('<url>', () => {
         ]
         invalid.forEach(input => expect(parse('<url>', input)).toBe(''))
     })
-    it('parses an URL to a representation with the expected CSS type', () => {
+    it('parses a valid value to the expected representation', () => {
         expect(parse('<url>', 'url(img.jpg)', false, false)).toEqual({
             representation: 'url(img.jpg)',
             type: new Set(['url-token', 'url']),
@@ -1473,34 +1486,34 @@ describe('<url>', () => {
         expect(parse('<url>', "url('file.jpg')")).toBe('url("file.jpg")')
         expect(parse('<url>', "src('file.jpg')")).toBe('src("file.jpg")')
     })
-    it('parses and serializes an url defined with custom variable(s)', () => {
+    it('parses and serializes a value defined with a custom variable', () => {
         expect(parse('<url>', 'var(--url)', true)).toBe('var(--url)')
         expect(parse('<url>', 'src(var(--url))', true)).toBe('src(var(--url))')
     })
 })
 
 describe('<zero>', () => {
-    it('returns empty string for invalid zero values', () => {
+    it('parses and serializes an invalid value to an empty string', () => {
         const invalid = ['string', '0px', '0%', 'calc(0)']
         invalid.forEach(input => expect(parse('<zero>', input)).toBe(''))
     })
-    it('parses 0 to a representation with the expected CSS type', () => {
+    it('parses a valid value to the expected representation', () => {
         expect(parse('<zero>', '0', false, false)).toEqual({
             representation: '0',
             type: new Set(['integer', 'zero']),
             value: 0,
         })
     })
-    it('parses and serializes zero', () => {
+    it('parses and serializes a valid value', () => {
         expect(parse('<zero>', '0')).toBe('0')
     })
 })
 describe('<integer>', () => {
-    it('returns empty string for invalid integer values', () => {
+    it('parses and serializes an invalid value to an empty string', () => {
         const invalid = ['string', '1px', '1.1', '.1', '1e-1', '-1', 'calc(1px)']
         invalid.forEach(input => expect(parse('<integer [0,∞]>', input)).toBe(''))
     })
-    it('parses an integer to a representation with the expected CSS type', () => {
+    it('parses a valid value to the expected representation', () => {
         expect(parse('<integer>', '0', false, false)).toEqual({
             representation: '0',
             type: new Set(['integer']),
@@ -1516,16 +1529,16 @@ describe('<integer>', () => {
         expect(parse('<integer>', '1e1')).toBe('10')
         expect(parse('<integer>', '1e+1')).toBe('10')
     })
-    it('parses and serializes an integer defined with a custom variable', () => {
+    it('parses and serializes a value defined with a custom variable', () => {
         expect(parse('<integer>', 'var(--integer)', true)).toBe('var(--integer)')
     })
 })
 describe('<signless-integer>', () => {
-    it('returns empty string for invalid signless integers', () => {
+    it('parses and serializes an invalid value to an empty string', () => {
         const invalid = ['keyword', '"string"', '1.1', '+1.1', '-1.1']
         invalid.forEach(input => expect(parse('<signless-integer>', input)).toBe(''))
     })
-    it('parses a signless integer to a representation with the expected CSS type', () => {
+    it('parses a valid value to the expected representation', () => {
         expect(parse('<signless-integer>', '1', false, false)).toEqual({
             representation: '1',
             type: new Set(['integer', 'signless-integer']),
@@ -1536,16 +1549,16 @@ describe('<signless-integer>', () => {
          * `signless-integer`.
          */
     })
-    it('parses and serializes valid signless integers', () => {
+    it('parses and serializes a valid value', () => {
         expect(parse('<signless-integer>', '1')).toBe('1')
     })
 })
 describe('<signed-integer>', () => {
-    it('returns empty string for invalid signed integer', () => {
+    it('parses and serializes an invalid value to an empty string', () => {
         const invalid = ['keyword', '"string"', '1', '1.1']
         invalid.forEach(input => expect(parse('<signed-integer>', input)).toBe(''))
     })
-    it('parses a signed integer to a representation with the expected CSS type', () => {
+    it('parses a valid value to the expected representation', () => {
         expect(parse('<signed-integer>', '+1', false, false)).toEqual({
             representation: '+1',
             type: new Set(['integer', 'signed-integer']),
@@ -1561,17 +1574,17 @@ describe('<signed-integer>', () => {
          * `signed-integer`.
          */
     })
-    it('parses and serializes valid signed integers', () => {
+    it('parses and serializes a valid value', () => {
         expect(parse('<signed-integer>', '+1')).toBe('1')
         expect(parse('<signed-integer>', '-1')).toBe('-1')
     })
 })
 describe('<number>', () => {
-    it('returns empty string for invalid number values', () => {
+    it('parses and serializes an invalid value to an empty string', () => {
         const invalid = ['string', '1px', '-1', 'calc(1px)']
         invalid.forEach(input => expect(parse('<number [0,∞]>', input)).toBe(''))
     })
-    it('parses a number to a representation with the expected CSS type(s)', () => {
+    it('parses a valid value to the expected representation', () => {
         expect(parse('<number>', '0', false, false)).toEqual({
             representation: '0',
             type: new Set(['integer', 'number']),
@@ -1599,16 +1612,16 @@ describe('<number>', () => {
     it('parses and serializes a number with a trailing decimal 0', () => {
         expect(parse('<number>', '0.10')).toBe('0.1')
     })
-    it('parses and serializes a number defined with a custom variable', () => {
+    it('parses and serializes a value defined with a custom variable', () => {
         expect(parse('<number>', 'var(--number)', true)).toBe('var(--number)')
     })
 })
 describe('<length>', () => {
-    it('returns empty string for invalid length values', () => {
+    it('parses and serializes an invalid value to an empty string', () => {
         const invalid = ['string', '0', '0px', '1', 'px', '1%', '#1px', '1px%', '-1px', 'calc(1)']
         invalid.forEach(input => expect(parse('<length [1,∞]>', input)).toBe(''))
     })
-    it('parses a length to a representation with the expected CSS types', () => {
+    it('parses a valid value to the expected representation', () => {
         expect(parse('<length>', '0', false, false)).toEqual({
             representation: '0',
             type: new Set(['dimension', 'length']),
@@ -1633,20 +1646,20 @@ describe('<length>', () => {
     it('parses and serializes a length with a trailing decimal 0', () => {
         expect(parse('<length>', '0.10px')).toBe('0.1px')
     })
-    it('parses and serializes a length case-insensitively', () => {
+    it('parses and serializes case-insensitively', () => {
         expect(parse('<length>', '1Px')).toBe('1px')
         expect(parse('<length>', '1Q')).toBe('1q')
     })
-    it('parses and serializes a length defined with a custom variable', () => {
+    it('parses and serializes a value defined with a custom variable', () => {
         expect(parse('<length>', 'var(--length)', true)).toBe('var(--length)')
     })
 })
 describe('<percentage>', () => {
-    it('returns empty string for invalid percentage values', () => {
+    it('parses and serializes an invalid value to an empty string', () => {
         const invalid = ['string', '0', '1', '%', '1px', '#1%', '1%%', '-1%', 'calc(1)']
         invalid.forEach(input => expect(parse('<percentage [0,∞]>', input)).toBe(''))
     })
-    it('parses a percentage to a representation with the expected CSS type', () => {
+    it('parses a valid value to the expected representation', () => {
         expect(parse('<percentage>', '0%', false, false)).toEqual({
             representation: '0%',
             type: new Set(['percentage']),
@@ -1671,7 +1684,7 @@ describe('<percentage>', () => {
     it('parses and serializes a percentage with a trailing decimal 0', () => {
         expect(parse('<percentage>', '0.10%')).toBe('0.1%')
     })
-    it('parses and serializes a percentage defined with a custom variable', () => {
+    it('parses and serializes a value defined with a custom variable', () => {
         expect(parse('<percentage>', 'var(--percentage)', true)).toBe('var(--percentage)')
     })
 })
@@ -1679,11 +1692,11 @@ describe('<length-percentage>', () => {
     it.todo('test')
 })
 describe('<alpha-value>', () => {
-    it('returns empty string for invalid alpha-value values', () => {
+    it('parses and serializes an invalid value to an empty string', () => {
         const invalid = ['string', '%', '1px', '1%%', 'calc(1px)', 'calc(0.5 + 50%)']
         invalid.forEach(input => expect(parse('<alpha-value>', input)).toBe(''))
     })
-    it('parses an alpha value to a representation with the expected CSS types', () => {
+    it('parses a valid value to the expected representation', () => {
         expect(parse('<alpha-value>', '0', false, false)).toEqual({
             representation: '0',
             type: new Set(['integer', 'number', 'alpha-value']),
@@ -1721,16 +1734,16 @@ describe('<alpha-value>', () => {
         expect(parse('<alpha-value>', '-1')).toBe('-1')
         expect(parse('<alpha-value>', '1.5')).toBe('1.5')
     })
-    it('parses and serializes an alpha value defined with a custom variable', () => {
+    it('parses and serializes a value defined with a custom variable', () => {
         expect(parse('<alpha-value>', 'var(--alpha)', true)).toBe('var(--alpha)')
     })
 })
 describe('<angle>', () => {
-    it('returns empty string for invalid angle values', () => {
+    it('parses and serializes an invalid value to an empty string', () => {
         const invalid = ['string', '0', '0deg', '1', 'deg', '1px', '#1deg', '1degg', 'calc(1)']
         invalid.forEach(input => expect(parse('<angle [1,∞]>', input)).toBe(''))
     })
-    it('parses an angle to a representation with the expected CSS types', () => {
+    it('parses a valid value to the expected representation', () => {
         expect(parse('<angle>', '0', false, false)).toEqual({
             representation: '0',
             type: new Set(['dimension', 'angle']),
@@ -1755,19 +1768,19 @@ describe('<angle>', () => {
     it('parses and serializes an angle with a trailing decimal 0', () => {
         expect(parse('<angle>', '0.10deg')).toBe('0.1deg')
     })
-    it('parses and serializes an angle case-insensitively', () => {
+    it('parses and serializes case-insensitively', () => {
         expect(parse('<angle>', '1DEg')).toBe('1deg')
     })
-    it('parses and serializes an angle defined with a custom variable', () => {
+    it('parses and serializes a value defined with a custom variable', () => {
         expect(parse('<angle>', 'var(--angle)', true)).toBe('var(--angle)')
     })
 })
 describe('<time>', () => {
-    it('returns empty string for invalid time values', () => {
+    it('parses and serializes an invalid value to an empty string', () => {
         const invalid = ['string', '0', '1', 's', '1px', '#1s', '1ss', '-1s', 'calc(1)']
         invalid.forEach(input => expect(parse('<time [0,∞]>', input)).toBe(''))
     })
-    it('parses a time to a representation with the expected CSS types', () => {
+    it('parses a valid value to the expected representation', () => {
         expect(parse('<time>', '1s', false, false)).toEqual({
             representation: '1s',
             type: new Set(['dimension', 'time']),
@@ -1786,19 +1799,19 @@ describe('<time>', () => {
     it('parses and serializes a time with a trailing decimal 0', () => {
         expect(parse('<time>', '0.10s')).toBe('0.1s')
     })
-    it('parses and serializes a time case-insensitively', () => {
+    it('parses and serializes case-insensitively', () => {
         expect(parse('<time>', '1Ms')).toBe('1ms')
     })
-    it('parses and serializes a time defined with a custom variable', () => {
+    it('parses and serializes a value defined with a custom variable', () => {
         expect(parse('<time>', 'var(--time)', true)).toBe('var(--time)')
     })
 })
 describe('<n-dimension>', () => {
-    it('returns empty string for invalid n dimension', () => {
+    it('parses and serializes an invalid value to an empty string', () => {
         const invalid = ['keyword', '"string"', '1px', '1n-', '1.1n', 'calc(1n)']
         invalid.forEach(input => expect(parse('<n-dimension>', input)).toBe(''))
     })
-    it('parses a n dimension to a representation with the expected CSS types', () => {
+    it('parses a valid value to the expected representation', () => {
         expect(parse('<n-dimension>', '1n', false, false)).toEqual({
             representation: '1n',
             type: new Set(['dimension', 'n-dimension']),
@@ -1806,21 +1819,21 @@ describe('<n-dimension>', () => {
             value: 1,
         })
     })
-    it('parses and serializes a valid n dimension', () => {
+    it('parses and serializes a valid value', () => {
         expect(parse('<n-dimension>', '1n')).toBe('1n')
         expect(parse('<n-dimension>', '-1n')).toBe('-1n')
         expect(parse('<n-dimension>', '0n')).toBe('0n')
     })
-    it('parses and serializes a n dimension case-insensitively', () => {
+    it('parses and serializes case-insensitively', () => {
         expect(parse('<n-dimension>', '1N')).toBe('1n')
     })
 })
 describe('<ndash-dimension>', () => {
-    it('returns empty string for invalid n- dimension', () => {
+    it('parses and serializes an invalid value to an empty string', () => {
         const invalid = ['keyword', '"string"', '1px', '1n', '1.1n-', 'calc(1n-)']
         invalid.forEach(input => expect(parse('<ndash-dimension>', input)).toBe(''))
     })
-    it('parses a n- dimension to a representation with the expected CSS types', () => {
+    it('parses a valid value to the expected representation', () => {
         expect(parse('<ndash-dimension>', '1n-', false, false)).toEqual({
             representation: '1n-',
             type: new Set(['dimension', 'ndash-dimension']),
@@ -1828,21 +1841,21 @@ describe('<ndash-dimension>', () => {
             value: 1,
         })
     })
-    it('parses and serializes a valid n- dimension', () => {
+    it('parses and serializes a valid value', () => {
         expect(parse('<ndash-dimension>', '1n-')).toBe('1n-')
         expect(parse('<ndash-dimension>', '-1n-')).toBe('-1n-')
         expect(parse('<ndash-dimension>', '0n-')).toBe('0n-')
     })
-    it('parses and serializes a n- dimension case-insensitively', () => {
+    it('parses and serializes case-insensitively', () => {
         expect(parse('<ndash-dimension>', '1N-')).toBe('1n-')
     })
 })
 describe('<ndashdigit-dimension>', () => {
-    it('returns empty string for invalid n-* dimension', () => {
+    it('parses and serializes an invalid value to an empty string', () => {
         const invalid = ['keyword', '"string"', '1px', '1n-', '1.1n-1', 'calc(1n-1)']
         invalid.forEach(input => expect(parse('<ndashdigit-dimension>', input)).toBe(''))
     })
-    it('parses a n-* dimension to a representation with the expected CSS types', () => {
+    it('parses a valid value to the expected representation', () => {
         expect(parse('<ndashdigit-dimension>', '1n-1', false, false)).toEqual({
             representation: '1n-1',
             type: new Set(['dimension', 'ndashdigit-dimension']),
@@ -1850,50 +1863,48 @@ describe('<ndashdigit-dimension>', () => {
             value: 1,
         })
     })
-    it('parses and serializes a valid n-* dimension', () => {
+    it('parses and serializes a valid value', () => {
         expect(parse('<ndashdigit-dimension>', '1n-1')).toBe('1n-1')
         expect(parse('<ndashdigit-dimension>', '-1n-1')).toBe('-1n-1')
         expect(parse('<ndashdigit-dimension>', '0n-1')).toBe('0n-1')
     })
-    it('parses and serializes a n-* dimension case-insensitively', () => {
+    it('parses and serializes case-insensitively', () => {
         expect(parse('<ndashdigit-dimension>', '1N-1')).toBe('1n-1')
     })
 })
 describe('<urange>', () => {
-    it('returns empty string for invalid unicode ranges', () => {
+    it('parses and serializes an invalid value to an empty string', () => {
         const invalid = [
             'keyword',
             '"string"',
             '1',
-            // U+...
+            // `U+` must appear first
             'U-0',
             'U0',
-            // 0 < hex digits < 7
+            // Start/end code points must have 0 < hexadecimal digits < 7
             'U+',
             'U+0000001',
             'U+-1',
             'U+0-',
+            'U+-0',
             'U+0-0000001',
-            // ? should appear last
+            // `?` must appear last
             'U+?0',
             'U+0?-1',
             'U+0-?0',
-            // Invalid start/end value separator
+            // Start/end code points must be separated with an hyphen
             'U+0+1',
-            // Missing start/end value
-            'U+0-',
-            // Unconsumed code points
+            // Start/end code points must be hexadecimal digits
             'U+0g',
             'U+0-0g',
-            // Not > U+10FFFF
+            // Start/end code points must be lower than 10FFFF (maximum allowed code point)
             'U+110001',
+            // Start code point must be lower or equal to end code point
             'U+1-0',
-            // Start > End
-            'U-0',
         ]
         invalid.forEach(input => expect(parse('<urange>', input)).toBe(''))
     })
-    it('parses a unicode range to a representation with the expected CSS type', () => {
+    it('parses a valid value to the expected representation', () => {
         expect(parse('<urange>', 'U+0-f', false, false)).toEqual({
             end: 15,
             representation: 'U+0-f',
@@ -1904,15 +1915,15 @@ describe('<urange>', () => {
 })
 
 describe('<calc()>', () => {
-    it('returns empty string for invalid calc() values', () => {
+    it('parses and serializes an invalid value to an empty string', () => {
 
-        // Whitespace is required on both sides of the + and - operators
+        // Whitespace is required on both sides of `+` and `-`
         expect(parse('<number>', 'calc(1+ 1)')).toBe('')
         expect(parse('<number>', 'calc(1 +1)')).toBe('')
         expect(parse('<number>', 'calc(1- 1)')).toBe('')
         expect(parse('<number>', 'calc(1 -1)')).toBe('')
 
-        // Maximum 32 `<calc-value>` or nested calculations
+        // Maximum 32 <calc-value> or nested calculations
         expect(parse('<number>', `calc(${[...Array(32)].reduce(n => `${n} + 1`, '1')})`)).toBe('')
         expect(parse('<number>', `calc(${[...Array(33)].reduce(n => `calc(1 + ${n})`, '1')})`)).toBe('')
         expect(parse('<number>', `calc(${[...Array(33)].reduce(n => `1 + (${n})`, '1')})`)).toBe('')
@@ -1944,12 +1955,12 @@ describe('<calc()>', () => {
         expect(parse('<length>', 'calc(1px - 0)')).toBe('')
         expect(parse('<length>', 'calc(0 - 1px)')).toBe('')
 
-        // A number and a percentage can not be combined
+        // <number> and <percentage> can not be combined
         expect(parse('<number> | <percentage>', 'calc(1 + 1%)')).toBe('')
         expect(parse('<number> | <percentage>', 'calc(1 - 1%)')).toBe('')
     })
-    it('parses calc() to a representation with the expected CSS types', () => {
-        // Raw calculations
+    it('parses a valid value to the expected representation', () => {
+        // Unresolved calculations
         expect(parse('<calc()>', 'calc(1)', false, false)).toEqual({
             name: 'calc',
             type: new Set(['function', 'calc()']),
@@ -2143,7 +2154,7 @@ describe('<calc()>', () => {
         expect(parse('<number>', 'calc(Infinity)')).toBe('calc(infinity)')
         expect(parse('<number>', 'calc(1 / 0)')).toBe('calc(infinity)')
         expect(parse('<length>', 'calc(1px / 0)')).toBe('calc(infinity * 1px)')
-        // NaN should resolve to Infinity when produced in a top-level calculation
+        // NaN must resolve to infinity when produced in a top-level calculation
         expect(parse('<number>', 'calc(nan)')).toBe('calc(infinity)')
         expect(parse('<number>', 'calc(0 / 0)')).toBe('calc(infinity)')
         expect(parse('<number>', 'calc(calc(NaN))')).toBe('calc(infinity)')
@@ -2157,7 +2168,7 @@ describe('<calc()>', () => {
         expect(parse('<number>', 'calc((1 + 2) * 3)')).toBe('calc(9)')
         expect(parse('<number>', 'calc(1 + 2 * (3 + 4))')).toBe('calc(15)')
         expect(parse('<number>', 'calc(calc(1 + 2) * 3 * calc(2 - 1))')).toBe('calc(9)')
-        // Nested math functions simplified to a single numeric value
+        // Nested math functions resolved to a single numeric value
         expect(parse('<number>', 'calc(min(1, 2) + max(1, 2))')).toBe('calc(3)')
         expect(parse('<length>', 'calc(min(1px))')).toBe('calc(1px)')
         expect(parse('<length>', 'calc(min(1em))')).toBe('calc(1em)')
@@ -2171,13 +2182,13 @@ describe('<calc()>', () => {
         expect(parse('<integer>', 'calc(1 / 2)')).toBe('calc(0.5)')
         expect(parse('<integer [0,∞]>', 'calc(1 * -1)')).toBe('calc(-1)')
     })
-    it('parses and serializes a calculation function defined with custom variable(s)', () => {
+    it('parses and serializes a value defined with a custom variable', () => {
         expect(parse('<number>', 'calc(var(--number) + 1)', true)).toBe('calc(var(--number) + 1)')
     })
 })
 describe('<min()>, <max()>', () => {
-    it('returns empty string for invalid min() or max() values', () => {
-        // Maximum 32 `<calc-sum>` arguments
+    it('parses and serializes an invalid value to an empty string', () => {
+        // Maximum 32 <calc-sum> arguments
         expect(parse('<number>', `min(${[...Array(33)].map(() => 1).join(', ')})`)).toBe('')
         // Type mismatch
         expect(parse('<number>', 'min(1, keyword)')).toBe('')
@@ -2190,10 +2201,10 @@ describe('<min()>, <max()>', () => {
         expect(parse('<percentage>', 'min(1px)')).toBe('')
         // "Unitless 0" <length> is not supported in math functions
         expect(parse('<length>', 'min(0)')).toBe('')
-        // A number and a percentage can not be combined
+        // <number> and <percentage> can not be combined
         expect(parse('<number> | <percentage>', 'min(1%, 1)')).toBe('')
     })
-    it('parses min() to a representation with the expected CSS types', () => {
+    it('parses a valid value to the expected representation', () => {
         expect(parse('<min()>', 'min(1)', false, false)).toEqual({
             name: 'min',
             type: new Set(['function', 'min()']),
@@ -2210,7 +2221,7 @@ describe('<min()>, <max()>', () => {
             }], ','),
         })
     })
-    it('parses and serializes min() or max() with valid arguments', () => {
+    it('parses and serializes a valid value', () => {
         expect(parse('<number>', 'min(0)')).toBe('calc(0)')
         expect(parse('<number>', 'min(0, 1)')).toBe('calc(0)')
         expect(parse('<number>', 'max(0, 1)')).toBe('calc(1)')
@@ -2224,12 +2235,12 @@ describe('<min()>, <max()>', () => {
         expect(parse('<length>', 'min(1em, 1px)')).toBe('min(1em, 1px)')
         expect(parse('<length-percentage>', 'min(1px, 1%)')).toBe('min(1%, 1px)')
     })
-    it('parses and serializes min() or max() defined with custom variable(s)', () => {
+    it('parses and serializes a value defined with custom variable(s)', () => {
         expect(parse('<integer>', 'min(var(--integer), 1)', true)).toBe('min(var(--integer), 1)')
     })
 })
 describe('<clamp()>', () => {
-    it('returns empty string for invalid clamp() values', () => {
+    it('parses and serializes an invalid value to an empty string', () => {
         expect(parse('<number>', 'clamp(1, 1)')).toBe('')
         expect(parse('<number>', 'clamp(1, 1, 1, 1)')).toBe('')
         // Type mismatch
@@ -2239,10 +2250,10 @@ describe('<clamp()>', () => {
         expect(parse('<number>', 'clamp(1, 2, 3px)')).toBe('')
         // "Unitless 0" <length> is not supported in math functions
         expect(parse('<length>', 'clamp(0, 1px, 2px)')).toBe('')
-        // A number and a percentage can not be combined
+        // <number> and <percentage> can not be combined
         expect(parse('<number> | <percentage>', 'clamp(0px, 1%, 2px)')).toBe('')
     })
-    it('parses and serializes clamp() with valid arguments', () => {
+    it('parses and serializes a valid value', () => {
         expect(parse('<number>', 'clamp(0, 1, 2)')).toBe('calc(1)')
         expect(parse('<number>', 'clamp(0, 2, 1)')).toBe('calc(1)')
         expect(parse('<number>', 'clamp(1, 0, 2)')).toBe('calc(1)')
@@ -2252,13 +2263,13 @@ describe('<clamp()>', () => {
         expect(parse('<length>', 'clamp(0px, 1em, 2px)')).toBe('clamp(0px, 1em, 2px)')
         expect(parse('<length-percentage>', 'clamp(1px, 1%, 2px)')).toBe('clamp(1px, 1%, 2px)')
     })
-    it('parses and serializes clamp() defined with custom variable(s)', () => {
+    it('parses and serializes a value defined with a custom variable', () => {
         expect(parse('<number>', 'clamp(var(--min), var(--number), var(--max))', true))
             .toBe('clamp(var(--min), var(--number), var(--max))')
     })
 })
 describe('<round()>', () => {
-    it('returns empty string for invalid round() values', () => {
+    it('parses and serializes an invalid value to an empty string', () => {
         expect(parse('<number>', 'round(nearest)')).toBe('')
         expect(parse('<number>', 'round(nearest, 1)')).toBe('')
         expect(parse('<number>', 'round(nearest, 1, 1, 1)')).toBe('')
@@ -2270,11 +2281,11 @@ describe('<round()>', () => {
         expect(parse('<length>', 'round(1, 2px)')).toBe('')
         // "Unitless 0" <length> is not supported in math functions
         expect(parse('<length>', 'round(0 + 1px, 2px)')).toBe('')
-        // A number and a percentage can not be combined
+        // <number> and <percentage> can not be combined
         expect(parse('<number> | <percentage>', 'round(1, 1%)')).toBe('')
         expect(parse('<number> | <percentage>', 'round(1%, 1)')).toBe('')
     })
-    it('parses and serializes round() with valid arguments', () => {
+    it('parses and serializes a valid value', () => {
         expect(parse('<length>', 'round(1.1px, 1px)')).toBe('calc(1px)')
         expect(parse('<length>', 'round(1px, 2px)')).toBe('calc(2px)')
         expect(parse('<length>', 'round(up, 1.1px, 1px)')).toBe('calc(2px)')
@@ -2334,13 +2345,13 @@ describe('<round()>', () => {
         expect(parse('<integer>', 'round(down, 0, infinity)')).toBe('calc(0)')
         expect(parse('<integer>', 'round(down, 1, infinity)')).toBe('calc(0)')
     })
-    it('parses and serializes round() defined with custom variable(s)', () => {
+    it('parses and serializes a value defined with a custom variable', () => {
         expect(parse('<number>', 'round(var(--strategy), var(--number), var(--step))', true))
             .toBe('round(var(--strategy), var(--number), var(--step))')
     })
 })
 describe('<mod()>', () => {
-    it('returns empty string for invalid mod() values', () => {
+    it('parses and serializes an invalid value to an empty string', () => {
         expect(parse('<number>', 'mod(1)')).toBe('')
         expect(parse('<number>', 'mod(1, 1, 1)')).toBe('')
         // Type mismatch
@@ -2351,11 +2362,11 @@ describe('<mod()>', () => {
         expect(parse('<length>', 'mod(1, 2px)')).toBe('')
         // "Unitless 0" <length> is not supported in math functions
         expect(parse('<length>', 'mod(0 + 1px, 2px)')).toBe('')
-        // A number and a percentage can not be combined
+        // <number> and <percentage> can not be combined
         expect(parse('<number> | <percentage>', 'mod(1, 1%)')).toBe('')
         expect(parse('<number> | <percentage>', 'mod(1%, 1)')).toBe('')
     })
-    it('parses and serializes mod() with valid arguments', () => {
+    it('parses and serializes a valid value', () => {
         expect(parse('<length>', 'mod(3px, 2px)')).toBe('calc(1px)')
         expect(parse('<length>', 'mod(3px, -2px)')).toBe('calc(-1px)')
         expect(parse('<length>', 'mod(-3px, 2px)')).toBe('calc(1px)')
@@ -2376,13 +2387,13 @@ describe('<mod()>', () => {
         expect(parse('<integer>', 'mod(-1, -infinity)')).toBe('calc(-1)')
         expect(parse('<integer>', 'mod(1, infinity)')).toBe('calc(1)')
     })
-    it('parses and serializes mod() defined with custom variable(s)', () => {
+    it('parses and serializes a value defined with a custom variable', () => {
         expect(parse('<number>', 'mod(var(--number), var(--modulus))', true))
             .toBe('mod(var(--number), var(--modulus))')
     })
 })
 describe('<rem()>', () => {
-    it('returns empty string for invalid rem() values', () => {
+    it('parses and serializes an invalid value to an empty string', () => {
         expect(parse('<number>', 'rem(1)')).toBe('')
         expect(parse('<number>', 'rem(1, 1, 1)')).toBe('')
         // Type mismatch
@@ -2393,11 +2404,11 @@ describe('<rem()>', () => {
         expect(parse('<length>', 'rem(1, 2px)')).toBe('')
         // "Unitless 0" <length> is not supported in math functions
         expect(parse('<length>', 'rem(0 + 1px, 2px)')).toBe('')
-        // A number and a percentage can not be combined
+        // <number> and <percentage> can not be combined
         expect(parse('<number> | <percentage>', 'rem(1, 1%)')).toBe('')
         expect(parse('<number> | <percentage>', 'rem(1%, 1)')).toBe('')
     })
-    it('parses and serializes rem() with valid arguments', () => {
+    it('parses and serializes a valid value', () => {
         expect(parse('<length>', 'rem(3px, 2px)')).toBe('calc(1px)')
         expect(parse('<length>', 'rem(3px, -2px)')).toBe('calc(1px)')
         expect(parse('<length>', 'rem(-3px, 2px)')).toBe('calc(-1px)')
@@ -2417,13 +2428,13 @@ describe('<rem()>', () => {
         expect(parse('<integer>', 'rem(-1, -infinity)')).toBe('calc(-1)')
         expect(parse('<integer>', 'rem(-1, infinity)')).toBe('calc(-1)')
     })
-    it('parses and serializes rem() defined with custom variable(s)', () => {
+    it('parses and serializes a value defined with a custom variable', () => {
         expect(parse('<number>', 'rem(var(--number), var(--divisor))', true))
             .toBe('rem(var(--number), var(--divisor))')
     })
 })
 describe('<sin()>', () => {
-    it('returns empty string for invalid sin() values', () => {
+    it('parses and serializes an invalid value to an empty string', () => {
         expect(parse('<number>', 'sin(1, 1)')).toBe('')
         // Type mismatch
         expect(parse('<number>', 'sin(keyword)')).toBe('')
@@ -2432,7 +2443,7 @@ describe('<sin()>', () => {
         expect(parse('<number>', 'sin(1 + 1deg)')).toBe('')
         expect(parse('<number>', 'sin(1 - 1deg)')).toBe('')
     })
-    it('parses and serializes sin() with a valid argument', () => {
+    it('parses and serializes a valid value', () => {
         expect(parse('<number>', 'sin(45)')).toBe(`calc(${+Math.sin(45).toFixed(6)})`)
         expect(parse('<number>', 'sin(45deg)')).toBe(`calc(${+Math.sin(toRadians(45)).toFixed(6)})`)
     })
@@ -2442,7 +2453,7 @@ describe('<sin()>', () => {
     })
 })
 describe('<cos()>', () => {
-    it('returns empty string for invalid cos() values', () => {
+    it('parses and serializes an invalid value to an empty string', () => {
         expect(parse('<number>', 'cos(1, 1)')).toBe('')
         // Type mismatch
         expect(parse('<number>', 'cos(keyword)')).toBe('')
@@ -2451,13 +2462,13 @@ describe('<cos()>', () => {
         expect(parse('<number>', 'cos(1 + 1deg)')).toBe('')
         expect(parse('<number>', 'cos(1 - 1deg)')).toBe('')
     })
-    it('parses and serializes cos() with a valid argument', () => {
+    it('parses and serializes a valid value', () => {
         expect(parse('<number>', 'cos(45)')).toBe(`calc(${+Math.cos(45).toFixed(6)})`)
         expect(parse('<number>', 'cos(45deg)')).toBe(`calc(${+Math.cos(toRadians(45)).toFixed(6)})`)
     })
 })
 describe('<tan()>', () => {
-    it('returns empty string for invalid tan() values', () => {
+    it('parses and serializes an invalid value to an empty string', () => {
         expect(parse('<number>', 'tan(1, 1)')).toBe('')
         // Type mismatch
         expect(parse('<number>', 'tan(keyword)')).toBe('')
@@ -2466,7 +2477,7 @@ describe('<tan()>', () => {
         expect(parse('<number>', 'tan(1 + 1deg)')).toBe('')
         expect(parse('<number>', 'tan(1 - 1deg)')).toBe('')
     })
-    it('parses and serializes tan() with a valid argument', () => {
+    it('parses and serializes a valid value', () => {
         expect(parse('<number>', 'tan(45)')).toBe(`calc(${+Math.tan(45).toFixed(6)})`)
         expect(parse('<number>', 'tan(45deg)')).toBe('calc(1)')
     })
@@ -2483,7 +2494,7 @@ describe('<tan()>', () => {
     })
 })
 describe('<asin()>', () => {
-    it('returns empty string for invalid asin() values', () => {
+    it('parses and serializes an invalid value to an empty string', () => {
         expect(parse('<angle>', 'asin(1, 1)')).toBe('')
         // Type mismatch
         expect(parse('<angle>', 'asin(keyword)')).toBe('')
@@ -2491,12 +2502,12 @@ describe('<asin()>', () => {
         expect(parse('<angle>', 'asin(1px)')).toBe('')
         expect(parse('<angle>', 'asin(1%)')).toBe('')
     })
-    it('parses and serializes asin() with a valid argument', () => {
+    it('parses and serializes a valid value', () => {
         expect(parse('<angle>', 'asin(0.5)')).toBe('calc(30deg)')
     })
 })
 describe('<acos()>', () => {
-    it('returns empty string for invalid acos() values', () => {
+    it('parses and serializes an invalid value to an empty string', () => {
         expect(parse('<angle>', 'acos(1, 1)')).toBe('')
         // Type mismatch
         expect(parse('<angle>', 'acos(keyword)')).toBe('')
@@ -2504,12 +2515,12 @@ describe('<acos()>', () => {
         expect(parse('<angle>', 'acos(1px)')).toBe('')
         expect(parse('<angle>', 'acos(1%)')).toBe('')
     })
-    it('parses and serializes acos() with a valid argument', () => {
+    it('parses and serializes a valid value', () => {
         expect(parse('<angle>', 'acos(0.5)')).toBe('calc(60deg)')
     })
 })
 describe('<atan()>', () => {
-    it('returns empty string for invalid atan() values', () => {
+    it('parses and serializes an invalid value to an empty string', () => {
         expect(parse('<angle>', 'atan(1, 1)')).toBe('')
         // Type mismatch
         expect(parse('<angle>', 'atan(keyword)')).toBe('')
@@ -2517,12 +2528,12 @@ describe('<atan()>', () => {
         expect(parse('<angle>', 'atan(1px)')).toBe('')
         expect(parse('<angle>', 'atan(1%)')).toBe('')
     })
-    it('parses and serializes atan() with a valid argument', () => {
+    it('parses and serializes a valid value', () => {
         expect(parse('<angle>', 'atan(0.5)')).toBe(`calc(${+toDegrees(Math.atan(0.5)).toFixed(6)}deg)`)
     })
 })
 describe('<atan2()>', () => {
-    it('returns empty string for invalid atan2() values', () => {
+    it('parses and serializes an invalid value to an empty string', () => {
         expect(parse('<angle>', 'atan2(1)')).toBe('')
         expect(parse('<angle>', 'atan2(1, 1, 1)')).toBe('')
         // Type mismatch
@@ -2530,14 +2541,14 @@ describe('<atan2()>', () => {
         expect(parse('<angle>', 'atan2(1, 1px)')).toBe('')
         expect(parse('<angle>', 'atan2(1px, 1deg)')).toBe('')
     })
-    it('parses and serializes atan2() with valid arguments', () => {
+    it('parses and serializes a valid value', () => {
         expect(parse('<angle>', 'atan2(1, 1)')).toBe(`calc(${+toDegrees(Math.atan2(1, 1)).toFixed(6)}deg)`)
         expect(parse('<angle>', 'atan2(1px, 1px)')).toBe(`calc(${+toDegrees(Math.atan2(1, 1)).toFixed(6)}deg)`)
         expect(parse('<angle>', 'atan2(100px, 1cm)')).toBe(`calc(${+toDegrees(Math.atan2(100, 96 / 2.54)).toFixed(6)}deg)`)
     })
 })
 describe('<pow()>', () => {
-    it('returns empty string for invalid pow() values', () => {
+    it('parses and serializes an invalid value to an empty string', () => {
         expect(parse('<number>', 'pow(1, 1, 1)')).toBe('')
         // Type mismatch
         expect(parse('<number>', 'pow(1, keyword)')).toBe('')
@@ -2546,24 +2557,24 @@ describe('<pow()>', () => {
         expect(parse('<number>', 'pow(1%, 1)')).toBe('')
         expect(parse('<number>', 'pow(1, 1%)')).toBe('')
     })
-    it('parses and serializes pow()> with valid arguments', () => {
+    it('parses and serializes a valid value', () => {
         expect(parse('<number>', 'pow(4, 2)')).toBe('calc(16)')
     })
 })
 describe('<sqrt()>', () => {
-    it('returns empty string for invalid sqrt() values', () => {
+    it('parses and serializes an invalid value to an empty string', () => {
         expect(parse('<number>', 'sqrt(1, 1)')).toBe('')
         // Type mismatch
         expect(parse('<number>', 'sqrt(keyword)')).toBe('')
         expect(parse('<number>', 'sqrt(1px)')).toBe('')
         expect(parse('<number>', 'sqrt(1%)')).toBe('')
     })
-    it('parses and serializes sqrt() with a valid argument', () => {
+    it('parses and serializes a valid value', () => {
         expect(parse('<number>', 'sqrt(4)')).toBe('calc(2)')
     })
 })
 describe('<hypot()>', () => {
-    it('returns empty string for invalid hypot() values', () => {
+    it('parses and serializes an invalid value to an empty string', () => {
         expect(parse('<number>', 'hypot(1, keyword)')).toBe('')
         expect(parse('<number>', 'hypot(1, 1px)')).toBe('')
         expect(parse('<number>', 'hypot(1, 1%)')).toBe('')
@@ -2571,12 +2582,12 @@ describe('<hypot()>', () => {
         expect(parse('<length>', 'hypot(1, 1)')).toBe('')
         expect(parse('<percentage>', 'hypot(1, 1)')).toBe('')
     })
-    it('parses and serializes hypot() with valid arguments', () => {
+    it('parses and serializes a valid value', () => {
         expect(parse('<number>', 'hypot(3, 4)')).toBe('calc(5)')
     })
 })
 describe('<log()>', () => {
-    it('returns empty string for invalid log() values', () => {
+    it('parses and serializes an invalid value to an empty string', () => {
         expect(parse('<number>', 'log(1, 1, 1)')).toBe('')
         // Type mismatch
         expect(parse('<number>', 'log(keyword)')).toBe('')
@@ -2586,46 +2597,46 @@ describe('<log()>', () => {
         expect(parse('<number>', 'log(1, 1px)')).toBe('')
         expect(parse('<number>', 'log(1, 1%)')).toBe('')
     })
-    it('parses and serializes log() with valid arguments', () => {
+    it('parses and serializes a valid value', () => {
         expect(parse('<number>', 'log(e)')).toBe('calc(1)')
         expect(parse('<number>', 'log(8, 2)')).toBe('calc(3)')
     })
 })
 describe('<exp()>', () => {
-    it('returns empty string for invalid exp() values', () => {
+    it('parses and serializes an invalid value to an empty string', () => {
         expect(parse('<number>', 'exp(1, 1)')).toBe('')
         // Type mismatch
         expect(parse('<number>', 'exp(keyword)')).toBe('')
         expect(parse('<number>', 'exp(1px)')).toBe('')
         expect(parse('<number>', 'exp(1%)')).toBe('')
     })
-    it('parses and serializes exp() with a valid argument', () => {
+    it('parses and serializes a valid value', () => {
         expect(parse('<number>', 'exp(1)')).toBe(`calc(${Math.E.toFixed(6)})`)
     })
 })
 describe('<abs()>', () => {
-    it('returns empty string for invalid abs() values', () => {
+    it('parses and serializes an invalid value to an empty string', () => {
         expect(parse('<number>', 'abs(keyword)')).toBe('')
         // Type mismatch
         expect(parse('<number>', 'abs(1px)')).toBe('')
         expect(parse('<length>', 'abs(1)')).toBe('')
         expect(parse('<percentage>', 'abs(1)')).toBe('')
     })
-    it('parses and serializes abs() with a valid argument', () => {
+    it('parses and serializes a valid value', () => {
         expect(parse('<number>', 'abs(-1)')).toBe('calc(1)')
         expect(parse('<number>', 'abs(-infinity)')).toBe('calc(infinity)')
         expect(parse('<length>', 'abs(-1px)')).toBe('calc(1px)')
     })
 })
 describe('<sign()>', () => {
-    it('returns empty string for invalid sign() values', () => {
+    it('parses and serializes an invalid value to an empty string', () => {
         expect(parse('<number>', 'sign(keyword)')).toBe('')
         // Type mismatch
         expect(parse('<length>', 'sign(1px)')).toBe('')
         expect(parse('<length>', 'sign(1)')).toBe('')
         expect(parse('<percentage>', 'sign(1)')).toBe('')
     })
-    it('parses and serializes sign() with a valid argument', () => {
+    it('parses and serializes a valid value', () => {
         expect(parse('<number>', 'sign(-2)')).toBe('calc(-1)')
         expect(parse('<number>', 'sign(-infinity)')).toBe('calc(-1)')
         expect(parse('<number>', 'sign(2px)')).toBe('calc(1)')
@@ -2633,7 +2644,7 @@ describe('<sign()>', () => {
 })
 
 describe('<color>', () => {
-    it('returns empty string for invalid color values', () => {
+    it('parses and serializes an invalid value to an empty string', () => {
         const invalid = [
             'invalid',
             '#ffz',
@@ -2663,7 +2674,7 @@ describe('<color>', () => {
         ]
         invalid.forEach(input => expect(parse('<color>', input)).toBe(''))
     })
-    it('parses a color to a representation with the expected CSS types', () => {
+    it('parses a valid value to the expected representation', () => {
         expect(parse('<color>', 'red', false, false)).toEqual({
             representation: 'red',
             type: new Set(['ident', 'keyword', 'named-color', 'absolute-color-base', 'color']),
@@ -2688,7 +2699,7 @@ describe('<color>', () => {
             ]),
         })
     })
-    it('parses and serializes a color case-insensitively', () => {
+    it('parses and serializes case-insensitively', () => {
         expect(parse('<color>', 'RED')).toBe('red')
         expect(parse('<color>', 'RGb(0, 0, 0)')).toBe('rgb(0, 0, 0)')
     })
@@ -2716,11 +2727,11 @@ describe('<color>', () => {
         expect(parse('<color>', 'rgba(245.5, 245.5, 0, 50.1%)')).toBe('rgba(246, 246, 0, 0.5)')
         expect(parse('<color>', 'rgba(245.5, 245.5, 0, 49.9%)')).toBe('rgba(246, 246, 0, 0.498)')
     })
-    it('parses and serializes a color defined with math function(s)', () => {
+    it('parses and serializes a value defined with a math function', () => {
         expect(parse('<color>', 'rgb(calc(255), min(0, 255), max(0, 255))')).toBe('rgb(255, 0, 255)')
         expect(parse('<color>', 'hsl(calc(300deg), min(0%, 100%), max(0%, 50%))')).toBe('rgb(128, 128, 128)')
     })
-    it('parses and serializes a color defined with custom variable(s)', () => {
+    it('parses and serializes a value defined with a custom variable', () => {
         expect(parse('<color>', 'rgb(var(--red', true)).toBe('rgb(var(--red')
         expect(parse('<color>', 'hsl(var(--red', true)).toBe('hsl(var(--red')
         expect(parse('<color>', 'rgb(var(--red), 0, 0, var(--alpha))', true)).toBe('rgb(var(--red), 0, 0, var(--alpha))')
@@ -2731,7 +2742,7 @@ describe('<image>', () => {
     it.todo('tests')
 })
 describe('<position>', () => {
-    it('returns empty string for invalid position values', () => {
+    it('parses and serializes an invalid value to an empty string', () => {
         const invalid = [
             'side',
             '1',
@@ -2789,16 +2800,16 @@ describe('<position>', () => {
         expect(parse('<position>', 'right 1px bottom 1px')).toBe('right 1px bottom 1px')
         expect(parse('<position>', 'left 1px bottom 10%')).toBe('left 1px bottom 10%')
     })
-    it('serializes keywords to lower case', () => {
+    it('parses and serializes case-insensitively', () => {
         expect(parse('<position>', 'LEFt 0%')).toBe('left 0%')
     })
-    it('parses and serializes a position defined with custom variable(s)', () => {
+    it('parses and serializes a value defined with a custom variable', () => {
         expect(parse('<position>', 'var(--position)', true)).toBe('var(--position)')
         expect(parse('<position>', 'top var(--position)', true)).toBe('top var(--position)')
     })
 })
 describe('<basic-shape>', () => {
-    it('returns empty string for invalid basic shape values', () => {
+    it('parses and serializes an invalid value to an empty string', () => {
         const invalid = [
             'ccircle()',
             'circle())',
@@ -2837,8 +2848,7 @@ describe('<basic-shape>', () => {
         ]
         invalid.forEach(value => expect(parse('<basic-shape>', value)).toBe(''))
     })
-    it('parses and serializes valid basic shape values', () => {
-        // [input, expected = input]
+    it('parses and serializes a valid value', () => {
         const valid = [
             ['circle()', 'circle(at center center)'],
             ['circle(1px)', 'circle(1px at center center)'],
@@ -2863,8 +2873,7 @@ describe('<basic-shape>', () => {
         ]
         valid.forEach(([input, expected = input]) => expect(parse('<basic-shape>', input)).toBe(expected))
     })
-    it('parses and serializes a basic shape defined with math function(s)', () => {
-        // [input, expected = input]
+    it('parses and serializes a value defined with a math function', () => {
         const input = [
             ['circle(calc(25% * 2) at calc(50% * 2))', 'circle(calc(50%) at calc(100%) center)'],
             ['ellipse(calc(25px * 2) calc(25px * 2) at calc(25px * 2))', 'ellipse(calc(50px) calc(50px) at calc(50px) center)'],
@@ -2873,7 +2882,7 @@ describe('<basic-shape>', () => {
         ]
         input.forEach(([value, expected = value]) => expect(parse('<basic-shape>', value)).toBe(expected))
     })
-    it('parses and serializes a basic shape defined with custom variable(s)', () => {
+    it('parses and serializes a valud defined with a custom variable', () => {
         const input = [
             'var(--shape)',
             'circle(var(--radius))',
@@ -2887,7 +2896,7 @@ describe('<basic-shape>', () => {
     })
 })
 describe('<gradient>', () => {
-    it('returns empty string for invalid gradient values', () => {
+    it('parses and serializes an invalid value to an empty string', () => {
         const invalid = [
             'string',
             '1',
@@ -2927,7 +2936,7 @@ describe('<gradient>', () => {
         ]
         invalid.forEach(input => expect(parse('<gradient>', input)).toBe(''))
     })
-    it('parses and serializes a conic gradient with valid arguments', () => {
+    it('parses and serializes a valid conic gradient value', () => {
         [
             ['conic-gradient(red, cyan)', 'conic-gradient(at center center, red, cyan)'],
             ['CONIc-gradient(red, cyan)', 'conic-gradient(at center center, red, cyan)'],
@@ -2956,7 +2965,7 @@ describe('<gradient>', () => {
             ['conic-gradient(red 0deg 180deg)', 'conic-gradient(at center center, red 0deg, red 180deg)'],
         ].forEach(([input, expected]) => expect(parse('<gradient>', input)).toBe(expected))
     })
-    it('parses and serializes a linear gradient with valid arguments', () => {
+    it('parses and serializes a valid linear gradient value', () => {
         [
             ['linear-gradient(red, cyan)', 'linear-gradient(red, cyan)'],
             ['LINEAr-gradient(red, cyan)', 'linear-gradient(red, cyan)'],
@@ -2980,7 +2989,7 @@ describe('<gradient>', () => {
             ['linear-gradient(red 0% 50%)', 'linear-gradient(red 0%, red 50%)'],
         ].forEach(([input, expected]) => expect(parse('<gradient>', input)).toBe(expected))
     })
-    it('parses and serializes a radial gradient with valid arguments', () => {
+    it('parses and serializes a valid radial gradient value', () => {
         [
             ['radial-gradient(red, cyan)', 'radial-gradient(at center center, red, cyan)'],
             ['RADIAl-gradient(red, cyan)', 'radial-gradient(at center center, red, cyan)'],
@@ -3017,7 +3026,7 @@ describe('<gradient>', () => {
             ['radial-gradient(red 0% 50%)', 'radial-gradient(at center center, red 0%, red 50%)'],
         ].forEach(([input, expected]) => expect(parse('<gradient>', input)).toBe(expected))
     })
-    it('parses and serializes a gradient defined with math function(s)', () => {
+    it('parses and serializes a value defined with a math function', () => {
         [
             [
                 'conic-gradient(from calc(0deg) at calc(50%), red calc(5% * 2) calc(50% * 2), calc(25% * 2), cyan)',
@@ -3045,7 +3054,7 @@ describe('<gradient>', () => {
             ],
         ].forEach(([input, expected]) => expect(parse('<gradient>', input)).toBe(expected))
     })
-    it('parses and serializes a gradient defined with custom variable(s)', () => {
+    it('parses and serializes a value defined with a custom variable', () => {
         [
             'conic-gradient(var(--config))',
             'linear-gradient(var(--config))',
@@ -3054,44 +3063,8 @@ describe('<gradient>', () => {
     })
 })
 
-describe('<declaration>', () => {
-    it('returns empty string for invalid declarations', () => {
-        const invalid = [
-            'color; red',
-            'color: ',
-            'color: ;',
-            'color:: red',
-            'color: red;',
-        ]
-        invalid.forEach(input => expect(parse('<declaration>', input)).toBe(''))
-    })
-    it('parses a supported declaration to a representation with the expected CSS type', () => {
-        expect(parse('<declaration>', 'color: green !important', false, false)).toEqual({
-            important: true,
-            name: 'color',
-            type: new Set(['declaration']),
-            value: {
-                representation: 'green',
-                type: new Set(['ident', 'keyword', 'named-color', 'absolute-color-base', 'color']),
-                value: 'green',
-            },
-        })
-    })
-    it('parses and serializes a declaration for a custom property', () => {
-        const input = '--custom: green'
-        expect(parse('<declaration>', input, false)).toBe(input)
-    })
-    it('parses and serializes a declaration of a custom variable', () => {
-        const input = 'color: var(--custom)'
-        expect(parse('<declaration>', input, false)).toBe(input)
-    })
-    it('parses and serializes a declaration of a CSS wide keyword', () => {
-        const input = 'color: initial'
-        expect(parse('<declaration>', input, false)).toBe(input)
-    })
-})
 describe('<selector-list>', () => {
-    it('returns empty string for invalid selector values', () => {
+    it('parses and serializes an invalid value to an empty string', () => {
         const invalid = [
             '"string"',
             '1px',
@@ -3123,7 +3096,7 @@ describe('<selector-list>', () => {
             // Invalid pseudo-element name
             '::hover',
             '::not',
-            // Invalid pseudo-element data structure
+            // Invalid functional pseudo-class name
             '::hover()',
             '::marker()',
             '::not()',
@@ -3148,7 +3121,7 @@ describe('<selector-list>', () => {
         ]
         invalid.forEach(input => expect(parse('<selector-list>', input)).toBe(''))
     })
-    it('parses a selector list to a representation with the expected CSS types', () => {
+    it('parses a valid value to the expected representation', () => {
         const classSelector = list([
             { location: -1, type: new Set(['delimiter']), value: '.' },
             { location: 0, representation: 'class', type: new Set(['ident', 'ident-token']), value: 'class' },
@@ -3168,7 +3141,7 @@ describe('<selector-list>', () => {
             ',',
             new Set(['complex-selector-list', 'selector-list'])))
     })
-    it('parses and serializes valid selectors', () => {
+    it('parses and serializes a valid value', () => {
         const valid = [
             // No extra whitespace
             ['#id.class[*|attr^=value]:hover > [attr=value]::before'],
@@ -3197,12 +3170,12 @@ describe('<selector-list>', () => {
             ['::before::marker'],
             ['::first-letter::postfix'],
             ['::first-letter::prefix'],
-            // Special parsing of `<forgiving-selector-list>`
+            // Special parsing of <forgiving-selector-list>
             [':is(, valid, 0, #valid, undeclared|*, .valid, ::before, :hover)', ':is(valid, #valid, .valid, :hover)'],
             [':where(, valid, 0, #valid, undeclared|*, .valid, ::before, :hover)', ':where(valid, #valid, .valid, :hover)'],
-            // Special parsing of `<forgiving-relative-selector-list>`
+            // Special parsing of <forgiving-relative-selector-list>
             [':has(, valid, 0, #valid, undeclared|*, .valid, ::before, :hover)', ':has(valid, #valid, .valid, ::before, :hover)'],
-            // Special parsing of `<an+b>`
+            // Special parsing of <an+b>
             [':nth-child(even)', ':nth-child(2n)'],
             [':nth-child(odd)', ':nth-child(2n+1)'],
             [':nth-child(1)'],
@@ -3243,6 +3216,42 @@ describe('<media-query>', () => {
     it.todo('parses (color) to a representation with the expected properties')
     it.todo('parses (aspect-ratio: 4/3) to a representation with the expected properties')
     it.todo('parses (width < 1px) to a representation with the expected properties')
+})
+describe('<declaration>', () => {
+    it('parses and serializes an invalid value to an empty string', () => {
+        const invalid = [
+            'color; red',
+            'color: ',
+            'color: ;',
+            'color:: red',
+            'color: red;',
+        ]
+        invalid.forEach(input => expect(parse('<declaration>', input)).toBe(''))
+    })
+    it('parses a valid value to the expected representation', () => {
+        expect(parse('<declaration>', 'color: green !important', false, false)).toEqual({
+            important: true,
+            name: 'color',
+            type: new Set(['declaration']),
+            value: {
+                representation: 'green',
+                type: new Set(['ident', 'keyword', 'named-color', 'absolute-color-base', 'color']),
+                value: 'green',
+            },
+        })
+    })
+    it('parses and serializes a declaration for a custom property', () => {
+        const input = '--custom: green'
+        expect(parse('<declaration>', input)).toBe(input)
+    })
+    it('parses and serializes a declaration of a custom variable', () => {
+        const input = 'color: var(--custom)'
+        expect(parse('<declaration>', input)).toBe(input)
+    })
+    it('parses and serializes a declaration of a CSS wide keyword', () => {
+        const input = 'color: initial'
+        expect(parse('<declaration>', input)).toBe(input)
+    })
 })
 
 describe.skip('(WIP) CSSValue', () => {

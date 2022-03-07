@@ -1,5 +1,5 @@
 
-// https://drafts.csswg.org/cssom/#the-css.escape()-method
+// https://drafts.csswg.org/cssom/#namespacedef-css
 // `interface` replaces `namespace` which is not supported by `webidl2js` yet
 [Exposed=Window]
 interface CSS {

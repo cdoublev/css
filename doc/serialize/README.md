@@ -1,7 +1,7 @@
 
 # Serialization to the shortest representation
 
-The procedure to serialize a CSS value defines that *component values can be omitted or replaced with a shorter representation without changing the meaning of the value* but initial values should not (always) be filtered out from a shorthand value otherwise it would be empty if all longhands are specified to their initial values, and it can not be replaced by `initial` because some shorthands have an initial value that is not equal to the concatenation of each initial longhand value.
+The procedure to serialize a CSS value defines that *component values can be omitted or replaced with a shorter representation without changing the meaning of the value* but initial values must not (always) be filtered out from a shorthand value otherwise it would be empty if all longhands are specified to their initial values, and it can not be replaced by `initial` because some shorthands have an initial value that is not equal to the concatenation of each initial longhand value.
 
 TODO: add a note about the general state of the different browser behaviors regarding this rule, a link to the HTML test pages to get a view at the different outputs, and the "master" rule of this library (always stick to the specification, then adapat to user agents when they all have the same behavior).
 

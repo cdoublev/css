@@ -1,5 +1,5 @@
 
-// https://drafts.css-houdini.org/css-properties-values-api/#csspropertyrule
+// https://drafts.css-houdini.org/css-properties-values-api-1/#csspropertyrule
 [Exposed=Window]
 interface CSSPropertyRule : CSSRule {
     readonly attribute CSSOMString name;
