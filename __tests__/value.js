@@ -87,16 +87,9 @@ function keyword(value, location = -1, position) {
     }
     return match
 }
-function omitted(definition, location, position) {
+function omitted(definition, location = -1, position) {
     const node = parseDefinition(definition)
-    const value = createOmitted(node)
-    if (location !== undefined) {
-        value.location = location
-    }
-    if (position !== undefined) {
-        value.position = position
-    }
-    return value
+    return createOmitted(node, location, position)
 }
 function list(components = [], separator = ' ', location = -1, position) {
     const list = createList(components, separator)
@@ -213,7 +206,7 @@ describe('repeated types', () => {
     })
     it('parses a value matched against a? to the expected representation', () => {
         const definition = 'a?'
-        expect(parse(definition, '', false, false)).toEqual(omitted('a'))
+        expect(parse(definition, '', false, false)).toEqual(omitted('a?'))
         expect(parse(definition, 'a', false, false)).toEqual(keyword('a'))
     })
     it('parses and serializes a value matched against a*', () => {
@@ -341,7 +334,7 @@ describe('repeated types', () => {
     })
     it('parses a value matched against [a? b?] to the expected representation', () => {
         const definition = '[a? b?]'
-        expect(parse(definition, '', false, false)).toEqual(createList([omitted('a', -1), omitted('b', -1)]))
+        expect(parse(definition, '', false, false)).toEqual(createList([omitted('a'), omitted('b')]))
         expect(parse(definition, 'a', false, false)).toEqual(createList([keyword('a'), omitted('b', 0)]))
         expect(parse(definition, 'a b', false, false)).toEqual(createList([keyword('a'), keyword('b', 0)]))
     })
@@ -1255,7 +1248,7 @@ describe('keyword', () => {
     it('parses and serializes predefined keywords', () => {
         expect(parse('solid', 'SOLId')).toBe('solid')
     })
-    it('parses and serializes a value defined with a custom variable', () => {
+    it('parses and serializes a value defined with a <var()>', () => {
         expect(parse('solid', 'var(--keyword)', true)).toBe('var(--keyword)')
     })
 })
@@ -1313,7 +1306,7 @@ describe('<custom-ident>', () => {
         ]
         valid.forEach(([input, expected = input]) => expect(parse('<custom-ident>', input)).toBe(expected))
     })
-    it('parses and serializes a value defined with a custom variable', () => {
+    it('parses and serializes a value defined with a <var()>', () => {
         expect(parse('<custom-ident>', 'var(--identifier)', true)).toBe('var(--identifier)')
     })
 })
@@ -1329,7 +1322,7 @@ describe('<dashed-ident>', () => {
             value: '--prop',
         })
     })
-    it('parses and serializes a value defined with a custom variable', () => {
+    it('parses and serializes a value defined with a <var()>', () => {
         expect(parse('<dashed-ident>', 'var(--dashed-ident)', true)).toBe('var(--dashed-ident)')
     })
 })
@@ -1411,7 +1404,7 @@ describe('<string>', () => {
     it('parses and serializes a string wrapped between double quotes', () => {
         expect(parse('<string>', "'string'")).toBe('"string"')
     })
-    it('parses and serializes a value defined with a custom variable', () => {
+    it('parses and serializes a value defined with a <var()>', () => {
         expect(parse('<string>', 'var(--string)', true)).toBe('var(--string)')
     })
 })
@@ -1486,7 +1479,7 @@ describe('<url>', () => {
         expect(parse('<url>', "url('file.jpg')")).toBe('url("file.jpg")')
         expect(parse('<url>', "src('file.jpg')")).toBe('src("file.jpg")')
     })
-    it('parses and serializes a value defined with a custom variable', () => {
+    it('parses and serializes a value defined with a <var()>', () => {
         expect(parse('<url>', 'var(--url)', true)).toBe('var(--url)')
         expect(parse('<url>', 'src(var(--url))', true)).toBe('src(var(--url))')
     })
@@ -1529,7 +1522,7 @@ describe('<integer>', () => {
         expect(parse('<integer>', '1e1')).toBe('10')
         expect(parse('<integer>', '1e+1')).toBe('10')
     })
-    it('parses and serializes a value defined with a custom variable', () => {
+    it('parses and serializes a value defined with a <var()>', () => {
         expect(parse('<integer>', 'var(--integer)', true)).toBe('var(--integer)')
     })
 })
@@ -1612,7 +1605,7 @@ describe('<number>', () => {
     it('parses and serializes a number with a trailing decimal 0', () => {
         expect(parse('<number>', '0.10')).toBe('0.1')
     })
-    it('parses and serializes a value defined with a custom variable', () => {
+    it('parses and serializes a value defined with a <var()>', () => {
         expect(parse('<number>', 'var(--number)', true)).toBe('var(--number)')
     })
 })
@@ -1650,7 +1643,7 @@ describe('<length>', () => {
         expect(parse('<length>', '1Px')).toBe('1px')
         expect(parse('<length>', '1Q')).toBe('1q')
     })
-    it('parses and serializes a value defined with a custom variable', () => {
+    it('parses and serializes a value defined with a <var()>', () => {
         expect(parse('<length>', 'var(--length)', true)).toBe('var(--length)')
     })
 })
@@ -1684,7 +1677,7 @@ describe('<percentage>', () => {
     it('parses and serializes a percentage with a trailing decimal 0', () => {
         expect(parse('<percentage>', '0.10%')).toBe('0.1%')
     })
-    it('parses and serializes a value defined with a custom variable', () => {
+    it('parses and serializes a value defined with a <var()>', () => {
         expect(parse('<percentage>', 'var(--percentage)', true)).toBe('var(--percentage)')
     })
 })
@@ -1734,7 +1727,7 @@ describe('<alpha-value>', () => {
         expect(parse('<alpha-value>', '-1')).toBe('-1')
         expect(parse('<alpha-value>', '1.5')).toBe('1.5')
     })
-    it('parses and serializes a value defined with a custom variable', () => {
+    it('parses and serializes a value defined with a <var()>', () => {
         expect(parse('<alpha-value>', 'var(--alpha)', true)).toBe('var(--alpha)')
     })
 })
@@ -1771,7 +1764,7 @@ describe('<angle>', () => {
     it('parses and serializes case-insensitively', () => {
         expect(parse('<angle>', '1DEg')).toBe('1deg')
     })
-    it('parses and serializes a value defined with a custom variable', () => {
+    it('parses and serializes a value defined with a <var()>', () => {
         expect(parse('<angle>', 'var(--angle)', true)).toBe('var(--angle)')
     })
 })
@@ -1802,7 +1795,7 @@ describe('<time>', () => {
     it('parses and serializes case-insensitively', () => {
         expect(parse('<time>', '1Ms')).toBe('1ms')
     })
-    it('parses and serializes a value defined with a custom variable', () => {
+    it('parses and serializes a value defined with a <var()>', () => {
         expect(parse('<time>', 'var(--time)', true)).toBe('var(--time)')
     })
 })
@@ -2145,9 +2138,12 @@ describe('<calc()>', () => {
         expect(parse('<percentage>', 'calc(100 * 1%)')).toBe('calc(100%)')
         expect(parse('<percentage>', 'calc(100% / 1)')).toBe('calc(100%)')
     })
-    it('parses and serializes calc() operands as a percentage relative to another type', () => {
+    it('parses and serializes calc() operands as a type-percentage mixed type', () => {
+        expect(parse('<length-percentage>', 'calc(1px)')).toBe('calc(1px)')
         expect(parse('<length-percentage>', 'calc(1%)')).toBe('calc(1%)')
+        expect(parse('<length> | <percentage>', 'calc(1px)')).toBe('calc(1px)')
         expect(parse('<length> | <percentage>', 'calc(1%)')).toBe('calc(1%)')
+        expect(parse('<number> | <percentage>', 'calc(1)')).toBe('calc(1)')
         expect(parse('<number> | <percentage>', 'calc(100%)')).toBe('calc(1)')
     })
     it('parses and serializes calc() that resolves to an infinite number or not to a number', () => {
@@ -2182,7 +2178,7 @@ describe('<calc()>', () => {
         expect(parse('<integer>', 'calc(1 / 2)')).toBe('calc(0.5)')
         expect(parse('<integer [0,∞]>', 'calc(1 * -1)')).toBe('calc(-1)')
     })
-    it('parses and serializes a value defined with a custom variable', () => {
+    it('parses and serializes a value defined with a <var()>', () => {
         expect(parse('<number>', 'calc(var(--number) + 1)', true)).toBe('calc(var(--number) + 1)')
     })
 })
@@ -2235,7 +2231,7 @@ describe('<min()>, <max()>', () => {
         expect(parse('<length>', 'min(1em, 1px)')).toBe('min(1em, 1px)')
         expect(parse('<length-percentage>', 'min(1px, 1%)')).toBe('min(1%, 1px)')
     })
-    it('parses and serializes a value defined with custom variable(s)', () => {
+    it('parses and serializes a value defined with a <var()>', () => {
         expect(parse('<integer>', 'min(var(--integer), 1)', true)).toBe('min(var(--integer), 1)')
     })
 })
@@ -2263,7 +2259,7 @@ describe('<clamp()>', () => {
         expect(parse('<length>', 'clamp(0px, 1em, 2px)')).toBe('clamp(0px, 1em, 2px)')
         expect(parse('<length-percentage>', 'clamp(1px, 1%, 2px)')).toBe('clamp(1px, 1%, 2px)')
     })
-    it('parses and serializes a value defined with a custom variable', () => {
+    it('parses and serializes a value defined with a <var()>', () => {
         expect(parse('<number>', 'clamp(var(--min), var(--number), var(--max))', true))
             .toBe('clamp(var(--min), var(--number), var(--max))')
     })
@@ -2345,7 +2341,7 @@ describe('<round()>', () => {
         expect(parse('<integer>', 'round(down, 0, infinity)')).toBe('calc(0)')
         expect(parse('<integer>', 'round(down, 1, infinity)')).toBe('calc(0)')
     })
-    it('parses and serializes a value defined with a custom variable', () => {
+    it('parses and serializes a value defined with a <var()>', () => {
         expect(parse('<number>', 'round(var(--strategy), var(--number), var(--step))', true))
             .toBe('round(var(--strategy), var(--number), var(--step))')
     })
@@ -2387,7 +2383,7 @@ describe('<mod()>', () => {
         expect(parse('<integer>', 'mod(-1, -infinity)')).toBe('calc(-1)')
         expect(parse('<integer>', 'mod(1, infinity)')).toBe('calc(1)')
     })
-    it('parses and serializes a value defined with a custom variable', () => {
+    it('parses and serializes a value defined with a <var()>', () => {
         expect(parse('<number>', 'mod(var(--number), var(--modulus))', true))
             .toBe('mod(var(--number), var(--modulus))')
     })
@@ -2428,7 +2424,7 @@ describe('<rem()>', () => {
         expect(parse('<integer>', 'rem(-1, -infinity)')).toBe('calc(-1)')
         expect(parse('<integer>', 'rem(-1, infinity)')).toBe('calc(-1)')
     })
-    it('parses and serializes a value defined with a custom variable', () => {
+    it('parses and serializes a value defined with a <var()>', () => {
         expect(parse('<number>', 'rem(var(--number), var(--divisor))', true))
             .toBe('rem(var(--number), var(--divisor))')
     })
@@ -2646,31 +2642,18 @@ describe('<sign()>', () => {
 describe('<color>', () => {
     it('parses and serializes an invalid value to an empty string', () => {
         const invalid = [
-            'invalid',
+            // Invalid <hex-color>
             '#ffz',
             '#1',
             '#12',
             '#12345',
             '#1234567',
             '#123456789',
-            'rg(0, 0, 0)',
-            'rgbo(0, 0, 0)',
-            'rgb(0, 0)',
+            // Invalid legacy color syntax
             'rgb(0, 0 0)',
-            'rgb(0%, 0, 0)',
-            'rgb(0, 1deg, 1px)',
-            'rgba(0, 1deg, 1px, invalid)',
-            'rgba(0 0 0 0)',
-            'rgba(0, 0, 0 / 0)',
-            'hs(0, 0, 0)',
-            'hslo(0, 0, 0)',
-            'hsl(0, 0)',
-            'hsl(0, 0 0)',
-            'hsl(0%, 0, 0)',
-            'hsl(0, 1deg, 1px)',
-            'hsla(0, 1deg, 1px, invalid)',
-            'hsla(0 0 0 0)',
-            'hsla(0, 0, 0 / 0)',
+            'rgb(0 0 0 0)',
+            'rgb(0, 0, 0 / 0)',
+            'hwb(0, 0, 0, 0)',
         ]
         invalid.forEach(input => expect(parse('<color>', input)).toBe(''))
     })
@@ -2695,43 +2678,218 @@ describe('<color>', () => {
                     { location: 3, representation: '0', type: new Set(['integer', 'number']), value: 0 },
                 ], ',', -1),
                 omitted(',', 6),
-                omitted('<alpha-value>', 6),
+                omitted('<alpha-value> | none', 6),
             ]),
         })
     })
-    it('parses and serializes case-insensitively', () => {
-        expect(parse('<color>', 'RED')).toBe('red')
-        expect(parse('<color>', 'RGb(0, 0, 0)')).toBe('rgb(0, 0, 0)')
-    })
-    it('parses and serializes a color defined as an hexadecimal value to rgb()', () => {
+    it('parses and serializes <hex-color> to legacy <rgb()> or <rgba()>', () => {
         expect(parse('<color>', '#F00')).toBe('rgb(255, 0, 0)')
+        expect(parse('<color>', '#0f0f')).toBe('rgb(0, 255, 0)')
         expect(parse('<color>', '#0f06')).toBe('rgba(0, 255, 0, 0.4)')
         expect(parse('<color>', '#0000ff')).toBe('rgb(0, 0, 255)')
         expect(parse('<color>', '#ff00ffff')).toBe('rgb(255, 0, 255)')
         expect(parse('<color>', '#ff00ff66')).toBe('rgba(255, 0, 255, 0.4)')
     })
-    it('parses and serializes a color defined as hsl() to rgb()', () => {
-        expect(parse('<color>', 'hsl(0, 1%, 2%)')).toBe('rgb(5, 5, 5)')
+    it('parses and serializes <rgb()> or <rgba()> to legacy <rgb()> or <rgba()>', () => {
+        // To legacy <rgb()> or <rgba()> depending on <alpha-value>
+        expect(parse('<color>', 'rgb(0 0 0)')).toBe('rgb(0, 0, 0)')
+        expect(parse('<color>', 'rgb(0 0 0 / 0)')).toBe('rgba(0, 0, 0, 0)')
+        expect(parse('<color>', 'rgb(0 0 0 / 1)')).toBe('rgb(0, 0, 0)')
+        expect(parse('<color>', 'rgba(0 0 0)')).toBe('rgb(0, 0, 0)')
+        expect(parse('<color>', 'rgba(0 0 0 / 0)')).toBe('rgba(0, 0, 0, 0)')
+        expect(parse('<color>', 'rgba(0 0 0 / 1)')).toBe('rgb(0, 0, 0)')
+        // From legacy color syntax
+        expect(parse('<color>', 'rgb(0, 0, 0)')).toBe('rgb(0, 0, 0)')
+        expect(parse('<color>', 'rgb(0, 0, 0, 0)')).toBe('rgba(0, 0, 0, 0)')
+        expect(parse('<color>', 'rgb(0, 0, 0, 1)')).toBe('rgb(0, 0, 0)')
+        expect(parse('<color>', 'rgba(0, 0, 0)')).toBe('rgb(0, 0, 0)')
+        expect(parse('<color>', 'rgba(0, 0, 0, 0)')).toBe('rgba(0, 0, 0, 0)')
+        expect(parse('<color>', 'rgba(0, 0, 0, 1)')).toBe('rgb(0, 0, 0)')
+        // Out of range arguments
+        expect(parse('<color>', 'rgb(-1 0 0 / -1)')).toBe('rgba(0, 0, 0, 0)')
+        expect(parse('<color>', 'rgb(256 0 0 / 2)')).toBe('rgb(255, 0, 0)')
+        // Map <percentage> to <number>
+        expect(parse('<color>', 'rgb(-1% 0% 0% / -1%)')).toBe('rgba(0, 0, 0, 0)')
+        expect(parse('<color>', 'rgb(101% 100% 100% / 101%)')).toBe('rgb(255, 255, 255)')
+        // Map `none` to `0`
+        expect(parse('<color>', 'rgb(none 0 0 / none)')).toBe('rgba(0, 0, 0, 0)')
+        expect(parse('<color>', 'rgb(none 0% 0%)')).toBe('rgb(0, 0, 0)')
+        // Math function
+        expect(parse('<color>', 'rgb(calc(-1) 0 0 / calc(-1))')).toBe('rgba(0, 0, 0, 0)')
+        expect(parse('<color>', 'rgb(calc(256) 0 0 / calc(2))')).toBe('rgb(255, 0, 0)')
+        expect(parse('<color>', 'rgb(calc(-1%) 0% 0% / calc(-1%))')).toBe('rgba(0, 0, 0, 0)')
+        expect(parse('<color>', 'rgb(calc(101%) 0% 0% / calc(101%))')).toBe('rgb(255, 0, 0)')
+        // Precision (browser conformance: 8 bit integers)
+        expect(parse('<color>', 'rgb(127.499 0 0 / 0.498)')).toBe('rgba(127, 0, 0, 0.498)')
+        expect(parse('<color>', 'rgb(127.501 0 0 / 0.499)')).toBe('rgba(128, 0, 0, 0.498)')
+        expect(parse('<color>', 'rgb(0 0 0 / 0.501)')).toBe('rgba(0, 0, 0, 0.5)')
+        expect(parse('<color>', 'rgb(49.9% 50.1% 0% / 49.9%)')).toBe('rgba(127, 128, 0, 0.498)')
+        expect(parse('<color>', 'rgb(0.501 0.499 0 / 50.1%)')).toBe('rgba(1, 0, 0, 0.5)')
     })
-    it('parses and serializes a color defined as hsla() to rgb()', () => {
-        expect(parse('<color>', 'hsla(0, 1%, 2%, 0.5)')).toBe('rgba(5, 5, 5, 0.5)')
+    it('parses and serializes <hsl()> or <hsla()> to legacy <rgb()> or <rgba()>', () => {
+        // To legacy <rgb()> or <rgba()> depending on <alpha-value>
+        expect(parse('<color>', 'hsl(0 1% 2%)')).toBe('rgb(5, 5, 5)')
+        expect(parse('<color>', 'hsl(0 1% 2% / 0)')).toBe('rgba(5, 5, 5, 0)')
+        expect(parse('<color>', 'hsl(0 1% 2% / 1)')).toBe('rgb(5, 5, 5)')
+        expect(parse('<color>', 'hsla(0 1% 2%)')).toBe('rgb(5, 5, 5)')
+        expect(parse('<color>', 'hsla(0 1% 2% / 0)')).toBe('rgba(5, 5, 5, 0)')
+        expect(parse('<color>', 'hsla(0 1% 2% / 1)')).toBe('rgb(5, 5, 5)')
+        // From legacy color syntax
+        expect(parse('<color>', 'hsl(0, 0%, 0%)')).toBe('rgb(0, 0, 0)')
+        expect(parse('<color>', 'hsl(0, 0%, 0%, 0)')).toBe('rgba(0, 0, 0, 0)')
+        expect(parse('<color>', 'hsl(0, 0%, 0%, 100%)')).toBe('rgb(0, 0, 0)')
+        expect(parse('<color>', 'hsla(0, 0%, 0%)')).toBe('rgb(0, 0, 0)')
+        expect(parse('<color>', 'hsla(0, 0%, 0%, 0%)')).toBe('rgba(0, 0, 0, 0)')
+        expect(parse('<color>', 'hsla(0, 0%, 0%, 1)')).toBe('rgb(0, 0, 0)')
+        // Out of range arguments
+        expect(parse('<color>', 'hsl(-540 -1% 50% / -1)')).toBe('rgba(128, 128, 128, 0)')
+        expect(parse('<color>', 'hsl(540 101% 50% / 2)')).toBe('rgb(0, 255, 255)')
+        expect(parse('<color>', 'hsl(-540deg 100% 50% / -1%)')).toBe('rgba(0, 255, 255, 0)')
+        expect(parse('<color>', 'hsl(540deg 100% 50% / 101%)')).toBe('rgb(0, 255, 255)')
+        // Map `none` to `0`
+        expect(parse('<color>', 'hsl(none 100% 50% / none)')).toBe('rgba(255, 0, 0, 0)')
+        expect(parse('<color>', 'hsl(0 none none)')).toBe('rgb(0, 0, 0)')
+        // Math function
+        expect(parse('<color>', 'hsl(calc(-540) calc(101%) calc(50%) / calc(-1))')).toBe('rgba(0, 255, 255, 0)')
+        expect(parse('<color>', 'hsl(calc(540) 100% 50% / calc(2))')).toBe('rgb(0, 255, 255)')
+        expect(parse('<color>', 'hsl(calc(-540deg) 100% 50% / calc(-1%))')).toBe('rgba(0, 255, 255, 0)')
+        expect(parse('<color>', 'hsl(calc(540deg) 100% 50% / 101%)')).toBe('rgb(0, 255, 255)')
+        // Precision (browser conformance: 8 bit integers)
+        expect(parse('<color>', 'hsl(0.498 100% 49.8% / 0.498)')).toBe('rgba(254, 2, 0, 0.498)')
+        expect(parse('<color>', 'hsl(0.499 100% 49.9% / 0.499)')).toBe('rgba(254, 2, 0, 0.498)')
+        expect(parse('<color>', 'hsl(0.501 100% 50.1% / 0.501)')).toBe('rgba(255, 3, 1, 0.5)')
+        expect(parse('<color>', 'hsl(0 100% 50% / 49.9%)')).toBe('rgba(255, 0, 0, 0.498)')
+        expect(parse('<color>', 'hsl(0 100% 50% / 50.1%)')).toBe('rgba(255, 0, 0, 0.5)')
     })
-    it('parses and serializes a color with clamped rgb values', () => {
-        expect(parse('<color>', 'rgb(300, 300, 300, 2)')).toBe('rgb(255, 255, 255)')
-        expect(parse('<color>', 'rgb(-1, -1, -1, -1)')).toBe('rgba(0, 0, 0, 0)')
-        expect(parse('<color>', 'hsl(540, 100%, 50%)')).toBe('rgb(0, 255, 255)')
-        expect(parse('<color>', 'hsla(400, 200%, 200%, 200%)')).toBe('rgb(255, 255, 255)')
-        expect(parse('<color>', 'hsla(-20deg, -1%, -1%, -1%)')).toBe('rgba(0, 0, 0, 0)')
+    it('parses and serializes <hwb()> to legacy <rgb()> or <rgba()>', () => {
+        // To legacy <rgb()> or <rgba()> depending on <alpha-value>
+        expect(parse('<color>', 'hwb(0 1% 2%)')).toBe('rgb(250, 3, 3)')
+        expect(parse('<color>', 'hwb(0 1% 2% / 0)')).toBe('rgba(250, 3, 3, 0)')
+        expect(parse('<color>', 'hwb(0 1% 2% / 1)')).toBe('rgb(250, 3, 3)')
+        // Out of range arguments
+        expect(parse('<color>', 'hwb(-540 0% 0% / -1)')).toBe('rgba(0, 255, 255, 0)')
+        expect(parse('<color>', 'hwb(540 0% 0% / 2)')).toBe('rgb(0, 255, 255)')
+        expect(parse('<color>', 'hwb(-540deg 0% 0% / -1%)')).toBe('rgba(0, 255, 255, 0)')
+        expect(parse('<color>', 'hwb(-540deg 0% 0% / 101%)')).toBe('rgb(0, 255, 255)')
+        expect(parse('<color>', 'hwb(0 -1% 101%)')).toBe('rgb(0, 0, 0)')
+        expect(parse('<color>', 'hwb(0 101% -1%)')).toBe('rgb(255, 255, 255)')
+        // Map `none` to `0` (deviates from the specification but it is browsers conformant)
+        expect(parse('<color>', 'hwb(none none none / none)')).toBe('rgba(255, 0, 0, 0)')
+        expect(parse('<color>', 'hwb(0 none none)')).toBe('rgb(255, 0, 0)')
+        // Math function
+        expect(parse('<color>', 'hwb(calc(-540) calc(0%) calc(0%) / calc(-1))')).toBe('rgba(0, 255, 255, 0)')
+        expect(parse('<color>', 'hwb(calc(540) 0% 0% / calc(2))')).toBe('rgb(0, 255, 255)')
+        expect(parse('<color>', 'hwb(calc(-540deg) 0% 0% / calc(-1%))')).toBe('rgba(0, 255, 255, 0)')
+        expect(parse('<color>', 'hwb(calc(540deg) 0% 0% / calc(101%))')).toBe('rgb(0, 255, 255)')
+        // Precision (browser conformance: 8 bit integers)
+        expect(parse('<color>', 'hwb(0.498 0% 49.8% / 0.498)')).toBe('rgba(128, 1, 0, 0.498)')
+        expect(parse('<color>', 'hwb(0.499 0% 49.9% / 0.499)')).toBe('rgba(128, 1, 0, 0.498)')
+        expect(parse('<color>', 'hwb(0.501 0% 50.1% / 0.501)')).toBe('rgba(127, 1, 0, 0.5)')
+        expect(parse('<color>', 'hwb(0 0% 0% / 49.8%)')).toBe('rgba(255, 0, 0, 0.498)')
+        expect(parse('<color>', 'hwb(0 0% 0% / 49.9%)')).toBe('rgba(255, 0, 0, 0.498)')
+        expect(parse('<color>', 'hwb(0 0% 0% / 50.1%)')).toBe('rgba(255, 0, 0, 0.5)')
     })
-    it('parses and serializes a color by preserving the precision of rgb values', () => {
-        expect(parse('<color>', 'rgba(245.5, 245.5, 0, 50.1%)')).toBe('rgba(246, 246, 0, 0.5)')
-        expect(parse('<color>', 'rgba(245.5, 245.5, 0, 49.9%)')).toBe('rgba(246, 246, 0, 0.498)')
+    it('parses and serializes <lab()>', () => {
+        // Out of range arguments
+        expect(parse('<color>', 'lab(-1 -126 0 / -1)')).toBe('lab(0 -126 0 / 0)')
+        expect(parse('<color>', 'lab(101 126 0 / 2)')).toBe('lab(101 126 0)')
+        expect(parse('<color>', 'lab(0 0 0 / -1%)')).toBe('lab(0 0 0 / 0)')
+        expect(parse('<color>', 'lab(0 0 0 / 101%)')).toBe('lab(0 0 0)')
+        // Map <percentage> to <number>
+        expect(parse('<color>', 'lab(-1% -101% 0% / -1%)')).toBe('lab(0 -126.25 0 / 0)')
+        expect(parse('<color>', 'lab(101% 101% 0% / 101%)')).toBe('lab(101 126.25 0)')
+        // Preserve `none`
+        expect(parse('<color>', 'lab(none none none / none)')).toBe('lab(none none none / none)')
+        // Math function
+        expect(parse('<color>', 'lab(calc(-1) calc(-126) 0 / calc(-1))')).toBe('lab(0 -126 0 / 0)')
+        expect(parse('<color>', 'lab(calc(101) calc(126) 0 / calc(2))')).toBe('lab(101 126 0)')
+        expect(parse('<color>', 'lab(calc(-1%) calc(-101%) 0 / calc(-1%))')).toBe('lab(0 -126.25 0 / 0)')
+        expect(parse('<color>', 'lab(calc(101%) calc(101%) 0 / calc(101%))')).toBe('lab(101 126.25 0)')
+        // Precision (browser conformance: TBD, at least 16 bit)
+        expect(parse('<color>', 'lab(0.0000001 0.0000001 0 / 0.499)')).toBe('lab(0 0 0 / 0.498)')
+        expect(parse('<color>', 'lab(0.00000051 0.00000051 0 / 0.501)')).toBe('lab(0.000001 0.000001 0 / 0.5)')
+        expect(parse('<color>', 'lab(0.0000001% 0.0000001% 0 / 49.9%)')).toBe('lab(0 0 0 / 0.498)')
+        expect(parse('<color>', 'lab(0.00000051% 0.00000041% 0 / 50.1%)')).toBe('lab(0.000001 0.000001 0 / 0.5)')
     })
-    it('parses and serializes a value defined with a math function', () => {
-        expect(parse('<color>', 'rgb(calc(255), min(0, 255), max(0, 255))')).toBe('rgb(255, 0, 255)')
-        expect(parse('<color>', 'hsl(calc(300deg), min(0%, 100%), max(0%, 50%))')).toBe('rgb(128, 128, 128)')
+    it('parses and serializes <lch()>', () => {
+        // Out of range arguments
+        expect(parse('<color>', 'lch(-1 -1 -540 / -1)')).toBe('lch(0 0 180 / 0)')
+        expect(parse('<color>', 'lch(101 151 540 / 2)')).toBe('lch(101 151 180)')
+        // Map <angle> and <percentage> to <number>
+        expect(parse('<color>', 'lch(-1% -1% -540deg / -1%)')).toBe('lch(0 0 180 / 0)')
+        expect(parse('<color>', 'lch(101% 101% 540deg / 101%)')).toBe('lch(101 151.5 180)')
+        // Preserve `none`
+        expect(parse('<color>', 'lch(none none none / none)')).toBe('lch(none none none / none)')
+        // Math function
+        expect(parse('<color>', 'lch(calc(-1) calc(-1) calc(-540) / calc(-1))')).toBe('lch(0 0 180 / 0)')
+        expect(parse('<color>', 'lch(calc(101) calc(151) calc(540) / calc(2))')).toBe('lch(101 151 180)')
+        expect(parse('<color>', 'lch(calc(-1%) calc(-1%) calc(-540deg) / calc(-1%))')).toBe('lch(0 0 180 / 0)')
+        expect(parse('<color>', 'lch(calc(101%) calc(101%) calc(540deg) / calc(101%))')).toBe('lch(101 151.5 180)')
+        // Precision (browser conformance: TBD, at least 16 bit)
+        expect(parse('<color>', 'lch(0.0000001 0.0000001 0.0000001 / 0.499)')).toBe('lch(0 0 0 / 0.498)')
+        expect(parse('<color>', 'lch(0.00000051 0.00000051 0.00000051 / 0.501)')).toBe('lch(0.000001 0.000001 0.000001 / 0.5)')
+        expect(parse('<color>', 'lch(0.0000001% 0.0000003% 0.0000001deg / 49.9%)')).toBe('lch(0 0 0 / 0.498)')
+        expect(parse('<color>', 'lch(0.00000051% 0.00000041% 0.00000051deg / 50.1%)')).toBe('lch(0.000001 0.000001 0.000001 / 0.5)')
     })
-    it('parses and serializes a value defined with a custom variable', () => {
+    it('parses and serializes <oklab()>', () => {
+        // Out of range arguments
+        expect(parse('<color>', 'oklab(-1 -0.41 0 / -1)')).toBe('oklab(0 -0.41 0 / 0)')
+        expect(parse('<color>', 'oklab(1.1 0.41 0 / 2)')).toBe('oklab(1.1 0.41 0)')
+        // Map <percentage> to <number>
+        expect(parse('<color>', 'oklab(-1% -101% 0 / -1%)')).toBe('oklab(0 -0.404 0 / 0)')
+        expect(parse('<color>', 'oklab(101% 101% 0 / 101%)')).toBe('oklab(1.01 0.404 0)')
+        // Preserve `none`
+        expect(parse('<color>', 'oklab(none none none / none)')).toBe('oklab(none none none / none)')
+        // Math function
+        expect(parse('<color>', 'oklab(calc(-1) calc(-0.41) calc(0) / calc(-1))')).toBe('oklab(0 -0.41 0 / 0)')
+        expect(parse('<color>', 'oklab(calc(1.1) calc(0.41) calc(0) / calc(2))')).toBe('oklab(1.1 0.41 0)')
+        expect(parse('<color>', 'oklab(calc(-1%) calc(-101%) calc(0) / calc(-1%))')).toBe('oklab(0 -0.404 0 / 0)')
+        expect(parse('<color>', 'oklab(calc(101%) calc(101%) calc(0) / calc(101%))')).toBe('oklab(1.01 0.404 0)')
+        // Precision (browser conformance: TBD, at least 16 bit)
+        expect(parse('<color>', 'oklab(0.0000001 0.0000001 0 / 0.499)')).toBe('oklab(0 0 0 / 0.498)')
+        expect(parse('<color>', 'oklab(0.00000051 0.00000051 0 / 0.501)')).toBe('oklab(0.000001 0.000001 0 / 0.5)')
+        expect(parse('<color>', 'oklab(0.00001% 0.0001% 0 / 49.9%)')).toBe('oklab(0 0 0 / 0.498)')
+        expect(parse('<color>', 'oklab(0.00005% 0.00013% 0 / 50.1%)')).toBe('oklab(0.000001 0.000001 0 / 0.5)')
+    })
+    it('parses and serializes <oklch()>', () => {
+        // Out of range arguments
+        expect(parse('<color>', 'oklch(-1 -1 -540 / -1)')).toBe('oklch(0 0 180 / 0)')
+        expect(parse('<color>', 'oklch(1.1 0.41 540 / 2)')).toBe('oklch(1.1 0.41 180)')
+        // Map <angle> and <percentage> to <number>
+        expect(parse('<color>', 'oklch(-1% -1% -540deg / -1%)')).toBe('oklch(0 0 180 / 0)')
+        expect(parse('<color>', 'oklch(101% 101% 540deg / 101%)')).toBe('oklch(1.01 0.404 180)')
+        // Preserve `none`
+        expect(parse('<color>', 'oklch(none none none / none)')).toBe('oklch(none none none / none)')
+        // Math function
+        expect(parse('<color>', 'oklch(calc(-1) calc(-1) calc(-540) / calc(-1))')).toBe('oklch(0 0 180 / 0)')
+        expect(parse('<color>', 'oklch(calc(1.1) calc(0.41) calc(540) / calc(2))')).toBe('oklch(1.1 0.41 180)')
+        expect(parse('<color>', 'oklch(calc(-1%) calc(-1%) calc(-540deg) / calc(-1%))')).toBe('oklch(0 0 180 / 0)')
+        expect(parse('<color>', 'oklch(calc(101%) calc(101%) calc(540deg) / calc(101%))')).toBe('oklch(1.01 0.404 180)')
+        // Precision (browser conformance: TBD, at least 16 bit)
+        expect(parse('<color>', 'oklch(0.0000001 0.0000001 0.0000001 / 0.499)')).toBe('oklch(0 0 0 / 0.498)')
+        expect(parse('<color>', 'oklch(0.00000051 0.00000051 0.00000051 / 0.501)')).toBe('oklch(0.000001 0.000001 0.000001 / 0.5)')
+        expect(parse('<color>', 'oklch(0.00001% 0.0001% 0.0000001deg / 49.9%)')).toBe('oklch(0 0 0 / 0.498)')
+        expect(parse('<color>', 'oklch(0.00005% 0.00013% 0.00000051deg / 50.1%)')).toBe('oklch(0.000001 0.000001 0.000001 / 0.5)')
+    })
+    it('parses and serializes <color()>', () => {
+        // Explicit `xyz` color space
+        expect(parse('<color>', 'color(xyz 0 0 0)')).toBe('color(xyz-d65 0 0 0)')
+        // Out of range arguments
+        // TODO: implement CSS gamut mapping
+        // Map <percentage> to <number>
+        expect(parse('<color>', 'color(srgb 0% 100% calc(100%))')).toBe('color(srgb 0 1 1)')
+        // Preserve `none`
+        // TODO: resolve https://github.com/w3c/csswg-drafts/issues/7136
+        // expect(parse('<color>', 'color(srgb none none none / none)')).toBe('color(srgb none none none / none)')
+        // Math function
+        expect(parse('<color>', 'color(srgb calc(1) calc(100%) 0)')).toBe('color(srgb 1 1 0)')
+        // Precision (browser conformance: TBD, at least 10 to 16 bits depending on the color space)
+        expect(parse('<color>', 'color(srgb 0.0000001 0 0 / 0.499)')).toBe('color(srgb 0 0 0 / 0.498)')
+        expect(parse('<color>', 'color(srgb 0.00000051 0 0 / 0.501)')).toBe('color(srgb 0.000001 0 0 / 0.5)')
+        expect(parse('<color>', 'color(srgb 0.00001% 0 0 / 49.9%)')).toBe('color(srgb 0 0 0 / 0.498)')
+        expect(parse('<color>', 'color(srgb 0.00005% 0 0 / 50.1%)')).toBe('color(srgb 0.000001 0 0 / 0.5)')
+    })
+    it('parses and serializes a value defined with a <var()>', () => {
         expect(parse('<color>', 'rgb(var(--red', true)).toBe('rgb(var(--red')
         expect(parse('<color>', 'hsl(var(--red', true)).toBe('hsl(var(--red')
         expect(parse('<color>', 'rgb(var(--red), 0, 0, var(--alpha))', true)).toBe('rgb(var(--red), 0, 0, var(--alpha))')
@@ -2803,7 +2961,7 @@ describe('<position>', () => {
     it('parses and serializes case-insensitively', () => {
         expect(parse('<position>', 'LEFt 0%')).toBe('left 0%')
     })
-    it('parses and serializes a value defined with a custom variable', () => {
+    it('parses and serializes a value defined with a <var()>', () => {
         expect(parse('<position>', 'var(--position)', true)).toBe('var(--position)')
         expect(parse('<position>', 'top var(--position)', true)).toBe('top var(--position)')
     })
@@ -2882,7 +3040,7 @@ describe('<basic-shape>', () => {
         ]
         input.forEach(([value, expected = value]) => expect(parse('<basic-shape>', value)).toBe(expected))
     })
-    it('parses and serializes a valud defined with a custom variable', () => {
+    it('parses and serializes a value defined with a <var()>', () => {
         const input = [
             'var(--shape)',
             'circle(var(--radius))',
@@ -3054,7 +3212,7 @@ describe('<gradient>', () => {
             ],
         ].forEach(([input, expected]) => expect(parse('<gradient>', input)).toBe(expected))
     })
-    it('parses and serializes a value defined with a custom variable', () => {
+    it('parses and serializes a value defined with a <var()>', () => {
         [
             'conic-gradient(var(--config))',
             'linear-gradient(var(--config))',

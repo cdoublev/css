@@ -1,0 +1,129 @@
+<style>
+    * {
+        box-sizing: border-box;
+    }
+    table {
+        margin-inline: auto;
+        border-spacing: 0;
+    }
+    table thead {
+        position: sticky;
+        top: 0;
+        background-color: #ffffffbb;
+    }
+    table th,
+    table td {
+        padding: 1em;
+    }
+    table th {
+        text-align: left;
+        font-weight: 600;
+        border-block-end: 2px solid lightgrey;
+    }
+    table td {
+        border-block-end: 1px solid lightgrey;
+    }
+    tr.error {
+        color: red;
+    }
+</style>
+
+<div id="target"></div>
+<table>
+    <thead>
+        <th>Input</th>
+        <th>Expected (specified)</th>
+        <th>Actual (specified)</th>
+        <th>Expected (resolved)</th>
+        <th>Actual (resolved)</th>
+    </thead>
+</table>
+
+<script>
+
+    // Act, Assert
+    function aa(value, expectedSpecified, expectedResolved = expectedSpecified) {
+
+        target.style.color = ''
+        target.style.color = value
+
+        const { style: { color: specified } } = target
+        const { color: resolved } = getComputedStyle(target)
+        const result = (specified === expectedSpecified && resolved === expectedResolved) ? 'success' : 'error'
+
+        console.log(`%c$Input: ${value}"`, `color: white; background-color: ${result === 'success' ? 'limegreen' : 'red'}`)
+        console.log(`Actual (specified): "${specified}"`)
+        console.log(`Expected (specified): "${expectedSpecified}"`)
+        console.log(`Actual (resolved): "${resolved}"`)
+        console.log(`Expected (resolved): "${expectedResolved}"`)
+
+        let html = `<td>${value}</td>`
+        html += `<td>${expectedSpecified === '' ? '-' : expectedSpecified}</td>`
+        html += `<td>${specified === '' ? '-' : specified}</td>`
+        html += `<td>${expectedResolved === '' ? '-' : expectedResolved}</td>`
+        html += `<td>${resolved === '' ? '-' : resolved}</td>`
+        const tr = document.createElement('tr')
+        tr.innerHTML = html
+        tr.classList.add(result)
+        document.querySelector('table').appendChild(tr)
+    }
+
+    // 1. Keywords (currentcolor, transparent, <named-color>, <system-color>)
+    aa('currentColor', 'currentcolor', 'rgb(0, 0, 0)')
+    aa('Transparent', 'rgba(0, 0, 0, 0)')
+    aa('Red', 'red', 'rgb(255, 0, 0)')
+    aa('CanvasText', 'canvastext', 'rgb(0, 0, 0)')
+
+    // 2. <hex-color> to <rgb()> or <rgba()
+    aa('#f00', 'rgb(255, 0, 0)')
+    aa('#f000', 'rgba(255, 0, 0, 0)')
+
+    // 3. Legacy <rgb()> to legacy <rgb()>
+    aa('rgb(0, 0, 0)', 'rgb(0, 0, 0)')
+    aa('rgb(0, 0, 0, 1)', 'rgb(0, 0, 0)')
+    // 4. Legacy <rgb()> to legacy <rgba()>
+    aa('rgb(0, 0, 0, 0)', 'rgba(0, 0, 0, 0)')
+    // 5. Legacy <rgba()> to legacy <rgb()>
+    aa('rgba(0, 0, 0)', 'rgb(0, 0, 0)')
+    aa('rgba(0, 0, 0, 1)', 'rgb(0, 0, 0)')
+    // 6. Legacy <rgba()> to legacy <rgba()>
+    aa('rgba(0, 0, 0, 0)', 'rgba(0, 0, 0, 0)')
+    // 7. Non-legacy <rgb()> to legacy <rgb()>
+    aa('rgb(0 0 0)', 'rgb(0, 0, 0)')
+    aa('rgb(0 0 0 / 1)', 'rgb(0, 0, 0)')
+    // 8. Non-legacy <rgb()> to legacy <rgba()>
+    aa('rgb(0 0 0 / 0)', 'rgba(0, 0, 0, 0)')
+    // 9. Non-legacy <rgba()> to legacy <rgb()>
+    aa('rgba(0 0 0)', 'rgb(0, 0, 0)')
+    aa('rgba(0 0 0 / 1)', 'rgb(0, 0, 0)')
+    // 10. Non-legacy <rgba()> to legacy <rgba()>
+    aa('rgba(0 0 0 / 0)', 'rgba(0, 0, 0, 0)')
+
+    // 11. Legacy <hsl()> to legacy <rgb()> or <rgba()>
+    aa('hsl(0, 100%, 50%)', 'rgb(255, 0, 0)')
+    aa('hsl(0, 100%, 50%, 50%)', 'rgba(255, 0, 0, 0.5)')
+
+    // 12. <hwb()> (only supported in Firefox/Safari)
+    aa('hwb(0 0% 0%)', 'rgb(255, 0, 0)')
+    aa('hwb(0 0% 0% / 50%)', 'rgba(255, 0, 0, 0.5)')
+
+    // 13. Precision (unspecified but consistent across browsers)
+    aa('rgb(127.499 0 0 / 0.498)', 'rgba(127, 0, 0, 0.498)')
+    aa('rgb(127.501 0 0 / 0.499)', 'rgba(128, 0, 0, 0.498)')
+    aa('rgb(0 0 0 / 0.501)', 'rgba(0, 0, 0, 0.5)')
+    aa('rgb(49.9% 50.1% 0% / 49.9%)', 'rgba(127, 128, 0, 0.498)')
+    aa('rgb(0.501 0.499 0 / 50.1%)', 'rgba(1, 0, 0, 0.5)')
+    aa('hsl(0.499 100% 49.9% / 49.9%)', 'rgba(254, 2, 0, 0.498)')
+    aa('hsl(0.501 100% 50.1% / 50.1%)', 'rgba(255, 3, 1, 0.5)')
+    // Only supported in Firefox/Safari
+    aa('hwb(0.499 0% 49.9% / 49.9%)', 'rgba(128, 1, 0, 0.498)')
+    aa('hwb(0.501 0% 50.1% / 50.1%)', 'rgba(127, 1, 0, 0.5)')
+
+    // 14. Issue in Chrome: it should be invalid ...
+    aa('rgba(0 0 50.1%)', '')
+    //   ... noting that this is correctly parsed as invalid
+    aa('rgba(0 0 50%)', '')
+
+    // 15. `none` as argument (not supported in Chrome/Firefox)
+    aa('hwb(none none none / none)', 'hwb(none none none / none)')
+</script>

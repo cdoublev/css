@@ -169,6 +169,8 @@ const replaced = {
         'import-condition': '[supports([<supports-condition> | <declaration>])]? <media-query-list>?',
         // TODO: fix https://github.com/w3c/webref/issues/333
         'selector()': 'selector(<id-selector>)',
+        // TODO: report spec issue "`<hue>` should not include `<none>`"
+        'hue': '<number> | <angle>',
         // TODO: report spec issue "`initial` does not match `value`"
         'content-list': '[<string> | <content()> | contents | <image> | <counter> | <quote> | <target> | <leader()>]+',
         // TODO: report spec issue "`value` has extra whitespace"
@@ -182,56 +184,22 @@ const replaced = {
         'linear-gradient()': 'linear-gradient([<angle> | to <side-or-corner>]? , <color-stop-list>)',
         'radial-gradient()': 'radial-gradient([<ending-shape> || <size>]? [at <position>]? , <color-stop-list>)',
         /**
-         * TODO: support new grammars from Color 4/5
+         * TODO: support new grammars from Color 5.
+         * TODO: parse legacy color syntax with a production specific rule.
+         * TODO: parse function value definition as disjunctions.
          *
-         * Color 5: color([from <color>]? <colorspace-params> [/ <alpha-value>]?)
-         * Color 4:
+         * Below is Color 4 + legacy syntax value definitions + fix for function
+         * value definition as disjunctions.
          */
+        'hsl()': 'hsl([<hue> | none] [<percentage> | none] [<percentage> | none] [/ [<alpha-value> | none]]? | [<hue> | none] , [<percentage> | none] , [<percentage> | none] , [<alpha-value> | none]?)',
+        'rgb()': 'rgb([<percentage> | none]{3} [/ [<alpha-value> | none]]? | [<number> | none]{3} [/ [<alpha-value> | none]]? | [<percentage> | none]#{3} , [<alpha-value> | none]? | [<number> | none]#{3} , [<alpha-value> | none]?)',
+        // TODO: support new grammars from Color 5
         'color()': 'color(<colorspace-params> [/ <alpha-value>]?)',
-        /**
-         * TODO: support new grammars from Color 4/5
-         * TODO: report spec issue "`<hue>` already includes `<none>`"
-         *
-         * Color 5: hsl([from <color>]? [<hue> | none] [<percentage> | none] [<percentage> | none] [/ [<alpha-value> | none]]?)
-         * Color 4: hsl([<hue> | none] [<percentage> | none] [<percentage> | none] [/ [<alpha-value> | none]]?) | hsl([<hue> | none] , [<percentage> | none] , [<percentage> | none] , [<alpha-value> | none]?)
-         * Color 4 without `none` + legacy definition (comma-separated arguments):
-         */
-        'hsl()': 'hsl(<hue> <percentage> <percentage> [/ <alpha-value>]? | <hue> , <percentage> , <percentage> , <alpha-value>?)',
-        /**
-         * TODO: support new grammars from Color 4/5
-         * TODO: report spec issue "`<hue>` already includes `<none>`"
-         *
-         * Color 5: hwb([from <color>]? [<hue> | none] [<percentage> | none] [<percentage> | none] [/ [<alpha-value> | none]]?)
-         * Color 4: hwb([<hue> | none] [<percentage> | none] [<percentage> | none] [/ [<alpha-value> | none]]?)
-         * Color 4 without `none`:
-         */
-        'hwb()': 'hwb(<hue> <percentage> <percentage> [/ <alpha-value>]?)',
-        /**
-         * TODO: support new grammars from Color 4/5
-         *
-         * Color 5: lab([from <color>]? [<percentage> | none] [<number> | none] [<number> | none] [/ [<alpha-value> | none]]?)
-         * Color 4: lab([<percentage> | none] [<number> | none] [<number> | none] [/ [<alpha-value> | none]]?)
-         * Color 4 without `none`:
-         */
-        'lab()': 'lab(<percentage> <number> <number> [/ <alpha-value>]?)',
-        /**
-         * TODO: support new grammars from Color 4/5
-         * TODO: report spec issue "`<hue>` already includes `<none>`"
-         *
-         * Color 5: lch([from <color>]? [<percentage> | none] [<number> | none] [<hue> | none] [/ [<alpha-value> | none]]?)
-         * Color 4: lch([<percentage> | none] [<number> | none] [<hue> | none] [/ [<alpha-value> | none]]?)
-         * Color 4 without `none`:
-         */
-        'lch()': 'lch(<percentage> <number> <hue> [/ <alpha-value>]?)',
-        /**
-         * TODO: support new grammars from Color 4/5
-         * TODO: handle repeated function name in definition value
-         *
-         * Color 5: rgb([<percentage> | none]{3} [/ [<alpha-value> | none]]?) | rgb([<number> | none]{3} [/ [<alpha-value> | none]]?) | rgb([from <color>]? [<number> | <percentage> | none]{3} [/ [<alpha-value> | none]]?)
-         * Color 4: rgb([<percentage> | none]{3} [/ [<alpha-value> | none]]?) | rgb([<number> | none]{3} [/ [<alpha-value> | none]]?)
-         * Color 4 without `none` + legacy syntax (comma-separated arguments) + fix to handle repeated function name
-         */
-        'rgb()': 'rgb(<percentage>{3} [/ <alpha-value>]? | <number>{3} [/ <alpha-value>]? | <percentage>#{3} , <alpha-value>? | <number>#{3} , <alpha-value>?)',
+        'hwb()': 'hwb([<hue> | none] [<percentage> | none] [<percentage> | none] [/ [<alpha-value> | none]]?)',
+        'lab()': 'lab([<percentage> | <number> | none] [<percentage> | <number> | none] [<percentage> | <number> | none] [/ [<alpha-value> | none]]?)',
+        'lch()': 'lch([<percentage> | <number> | none] [<percentage> | <number> | none] [<hue> | none] [/ [<alpha-value> | none]]?)',
+        'oklab()': 'oklab([<percentage> | <number> | none] [<percentage> | <number> | none] [<percentage> | <number> | none] [/ [<alpha-value> | none] ]?)',
+        'oklch()': 'oklch([<percentage> | <number> | none] [<percentage> | <number> | none] [<hue> | none] [/ [<alpha-value> | none]]?)',
         // Written in prose
         'age': 'child | young | old',
         'end-value': '<number> | <dimension> | <percentage>',

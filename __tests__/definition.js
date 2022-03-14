@@ -17,7 +17,7 @@ function repeat(type, repeat) {
     return { ...type, repeat }
 }
 
-// TODO: handle repeated function name in definition value
+// TODO: parse function value definition as disjunctions.
 it('rgb()', () => {
     const definition = 'rgb(<percentage>{3} [/ <alpha-value>]?) | rgb(<number>{3} [/ <alpha-value>]?) | rgb(<percentage>#{3} , <alpha-value>?) | rgb(<number>#{3} , <alpha-value>?)'
     const ast = {

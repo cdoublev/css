@@ -227,7 +227,7 @@ Issues to report on the `w3c/csswg-drafts` repository:
   - `content` uses `element()` instead of `<element()>`
   - `content-level` (defined in prose in GCPM) uses `attr(<identifier>)` but `<identifier>` should be `<custom-ident>`
   - `<color-stop-list>` and `<angular-color-stop-list>` (Images) can not match a single implicit color stop: https://github.com/w3c/csswg-drafts/issues/6425
-  - `<hue>` already includes `<none>`
+  - `<hue>` should not include `<none>` (but `<none>` should be a valid alternative value defined in the value definitions of the color functions, for consistency with other color function arguments)
   - `<size>` (defined in prose, Images) can be defined with `<length-percentage [0,∞]>{1,2}`: https://github.com/w3c/csswg-drafts/issues/6425
   - `<selector()>` (Scroll Animation): https://github.com/w3c/webref/issues/333
 

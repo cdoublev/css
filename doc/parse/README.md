@@ -12,7 +12,7 @@ A CSS input can have different sources:
 
 This document explains how a CSS input is parsed by first looking at `Element.style`. Narrowing the input type to a CSS declaration list will help understand the CSS parsing model before looking at parsing a higher level CSS input: a rule and a style sheet.
 
-This document also highlights some parts of Syntax and CSSOM specifications that seem intentionnally written in a rather vague way, in order to preserve some freedom in how parsing a CSS input and construct the corresponding CSSOM representation is implemented, so as to explain some decisions for this implementation.
+This document also highlights some parts of Syntax and CSSOM specifications that seem intentionnally written in a rather vague way, in order to give some freedom in how parsing a CSS input and constructing the corresponding CSSOM representation is implemented, so as to explain the decisions of this implementation.
 
 > Implementations don't have to follow the specs step by step. If the result is indistinguishable from what you should get according to the spec, then it's fine.
 
@@ -410,6 +410,7 @@ The scripting interface of the CSSOM is defined with [Web IDL (Interface Definit
   - `wrapper.create()` is usefull to create an instance of a wrapper class when the `.webidl` does not define a `constructor()` or when an instance must be created with state values (`privateData`) that are different than when creating a constructed instance
   - `wrapper.createImpl()` is an alias for `wrapper.convert(wrapper.create())` and is usefull to write "private" properties of an instance of the implementation class from outside
   - `wrapper.convert()` converts a wrapper instance to an implementation instance
+  - when the value of a class property defined with `?` is `undefined`, the getter of the wrapper class returns `undefined` instead of `null`, which is sometimes the value explicitly defined in some CSS specifications
 
 **What should be implemented for the procedures named *create an `<interface>` object*?**
 

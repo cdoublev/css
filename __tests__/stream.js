@@ -138,7 +138,7 @@ describe('atEnd()', () => {
     })
 })
 
-describe('insert(items)', () => {
+describe('insert(...items)', () => {
     it('inserts the given items after the current item', () => {
         stream.insert('hey, ')
         expect(stream.source).toBe('hey, hello')

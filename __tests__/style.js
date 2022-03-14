@@ -773,19 +773,6 @@ describe('clip-path', () => {
         })
     })
 })
-describe('color', () => {
-    it('parses and serializes an alpha value in a color function as an 8 bit integer', () => {
-        const style = createStyleDeclaration()
-        style.color = 'rgb(0, 0, 0, 0.499)'
-        expect(style.color).toBe('rgba(0, 0, 0, 0.499)')
-        style.color = 'rgb(0, 0, 0, 49.9%)'
-        expect(style.color).toBe('rgba(0, 0, 0, 0.498)')
-        style.color = 'rgb(0, 0, 0, 0.501)'
-        expect(style.color).toBe('rgba(0, 0, 0, 0.501)')
-        style.color = 'rgb(0, 0, 0, 50.1%)'
-        expect(style.color).toBe('rgba(0, 0, 0, 0.5)')
-    })
-})
 describe.skip('flex', () => {
     it.todo('invalid (with flex-grow or flex-shrink at invalid positions)')
     it('expands a shorthand declaration to longhand declarations', () => {
