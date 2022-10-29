@@ -1,5 +1,5 @@
 
-// https://drafts.csswg.org/cssom/#stylesheet
+// https://drafts.csswg.org/cssom-1/#stylesheet
 [Exposed=Window]
 interface StyleSheet {
     readonly attribute CSSOMString type;

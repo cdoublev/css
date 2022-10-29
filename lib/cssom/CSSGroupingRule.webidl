@@ -1,5 +1,5 @@
 
-// https://drafts.csswg.org/cssom/#cssgroupingrule
+// https://drafts.csswg.org/cssom-1/#cssgroupingrule
 [Exposed=Window]
 interface CSSGroupingRule : CSSRule {
     [SameObject] readonly attribute CSSRuleList cssRules;

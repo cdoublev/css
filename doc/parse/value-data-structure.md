@@ -1,21 +1,34 @@
 
 # Value data structure
 
-## Token
+A CSS value is either a component value, a declaration, a rule, or a list of these values. This document defines the data structures to represent them.
 
-Normalization from a string to a list of tokens is the first step of parsing a CSS input.
+## Component value
 
-A token represents a single code point, `<--`, or `-->`, implemented as a primitive string, or an identifier, eventually wrapped between quotes (a string), or a numeric, implemented as a plain object with the following properties:
+Normalizing the input into tokens is the first parsing step before consuming tokens into component values: the CSS lexical units.
 
-  - `type`: `Set`
-  - `value`: `String`
-  - `unit` (only for `<dimension-token>`): `String`
+A token represents a delimiter (a single code point, `<--`, or `-->`), a numeric, or an identifier eventually prefixed with `#`, `@`, or wrapped between `"`. In CSS Syntax, it is defined with the following properties:
 
-Note: `<dimension-token>` does not have [*the same `type` flag as number*](https://drafts.csswg.org/css-syntax-3/#consume-numeric-token) because it is never used and because a value matching `<number>` can not match `<dimension>` (except `0` for `<length>` and `<angle>`) and vice versa, therefore a `<dimension>` having `number` or `integer` as its `type` is kind of inappropriate.
+  - `representation`: `String`
+  - `type`: `String`
+  - `value`: `String` or `Number`
+  - `unit`: `String`
 
-Identifier and number tokens are neither implemented as primitive strings or `String` instances because of the following limitations and potential issues:
+`representation` is assigned the code points consumed to produce the token. It must be an empty string when the token is not produced during tokenization.
 
-  1. a primitive can not be assigned a property:
+`type` is only defined for `<hash-token>`, `<number-token>`, `<dimension-token>`. In this library, it is implemented as `Set [String]` for all tokens, as explained further below.
+
+`value` is a `Number` only for numeric tokens.
+
+`unit` is only defined for `<dimension-token>`. According to this [issue](https://github.com/w3c/csswg-drafts/issues/7381), a `<percentage-token>` can be considered as a dimension therefore it is also implemented with `unit`, to simplify the parsing and serialization of numeric types.
+
+> A component value is one of the preserved tokens, a function, or a simple block.
+
+A component value is the same data structure than the corresponding token, except a function and a simple block, which have a `value` that is a list of component values. A function also has a `name` (`String`) and a simple block also has an `associatedToken` (`String`).
+
+All component values are implemeted as objects, including those representing delimiters. They are not implemented as primitive strings or `String` instances because it guarantees to process (parse and serialize) the same type(s) of data structures with a common interface, and because of the following limitations and potential issues:
+
+  1. a primitive cannot be assigned a property:
 
     ```js
     const length = '100px'
@@ -23,13 +36,13 @@ Identifier and number tokens are neither implemented as primitive strings or `St
     console.log(length.type) // undefined
     ```
 
-  2. `new String('foo') === 'foo'` and `['foo'].includes(new String('foo'))` are falsy (strict equality), while`` `${new String('foo')}` === 'foo'`` and `new String('foo').startsWith('f')` are truthy (`toString()` conversion)
+  2. `new String('identifier') === 'identifier'` and `['identifier'].includes(new String('identifier'))` are falsy while`` `${new String('identifier')}` === 'identifier'`` and `new String('identifier').startsWith('i')` are truthy (`toString()` conversion)
 
   3. `new String(0) == ' '` is truthy
 
-    - `==`: the left/right operand is coerced to primitive if one is an object and the other is a string/number
+    - `==`: the left/right operand is coerced to a primitive if one is an object and the other is a string/number
     - `<`, `<=`, `>`, `>=`: operands are coerced to primitives (with number as a preference `hint` for conversion)
-    - an object is converted to a primitive with `valueOf()` if this method exists and receives `number` or nothing as a preference `hint`, otherwise with `toString()`
+    - an object is converted to a primitive with `valueOf()` if this method exists, otherwise with `toString()`, and receives `number` or nothing as a preference `hint`
 
       ```js
       class Foo {
@@ -46,26 +59,13 @@ Identifier and number tokens are neither implemented as primitive strings or `St
       // false
       ```
 
-## CSS component value
+A token must expose its name in order to be matched against the corresponding CSS basic data type, and a component value must expose the matched CSS type(s) in order to apply the corresponding serialization rules. For example, `<number>` must match a `<number-token>` and serialize to the shortest possible form.
 
-> A component value is one of the preserved tokens, a function, or a simple block.
+This library assimilates CSS types and token names by removing the `-token` suffix part, except for `<function-token>` otherwise *consume a component value* would yield an invalid result when processing a function more than once, rather than using classes (eg. `CSSNumber`, `CSSDimension`, etc) or different properties (eg. `tokenType` and `cssTypes`).
 
-A component value is the same data structure than the corresponding token, except a function and a simple block. A function also has a name (`String`) and a simple block has an `associatedToken` (`String`).
+While token names are exclusive, CSS types are inclusive. For example, a `<number-token>` can not represent any other token but `<alpha-value>` can also represent a `<number>` or `<percentage>`. Additionally, CSS types must be represented in a hierarchical order: because `<alpha-value>` has a higher order than `<percentage>`, a value matching `<percentage>` and `<alpha-value>` must serialize to a `<number>`, according to the serialization rule of `<alpha-value>`.
 
-The different specifications for parsing a CSS value involve different kind of types:
-
-- token types: `<ident-token>`, `<number-token>`, `<dimension-token>`, etc.
-- CSS types: `<ident>`, `<number>`, `<dimension>`, `<length>`, `<calc-sum>`, `<calc-product>`, etc.
-- types of `<math-function>` : a `Map` whose entries are numeric CSS types as keys and integers as values, and which has an optional `percentHint` property assigned a numeric CSS type, ie. `Map { [Type]: Integer, percentHint: Type }`
-- types of calculation tree nodes: `Sum`, `Product`, `Negate`, or `Invert`
-
-The types of a `<math-function>` are used to check that a calculation tree matches the numeric CSS type it replaces. The types of calculation tree nodes are used to represent and simplify the calculation tree, and they correspond to the subclasses of `CSSMathValue` (which extends `CSSNumericValue`) defined in Typed OM: `CSSMathSum`, `CSSMathProduct`, `CSSMathNegate`, `CSSMathInvert`.
-
-Token and CSS types are partially overlapping: both are used to parse a CSS input against a CSS value definition. The token types can be used to match a component value against a CSS value definition representing a terminal CSS type. Eg. to match a `<number>`, the input must be an object with `number-token` as its `type`. While the token types are exclusive, ie. a token can only have a single type (but it may have a `type` flag, eg. `number` or `integer` for `<number-token>`), the CSS types are inclusive, ie. some types are subtypes of another CSS type.
-
-Therefore the current implementation assimilates a token type with the corresponding CSS type, by removing the `-token` suffix part in its name when creating the token. Because some value definitions are defined with token types, all token types are aliased to the corresponding CSS type, except `<function-token>` and `<dimension-token>` (see related issue in [the documentation for parsing math functions](./math-function.md)).
-
-All uses of token types:
+As an aside, it should be noted that some value definitions contains token types:
 
   - `<dimension-token>`
     - `<urange>`
@@ -90,24 +90,42 @@ All uses of token types:
   - `<string-token>`
     - `<attribute-selector>`
 
-These value definitions are inappropriate because any CSS input will go through *consume a component value*. Eg. `<function-token> (<any-value>)`, which is used *to allow for future expansion of the grammar* of a functional pseudo-class or media query, represents two objects, which will be consumed as a single function component value. Even if Syntax defines that it *makes no difference to any of [its] algorithms*, it prevents matching any CSS input against this value definition.
+CSS Syntax defines that the distinction between a token and a component value *makes no difference to any of [its] algorithms*, but there is no input that can match `<function-token>`, because any CSS input must go through *consume a component value*. The three tokens in `<function-token> <any-value>)`, which is used *to allow for future expansion of the grammar* of a media query, a functional pseudo-class, and an url modifier, are consumed into a single function component value. To workaround this problem, they are replaced by `<function>` in `<general-enclosed>`, `<pseudo-class-selector>`, and `<url-modifier>`.
 
-`<function-token> (<any-value>)` is replaced by `<function>` in the value definition of `<general-enclosed>` and `<pseudo-class-selector>`, and `<function>` matches a component value when its `type` includes `function`.
+The normalized token name and the matched CSS types are exposed by `type` defined as a `Set`. This has some notable consequences.
 
-For the purpose of serialization, a CSS component value must be able to have multiple types and a "main" CSS type. Eg. how a CSS component value matching `<alpha-value>` is serialized depends on whether it also matches either `<number>` or `<percentage>`. This can be implemented with either:
+`<hash-token>` is defined with a `type` that must be `unrestricted` if not otherwise set to `id` when its `value` is an identifier, `<id>` is defined as matching `<id-selector>`, and `<id-selector>` is defined as matching a `<hash-token>` whose `type` *is* `id`.
 
-  1. composition: `{ type: 'alpha-value', value: { type: 'number', value: 1 } }`
-  2. convention(s) (the main type is the last item in the list): `{ type: ['number', 'alpha-value'], value: 1 }`
-  3. heritage: `class AlphaValue extends NumberValue { value: 1 }`
+```
+         <id> = <id-selector>
+<id-selector> = <hash-token type="id">
+```
 
-The first implementation makes it harder to read a value matching subtype(s), eg. when serializing a `<color>` that is a `<named-color>` (which is an `<ident>`), the value must be read from `color.value.value.value`.
+Instead, in this library, `<hash-token>` is implemented with a `type` that *has* `id` when its `value` is an identifier, noting that defining `<id-selector>` as matching `<id>`, defined as a CSS basic data type matching a `<hash-token>` whose `type` is/has `id`, would have make more sense.
 
-The second implementation makes checking the type of a value more brittle, eg. when serializing an `<alpha-value>` that is a `<percentage>` implemented as `{ type: ['number', 'percentage', 'alpha-value'], value: 1, unit: '%' }`, ie. as *a `<percentage-token>` with the same value and type flag as [the] number [it represents]*, `<percentage>` must be checked before `<number>`.
+```
+         <id> = <hash-token type="id">
+<id-selector> = <hash-token type="id">
+# But ideally:
+<id-selector> = <id>
+```
 
-The third implementation makes checking the type of a value more brittle, eg. when serializing `<alpha-value>` that is a `PercentageValue` that extends `NumericValue`, `instanceof PercentageValue` must be checked before `instanceof NumberValue`. Not extending `NumberValue` from `PercentageValue` has other drawbacks. Finally, it is cumbersome to represent all types with a set of classes that must eventually interact (inherit, compose) with each other.
+`<numeric-token>` and `<dimension-token>` are defined with a `type` that is either `integer` or `number`, noting that the `type` of any number specified with the scientific notation is currently defined as `number` (even if eg. `1e1` is an integer), and `<integer>`, `<signed-integer>`, `<signless-integer>`, `<n-dimension>`, `<ndash-dimension>`, `<ndashdigit-dimension>`, are defined as a `<number-token>` whose `type` *is* `integer`.
 
-The current implementation uses convention and automatically add a matching CSS type to a CSS component value.
+Instead, in this library, `<numeric-token>` is implemented with a `type` that only *has* `number`, and parsing these CSS types is implemented as matching a `<number-token>` or `<dimension-token>` whose `value` evaluates to an integer. A consequence is that eg. `nth-child(1e1)` or `nth-child(1e1n)` are valid if not otherwise discarded when parsing `<n-dimension>`.
 
-## CSS value: one or more component values
+Finally, math functions involve two other type sets, which are also overlapping with CSS types:
+
+  - CSS types: `<number>`, `<dimension>`, `<percentage>`, `<calc-sum>`, `<calc-product>`
+  - types of calculation tree nodes: `Sum`, `Product`, `Negate`, `Invert`
+  - types of calculations: a `Map` from numeric CSS types to integers, and an optional `percentHint` property which is also assigned a numeric CSS type, ie. `Map { [CSSType]: Integer, percentHint: CSSType }`
+
+The type of a calculation allows to validate its (numeric) CSS type of its tree, and correspond to the type of `CSSNumericValue`, defined in CSS Typed OM. The types of calculation tree nodes allow to represent and simplify a calculation tree, and correspond to the subclasses of `CSSMathValue` (which extends `CSSNumericValue`) defined in Typed OM: `CSSMathSum`, `CSSMathProduct`, `CSSMathNegate`, `CSSMathInvert`.
+
+In this library, `numericType` is a property of a component value representing a math function, and is assigned the resolved type of its calculation.
+
+In this library, the calculation tree nodes are represented as component values whose `type` has `calc-sum`, `calc-product`, `calc-negate`, or `calc-invert`, noting that there is no specification defining the last two.
+
+## List of component values
 
 WIP

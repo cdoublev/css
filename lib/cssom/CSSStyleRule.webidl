@@ -1,5 +1,5 @@
 
-// https://drafts.csswg.org/cssom/#cssstylerule
+// https://drafts.csswg.org/cssom-1/#cssstylerule
 [Exposed=Window]
 interface CSSStyleRule : CSSRule {
     attribute CSSOMString selectorText;

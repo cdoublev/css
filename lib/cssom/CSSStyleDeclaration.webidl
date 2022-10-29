@@ -1,5 +1,5 @@
 
-// https://drafts.csswg.org/cssom/#cssstyledeclaration
+// https://drafts.csswg.org/cssom-1/#cssstyledeclaration
 [Exposed=Window]
 interface CSSStyleDeclaration {
     [CEReactions] attribute CSSOMString cssText;

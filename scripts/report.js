@@ -1,92 +1,125 @@
 
-const css = require('@webref/css')
+const descriptors = require('../lib/descriptors/definitions.js')
 const parseDefinition = require('../lib/parse/definition.js')
 const properties = require('../lib/properties/definitions.js')
 const structures = require('../lib/values/structures.js')
 const terminals = require('../lib/parse/terminals.js')
-const types = require('../lib/values/types.js')
+const types = require('../lib/values/definitions.js')
+const webref = require('./webref.js')
 
-const nodeTypes = [
-    'function',
-    'non-terminal',
-    'property',
-    'structure',
-    'terminal',
-]
+const definitions = {
+    properties: new Map(),
+    types: new Map(),
+}
 
-function parseDefinitionDeep(name, { type, value }) {
-    if (Array.isArray(value)) {
-        return value.forEach(type => parseDefinitionDeep(name, type))
-    }
-    if (nodeTypes.includes(type)) {
-        if (type === 'function') {
-            return tryParseDefinition(name, value)
+function reportDuplicates(definitions) {
+    definitions.forEach((entries, name) => {
+        if (1 < entries.length) {
+            console.group(`Duplicate definitions for ${name}`)
+            console.table(entries)
+            console.groupEnd(`Duplicate definitions for ${name}`)
         }
-        if (!(structures.includes(value) || properties[value] || types[value] || terminals[value])) {
-            throw Error(`There is no definition for the production type <${value}>`)
-        }
+    })
+}
+
+function registerDefinition(type, name, value, url) {
+    const { [type]: entries } = definitions
+    if (entries.has(name)) {
+        entries.get(name).push([value, url])
+    } else {
+        entries.set(name, [[value, url]])
     }
 }
 
-function tryParseDefinition(name, definition, context = {}) {
+function parseDefinitionDeep(parent, { name, type, value }, context) {
+    switch (type) {
+        case ' ':
+        case '&&':
+        case '||':
+        case '|':
+            return value.forEach(type => parseDefinitionDeep(parent, type, context))
+        case 'function':
+        case 'simple-block':
+            return tryParseDefinition(parent, value, context)
+        case 'optional':
+        case 'repeat':
+        case 'required':
+            return parseDefinitionDeep(parent, value, context)
+        case 'non-terminal':
+        case 'property':
+        case 'structure':
+        case 'terminal':
+            if (structures.includes(name) || terminals[name] || types[name] || properties[name]) {
+                return
+            }
+            throw Error(`There is no definition for the ${type} production <${name}>`)
+        case 'delimiter':
+            return
+        default:
+            throw Error('Unexpected node type')
+    }
+}
+
+function tryParseDefinition(name, definition, context) {
     try {
-        const ast = parseDefinition(definition)
-        if (!context.spec) {
-            parseDefinitionDeep(name, ast)
+        const node = parseDefinition(definition, { useCache: true })
+        if (!context) {
+            parseDefinitionDeep(name, node, context)
         }
     } catch ({ message }) {
         console.log(`Error while parsing "${name}": ${message}`)
-        if (context.spec) {
+        if (context) {
             console.log(context)
         }
     }
 }
 
 /**
- * Test of parsing all property/type `value` or `newValues` from `@webref/css`.
+ * Test parsing all property and type definitions from @webref/css.
  *
- * Parsing is shallow: the definition values of non-terminal and property types
- * are not expanded.
+ * It reports syntax errors and duplicate definitions.
  */
-function testParseAllDefinitionValues() {
-    return css.listAll().then(specifications => {
-        console.group('Definition errors in @webref/css (shallow parsing)')
-        Object.values(specifications).forEach(({ properties, spec, valuespaces }) => {
+function testParseWebrefDefinitions() {
+    return webref.listAll().then(specifications => {
+        console.group('Errors in @webref/css definitions')
+        Object.values(specifications).forEach(({ properties, spec: { url }, valuespaces }) => {
             Object.entries(properties).forEach(([property, { newValues, value }]) => {
                 if (newValues) {
-                    value = newValues
-                }
-                if (value) {
-                    const context = { field: newValues ? 'newValues' : 'value', spec, value }
-                    tryParseDefinition(property, value, context)
+                    tryParseDefinition(property, newValues, { newValues, property, url })
+                } else if (value) {
+                    tryParseDefinition(property, value, { property, url, value })
+                    registerDefinition('properties', property, value, url)
                 }
                 // Some properties have neither `value` or `newValues`, eg. aliases
             })
             Object.entries(valuespaces).forEach(([type, { value }]) => {
                 if (value) {
-                    const context = { field: 'value', spec, value }
-                    tryParseDefinition(type, value, context)
+                    tryParseDefinition(type, value, { type, url, value })
+                    registerDefinition('types', type, value, url)
                 }
                 // Some types do not have `value`, eg. when written in prose
             })
         })
-        console.groupEnd('Definition errors @webref/css (shallow parsing)')
+        reportDuplicates(definitions.properties)
+        reportDuplicates(definitions.types)
+        console.groupEnd('Errors in @webref/css definitions')
     })
 }
 
-testParseAllDefinitionValues()
-
 /**
- * Test of parsing all type values in `lib/values/types.js`.
+ * Test parsing all property, descriptor, and type definitions from w3c/webref,
+ * curated in scripts/definitions.js, and used in this library.
  *
- * Parsing is deep: the definition values of non-terminal and property types are
- * expanded, or an error is thrown if the expanded definition can not be found,
- * as well as if the parse function of a basic type can not be found.
+ * It reports syntax errors, missing type definitions or parse functions.
  */
-function testParseTypeDefinition() {
-    console.group('Definition errors in lib/values/types.js (deep parsing)')
+function testParseCuratedDefinitions() {
+    console.group('Errors in curated definitions')
+    Object.entries(descriptors).forEach(([descriptor, definitions]) =>
+        Object.values(definitions).forEach(({ value }) => tryParseDefinition(descriptor, value)))
+    Object.entries(properties).forEach(([property, { value }]) => tryParseDefinition(property, value))
     Object.entries(types).forEach(([type, definition]) => tryParseDefinition(type, definition))
-    console.groupEnd('Definition errors in lib/values/types.js (deep parsing)')
+    console.groupEnd('Errors in curated definitions')
 }
 
-testParseTypeDefinition()
+testParseWebrefDefinitions()
+testParseCuratedDefinitions()

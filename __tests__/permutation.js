@@ -1,10 +1,10 @@
 
-const { getNextPermutation, getNthPermutation, getPermutationIndex } = require('../lib/parse/permutation.js')
+const { createPermutationIterator, getNthPermutation, getPermutationIndex } = require('../lib/parse/permutation.js')
 
-const a = { position: 0, type: 'keyword', value: 'a' }
-const b = { position: 1, type: 'keyword', value: 'b' }
-const c = { position: 2, type: 'keyword', value: 'c' }
-const d = { position: 3, type: 'keyword', value: 'd' }
+const a = { type: 'keyword', value: 'a' }
+const b = { type: 'keyword', value: 'b' }
+const c = { type: 'keyword', value: 'c' }
+const d = { type: 'keyword', value: 'd' }
 const set = [a, b, c, d]
 const permutations = [
     ['[a, b, c, d]', [a, b, c, d], 0],
@@ -83,35 +83,27 @@ describe('getNthPermutation()', () => {
         expect(getNthPermutation(set, index)).toEqual(permutation)
     })
 })
-describe('getNextPermutation()', () => {
-    it('excludes all permutations starting with the first type of a permutation failing to match any value', () => {
-        const excluded = []
-        expect(getNextPermutation(set, [a, b, c, d], [], excluded)).toEqual([b, a, c, d])
-        expect(excluded).toEqual([[0]])
-        expect(getNextPermutation(set, [d, c, b, a], [d, c, b], excluded)).toEqual([b, a, c])
+describe('createPermutationIterator()', () => {
+    it('returns the next permutation based on the given number of valid value(s)', () => {
+        const permutations = createPermutationIterator(set, true)
+        expect(permutations.next().value).toBe(set)
+        expect(permutations.next(1).value).toEqual([a, c, b, d])
+        expect(permutations.next(2).value).toEqual([a, c, d, b])
+        expect(permutations.next(3).value).toEqual([a, d, b, c])
+        expect(permutations.next(1).value).toEqual([b, a, c, d])
+        expect(permutations.next(0).value).toEqual([c, a, b, d])
+        expect(permutations.next(0).value).toEqual([d, a, b, c])
+        expect(permutations.next(0).value).toBeUndefined()
     })
-    it('excludes all permutations starting with the first types of a permutation failing to match more values', () => {
-        const excluded = []
-        expect(getNextPermutation(set, [a, b, c, d], [a], excluded)).toEqual([a, c, b, d])
-        expect(excluded).toEqual([[0, 1]])
-        expect(getNextPermutation(set, [d, c, b, a], [d, c, b], excluded)).toEqual([a, c, b])
-    })
-    it('excludes all length of a permutation including the first remaining type failing to match another value', () => {
-        const excluded = []
-        expect(getNextPermutation(set, [a, d, c, b], [a], excluded)).toEqual([b, a, c, d])
-        expect(excluded).toEqual([[0, 3]])
-        expect(getNextPermutation(set, [a, c, d], [a, c], excluded)).toEqual([b, a, c])
-        expect(getNextPermutation(set, [a, c], [a], excluded)).toEqual([b, a])
-    })
-    it('excludes all length of a permutation including the last remaining type failing to match another value', () => {
-        const excluded = []
-        expect(getNextPermutation(set, [a, b, d, c], [a, b], excluded)).toEqual([a, c, b, d])
-        expect(excluded).toEqual([[0, 1, 3]])
-        expect(getNextPermutation(set, [a, b, c], [a, b], excluded)).toEqual([a, c, b])
-    })
-    it('does not exclude permutations based on a permutation that had a match before backtracking', () => {
-        const excluded = []
-        getNextPermutation(set, [a, b, c], [a, b, c], excluded)
-        expect(excluded).toEqual([])
+    it('returns the next k-permutation based on the given number of valid value(s)', () => {
+        const permutations = createPermutationIterator(set)
+        expect(permutations.next().value).toBe(set)
+        expect(permutations.next(0).value).toEqual([b, a, c, d])
+        expect(permutations.next(1).value).toEqual([b, c, a, d])
+        expect(permutations.next(1).value).toEqual([b, d, a, c])
+        expect(permutations.next(1).value).toEqual([c, a, b, d])
+        expect(permutations.next(0).value).toEqual([d, a, b, c])
+        expect(permutations.next(0).value).toEqual([b])
+        expect(permutations.next(0).value).toBeUndefined()
     })
 })

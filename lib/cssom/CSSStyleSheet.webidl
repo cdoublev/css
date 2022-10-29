@@ -1,5 +1,5 @@
 
-// https://drafts.csswg.org/cssom/#cssstylesheet
+// https://drafts.csswg.org/cssom-1/#cssstylesheet
 [Exposed=Window]
 interface CSSStyleSheet : StyleSheet {
     constructor(optional CSSStyleSheetInit options = {});
@@ -13,7 +13,7 @@ interface CSSStyleSheet : StyleSheet {
     undefined replaceSync(USVString text);
 };
 
-// https://drafts.csswg.org/cssom/#dictdef-cssstylesheetinit
+// https://drafts.csswg.org/cssom-1/#dictdef-cssstylesheetinit
 dictionary CSSStyleSheetInit {
     DOMString baseURL = null;
     (MediaList or DOMString) media = "";

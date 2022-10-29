@@ -1,5 +1,5 @@
 
-// https://drafts.csswg.org/cssom/#medialist
+// https://drafts.csswg.org/cssom-1/#medialist
 // https://github.com/jsdom/webidl2js/issues/254
 [Exposed=Window]
 interface MediaList {

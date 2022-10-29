@@ -3,7 +3,7 @@ This document defines the specifications that this library depends on.
 
 # CSS specifications
 
-The CSS specifications implemented by browsers are endorsed by the World Wide Web Consortium (W3C) and authored by its CSS Working Group (CSSWG).
+The CSS specifications to which browsers must conform are endorsed by the World Wide Web Consortium (W3C) and authored by its CSS Working Group (CSSWG).
 
 The W3C specifications are organized in [*classes*](https://www.w3.org/standards/types) (aka. *types*), in particular the classes of the *standard track*, identified by a [status code](https://www.w3.org/2021/Process-20211102/#maturity-levels) indicating their maturity:
 
@@ -13,14 +13,14 @@ The W3C specifications are organized in [*classes*](https://www.w3.org/standards
   - Proposed Recommendation (PR)
   - Recommendation (REC)
 
-Some RECs may be continuously revised, like the HTML *living* standard, while others, like the CSS RECs, are maintained by creating a new version. Either the previous version becomes a Superseded REC, or the new version is an Amended REC, depending on the *classes of changes* the new version receives:
+Some RECs may be continuously revised, like the HTML *living* standard, whereas others, like the CSS RECs, are maintained by creating a new version. Either the previous version becomes a Superseded REC, or the new version is an Amended REC, depending on the *classes of changes* the new version includes:
 
-  - **editorial:** fixing broken links, invalid markup, non-normative contents, typos or grammatical errors, etc
-  - **substantive:** new features or corrections that makes conforming implementations become non-conforming or vice-versa
+  - **editorial:** fixing a broken link, an invalid markup, a non-normative content, a typo or a grammatical error, etc
+  - **substantive:** a new feature or correction that makes conforming implementations become non-conforming or vice-versa
 
-A superseding REC includes editorial changes, while an Amended REC includes substantive changes. A CR can revert back to a WD if it needs to include substantive changes, while a PR can not.
+A superseding REC includes editorial changes, whereas an Amended REC includes substantive changes. A CR can revert to a WD if it needs to include substantive changes, whereas a PR can not.
 
-CSS 1 is superseded by CSS 2. CSS 2.1 amends CSS 2 and incorporates its content with some parts that have been altered and others that have been removed. The removed parts may be used in other new specifications (aka. *modules*) labelled with *level 3*, while new features are defined in new specifications labelled with *level 1*.
+CSS 1 is superseded by CSS 2. CSS 2.1 amends CSS 2 and incorporates its content with some parts that have been altered and others that have been removed. The removed parts may be used in new specifications (aka. *modules*) labelled with *level 3*, whereas new features are defined in new specifications labelled with *level 1*.
 
 The CSSWG defines [complementary classes](https://www.w3.org/blog/CSS/2007/11/01/css_recommendation_track/) (stages):
 
@@ -41,14 +41,9 @@ This folder may contain multiple levels of a specification: the level correspond
 The "level-less" URL of a specification most often references the last delta (but still relevant) version if any, otherwise the last full version, eg:
 
   - https://drafts.csswg.org/css-syntax/ provides the same content than https://drafts.csswg.org/css-syntax-3/
-  - https://drafts.csswg.org/css-conditional/ provides a delta between level 5 and level 3 (full)
-  - https://drafts.csswg.org/css-conditional-4/ provides a delta between level 4 and level 3 (full)
+  - https://drafts.csswg.org/css-conditional/ provides the content of level 5 as delta from level 3 (full)
+  - https://drafts.csswg.org/css-conditional-4/ provides the content of level 4 as delta from level 3 (full)
 
 But `@webref/css` also references CSS Backgrounds and Borders Level 4, which is a delta version, and https://drafts.csswg.org/css-backgrounds/ refers to Level 3.
 
-A "level-less" URL is handy for documenting a declaration in code because it does not need to be updated. But on the other hand, it refers to a dynamic content that could later no longer apply to the related code. Furthermore, the level is a hint for the currently supported version, therefore a JSDOC `@link` must use the URL that includes the highest level of the specification whose content is related to the code it applies to.
-
-# Other specifications
-
-- Compat
-- ?
+A "level-less" URL is handy for documenting code because it does not need to be updated. But on the other hand, it refers to a dynamic content that could later no longer apply to the related code. Furthermore, the level is a hint of the supported version, therefore a JSDOC `@link` must use the URL that includes the highest level of the specification whose content is related to the code it applies to.

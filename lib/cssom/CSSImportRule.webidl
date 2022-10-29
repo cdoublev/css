@@ -1,5 +1,5 @@
 
-// https://drafts.csswg.org/cssom/#cssimportrule
+// https://drafts.csswg.org/cssom-1/#cssimportrule
 [Exposed=Window]
 interface CSSImportRule : CSSRule {
     readonly attribute USVString href;

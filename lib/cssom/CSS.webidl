@@ -1,5 +1,5 @@
 
-// https://drafts.csswg.org/cssom/#namespacedef-css
+// https://drafts.csswg.org/cssom-1/#namespacedef-css
 // `interface` replaces `namespace` which is not supported by `webidl2js` yet
 [Exposed=Window]
 interface CSS {

@@ -8,53 +8,44 @@ beforeEach(() => {
     stream.reset()
 })
 
-describe('reset()', () => {
-    it('pushes all items back onto the front of the stream', () => {
-        stream.reset()
-        expect(stream.current).toBeUndefined()
-        expect(stream.next()).toBe('h')
-        expect(stream.index).toBe(-1)
-    })
-})
-
 describe('moveTo(index)', () => {
-    it('sets the item at the given index as the current item', () => {
+    it('moves the stream in front of the item at the given index', () => {
         stream.moveTo(1)
         expect(stream.current).toBe('e')
         expect(stream.index).toBe(1)
     })
 })
 
-describe('consume(size, fallback)', () => {
-    it('throws an error when the specified item is not found at the front of the stream', () => {
-        expect(() => stream.consume('_', false)).toThrow('"_" was expected')
+describe('consume(item, fallback)', () => {
+    it('throws an error when the given item is not at the front of the stream', () => {
+        expect(() => stream.consume('_', Error)).toThrow('"_" was expected')
+        expect(() => stream.consume('_', Error('oups'))).toThrow('oups')
         expect(stream.index).toBe(-1)
-        stream.moveTo(1)
-        expect(() => stream.consume('_', false)).toThrow('"_" was expected')
-        expect(stream.index).toBe(1)
-        stream.moveTo(string.length - 1)
-        expect(() => stream.consume('_', false)).toThrow('"_" was expected')
-        expect(stream.index).toBe(string.length - 1)
     })
-    it('consumes item at the front of the stream', () => {
+    it('consumes the given item at the front of the stream', () => {
         expect(stream.consume('h')).toBe('h')
+        expect(stream.consume('_')).toBeNull()
+        expect(stream.consume('_', 'e')).toBe('e')
         expect(stream.current).toBe('h')
         expect(stream.index).toBe(0)
     })
-    it('consumes n items at the front of the stream', () => {
+    it('consumes the given n items at the front of the stream', () => {
         expect(stream.consume(2)).toBe('he')
         expect(stream.consume(string.length)).toBe('llo')
+        expect(stream.consume(string.length)).toBe('')
         expect(stream.index).toBe(string.length - 1)
     })
-    it('returns the specified fallback item when the specified item is not found at the front of the stream', () => {
-        expect(stream.consume('_', 'H')).toBe('H')
-        expect(stream.current).toBeUndefined()
-        expect(stream.index).toBe(-1)
+    it('consumes the item at the front of the stream when it matches a parse function', () => {
+        expect(stream.consume(char => char === 'h')).toBe('h')
+        expect(stream.consume(char => char === 'e' ? 'success' : null)).toBe('success')
+        expect(stream.consume(char => char === 'l' ? null : 'success')).toBeNull()
+        expect(stream.consume((char, arg1, arg2) => char === 'l' ? `${arg1}${arg2}` : null, 'l', 'o')).toBe('lo')
+        expect(stream.index).toBe(2)
     })
 })
 
 describe('reconsume(size)', () => {
-    it('pushes the current item back onto the front of the stream', () => {
+    it('pushes the given n items back to the front of the stream', () => {
         stream.moveTo(string.length - 1)
         expect(stream.current).toBe('o')
         stream.reconsume()
@@ -67,64 +58,85 @@ describe('reconsume(size)', () => {
 })
 
 describe('consumeRunOf(...items)', () => {
-    it('consumes all consecutive occurrences of the specified item in the remaining stream items', () => {
+    it('consumes all consecutive occurrences of a given item at the front of the stream', () => {
         stream.moveTo(1)
-        stream.consumeRunOf('l')
+        expect(stream.consumeRunOf('l')).toBe('ll')
         expect(stream.current).toBe('l')
         expect(stream.index).toBe(3)
     })
-    it('consumes all consecutive occurrences of the specified items in the remaining stream items', () => {
+    it('consumes all consecutive occurrences of given items at the front of the stream', () => {
         const stream = create('csscsscss.')
-        stream.consumeRunOf('c', 's')
+        expect(stream.consumeRunOf('c', 's')).toBe('csscsscss')
+        expect(stream.current).toBe('s')
+        expect(stream.index).toBe(8)
+    })
+    it('consumes all consecutive items matching a given predicate function at the front of the stream', () => {
+        const stream = create('csscsscss.')
+        expect(stream.consumeRunOf(char => char === 'c' || char === 's')).toBe('csscsscss')
         expect(stream.current).toBe('s')
         expect(stream.index).toBe(8)
     })
 })
 
 describe('consumeUntil(item)', () => {
-    it('throws an error when the specified item is not found in the remaining stream items', () => {
+    it('throws an error when the given item is not found at the front of the stream', () => {
         expect(() => stream.consumeUntil('_')).toThrow('"_" was expected')
         expect(stream.index).toBe(-1)
         stream.moveTo(2)
         expect(() => stream.consumeUntil('_')).toThrow('"_" was expected')
         expect(stream.index).toBe(2)
     })
-    it('consumes items until the given item is found in the remaining stream items', () => {
+    it('consumes consecutive occurrences of the given item at the front of the stream', () => {
         expect(stream.consumeUntil('o')).toBe('hell')
         expect(stream.current).toBe('l')
         expect(stream.index).toBe(3)
     })
-    it('consumes all remaining stream items when no argument is given', () => {
+    it('consumes all remaining items at the front of the stream when no argument is given', () => {
         expect(stream.consumeUntil()).toBe('hello')
         expect(stream.current).toBe('o')
         expect(stream.index).toBe(4)
     })
 })
 
-describe('next(end, size)', () => {
-    it('returns the next item(s) at current index + given integer', () => {
+describe('reset()', () => {
+    it('pushes all items back to the front of the stream', () => {
+        expect(stream.consumeUntil('o')).toBe('hell')
+        stream.reset()
+        expect(stream.current).toBeUndefined()
         expect(stream.next()).toBe('h')
-        expect(stream.next(1)).toBe('h')
-        expect(stream.next(1, 2)).toBe('h')
-        expect(stream.next(2)).toBe('he')
-        expect(stream.next(2, 1)).toBe('h')
-        expect(stream.next(2, 2)).toBe('he')
-        expect(stream.next(3, 2)).toBe('el')
         expect(stream.index).toBe(-1)
     })
 })
 
-describe('prev(start, size)', () => {
-    it('returns the previous item(s) at current index - given integer', () => {
+describe('next(size, offset = 0)', () => {
+    it('returns the given size of next items located at the given offset from index', () => {
+        expect(stream.next()).toBe('h')
+        expect(stream.next(1, 0)).toBe('h')
+        expect(stream.next(1, 1)).toBe('e')
+        expect(stream.next(1, 2)).toBe('l')
+        expect(stream.next(2)).toBe('he')
+        expect(stream.next(2, 1)).toBe('el')
+        expect(stream.next(2, 2)).toBe('ll')
+        expect(stream.next(3, 2)).toBe('llo')
+        expect(stream.next(Infinity)).toBe('hello')
+        expect(stream.next(Infinity, 1)).toBe('ello')
+    })
+})
+
+describe('prev(size, offset = 0)', () => {
+    it('returns the given size of previous items located at the given offset from index', () => {
         stream.moveTo(string.length)
         expect(stream.prev()).toBe('o')
-        expect(stream.prev(1)).toBe('o')
-        expect(stream.prev(1, 2)).toBe('o')
+        expect(stream.prev(1, 0)).toBe('o')
+        expect(stream.prev(1, 1)).toBe('l')
+        expect(stream.prev(1, 2)).toBe('l')
         expect(stream.prev(2)).toBe('lo')
-        expect(stream.prev(2, 1)).toBe('l')
-        expect(stream.prev(2, 2)).toBe('lo')
-        expect(stream.prev(3, 2)).toBe('ll')
+        expect(stream.prev(2, 1)).toBe('ll')
+        expect(stream.prev(2, 2)).toBe('el')
+        expect(stream.prev(3, 2)).toBe('hel')
         expect(stream.index).toBe(string.length)
+        expect(stream.prev(Infinity)).toBe('hello')
+        expect(stream.prev(Infinity, 1)).toBe('hell')
     })
 })
 
@@ -136,15 +148,14 @@ describe('atEnd()', () => {
         stream.consumeUntil()
         expect(stream.atEnd()).toBeTruthy()
     })
-})
-
-describe('insert(...items)', () => {
-    it('inserts the given items after the current item', () => {
-        stream.insert('hey, ')
-        expect(stream.source).toBe('hey, hello')
-        stream.moveTo(stream.source.length - 1)
-        stream.insert(' world!')
-        expect(stream.source).toBe('hey, hello world!')
+    it('returns true when all items have been consumed excluding items determined by a given predicate', () => {
+        function predicate(char) {
+            return char === 'l' || char === 'o'
+        }
+        stream.moveTo(1) // he
+        expect(stream.atEnd(predicate)).toBeTruthy()
+        stream.moveTo(3) // hell
+        expect(stream.atEnd('o')).toBeTruthy()
     })
 })
 
@@ -152,24 +163,24 @@ describe('loops', () => {
     it('iterates over the stream items', () => {
         const string = 'hello world!'
         const stream = create(string)
-        let i = 0
+        let index = 0
         expect(stream.current).toBeUndefined()
         for (const char of stream) {
             expect(char).toBeDefined()
-            expect(char).toBe(string[i])
+            expect(char).toBe(string[index])
             expect(stream.current).toBe(char)
-            expect(stream.index).toBe(i)
-            expect(stream.next()).toBe(string[i + 1])
-            if (++i === string.length) {
+            expect(stream.index).toBe(index)
+            expect(stream.next()).toBe(string[index + 1])
+            if (++index === string.length) {
                 expect(stream.atEnd()).toBeTruthy()
             } else {
                 expect(stream.atEnd()).toBeFalsy()
             }
         }
-        expect(i).toBe(string.length)
+        expect(string).toHaveLength(index)
         expect(stream.atEnd()).toBeTruthy()
     })
-    it('iterates over a slice of the stream items while iterating over the stream items', () => {
+    it('iterates over a slice of the stream items while iterating over all stream items', () => {
         const string = 'a nested word'
         const stream = create(string)
         let nested = ''
@@ -185,7 +196,7 @@ describe('loops', () => {
         }
         expect(nested).toBe('nested')
     })
-    it('consumes a stream item while stream is not at end', () => {
+    it('consumes a stream item while the stream is not at end', () => {
         const string = 'a nested word'
         const stream = create(string)
         let nested = ''
@@ -202,7 +213,7 @@ describe('loops', () => {
         }
         expect(nested).toBe('nested')
     })
-    it('reconsumes stream items while iterating over the stream items', () => {
+    it('reconsumes an item while iterating over the stream items', () => {
         const stream = create(string)
         let output = ''
         let i = 0
@@ -221,31 +232,34 @@ it('works with array', () => {
     const array = ['hello', ' ', 'world', '!']
     const stream = create(array)
 
-    expect(stream).toHaveLength(array.length)
-
-    expect(stream.next()).toBe('hello')
     expect(stream.current).toBeUndefined()
+    expect(stream.next()).toBe('hello')
+    expect(stream.next(2)).toEqual(['hello', ' '])
+    expect(stream.next(1, 1)).toBe(' ')
+    expect(stream.next(2, 1)).toEqual([' ', 'world'])
     expect(stream.consume()).toBe('hello')
     expect(stream.current).toBe('hello')
-    expect(stream.next(2, 1)).toBe(' ')
-    expect(stream.next(2)).toEqual([' ', 'world'])
+    expect(stream.consume(2)).toEqual([' ', 'world'])
+    expect(stream.current).toBe('world')
+    expect(stream.prev()).toBe(' ')
+    expect(stream.prev(1, 1)).toBe('hello')
+    expect(stream.prev(2, 1)).toEqual(['hello'])
 
     stream.reset()
 
     expect(stream.current).toBeUndefined()
     expect(stream.consumeUntil('!')).toEqual(['hello', ' ', 'world'])
     expect(stream.consume()).toBe('!')
-    expect(stream.consume('!')).toBeUndefined()
+    expect(stream.consume('!')).toBeNull()
 
-    stream.moveTo(1)
-    stream.insert('beautiful', ' ')
+    stream.moveTo(2)
+    stream.source.splice(stream.index, 0, 'beautiful', ' ')
     stream.reset()
     expect(stream.consumeUntil('!')).toEqual(['hello', ' ', 'beautiful', ' ', 'world'])
-    expect(stream).toHaveLength(6)
 
     stream.reset()
-    let i = 0
+    let index = 0
     for (const char of stream) {
-        expect(char).toBe(['hello', ' ', 'beautiful', ' ', 'world', '!'][i++])
+        expect(char).toBe(['hello', ' ', 'beautiful', ' ', 'world', '!'][index++])
     }
 })

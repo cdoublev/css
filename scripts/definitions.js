@@ -1,488 +1,543 @@
 /**
- * This script generates definitions extracted by `@webref/css` from latest W3C
+ * This script generates definitions extracted by @webref/css from latest W3C
  * Editor's Drafts specifications:
- * - `./lib/values/types.js`: CSS type definitions
- * - `./lib/properties/definitions.js`: CSS property definitions
+ *
+ *   - ./lib/descriptors/definitions.js
+ *   - ./lib/properties/definitions.js
+ *   - ./lib/values/definitions.js
  */
 const { addQuotes, logError, tab } = require('../lib/utils/script.js')
-const { aliases } = require('../lib/properties/compatibility.js')
-const cssWideKeywords = require('../lib/values/cssWideKeywords.js')
-const { units: dimensionUnits } = require('../lib/values/dimensions.js')
-const fs = require('fs')
-const { listAll } = require('@webref/css')
-const namedColors = require('../lib/values/namedColors.js')
-const path = require('path')
-const { functions: pseudoFunctions } = require('../lib/values/pseudos.js')
+const { join, resolve } = require('path')
+const compatibility = require('../lib/compatibility.js')
+const cssWideKeywords = require('../lib/values/css-wide-keywords.js')
+const deprecatedColors = require('../lib/values/deprecated-colors.js')
+const { definitions: dimensions } = require('../lib/values/dimensions.js')
+const fs = require('node:fs/promises')
+const logical = require('../lib/properties/logical.js')
+const { listAll } = require('./webref.js')
+const namedColors = require('../lib/values/named-colors.js')
 const shorthands = require('../lib/properties/shorthands.js')
 const structures = require('../lib/values/structures.js')
-const systemColors = require('../lib/values/systemColors.js')
+const systemColors = require('../lib/values/system-colors.js')
 const terminals = require('../lib/parse/terminals.js')
 
-const outputPaths = {
-    properties: path.resolve(__dirname, '../lib/properties/definitions.js'),
-    type: path.resolve(__dirname, '../lib/values/types.js'),
-}
-const header = `// Generated from ${__filename}`
+const logicalGroups = Object.keys(logical)
 
-/**
- * Excluded types
- *
- * <EOF-token> is not represented in this library, and the other types are not
- * parsed using the CSS value definition syntax.
- */
+const outputPaths = {
+    descriptors: resolve(join(__dirname, '..', 'lib', 'descriptors', 'definitions.js')),
+    properties: resolve(join(__dirname, '..', 'lib', 'properties', 'definitions.js')),
+    types: resolve(join(__dirname, '..', 'lib', 'values', 'definitions.js')),
+}
+
+const header = `\n// Generated from ${__filename}\n\nmodule.exports = {\n`
+
 const excludedTypes = [
+    // Terminals
+    '(-token',
+    ')-token',
+    '[-token',
+    ']-token',
+    '{-token',
+    '}-token',
+    'CDC-token',
+    'CDO-token',
     'EOF-token',
+    'at-keyword-token',
+    'bad-string-token',
+    'bad-url-token',
+    'colon-token',
+    'comma-token',
+    'delim-token',
+    'semicolon-token',
+    'whitespace-token',
     ...structures,
     ...Object.keys(terminals),
+    // Aliases (defined in prose)
+    ...compatibility.values.aliases.keys(),
+    // https://github.com/w3c/csswg-drafts/issues/7301
+    'length-percentages',
 ]
 
 /* eslint-disable sort-keys */
 
-/**
- * Legacy, extended, custom, or missing type definitions
- *
- * Legacy and extended types are only defined in prose in specifications. They
- * must be supported as simple aliases either with an identical behavior than
- * the target type (legacy types) or with a specific behavior (extended types).
- *
- * Custom types only exist in this library to simplify parsing.
- *
- * Missing type definitions are defined in prose in specifications instead of
- * with the CSS value definition syntax.
- *
- * This object is normalized into entries accepting multiple value definitions
- * for further processing in this script.
- */
-const initialTypes = Object.entries({
-    // Legacy types
-    'hsla()': '<hsl()>',
-    'rgba()': '<rgb()>',
-    // Extended types
-    'repeating-conic-gradient()': '<conic-gradient()>',
-    'repeating-linear-gradient()': '<linear-gradient()>',
-    'repeating-radial-gradient()': '<radial-gradient()>',
+const initialTypes = {
     // Custom types
     'css-wide-keyword': cssWideKeywords.join(' | '),
-    'math-function': '<calc()> | <min()> | <max()> | <clamp()> | <round()> | <mod()> | <rem()> | <sin()> | <cos()> | <tan()> | <asin()> | <acos()> | <atan()> | <atan2()> | <pow()> | <sqrt()> | <hypot()> | <log()> | <exp()> | <abs()> | <sign()>',
-    // TODO: fix https://github.com/w3c/csswg-drafts/issues/7016
-    ...pseudoFunctions,
-    // TODO: fix https://github.com/w3c/csswg-drafts/issues/6927
-    'nesting-selector': "'&'",
     // TODO: report @webref/css issue "`value` written in prose and not extracted"
     'absolute-size': 'xx-small | x-small | small | medium | large | x-large | xx-large',
-    'basic-shape': '<inset()> | <circle()> | <ellipse()> | <polygon()> | <path()>',
-    'bottom': '<length> | auto',
-    'content-level': 'element | content | text | attr(<custom-ident>) | counter() | counters()',
-    'counter-name': '<custom-ident>',
-    'counter-style-name': '<custom-ident>',
-    'custom-params': '<dashed-ident> [<number> | <percentage> | none]#',
-    'dimension': '<length> | <time> | <frequency> | <resolution> | <angle> | <decibel> | <flex> | <semitones>',
-    'dimension-unit': `"%" | ${dimensionUnits.join(' | ')}`,
-    'extension-name': '<dashed-ident>',
-    'lang': '<ident> | <string>',
-    'left': '<length> | auto',
-    'named-color': namedColors.join(' | '),
-    'outline-line-style': 'none | hidden | dotted | dashed | solid | double | groove | ridge | inset | outset | auto',
+    'content-level': 'element | content | text | attr(<custom-ident>) | <counter()> | <counters()>',
     'q-name': '<wq-name>',
     'relative-size': 'larger | smaller',
-    'right': '<length> | auto',
-    'size-feature': '<media-feature>',
-    'style-feature': '<declaration>',
-    'system-color': systemColors.join(' | '),
-    'top': '<length> | auto',
-    'transform-function': '<matrix()> | <translate()> | <translateX()> | <translateY()> | <scale()> | <scaleX()> | <scaleY()> | <rotate()> | <skew()> | <skewX()> | <skewY()>',
-    'url-modifier': '<custom-ident> | <function>',
     'x': '<number>',
-    'xyz': 'xyz | xyz-d50 | xyz-d65',
     'y': '<number>',
-    // TODO: report spec issue "replace `<number-percentage>` by `<number> | <percentage>`"
-    'number-percentage': '<number> | <percentage>',
-    // TODO: report spec issue "replace `<uri>` (defined in prose in CSS2) by `<url>`"
-    'uri': '<url>',
-}).map(([type, value]) => [type, [['value', [[value]]]]])
+}
 
-/**
- * Overriden property/type definitions
- *
- * Only fields whose value is defined with a replacement are overriden and
- * `newValues` are ignored when assigned a falsy value here.
- */
 const replaced = {
+    descriptors: {
+        '@color-profile': {
+            // https://github.com/w3c/webref/issues/707
+            'components': {
+                initial: '',
+            },
+            'src': {
+                initial: '',
+            },
+        },
+        '@counter-style': {
+            // https://github.com/w3c/csswg-drafts/issues/7417
+            'negative': {
+                initial: '"-"',
+            },
+            'prefix': {
+                initial: '""',
+            },
+            'suffix': {
+                initial: '". "',
+            },
+            // https://github.com/w3c/webref/issues/707
+            'additive-symbols': {
+                initial: '',
+            },
+            'symbols': {
+                initial: '',
+            },
+        },
+        '@font-face': {
+            // https://github.com/w3c/csswg-drafts/issues/7418
+            'font-size': {
+                value: 'auto | normal | [<number>]{1,2}',
+            },
+            'src': {
+                initial: '',
+            },
+            // https://github.com/w3c/webref/issues/707
+            'font-family': {
+                initial: '',
+            },
+        },
+        '@font-palette-values': {
+            // https://github.com/w3c/webref/issues/707
+            'base-palette': {
+                initial: '',
+            },
+            'font-family': {
+                initial: '',
+            },
+            'override-colors': {
+                initial: '',
+            },
+        },
+        '@property': {
+            // https://github.com/w3c/webref/issues/707
+            'inherits': {
+                initial: '',
+            },
+            'initial-value': {
+                initial: '',
+            },
+            'syntax': {
+                initial: '',
+            },
+        },
+    },
     properties: {
         // Implementation dependent
         'font-family': { initial: 'monospace' },
+        'glyph-orientation-vertical': { initial: 'auto' },
         'voice-family': { initial: 'female' },
-        // TODO: fix https://github.com/w3c/fxtf-drafts/issues/451
+        // https://github.com/w3c/fxtf-drafts/issues/451
         'background-blend-mode': { value: "<'mix-blend-mode'>#" },
-        // TODO: report @webref/css issue "`value` not extracted (but only `name`)"
+        // https://github.com/w3c/csswg-drafts/issues/7366
+        'border-end-end-radius': { initial: '0' },
+        'border-end-start-radius': { initial: '0' },
+        'border-start-end-radius': { initial: '0' },
+        'border-start-start-radius': { initial: '0' },
+        // https://github.com/w3c/csswg-drafts/issues/7367
+        'border-limit': { value: 'all | round | [sides | corners] <length-percentage [0,∞]>? | [top | right | bottom | left] <length-percentage [0,∞]>' },
+        // https://github.com/w3c/csswg-drafts/issues/7350
+        'clear': { value: 'inline-start | inline-end | block-start | block-end | left | right | top | bottom | both-inline | both-block | both | all | none' },
+        // https://github.com/w3c/csswg-drafts/issues/7219
+        'clip': { value: 'rect(<top>, <right>, <bottom>, <left>) | auto' },
+        // https://github.com/w3c/csswg-drafts/issues/6744#issuecomment-1059172827
+        'contain': { value: 'none | strict | content | [[size | inline-size] || layout || style || paint]' },
+        // https://github.com/w3c/csswg-drafts/issues/7351
+        'content': { value: 'normal | none | [<content-replacement> | <content-list>] [/ [<string> | <counter>]+]? | <element()>' },
+        'position': { value: 'static | relative | absolute | sticky | fixed | running(<custom-ident>)' },
+        // https://github.com/w3c/csswg-drafts/issues/7700
+        'outline': { value: "<'outline-width'> || <'outline-style'> || <'outline-color'>" },
+        // https://github.com/w3c/csswg-drafts/issues/7352
+        'shape-padding': { initial: '0', value: '<length-percentage>' },
+        // https://github.com/w3c/svgwg/issues/888
         'stop-color': { initial: 'black', value: "<'color'>" },
         'stop-opacity': { initial: '1', value: "<'opacity'>" },
-        // TODO: report spec issue "`clear` is missing `both-inline | both-block | both` (defined in prose)"
-        'clear': { value: 'inline-start | inline-end | block-start | block-end | left | right | top | bottom | both-inline | both-block | both | all | none' },
-        /**
-         * TODO: report spec issue "`content` uses `[<content-replacement> | <content-list>]` instead of `<content-list>` (duplicate `<image>` in expansions)"
-         * TODO: report spec issue "`content` uses `element()` instead of `<element()>`"
-         */
-        'content': { newValues: '', value: 'normal | none | <content-list> [/ [<string> | <counter>]+]? | <element()>' },
-        // TODO: report spec issue "`initial` does not match `value`"
-        '-webkit-background-clip': { value: 'border-box | padding-box | content-box | text | none' },
-        'border-end-start-radius': { initial: '0' },
-        'border-end-end-radius': { initial: '0' },
-        'border-limit': { value: 'all | round | [sides | corners] <length-percentage [0,∞]>? | [top | right | bottom | left] <length-percentage [0,∞]>' },
-        'border-start-start-radius': { initial: '0' },
-        'border-start-end-radius': { initial: '0' },
-        'glyph-orientation-vertical': { initial: 'auto' },
-        'shape-padding': { value: '<length> | none' },
-        'white-space': { value: 'normal | pre | nowrap | pre-wrap | break-spaces | pre-line | auto' },
-        // TODO: report spec issue "`newValues` of `[[max|min]-][block|inline]-size` already defined by `<'[[max|min]-][width|height]'>`"
-        'block-size': { newValues: '' },
-        'inline-size': { newValues: '' },
-        'max-block-size': { newValues: '' },
-        'max-inline-size': { newValues: '' },
-        'min-block-size': { newValues: '' },
-        'min-inline-size': { newValues: '' },
-        // TODO: report spec issue "`newValues` of `contain` is ambiguous"
-        'contain': { newValues: '', value: 'none | strict | content | [[size | inline-size] || layout || style || paint]' },
-        // TODO: report spec issue "`value` is missing whitespace"
-        'flow-into': { value: 'none | <ident> [element | content]?' },
-        // TODO: resolve to inital `background-position-x` or `background-position-y` depending on `writing-mode`
-        'background-position-block': { initial: '0%' },
-        'background-position-inline': { initial: '0%' },
+        // TODO: report spec issue "invalid quotes to define non-terminal referencing `opacity`"
+        'fill-opacity': { value: "<'opacity'>" },
+        'stroke-opacity': { value: "<'opacity'>" },
     },
     types: {
-        // Modified to be consistent with <polygon()>
-        'path()': "path(<'fill-rule'>? , <string>)",
-        // Modified to include legacy <url-token>
-        'url': '<url-token> | url(<string> <url-modifier>*) | src(<string> <url-modifier>*)',
-        // TODO: fix https://github.com/w3c/csswg-drafts/issues/7030
-        'an+b': "odd | even | <integer> | <n-dimension> | '+'? n | -n | <ndashdigit-dimension> | '+'? <ndashdigit-ident> | <dashndashdigit-ident> | <n-dimension> <signed-integer> | '+'? n <signed-integer> | -n <signed-integer> | <ndash-dimension> <signless-integer> | '+'? n- <signless-integer> | -n- <signless-integer> | <n-dimension> ['+' | '-'] <signless-integer> | '+'? n ['+' | '-'] <signless-integer> | -n ['+' | '-'] <signless-integer>",
-        // TODO: fix https://github.com/w3c/csswg-drafts/issues/6425
-        'angular-color-stop-list': '<angular-color-stop> , [<angular-color-hint>? , <angular-color-stop>]#?',
-        'color-stop-list': '<linear-color-stop> , [<linear-color-hint>? , <linear-color-stop>]#?',
-        'size': 'closest-side | closest-corner | farthest-side | farthest-corner | sides | <length-percentage [0,∞]>{1,2}',
-        // TODO: fix https://github.com/w3c/csswg-drafts/issues/6927
-        'complex-selector': '[<compound-selector> | <nesting-selector>] [<combinator>? [<compound-selector> | <nesting-selector>]]*',
-        // TODO: fix https://github.com/w3c/csswg-drafts/issues/7016
+        // https://github.com/w3c/csswg-drafts/issues/7368
+        'content-list': '[<string> | <content()> | contents | <image> | <counter> | <quote> | <target> | <leader()>]+',
+        // https://github.com/w3c/csswg-drafts/issues/7016
         'general-enclosed': '<function> | (<ident> <any-value>)',
         'pseudo-class-selector': "':' <ident> | ':' <function>",
-        // TODO: fix https://github.com/w3c/csswg-drafts/issues/7108
-        'import-condition': '[supports([<supports-condition> | <declaration>])]? <media-query-list>?',
-        // TODO: fix https://github.com/w3c/webref/issues/333
-        'selector()': 'selector(<id-selector>)',
-        // TODO: report spec issue "`<hue>` should not include `<none>`"
-        'hue': '<number> | <angle>',
-        // TODO: report spec issue "`initial` does not match `value`"
-        'content-list': '[<string> | <content()> | contents | <image> | <counter> | <quote> | <target> | <leader()>]+',
-        // TODO: report spec issue "`value` has extra whitespace"
-        'supports-font-format-fn': 'font-format(<font-format>)',
-        'supports-font-tech-fn': 'font-tech(<font-tech>)',
-        // TODO: report spec issue "`value` is missing whitespace"
-        'blend-mode': 'normal | multiply | screen | overlay | darken | lighten | color-dodge | color-burn | hard-light | soft-light | difference | exclusion | hue | saturation | color | luminosity',
-        'mask-layer': '<mask-reference> || <position> [/ <bg-size>]? || <repeat-style> || <geometry-box> || [<geometry-box> | no-clip] || <compositing-operator> || <masking-mode>',
-        // TODO: support new grammars from Images 4
+        // https://github.com/w3c/fxtf-drafts/issues/411
+        'path()': "path(<'fill-rule'>?, <string>)",
+        // TODO: support new grammars from CSS Images 4
         'conic-gradient()': 'conic-gradient([from <angle>]? [at <position>]?, <angular-color-stop-list>)',
-        'linear-gradient()': 'linear-gradient([<angle> | to <side-or-corner>]? , <color-stop-list>)',
-        'radial-gradient()': 'radial-gradient([<ending-shape> || <size>]? [at <position>]? , <color-stop-list>)',
-        /**
-         * TODO: support new grammars from Color 5.
-         * TODO: parse legacy color syntax with a production specific rule.
-         * TODO: parse function value definition as disjunctions.
-         *
-         * Below is Color 4 + legacy syntax value definitions + fix for function
-         * value definition as disjunctions.
-         */
-        'hsl()': 'hsl([<hue> | none] [<percentage> | none] [<percentage> | none] [/ [<alpha-value> | none]]? | [<hue> | none] , [<percentage> | none] , [<percentage> | none] , [<alpha-value> | none]?)',
-        'rgb()': 'rgb([<percentage> | none]{3} [/ [<alpha-value> | none]]? | [<number> | none]{3} [/ [<alpha-value> | none]]? | [<percentage> | none]#{3} , [<alpha-value> | none]? | [<number> | none]#{3} , [<alpha-value> | none]?)',
-        // TODO: support new grammars from Color 5
-        'color()': 'color(<colorspace-params> [/ <alpha-value>]?)',
+        'linear-gradient()': 'linear-gradient([<angle> | to <side-or-corner>]?, <color-stop-list>)',
+        'radial-gradient()': 'radial-gradient([<ending-shape> || <size>]? [at <position>]?, <color-stop-list>)',
+        // TODO: support new grammars from CSS Color 5
+        'color()': 'color(<colorspace-params> [/ [<alpha-value> | none]]?)',
+        'hsl()': 'hsl([<hue> | none] [<percentage> | none] [<percentage> | none] [/ [<alpha-value> | none]]?)',
         'hwb()': 'hwb([<hue> | none] [<percentage> | none] [<percentage> | none] [/ [<alpha-value> | none]]?)',
         'lab()': 'lab([<percentage> | <number> | none] [<percentage> | <number> | none] [<percentage> | <number> | none] [/ [<alpha-value> | none]]?)',
         'lch()': 'lch([<percentage> | <number> | none] [<percentage> | <number> | none] [<hue> | none] [/ [<alpha-value> | none]]?)',
         'oklab()': 'oklab([<percentage> | <number> | none] [<percentage> | <number> | none] [<percentage> | <number> | none] [/ [<alpha-value> | none] ]?)',
         'oklch()': 'oklch([<percentage> | <number> | none] [<percentage> | <number> | none] [<hue> | none] [/ [<alpha-value> | none]]?)',
+        'rgb()': 'rgb([<percentage> | none]{3} [/ [<alpha-value> | none]]?) | rgb([<number> | none]{3} [/ [<alpha-value> | none]]?)',
         // Written in prose
         'age': 'child | young | old',
+        'basic-shape': '<basic-shape-rect> | <circle()> | <ellipse()> | <polygon()> | <path()>',
+        'bottom': '<length> | auto',
+        'counter-name': '<custom-ident>',
+        'counter-style-name': '<custom-ident>',
+        'custom-highlight-name': '<ident>',
+        'deprecated-color': deprecatedColors.join(' | '),
+        'dimension-unit': `"%" | ${[...dimensions.values()].flatMap(({ units }) => units).join(' | ')}`,
         'end-value': '<number> | <dimension> | <percentage>',
         'ending-shape': 'circle | ellipse',
+        'extension-name': '<dashed-ident>',
         'family-name': '<string> | <custom-ident>',
         'gender': 'male | female | neutral',
         'generic-family': 'cursive | emoji | fangsong | fantasy | math | monospace | sans-serif | serif | system-ui | ui-monospace | ui-rounded | ui-sans-serif | ui-serif',
+        'hsla()': 'hsla([<hue> | none] [<percentage> | none] [<percentage> | none] [/ [<alpha-value> | none]]?)',
         'id': '<id-selector>',
+        'lang': '<ident> | <string>',
+        'left': '<length> | auto',
+        'mix()': "mix(<percentage> ';' <start-value> ';' <end-value>)",
+        'mq-boolean': '<integer [0,1]>',
+        'named-color': namedColors.join(' | '),
+        'outline-line-style': 'none | dotted | dashed | solid | double | groove | ridge | inset | outset | auto',
         'page-size': 'A5 | A4 | A3 | B5 | B4 | JIS-B5 | JIS-B4 | letter | legal | ledger',
-        'paint': 'none | <color> | <url> [none | <color>]? | context-fill | context-stroke',
         'palette-identifier': '<custom-ident>',
+        'quirky-color': '<number-token> | <ident-token> | <dimension-token>',
+        'quirky-length': '<number-token>',
+        'repeat()': 'repeat([<integer [1,∞]> | auto-fill | auto-fit], <track-list>)',
+        'repeating-conic-gradient()': 'repeating-conic-gradient([from <angle>]? [at <position>]?, <angular-color-stop-list>)',
+        'repeating-linear-gradient()': 'repeating-linear-gradient([<angle> | to <side-or-corner>]?, <color-stop-list>)',
+        'repeating-radial-gradient()': 'repeating-radial-gradient([<ending-shape> || <size>]? [at <position>]?, <color-stop-list>)',
+        'rgba()': 'rgba([<percentage> | none]{3} [/ [<alpha-value> | none]]?) | rgba([<number> | none]{3} [/ [<alpha-value> | none]]?)',
+        'right': '<length> | auto',
+        'scope-end': '<forgiving-selector-list>',
+        'scope-start': '<forgiving-selector-list>',
         'shape': "rect(<'top'>, <'right'>, <'bottom'>, <'left'>)",
+        'size-feature': '<media-feature>',
+        'src()': 'src(<string> <url-modifier>*)',
+        'style-feature': '<declaration>',
         'start-value': '<number> | <dimension> | <percentage>',
+        'system-color': systemColors.join(' | '),
         'target-name': '<string>',
+        'toggle()': "toggle(<toggle-value> [';' <toggle-value>]+)",
+        'top': '<length> | auto',
+        'transform-function': '<matrix()> | <translate()> | <translateX()> | <translateY()> | <scale()> | <scaleX()> | <scaleY()> | <rotate()> | <skew()> | <skewX()> | <skewY()>',
+        'uri': '<url>',
+        'url()': 'url(<string> <url-modifier>*)',
+        'url-modifier': '<custom-ident> | <function>',
+        'url-set': '<image-set()>',
+    },
+}
+
+/**
+ * Definitions existing in different specifications and which are ignored for
+ * the corresponding specification.
+ */
+const excluded = {
+    descriptors: {},
+    properties: {
+        'CSS': [
+            // Superseded by CSS Backgrounds and Borders
+            'background',
+            'background-attachment',
+            'background-color',
+            'background-image',
+            'background-position',
+            'background-repeat',
+            'border',
+            'border-bottom',
+            'border-bottom-color',
+            'border-bottom-style',
+            'border-bottom-width',
+            'border-color',
+            'border-left',
+            'border-left-color',
+            'border-left-style',
+            'border-left-width',
+            'border-right',
+            'border-right-color',
+            'border-right-style',
+            'border-right-width',
+            'border-style',
+            'border-top',
+            'border-top-color',
+            'border-top-style',
+            'border-top-width',
+            'border-width',
+            // Superseded by CSS Basic User Interface
+            'cursor',
+            'outline',
+            'outline-color',
+            'outline-style',
+            'outline-width',
+            // Superseded by CSS Box Model
+            'margin',
+            'margin-bottom',
+            'margin-left',
+            'margin-right',
+            'margin-top',
+            'padding',
+            'padding-bottom',
+            'padding-left',
+            'padding-right',
+            'padding-top',
+            // Superseded by CSS Box Sizing
+            'height',
+            'max-height',
+            'max-width',
+            'min-height',
+            'min-width',
+            'width',
+            // Superseded by CSS Color
+            'color',
+            // Superseded by CSS Display
+            'display',
+            'visibility',
+            // Superseded by CSS Fonts
+            'font',
+            'font-family',
+            'font-size',
+            'font-style',
+            'font-variant',
+            'font-weight',
+            // Superseded by CSS Fragmentation
+            'orphans',
+            'widows',
+            // Superseded by CSS Generated Content
+            'content',
+            'quotes',
+            // Superseded by CSS Inline Layout
+            'line-height',
+            'vertical-align',
+            // Superseded by CSS Lists and Counters
+            'counter-increment',
+            'counter-reset',
+            'list-style',
+            'list-style-image',
+            'list-style-position',
+            'list-style-type',
+            // Superseded by CSS Masking
+            'clip',
+            // Superseded by CSS Overflow
+            'overflow',
+            // Superseded by CSS Page Floats
+            'clear',
+            'float',
+            // Superseded by CSS Positioned Layout
+            'bottom',
+            'left',
+            'position',
+            'right',
+            'top',
+            // Superseded by CSS Table
+            'border-collapse',
+            'border-spacing',
+            'caption-side',
+            'empty-cells',
+            'table-layout',
+            // Superseded by CSS Text
+            'letter-spacing',
+            'text-align',
+            'text-decoration',
+            'text-indent',
+            'text-transform',
+            'white-space',
+            'word-spacing',
+            // Superseded by CSS Writing Modes
+            'direction',
+            'unicode-bidi',
+        ],
+        'SVG': [
+            // Prefer definition from CSS Images
+            'image-rendering',
+            // Prefer definition from CSS Sizing
+            'inline-size',
+            // Prefer definition from CSS Shapes
+            'shape-inside',
+            'shape-margin',
+        ],
+        'css-backgrounds-4': [
+            // TODO: support new grammars from CSS Background 4
+            'background-clip',
+            'background-position',
+            'border-bottom-color',
+            'border-clip',
+            'border-clip-bottom',
+            'border-clip-left',
+            'border-clip-right',
+            'border-clip-top',
+            'border-color',
+            'border-left-color',
+            'border-right-color',
+            'border-top-color',
+        ],
+        'css-contain-3': [
+            // https://github.com/w3c/csswg-drafts/issues/6744#issuecomment-1059172827
+            'contain',
+        ],
+        'css-content': [
+            // https://github.com/w3c/csswg-drafts/issues/6435
+            'string-set',
+        ],
+        'css-flexbox': [
+            // Superseded by CSS Box Alignment
+            'align-content',
+            'align-items',
+            'align-self',
+            'justify-content',
+        ],
+        'css-gcpm': [
+            // https://github.com/w3c/csswg-drafts/issues/7351
+            'content',
+            'position',
+        ],
+        'css-logical': [
+            // https://github.com/w3c/csswg-drafts/issues/7371
+            'text-align',
+            // Superseded by CSS Page Floats
+            'clear',
+            'float',
+            // Superseded by CSS Positioned Layout
+            'inset',
+            'inset-block',
+            'inset-inline',
+            'inset-block-end',
+            'inset-block-start',
+            'inset-inline-end',
+            'inset-inline-start',
+        ],
+        'css-round-display': [
+            // https://github.com/w3c/csswg-drafts/issues/6433
+            'shape-inside',
+        ],
+        'css-sizing-4': [
+            // https://github.com/w3c/csswg-drafts/issues/7370
+            'block-size',
+            'inline-size',
+            'max-block-size',
+            'max-inline-size',
+            'min-block-size',
+            'min-inline-size',
+        ],
+        'css-ui': [
+            // Prefer definition from SVG
+            'pointer-events',
+        ],
+        'fill-stroke': [
+            // Prefer definitions from SVG
+            'fill',
+            'fill-opacity',
+            'fill-rule',
+            'stroke',
+            'stroke-dasharray',
+            'stroke-dashoffset',
+            'stroke-linecap',
+            'stroke-linejoin',
+            'stroke-miterlimit',
+            'stroke-opacity',
+            'stroke-width',
+        ],
+        'scroll-animations': [
+            // TODO: support new grammars from Scroll Animations 1 (to be moved in CSS Animations 2)
+            'animation-delay',
+            'animation-delay-end',
+            'animation-delay-start',
+            'animation-range',
+        ],
+        'svg-strokes': [
+            // Superseded by Fill Stroke
+            'stroke',
+            'stroke-dasharray',
+            'stroke-dashoffset',
+            'stroke-linecap',
+            'stroke-linejoin',
+            'stroke-miterlimit',
+            'stroke-opacity',
+            'stroke-width',
+        ],
+    },
+    types: {
+        'CSS': [
+            // Obsoleted by CSS Backgrounds
+            'border-style',
+            'border-width',
+            // Obsoleted by CSS Box Model
+            'margin-width',
+            'padding-width',
+            // Superseded by CSS Color
+            'color',
+            // Superseded by CSS Fonts
+            'family-name',
+            'generic-family',
+            // Superseded by CSS Lists and Counters
+            'counter',
+            'counter()',
+            'counters()',
+        ],
+        'css-backgrounds-4': [
+            // https://github.com/w3c/csswg-drafts/issues/7376
+            'position',
+        ],
+        'css-conditional-5': [
+            // Duplicate of CSS Fonts
+            'font-tech',
+        ],
+        'css-gcpm': [
+            // Prefer definitions from CSS Generated Content
+            'content()',
+            'string()',
+        ],
+        'css-images-4': [
+            // https://github.com/w3c/csswg-drafts/issues/1981
+            'element()',
+        ],
+        'css-masking': [
+            // Superseded by CSS Shapes
+            'rect()',
+        ],
+        'fill-stroke': [
+            // Prefer definition from SVG
+            'paint',
+        ],
+        'filter-effects': [
+            // Duplicate of CSS Values
+            'url',
+        ],
+        'motion': [
+            // https://github.com/w3c/fxtf-drafts/issues/411
+            'path()',
+        ],
+        'scroll-animations': [
+            // TODO: support new grammars from Scroll Animations 1 (to be moved in CSS Animations 2)
+            'keyframe-selector',
+            'timeline-range-name',
+        ],
+        'svg-strokes': [
+            // Superseded by SVG
+            'dasharray',
+        ],
     },
 }
 
 /* eslint-enable sort-keys */
-
-/**
- * @param {string[][]} entries [[field, value]]
- * @returns {string}
- */
-function serializeEntries(entries, depth = 1) {
-    return entries.reduce((string, [key, value]) => {
-        const tabs = tab(depth)
-        /**
-         * The definition field `value` must have been reduced to a single value
-         * at this point but process it for further inspection.
-         */
-        if (Array.isArray(value)) {
-            const altTabs = tab(depth + 1)
-            const altValueTabs = tab(depth + 2)
-            const alts = value
-                .map(alt => `[\n${altValueTabs}${alt.map(addQuotes).join(`,\n${altValueTabs}`)},\n${altTabs}]`)
-                .join(`,\n${altTabs}`)
-            return `${string}${tabs}${key}: [\n${altTabs}${alts},\n${tabs}],\n`
-        }
-        return `${string}${tabs}${key}: ${addQuotes(value)},\n`
-    }, '')
-}
-
-/**
- * @param {*[]} properties [[name, [[field, value]]]]
- * @returns {string}
- */
-function serializeProperties(properties) {
-    return properties.reduce(
-        (string, [property, fields]) => {
-            const tabs = tab(1)
-            property = addQuotes(property)
-            fields = serializeEntries(fields.sort(sortByName), 2)
-            return `${string}${tabs}${property}: {\n${fields}${tabs}},\n`
-        },
-        '')
-}
-
-/**
- * @param {*[][]} types [[name, [[field, value]]]]
- * @returns {string}
- */
-function serializeTypes(types) {
-    return types.reduce(
-        (string, [type, [[, value]]]) =>
-            `${string}${serializeEntries([[addQuotes(type), value]])}`,
-        '')
-}
-
-/**
- * @param {*[]} aa [name, [field, [[value]]]]
- * @param {*[]} bb [name, [field, [[value]]]]
- * @returns {number}
- */
-function sortByName([a], [b]) {
-    let left = a.charCodeAt(0)
-    let right = b.charCodeAt(0)
-    let i = 0
-    while (left === right) {
-        left = ++i < a.length ? a.charCodeAt(i) : 0
-        right = i < b.length ? b.charCodeAt(i) : 0
-    }
-    return left - right
-}
-
-/**
- * @param {*[]} definition [name, [[field, value]]]
- * @returns {*[]}
- */
-function concatNewValues(definition) {
-    const [name, fields] = definition
-    let initial
-    let newValues
-    let value
-    /**
-     * `value` and `initial` must have been reduced to a single value at this
-     * point but keep it for further inspection.
-     */
-    for (const [field, v] of fields) {
-        if (Array.isArray(v)) {
-            return definition
-        }
-        switch (field) {
-            case 'newValues':
-                newValues = v.split(' | ')
-                break
-            case 'value':
-                value = v.split(' | ')
-                break
-            case 'initial':
-                initial = v
-                break
-        }
-    }
-    if (newValues) {
-        const fields = []
-        definition = [name, fields]
-        if (initial) {
-            fields.push(['initial', initial])
-        }
-        newValues.forEach(alt => {
-            // `alt` can be defined as a falsy value to discard `newValues`
-            if (alt && !value.includes(alt)) {
-                value.push(alt)
-            }
-        })
-        fields.push(['value', value.join(' | ')])
-    }
-    return definition
-}
-
-/**
- * @param {string} url
- * @param {string[]} values
- * @returns {boolean}
- */
-function isLastSpecificationVersion(url, values) {
-    const [baseURL, v1 = 1] = url.slice(0, -1).split(/-(\d)$/)
-    return values.every(([, otherURL]) => {
-        if (otherURL !== url && otherURL.startsWith(baseURL)) {
-            const [, v2 = 1] = otherURL.split(/-(\d)\/$/)
-            if (v1 < v2) {
-                return false
-            }
-        }
-        return true
-    })
-}
-
-/**
- * @param {string} name
- * @param {string} url
- * @returns {boolean}
- */
-function isAuthoritativeSpecification(name, url) {
-    if (url === 'https://drafts.csswg.org/css2/') {
-        return false
-    }
-    // TODO: support new grammars from Background 4
-    if (url === 'https://drafts.csswg.org/css-backgrounds-4/') {
-        return false
-    }
-    switch (name) {
-        case 'align-content':
-        case 'align-items':
-        case 'align-self':
-        case 'justify-content':
-            return url.includes('css-align')
-        case 'content()':
-        case 'string-set':
-        case 'string()':
-            return url.includes('css-content')
-        case 'dasharray':
-        case 'fill':
-        case 'fill-opacity':
-        case 'fill-rule':
-        case 'pointer-events':
-        case 'stroke':
-        case 'stroke-dasharray':
-        case 'stroke-dashoffset':
-        case 'stroke-linecap':
-        case 'stroke-linejoin':
-        case 'stroke-miterlimit':
-        case 'stroke-opacity':
-        case 'stroke-width':
-            return url === 'https://svgwg.org/svg2-draft/'
-        case 'display':
-            return url.includes('css-display')
-        case 'element()':
-        case 'image-rendering':
-            return url.includes('css-images')
-        case 'inset':
-        case 'inset-block':
-        case 'inset-block-start':
-        case 'inset-block-end':
-        case 'inset-inline':
-        case 'inset-inline-start':
-        case 'inset-inline-end':
-            return url.includes('css-position')
-        case 'fit-content()':
-            return url.includes('css-sizing')
-        case 'font-tech':
-            return url.includes('css-font')
-        case 'inline-size':
-            return url.includes('css-logical')
-        case 'position':
-            return url.includes('css-position') || url.includes('css-values')
-        case 'path()':
-        case 'shape-inside':
-        case 'shape-margin':
-            return url.includes('css-shapes')
-        case 'url':
-            return url.includes('css-values')
-    }
-    return true
-}
-
-/**
- * @param {*[]} definition [name, [[field, [[value, URL]]]]]
- * @returns {*[]} [[name, [[field, value]]]]
- *
- * It reduces each definition field to a single value by removing field values
- * from superseded/outdated specifications, and joining `newValues`.
- *
- * Some properties/types are defined in different specifications, sometimes with
- * different values, for different reasons:
- * - the definitions are duplicated instead of linking to the definition in the
- * authoritative specification
- * - the last level of the specification does not include all definitions from
- * the "canonical" level
- * - the definitions are superseded by an authoritative specification
- *
- * The strategy is to favor the last level of the authoritative specification,
- * otherwise fallback to its canonical level.
- */
-function reduceFieldValues([name, fields]) {
-    return [name, fields.reduce((fields, [field, values]) => {
-        // Remove values from outdated/superseded/unsupported specifications
-        if (1 < values.length) {
-            values = values
-                .filter(([, url]) => isAuthoritativeSpecification(name, url))
-                .filter(([, url], _, values) => isLastSpecificationVersion(url, values))
-        }
-        const { length } = values
-        if (length === 1) {
-            const [[value]] = values
-            fields.push([field, value])
-        } else if (1 < length) {
-            // Join `newValues`
-            if (field === 'newValues') {
-                values = values.map(([value]) => value).join(' | ')
-            } else {
-                // TODO: run in development mode only
-                const urls = values.map(([, url]) => url).join('\n  • ')
-                console.error(`"${name}" has still multiple "${field}" values from:\n  • ${urls}`)
-            }
-            fields.push([field, values])
-        }
-        return fields
-    }, [])]
-}
-
-/**
- * @param {*[][]} definitions [[name, [[field, [[value, URL]]]]]]
- * @param {string} name
- * @param {string} field
- * @param {string} value
- * @param {string} url
- */
-function addFieldValue(definitions, name, field, value, url) {
-    const definition = definitions.find(([property]) => property === name)
-    if (definition) {
-        const [, fields] = definition
-        const current = fields.find(([name]) => name === field)
-        if (current) {
-            const [, values] = current
-            values.push([value, url])
-        } else {
-            fields.push([field, [[value, url]]])
-        }
-    } else {
-        definitions.push([name, [[field, [[value, url]]]]])
-    }
-}
 
 /**
  * @param {string} value
@@ -493,9 +548,9 @@ function removeExtraGroup(value) {
         const { length } = value
         const end = length - 2
         let depth = 0
-        let i = 0
-        while (++i < end) {
-            const char = value[i]
+        let index = 0
+        while (++index < end) {
+            const char = value[index]
             if (char === ']' && depth-- === 0) {
                 return value
             }
@@ -524,79 +579,185 @@ function removeExtraGroup(value) {
  * @param {string} value
  * @returns {string}
  *
- * It removes extra whitespaces and angled brackets from `value`.
+ * It removes extra whitespaces and groups (angled brackets).
  */
 function normalizeValue(value) {
-    return removeExtraGroup(value.replace(/([([]) | [)\]]/g, match => match.trim()))
+    return removeExtraGroup(value.replace(/[([] | [)\],]/g, match => match.trim()))
 }
 
 /**
- * @param {*[][]} types [[name, [[field, [[value, URL]]]]]]
- * @param {object} definitions
- * @param {string} url
- * @returns {*[][]}
+ * @param {string[][]} types
+ * @returns {string}
  */
-function extractTypeDefinitions(types, definitions, url) {
-    return Object.entries(definitions).reduce((types, [type, { value }]) => {
-        // Strip `<type>` to `type`
-        type = type.slice(1, -1)
-        if (excludedTypes.includes(type)) {
-            return types
-        }
-        // TODO: run in development mode only
-        if (types.some(t => t === type)) {
-            console.error(`"${type}" (defined in initial types) is now defined in: ${url}`)
-        }
-        const replacement = replaced.types[type]
-        if (replacement) {
-            value = replacement
-        } else if (!value) {
-            throw Error(`Missing value to replace the definition of "<${type}>" written in prose (${url})`)
-        }
-        addFieldValue(types, type, 'value', normalizeValue(value), url)
-        return types
-    }, types)
+function serializeTypes(types) {
+    return types.reduce(
+        (string, [type, value]) =>
+            `${string}${tab(1)}${addQuotes(type)}: ${addQuotes(normalizeValue(value))},\n`,
+        '')
 }
 
 /**
- * @param {*[][]} properties [[name, [[field, [[value, URL]]]]]]
- * @param {object} definitions
- * @param {string} url
- * @returns {*[][]}
+ * @param {*[][]} properties
+ * @returns {string}
  */
-function extractPropertyDefinitions(properties, definitions, url) {
-    return Object.entries(definitions).reduce((properties, [property, { initial, newValues, value }]) => {
-        if (aliases.has(property)) {
-            return properties
-        }
-        const replacement = replaced.properties[property]
-        // It is assumed that definitions do not define both `value` and `newValues`
-        if (newValues) {
-            if (replacement) {
-                ({ newValues = newValues } = replacement)
+function serializeProperties(properties) {
+    return properties.reduce(
+        (string, [property, { initial, value }, key]) => {
+            string += `${tab(1)}${addQuotes(property)}: {\n`
+            if (!shorthands.has(property)) {
+                const group = logicalGroups.find(group => logical[group].some(mapping => mapping.includes(property)))
+                if (group) {
+                    string += `${tab(2)}group: ${addQuotes(group)},\n`
+                }
+                string += `${tab(2)}initial: ${addQuotes(initial)},\n`
             }
-            addFieldValue(properties, property, 'newValues', normalizeValue(newValues), url)
-            return properties
+            if (key === 'CSS') {
+                value = value.replace(/ \| inherit$/, '')
+            }
+            string += `${tab(2)}value: ${addQuotes(normalizeValue(value))},\n${tab(1)}},\n`
+            return string
+        },
+        '')
+}
+
+/**
+ * @param {*[][]} descriptors
+ * @returns {string}
+ */
+function serializeDescriptors(descriptors) {
+    return descriptors.reduce(
+        (string, [rule, definitions]) => {
+            string += `${tab(1)}${addQuotes(rule)}: {\n`
+            definitions.sort(sortByName).forEach(([descriptor, { initial, value }]) => {
+                string += `${tab(2)}${addQuotes(descriptor)}: {\n`
+                if (initial) {
+                    string += `${tab(3)}initial: ${addQuotes(initial)},\n`
+                }
+                string += `${tab(3)}value: ${addQuotes(normalizeValue(value))},\n${tab(2)}},\n`
+            })
+            string += `${tab(1)}},\n`
+            return string
+        },
+        '')
+}
+
+/**
+ * @param {*[]} a [name]
+ * @param {*[]} b [name]
+ * @returns {number}
+ */
+function sortByName([a], [b]) {
+    return a < b ? -1 : 0
+}
+
+/**
+ * @param {string[][]} types [[type, value, key]]
+ * @param {object} definitions
+ * @param {string} key
+ */
+function addTypes(types, definitions = {}, key) {
+    const { types: { [key]: skip = [] } } = excluded
+    Object.entries(definitions).forEach(([type, { value }]) => {
+        // `<type>` -> `type`
+        type = type.slice(1, -1)
+        if (excludedTypes.includes(type) || replaced.types[type] || skip.includes(type)) {
+            return
         }
+        if (initialTypes[type]) {
+            console.error(`The type "${type}" (manually defined) is now extracted from: ${key}`)
+            return
+        }
+        const entry = types.find(([name]) => name === type)
+        if (entry) {
+            const [base1, v1 = 1] = entry[2].split(/-(\d)$/)
+            const [base2, v2 = 1] = key.split(/-(\d)$/)
+            if (base1 !== base2) {
+                throw Error(`Unhandled duplicate definitions for the type "${type}"`)
+            }
+            if (v1 < v2) {
+                entry.splice(1, 2, value, key)
+            }
+        } else {
+            types.push([type, value, key])
+        }
+    })
+}
+
+/**
+ * @param {*[][]} properties [[property, definition, key]]
+ * @param {object} definitions
+ * @param {string} key
+ */
+function addProperties(properties, definitions = {}, key) {
+    const { properties: { aliases, mappings } } = compatibility
+    const { properties: { [key]: skip = [] } } = excluded
+    Object.entries(definitions).forEach(([property, definition]) => {
+        if (aliases.has(property) || mappings.has(property) || skip.includes(property)) {
+            return
+        }
+        const { properties: { [property]: replacement } } = replaced
         if (replacement) {
-            ({ initial = initial, value = value } = replacement)
+            definition = { ...definition, ...replacement }
         }
-        if (!initial) {
-            throw Error(`The "initial" field is missing in the definition of "${property}"`)
-        } else if (!value) {
-            throw Error(`The "value" field is missing in the definition of "${property}"`)
+        const entry = properties.find(([name]) => name === property)
+        if (entry) {
+            const [, prevDefinition, prevKey] = entry
+            const { newValues: prevNewValues } = prevDefinition
+            const { newValues, value } = definition
+            const [base1, v1 = 1] = prevKey.split(/-(\d)$/)
+            const [base2, v2 = 1] = key.split(/-(\d)$/)
+            if (newValues) {
+                prevDefinition[prevNewValues ? 'newValues' : 'value'] += ` | ${newValues}`
+            } else if (prevNewValues) {
+                entry.splice(1, 1, { ...definition, value: `${value} | ${prevNewValues}` }, key)
+            } else if (base1 !== base2) {
+                throw Error(`Unhandled duplicate definitions for the property "${property}"`)
+            } else if (v1 < v2) {
+                entry.splice(1, 2, definition, key)
+            }
+        } else {
+            properties.push([property, definition, key])
         }
-        // Skip initial shorthand value
-        if (!shorthands.has(property) && property !== 'all') {
-            addFieldValue(properties, property, 'initial', initial, url)
-        }
-        // Remove CSS-wide keyword `inherit`
-        if (url === 'https://drafts.csswg.org/css2/') {
-            value = value.replace(' | inherit', '')
-        }
-        addFieldValue(properties, property, 'value', normalizeValue(value), url)
-        return properties
-    }, properties)
+    })
+}
+
+/**
+ * @param {*[][]} descriptors [[rule, [[descriptor, definition, key]]]]
+ * @param {object} definitions
+ * @param {string} key
+ */
+function addDescriptors(descriptors, definitions = {}, key) {
+    const { descriptors: { aliases, mappings } } = compatibility
+    Object.entries(definitions).forEach(([rule, { descriptors: definitions }]) =>
+        definitions.forEach(({ initial = '', name, value }) => {
+            if (aliases.has(name) || mappings.has(name)) {
+                return
+            }
+            const replacement = replaced.descriptors[rule]?.[name]
+            if (replacement) {
+                ({ initial = initial, value = value } = replacement)
+            }
+            const context = descriptors.find(([key]) => key === rule)
+            if (context) {
+                const [, entries] = context
+                const entry = entries.find(([key]) => key === name)
+                if (entry) {
+                    const [,, prevKey] = entry
+                    const [base1, v1 = 1] = prevKey.split(/-(\d)$/)
+                    const [base2, v2 = 1] = key.split(/-(\d)$/)
+                    if (base1 !== base2) {
+                        throw Error(`Unhandled duplicate definitions for the descriptor "${name}"`)
+                    }
+                    if (v2 < v1) {
+                        return
+                    }
+                    context.splice(rule.indexOf(entry), 1)
+                }
+                entries.push([name, { initial, value }, key])
+            } else {
+                descriptors.push([rule, [[name, { initial, value }, key]]])
+            }
+        }))
 }
 
 /**
@@ -605,30 +766,21 @@ function extractPropertyDefinitions(properties, definitions, url) {
  */
 function build(specifications) {
 
-    // Extract property/type definitions from the record exported by `@webref/css`
-    let [properties, types] = Object.values(specifications).reduce(
-        ([initialProperties, initialTypes], { properties, spec: { url }, valuespaces = {} }) => [
-            extractPropertyDefinitions(initialProperties, properties, url),
-            extractTypeDefinitions(initialTypes, valuespaces, url),
-        ],
-        [[], initialTypes])
+    const descriptors = []
+    const properties = []
+    const types = [...Object.entries(initialTypes), ...Object.entries(replaced.types)]
 
-    // Cleanup definitions
-    properties = properties
-        .map(reduceFieldValues)
-        .map(concatNewValues)
-        .sort(sortByName)
-    types = types
-        .map(reduceFieldValues)
-        .sort(sortByName)
-
-    const typesOuput = `\n${header}\nmodule.exports = {\n${serializeTypes(types)}}\n`
-    const propertiesOuput = `\n${header}\nmodule.exports = {\n${serializeProperties(properties)}}\n`
+    Object.entries(specifications).forEach(([key, definition]) => {
+        addDescriptors(descriptors, definition.atrules, key)
+        addProperties(properties, definition.properties, key)
+        addTypes(types, definition.valuespaces, key)
+    })
 
     return Promise.all([
-        fs.writeFile(outputPaths.type, typesOuput, logError),
-        fs.writeFile(outputPaths.properties, propertiesOuput, logError),
+        fs.writeFile(outputPaths.descriptors, `${header}${serializeDescriptors(descriptors.sort(sortByName))}}\n`),
+        fs.writeFile(outputPaths.properties, `${header}${serializeProperties(properties.sort(sortByName))}}\n`),
+        fs.writeFile(outputPaths.types, `${header}${serializeTypes(types.sort(sortByName))}}\n`),
     ])
 }
 
-listAll().then(build)
+listAll().then(build).catch(logError)

@@ -1,139 +1,205 @@
 
 const parse = require('../lib/parse/definition.js')
-const { serializeNodeType: serialize } = require('../lib/serialize.js')
+const properties = require('../lib/properties/definitions.js')
+const { serializeDefinition: serialize } = require('../lib/serialize.js')
+const types = require('../lib/values/definitions.js')
 
-const a = { range: 'a', type: 'terminal', value: 'keyword' }
-const b = { range: 'b', type: 'terminal', value: 'keyword' }
-const c = { range: 'c', type: 'terminal', value: 'keyword' }
+const a = { name: 'keyword', type: 'terminal', value: 'a' }
+const b = { name: 'keyword', type: 'terminal', value: 'b' }
+const c = { name: 'keyword', type: 'terminal', value: 'c' }
+const colon = { type: 'delimiter', value: ':' }
 const comma = { type: 'delimiter', value: ',' }
-const number = { type: 'terminal', value: 'number' }
+const number = { name: 'number', type: 'terminal' }
 
 /**
- * @param {object} type
- * @param {object} repeat
+ * @param {object} value
  * @returns {object}
  */
-function repeat(type, repeat) {
-    return { ...type, repeat }
+function optional(value) {
+    return { type: 'optional', value }
 }
 
-// TODO: parse function value definition as disjunctions.
-it('rgb()', () => {
-    const definition = 'rgb(<percentage>{3} [/ <alpha-value>]?) | rgb(<number>{3} [/ <alpha-value>]?) | rgb(<percentage>#{3} , <alpha-value>?) | rgb(<number>#{3} , <alpha-value>?)'
-    const ast = {
-        type: '|',
-        value: [
-            { name: 'rgb', type: 'function', value: '<percentage>{3} [/ <alpha-value>]?' },
-            { name: 'rgb', type: 'function', value: '<number>{3} [/ <alpha-value>]?' },
-            { name: 'rgb', type: 'function', value: '<percentage>#{3} , <alpha-value>?' },
-            { name: 'rgb', type: 'function', value: '<number>#{3} , <alpha-value>?' },
-        ],
-    }
-    expect(parse(definition)).toEqual(ast)
-})
+/**
+ * @param {object} value
+ * @returns {object}
+ */
+function required(value) {
+    return { type: 'required', value }
+}
 
-describe('single type', () => {
-    it('represents a (terminal <keyword> type)', () => {
+/**
+ * @param {object} value
+ * @param {number} min
+ * @param {number} max
+ * @param {string} [separator]
+ * @returns {object}
+ */
+function repeat(value, min, max, separator) {
+    return separator
+        ? { max, min, separator, type: 'repeat', value }
+        : { max, min, type: 'repeat', value }
+}
+
+/**
+ * @param {string} name
+ * @returns {object}
+ */
+function type(name) {
+    return { name, type: 'non-terminal', value: types[name] }
+}
+
+describe('type', () => {
+    it("represents '+' (delimiter)", () => {
+        expect(parse("'+'")).toEqual({ type: 'delimiter', value: '+' })
+    })
+    it('represents a (keyword)', () => {
         expect(parse('a')).toEqual(a)
     })
-    it('represents <number> (terminal type)', () => {
-        expect(parse('<number>')).toEqual({ type: 'terminal', value: 'number' })
+    it('represents <number>', () => {
+        expect(parse('<number>')).toEqual(number)
     })
-    it('represents <number [0,1]>', () => {
-        expect(parse('<number [0,1]>')).toEqual({
-            range: { max: 1, min: 0 },
+    it('represents <number [-2,-1]>', () => {
+        expect(parse('<number [-2,-1]>')).toEqual({
+            max: -1,
+            min: -2,
+            name: 'number',
             type: 'terminal',
-            value: 'number',
         })
     })
     it('represents <number [0,∞]>', () => {
         expect(parse('<number [0,∞]>')).toEqual({
-            range: { max: Infinity, min: 0 },
+            max: Infinity,
+            min: 0,
+            name: 'number',
             type: 'terminal',
-            value: 'number',
         })
     })
-    it('represents <length-percentage> (non-terminal type)', () => {
-        expect(parse('<length-percentage>')).toEqual({ type: 'non-terminal', value: 'length-percentage' })
+    it('represents <number [-∞,0]>', () => {
+        expect(parse('<number [-∞,0]>')).toEqual({
+            max: 0,
+            min: -Infinity,
+            name: 'number',
+            type: 'terminal',
+        })
     })
-    it('represents fn(<number>) (terminal function type)', () => {
-        expect(parse('fn(<number>)')).toEqual({ name: 'fn', type: 'function', value: '<number>' })
+    it('represents <angle [-1deg,1deg]>', () => {
+        expect(parse('<angle [-1deg,1deg]>')).toEqual({
+            max: 1,
+            min: -1,
+            name: 'angle',
+            type: 'terminal',
+        })
     })
-    it('represents <rotate()> (non-terminal function type)', () => {
-        expect(parse('<rotate()>')).toEqual({ name: 'rotate', type: 'function', value: '<angle> | <zero>' })
+    it('represents <angle [-1turn, 1turn]>', () => {
+        expect(parse('<angle [-1turn,1turn]>')).toEqual({
+            max: 360,
+            min: -360,
+            name: 'angle',
+            type: 'terminal',
+        })
     })
-    it("represents <'prop'> (property type)", () => {
-        expect(parse("<'prop'>")).toEqual({ type: 'property', value: 'prop' })
+    it('represents fn(<number>)', () => {
+        expect(parse('fn(<number>)')).toEqual({
+            name: 'fn',
+            type: 'function',
+            value: '<number>',
+        })
     })
-    it('represents <structure> (structure type)', () => {
-        expect(parse('<declaration>')).toEqual({ type: 'structure', value: 'declaration' })
+    it("represents (<number> '+'|'-' <number>)", () => {
+        expect(parse("(<number> '+'|'-' <number>)")).toEqual({
+            associatedToken: '(',
+            type: 'simple-block',
+            value: "<number> '+'|'-' <number>",
+        })
+    })
+    it("represents '[' a [b c] ']'", () => {
+        expect(parse("'[' a [b c] ']'")).toEqual({
+            associatedToken: '[',
+            type: 'simple-block',
+            value: 'a [b c]',
+        })
+    })
+    it('represents <length-percentage>', () => {
+        expect(parse('<length-percentage>')).toEqual(type('length-percentage'))
+    })
+    it('represents <length-percentage [0,∞]>', () => {
+        const definition = parse('<length-percentage [0,∞]>')
+        expect(definition).toEqual({
+            max: Infinity,
+            min: 0,
+            name: 'length-percentage',
+            type: 'non-terminal',
+            value: types['length-percentage'],
+        })
+        expect(parse('<length>', { parent: { definition } })).toEqual({
+            max: Infinity,
+            min: 0,
+            name: 'length',
+            type: 'terminal',
+        })
+    })
+    it('represents <rotate()>', () => {
+        expect(parse('<rotate()>')).toEqual(type('rotate()'))
+    })
+    it('represents <structure>', () => {
+        expect(parse('<declaration>')).toEqual({ name: 'declaration', type: 'structure' })
+    })
+    it("represents <'background-color'>", () => {
+        expect(parse("<'background-color'>")).toEqual({
+            name: 'background-color',
+            type: 'property',
+            value: properties['background-color'].value,
+        })
     })
 })
-describe('repeated type', () => {
-    it('represents a?', () => {
-        expect(parse('a?')).toEqual(repeat(a, { max: 1, min: 1, optional: true }))
-    })
-    it('represents a*', () => {
-        expect(parse('a*')).toEqual(repeat(a, { max: 20, min: 0 }))
-    })
-    it('represents a+', () => {
-        expect(parse('a+')).toEqual(repeat(a, { max: 20, min: 1 }))
+describe('multiplier', () => {
+    it('represents a{1,2}', () => {
+        expect(parse('a{1,2}')).toEqual(repeat(a, 1, 2))
     })
     it('represents a{2}', () => {
-        expect(parse('a{2}')).toEqual(repeat(a, { max: 2, min: 2 }))
+        expect(parse('a{2}')).toEqual(repeat(a, 2, 2))
     })
-    it('represents a{1,}', () => {
-        expect(parse('a{1,}')).toEqual(repeat(a, { max: 20, min: 1 }))
+    it('represents a{2,∞}', () => {
+        expect(parse('a{2,∞}')).toEqual(repeat(a, 2, 20))
+    })
+    it('represents a?', () => {
+        expect(parse('a?')).toEqual(optional(a))
+    })
+    it('represents a*', () => {
+        expect(parse('a*')).toEqual(repeat(a, 0, 20))
+    })
+    it('represents a+', () => {
+        expect(parse('a+')).toEqual(repeat(a, 1, 20))
     })
     it('represents a#', () => {
-        expect(parse('a#')).toEqual(repeat(a, { max: 20, min: 1, separator: ',' }))
+        expect(parse('a#')).toEqual(repeat(a, 1, 20, ','))
+    })
+    it('represents a#{1,2}', () => {
+        expect(parse('a#{1,2}')).toEqual(repeat(a, 1, 2, ','))
+    })
+    it('represents a#{2}', () => {
+        expect(parse('a#{2}')).toEqual(repeat(a, 2, 2, ','))
+    })
+    it('represents a#{2,∞}', () => {
+        expect(parse('a#{2,∞}')).toEqual(repeat(a, 2, 20, ','))
     })
     it('represents a#?', () => {
-        expect(parse('a#?')).toEqual(repeat(a, { max: 20, min: 1, optional: true, separator: ',' }))
+        expect(parse('a#?')).toEqual(optional(repeat(a, 1, 20, ',')))
     })
     it('represents a+#', () => {
-        expect(parse('a+#')).toEqual(repeat(a, { max: 20, min: 1, separator: [' ', ','] }))
+        expect(parse('a+#')).toEqual(repeat(repeat(a, 1, 20), 1, 20, ','))
     })
     it('represents a+#?', () => {
-        expect(parse('a+#?')).toEqual(repeat(a, { max: 20, min: 0, separator: [' ', ','] }))
-    })
-    it('represents a#{1,}', () => {
-        expect(parse('a#{1,}')).toEqual(repeat(a, { max: 20, min: 1, separator: ',' }))
+        expect(parse('a+#?')).toEqual(optional(repeat(repeat(a, 1, 20), 1, 20, ',')))
     })
     it("represents ','?'", () => {
-        expect(parse("','?")).toEqual(repeat(comma, { max: 1, min: 1, optional: true }))
+        expect(parse("','?")).toEqual(optional(comma))
     })
     it('represents <number>?', () => {
-        expect(parse('<number>?')).toEqual(repeat(number, { max: 1, min: 1, optional: true }))
-    })
-    it('represents <number># with `repeat.ignoreHash` flag set', () => {
-        expect(parse('<number>#', { repeat: { ignoreHash: true } })).toEqual(number)
-    })
-    it('represents <calc-sum># with a custom `repeat.max`', () => {
-        expect(parse('<calc-sum>#', { repeat: { max: 32 } })).toEqual({
-            repeat: { max: 32, min: 1, separator: ',' },
-            type: 'non-terminal',
-            value: 'calc-sum',
-        })
-    })
-    it("represents [['+' | '-'] <calc-product>]* with a custom `repeat.max`", () => {
-        expect(parse("[['+' | '-'] <calc-product>]*", { repeat: { max: 32 } })).toEqual({
-            repeat: { max: 32, min: 0 },
-            type: ' ',
-            value: [
-                {
-                    type: '|',
-                    value: [
-                        { type: 'delimiter', value: '+' },
-                        { type: 'delimiter', value: '-' },
-                    ],
-                },
-                { type: 'non-terminal', value: 'calc-product' },
-            ],
-        })
+        expect(parse('<number>?')).toEqual(optional(number))
     })
 })
-describe('combined types', () => {
+describe('combination', () => {
     it('represents a b c', () => {
         expect(parse('a b c')).toEqual({ type: ' ', value: [a, b, c] })
     })
@@ -171,93 +237,15 @@ describe('combined types', () => {
             ],
         })
     })
-})
-describe('group of types', () => {
-    it('represents a [a | b]', () => {
-        expect(parse('a [a | b]')).toEqual({ type: ' ', value: [a, { type: '|', value: [a, b] }] })
+    it('represents a, a', () => {
+        expect(parse('a, a')).toEqual({ type: ' ', value: [a, comma, a] })
     })
-    it('represents [a | b] a', () => {
-        expect(parse('[a | b] a')).toEqual({ type: ' ', value: [{ type: '|', value: [a, b] }, a] })
-    })
-    it('represents [a | b]? c', () => {
-        expect(parse('[a | b]? c')).toEqual({
+    it('represents a [b, c]', () => {
+        expect(parse('a [b, c]')).toEqual({
             type: ' ',
-            value: [{ repeat: { max: 1, min: 1, optional: true }, type: '|', value: [a, b] }, c],
+            value: [a, { type: ' ', value: [b, comma, c] }],
         })
     })
-    it('represents [a{2}]?', () => {
-        expect(parse('[a{2}]?')).toEqual({
-            range: 'a',
-            repeat: { max: 2, min: 2, optional: true },
-            type: 'terminal',
-            value: 'keyword',
-        })
-    })
-    it('represents [a?]!', () => {
-        expect(parse('[a?]!')).toEqual({
-            range: 'a',
-            repeat: { max: 1, min: 1, optional: false },
-            type: 'terminal',
-            value: 'keyword',
-        })
-    })
-    it('represents [a? b?]!', () => {
-        expect(parse('[a? b?]!')).toEqual({
-            repeat: { max: 1, min: 1, optional: false },
-            type: ' ',
-            value: [
-                repeat(a, { max: 1, min: 1, optional: true }),
-                repeat(b, { max: 1, min: 1, optional: true }),
-            ],
-        })
-    })
-})
-describe('block of types', () => {
-    it("represents (<number> '+'|'-' <number>)", () => {
-        expect(parse("(<number> '+'|'-' <number>)")).toEqual({
-            associatedToken: '(',
-            type: 'simple-block',
-            value: "<number> '+'|'-' <number>",
-        })
-    })
-    it("represents '[' a ']' | '[' a b ']'", () => {
-        expect(parse("'[' a ']' | '[' a b ']'")).toEqual({
-            type: '|',
-            value: [
-                { associatedToken: '[', type: 'simple-block', value: 'a' },
-                { associatedToken: '[', type: 'simple-block', value: 'a b' },
-            ],
-        })
-    })
-})
-describe('comma-separated types', () => {
-    // Subject to comma-ellision rules
-    it('represents a, b? c', () => {
-        expect(parse('a, b? c')).toEqual({
-            type: ' ',
-            value: [a, comma, repeat(b, { max: 1, min: 1, optional: true }), c],
-        })
-    })
-    it('represents a b?, c', () => {
-        expect(parse('a b?, c')).toEqual({
-            type: ' ',
-            value: [a, repeat(b, { max: 1, min: 1, optional: true }), comma, c],
-        })
-    })
-    it('represents a [b?, c]#', () => {
-        expect(parse('a [b?, c]#')).toEqual({
-            type: ' ',
-            value: [
-                a,
-                {
-                    repeat: { max: 20, min: 1, separator: ',' },
-                    type: ' ',
-                    value: [repeat(b, { max: 1, min: 1, optional: true }), comma, c],
-                },
-            ],
-        })
-    })
-    // Not subject to comma-ellision rules
     it('represents [a, | b,] c', () => {
         expect(parse('[a, | b,] c')).toEqual({
             type: ' ',
@@ -318,94 +306,125 @@ describe('comma-separated types', () => {
             ],
         })
     })
+    it('represents :pseudo-class', () => {
+        expect(parse(':pseudo-class')).toEqual({
+            type: ' ',
+            value: [colon, { name: 'keyword', type: 'terminal', value: 'pseudo-class' }],
+        })
+    })
+    it('represents ::pseudo-element', () => {
+        expect(parse('::pseudo-element')).toEqual({
+            type: ' ',
+            value: [colon, colon, { name: 'keyword', type: 'terminal', value: 'pseudo-element' }],
+        })
+    })
+    it('represents :pseudo-class(a)', () => {
+        expect(parse(':pseudo-class(a)')).toEqual({
+            type: ' ',
+            value: [colon, { name: 'pseudo-class', type: 'function', value: 'a' }],
+        })
+    })
+    it('represents ::pseudo-element(a)', () => {
+        expect(parse('::pseudo-element(a)')).toEqual({
+            type: ' ',
+            value: [colon, colon, { name: 'pseudo-element', type: 'function', value: 'a' }],
+        })
+    })
+})
+describe('group', () => {
+    it('represents a [a | b]', () => {
+        expect(parse('a [a | b]')).toEqual({
+            type: ' ',
+            value: [a, { type: '|', value: [a, b] }],
+        })
+    })
+    it('represents [a | b] a', () => {
+        expect(parse('[a | b] a')).toEqual({
+            type: ' ',
+            value: [{ type: '|', value: [a, b] }, a],
+        })
+    })
+    it('represents [a | b]? a', () => {
+        expect(parse('[a | b]? a')).toEqual({
+            type: ' ',
+            value: [optional({ type: '|', value: [a, b] }), a],
+        })
+    })
+    it('represents [a{2}]?', () => {
+        expect(parse('[a{2}]?')).toEqual(optional(repeat(a, 2, 2)))
+    })
+    it('represents [a?]!', () => {
+        expect(parse('[a?]!')).toEqual(required(optional(a)))
+    })
+    it('represents [a? b?]!', () => {
+        expect(parse('[a? b?]!')).toEqual(required({
+            type: ' ',
+            value: [optional(a), optional(b)],
+        }))
+    })
+})
+describe('context rules', () => {
+    it("represents the expansion of <'property'>", () => {
+        const root = { definition: {} }
+        const definition = parse("<'color'>")
+        expect(parse('<number>#', { parent: { definition } })).toEqual(repeat(number, 1, 20, ','))
+        expect(parse('<number>#', { parent: { definition, parent: root } })).toEqual(number)
+    })
+    it('represents the expansion of <calc-sum>', () => {
+        const parent = { definition: parse('<calc-sum>') }
+        expect(parse("[['+' | '-'] <calc-product>]*", { parent })).toEqual(repeat(
+            {
+                type: ' ',
+                value: [
+                    {
+                        type: '|',
+                        value: [
+                            { type: 'delimiter', value: '+' },
+                            { type: 'delimiter', value: '-' },
+                        ],
+                    },
+                    type('calc-product'),
+                ],
+            },
+            0,
+            31))
+    })
+    it('represents <calc-sum># in min(<calc-sum>#)', () => {
+        const parent = { definition: parse('min(<calc-sum>#)') }
+        expect(parse('<calc-sum>#', { parent })).toEqual(repeat(type('calc-sum'), 1, 32, ','))
+    })
 })
 
 describe('serialize', () => {
-    it('serializes a keyword type', () => {
-        const definition = 'a'
-        const node = parse(definition)
-        expect(serialize(node)).toBe(definition)
-    })
-    it('serializes a terminal type', () => {
-        const definition = '<length>'
-        const node = parse(definition)
-        expect(serialize(node)).toBe(definition)
-    })
-    it('serializes a non-terminal type', () => {
-        const definition = '<length-percentage>'
-        const node = parse(definition)
-        expect(serialize(node)).toBe(definition)
-    })
-    it('serializes a non-terminal function type', () => {
-        const definition = '<calc()>'
-        const node = parse(definition)
-        expect(serialize(node)).toBe('<calc(<calc-sum>)>')
-    })
-    it('serializes a terminal type with a range [min, max]', () => {
-        const definition = '<number [1,2]>'
-        const node = parse(definition)
-        expect(serialize(node)).toBe(definition)
-    })
-    it('serializes a terminal type with a range [min,]', () => {
-        const definition = '<number [1,∞]>'
-        const node = parse(definition)
-        expect(serialize(node)).toBe(definition)
-    })
-    it('serializes a terminal type with a multiplier ?', () => {
-        const definition = '<number>?'
-        const node = parse(definition)
-        expect(serialize(node)).toBe(definition)
-    })
-    it('serializes a terminal type with a multiplier *', () => {
-        const definition = '<number>*'
-        const node = parse(definition)
-        expect(serialize(node)).toBe(definition)
-    })
-    it('serializes a terminal type with a multiplier +', () => {
-        const definition = '<number>+'
-        const node = parse(definition)
-        expect(serialize(node)).toBe(definition)
-    })
-    it('serializes a terminal type with a multiplier {n}', () => {
-        const definition = '<number>{2}'
-        const node = parse(definition)
-        expect(serialize(node)).toBe(definition)
-    })
-    it('serializes a terminal type with a multiplier {min,max}', () => {
-        const definition = '<number>{1,2}'
-        const node = parse(definition)
-        expect(serialize(node)).toBe(definition)
-    })
-    it('serializes a terminal type with a multiplier {min,}', () => {
-        const definition = '<number>{2,}'
-        const node = parse(definition)
-        expect(serialize(node)).toBe('<number>{2,20}')
-    })
-    it('serializes a terminal type with a multiplier #', () => {
-        const definition = '<number>#'
-        const node = parse(definition)
-        expect(serialize(node)).toBe(definition)
-    })
-    it('serializes a terminal type with a multiplier #?', () => {
-        const definition = '<number>#?'
-        const node = parse(definition)
-        expect(serialize(node)).toBe(definition)
-    })
-    it.todo('serializes a terminal type with a multiplier +#')
-    it.todo('serializes a terminal type with a multiplier +#?')
-    it('serializes a terminal type with a multiplier #{min,max}', () => {
-        const definition = '<number>#{1,2}'
-        const node = parse(definition)
-        expect(serialize(node)).toBe(definition)
-    })
-    it('serializes a type expanded to a combination', () => {
-        const definition = '<length> | <percentage>'
-        const node = parse(definition)
-        expect(serialize(node)).toBe(definition)
-    })
-    it('[a b?]?', () => {
-        const definition = '[a b?]?'
-        const node = parse(definition)
-        expect(serialize(node)).toBe(definition)
-    })
+    const definitions = [
+        ['a'],
+        ['<number>'],
+        ['<number [0,1]>'],
+        ['<number [0,∞]>'],
+        ['<length-percentage>'],
+        ['<calc()>'],
+        ['<number>?'],
+        ['<number>*'],
+        ['<number>+'],
+        ['<number>{2}'],
+        ['<number>{0,∞}', '<number>*'],
+        ['<number>{1,∞}', '<number>+'],
+        ['<number>{1,2}'],
+        ['<number>#'],
+        ['<number>#{1,2}'],
+        ['<number>#{1,∞}', '<number>#'],
+        ['<number>#{2,∞}', '<number>#{2,20}'],
+        ['<number>#?'],
+        ['<number>+#'],
+        ['<number>+#?'],
+        ['a b'],
+        ['a && b'],
+        ['a || b'],
+        ['a | b'],
+        ['[a b]?'],
+        ['[a{2}]?'],
+        ['[a? b?]!'],
+    ]
+    it.each(definitions)('serializes %s', (definition, expected = definition) =>
+        expect(serialize(parse(definition))).toBe(expected))
 })

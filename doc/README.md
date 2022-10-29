@@ -1,6 +1,8 @@
 
 This document explains how the documentation is organized.
 
-- parse a CSS input
-- serialize a CSS value
-- shorthands
+- parsing a CSS input
+- serializing a CSS value
+- specifics of shorthands
+- specifics of substitution values
+- specifications

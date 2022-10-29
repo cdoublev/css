@@ -58,19 +58,24 @@
     }
 
     /**
+     * https://github.com/w3c/csswg-drafts/issues/368
+     * https://github.com/w3c/csswg-drafts/issues/418
+     * https://github.com/w3c/csswg-drafts/issues/6894
+     * ...
+     *
      * background = [<bg-layer># ,]? <final-bg-layer>
      *
      * <bg-layer> = <bg-image> || <bg-position> [ / <bg-size> ]? || <repeat-style> || <attachment> || <box> || <box>
      * <final-bg-layer> =  <'background-color'> || <bg-image> || <bg-position> [ / <bg-size> ]? || <repeat-style> || <attachment> || <box> || <box>
      *
      * Issues:
-     * - Chrome does not remove `<'background-color'>` when it has a default authored value
-     * - Chrome removes `<bg-position>` when it has the default value (and another value is authored)
-     * - Chrome does not add `center center` when no `<bg-position>` is authored
-     * - Chrome does not add the 2nd `center` when `<bg-size>` has a default authored value
-     * - Chrome does not remove `<repeat-style>`, `<attachment>`, `<box>`, when they have a default authored value
+     * - Chrome does not remove `<'background-color'>` when it is specified with the default value
+     * - Chrome removes `<bg-position>` when it is specified with the default value (and another value is specified)
+     * - Chrome does not add `center center` when no `<bg-position>` is specified
+     * - Chrome does not add the 2nd `center` when `<bg-position>` is specified with the default value
+     * - Chrome does not remove `<repeat-style>`, `<attachment>`, `<box>`, when they are specified with the default value
      * - Firefox serializes `<'background-color'>` first
-     * - Firefox serializes `<bg-image>`, `<bg-position>`, `<repeat-style>`, `<attachment>`, `<'background-color'>`, with their default authored value
+     * - Firefox serializes `<bg-image>`, `<bg-position>`, `<repeat-style>`, `<attachment>`, `<'background-color'>`, specified with their default value
      * - Firefox serializes following the order <'background-color'> <bg-image> <repeat-style> <attachment> <bg-position> <box> <box>
      */
     aa('red', 'center center red')
