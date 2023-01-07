@@ -15,9 +15,9 @@ const definitions = {
 function reportDuplicates(definitions) {
     definitions.forEach((entries, name) => {
         if (1 < entries.length) {
-            console.group(`Duplicate definitions for ${name}`)
+            console.group(`Duplicate definitions of ${name}`)
             console.table(entries)
-            console.groupEnd(`Duplicate definitions for ${name}`)
+            console.groupEnd(`Duplicate definitions of ${name}`)
         }
     })
 }
@@ -52,7 +52,7 @@ function parseDefinitionDeep(parent, { name, type, value }, context) {
             if (structures.includes(name) || terminals[name] || types[name] || properties[name]) {
                 return
             }
-            throw Error(`There is no definition for the ${type} production <${name}>`)
+            throw Error(`There is no definition of the ${type} production <${name}>`)
         case 'delimiter':
             return
         default:
@@ -82,17 +82,17 @@ function tryParseDefinition(name, definition, context) {
 function testParseWebrefDefinitions() {
     return webref.listAll().then(specifications => {
         console.group('Errors in @webref/css definitions')
-        Object.values(specifications).forEach(({ properties, spec: { url }, valuespaces }) => {
-            Object.entries(properties).forEach(([property, { newValues, value }]) => {
+        Object.values(specifications).forEach(({ properties, spec: { url }, values }) => {
+            properties.forEach(({ name: property, newValues, value }) => {
                 if (newValues) {
                     tryParseDefinition(property, newValues, { newValues, property, url })
                 } else if (value) {
                     tryParseDefinition(property, value, { property, url, value })
                     registerDefinition('properties', property, value, url)
                 }
-                // Some properties have neither `value` or `newValues`, eg. aliases
+                // Some properties (eg. aliases) have neither `newValues`, `value`, `values`
             })
-            Object.entries(valuespaces).forEach(([type, { value }]) => {
+            values.forEach(({ name: type, value }) => {
                 if (value) {
                     tryParseDefinition(type, value, { type, url, value })
                     registerDefinition('types', type, value, url)

@@ -151,7 +151,7 @@ function serializeDescriptorDefinitions(descriptors) {
     return Object.entries(descriptors).reduce(
         (string, [rule, definitions]) => {
             string += `${tab(1)}${addQuotes(rule)}: {\n`
-            Object.entries(definitions).forEach(([descriptor, { initial, value }]) => {
+            Object.entries(definitions).forEach(([descriptor, { initial, type, value }]) => {
                 string += `${tab(2)}${addQuotes(descriptor)}: {\n`
                 if (initial) {
                     const [serialized, parsed] = getInitialDescriptorValue(descriptor, initial, rule)
@@ -159,6 +159,8 @@ function serializeDescriptorDefinitions(descriptors) {
                     string += `${tab(4)}parsed: ${parsed},\n`
                     string += `${tab(4)}serialized: ${addQuotes(serialized)},\n`
                     string += `${tab(3)}},\n`
+                } else if (type) {
+                    string += `${tab(3)}type: '${type}',\n`
                 }
                 string += `${tab(3)}value: ${addQuotes(value)},\n`
                 string += `${tab(2)}},\n`

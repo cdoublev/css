@@ -38,8 +38,3 @@ partial interface CSSRule {
 partial interface CSSRule {
     const unsigned short FONT_FEATURE_VALUES_RULE = 14;
 };
-
-// https://drafts.csswg.org/css-device-adapt-1/#css-rule-interface
-partial interface CSSRule {
-    const unsigned short VIEWPORT_RULE = 15;
-};

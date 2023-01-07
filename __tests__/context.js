@@ -13,7 +13,7 @@ const {
 } = topLevel
 const { rules: { keyframe: keyframeDefinition } } = keyframesDefinition
 const { rules: { margin: marginDefinition } } = pageDefinition
-const { rules: { nest: nestingStyleDefinition, style: nestedStyleDefinition } } = styleDefinition
+const { rules: { supports: nestedSupportsDefinition, style: nestedStyleDefinition } } = styleDefinition
 
 const parentStyleSheet = { _rules: [], type: 'text/css' }
 
@@ -28,7 +28,7 @@ const marginRule = { parentRule: pageRule, parentStyleSheet, type: new Set(['at-
 
 const styleRule = { parentStyleSheet, type: new Set(['qualified-rule', 'style']) }
 const nestedStyleRule = { parentRule: styleRule, parentStyleSheet, type: new Set(['qualified-rule', 'style']) }
-const nestingRule = { parentRule: styleRule, parentStyleSheet, type: new Set(['at-rule', 'nest']) }
+const nestedSupportsRule = { parentRule: styleRule, parentStyleSheet, type: new Set(['at-rule', 'supports']) }
 
 parentStyleSheet._rules.push(
     { parentStyleSheet, type: new Set(['import']) },
@@ -115,17 +115,17 @@ describe('ParseContext', () => {
         expect(type).toBe('keyframe')
     })
     // Find at-rule type in <style-block>
-    it('represents the context of the given @nest', () => {
-        const { definition, parent, root, type } = new ParseContext(nestingRule)
-        expect(definition).toBe(nestingStyleDefinition)
+    it('represents the context of the given @supports nested in style rule', () => {
+        const { definition, parent, root, type } = new ParseContext(nestedSupportsRule)
+        expect(definition).toBe(nestedSupportsDefinition)
         expect(root).toBe(parent.parent)
         expect(root.namespaces).toEqual(['*', 'html', 'svg'])
         expect(parent.definition).toBe(styleDefinition)
         expect(parent.type).toBe('style')
-        expect(type).toBe('nest')
+        expect(type).toBe('supports')
     })
     // Find qualified rule type in <style-block>
-    it('represents the context of the given directly nested style rule', () => {
+    it('represents the context of the given nested style rule', () => {
         const { definition, root, parent, type } = new ParseContext(nestedStyleRule)
         expect(definition).toBe(nestedStyleDefinition)
         expect(root).toBe(parent.parent)
@@ -184,14 +184,14 @@ describe('ParseContext.enter()', () => {
         expect(parent).toBe(context)
     })
     // Enter in at-rule rule from <style-block>
-    it('returns a child context representing the given @nest', () => {
+    it('returns a child context representing the given @supports nested in style rule', () => {
         const context = new ParseContext(styleRule)
-        const { parent, type } = context.enter({ name: 'nest', type: new Set(['at-rule']) })
-        expect(type).toBe('nest')
+        const { parent, type } = context.enter({ name: 'supports', type: new Set(['at-rule']) })
+        expect(type).toBe('supports')
         expect(parent).toBe(context)
     })
     // Enter in qualified rule from <style-block>
-    it('returns a child context representing the given directly nested style rule', () => {
+    it('returns a child context representing the given nested style rule', () => {
         const context = new ParseContext(styleRule)
         const { parent, type } = context.enter({ type: new Set(['qualified-rule']) })
         expect(type).toBe('style')

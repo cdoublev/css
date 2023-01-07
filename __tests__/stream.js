@@ -38,7 +38,7 @@ describe('consume(item, fallback)', () => {
     it('consumes the item at the front of the stream when it matches a parse function', () => {
         expect(stream.consume(char => char === 'h')).toBe('h')
         expect(stream.consume(char => char === 'e' ? 'success' : null)).toBe('success')
-        expect(stream.consume(char => char === 'l' ? null : 'success')).toBeNull()
+        expect(stream.consume(char => char === 'e' ? 'success' : false)).toBeNull()
         expect(stream.consume((char, arg1, arg2) => char === 'l' ? `${arg1}${arg2}` : null, 'l', 'o')).toBe('lo')
         expect(stream.index).toBe(2)
     })

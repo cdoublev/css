@@ -90,7 +90,7 @@ As an aside, it should be noted that some value definitions contains token types
   - `<string-token>`
     - `<attribute-selector>`
 
-CSS Syntax defines that the distinction between a token and a component value *makes no difference to any of [its] algorithms*, but there is no input that can match `<function-token>`, because any CSS input must go through *consume a component value*. The three tokens in `<function-token> <any-value>)`, which is used *to allow for future expansion of the grammar* of a media query, a functional pseudo-class, and an url modifier, are consumed into a single function component value. To workaround this problem, they are replaced by `<function>` in `<general-enclosed>`, `<pseudo-class-selector>`, and `<url-modifier>`.
+CSS Syntax defines that the distinction between a token and a component value *makes no difference to any of [its] algorithms*, but there is no input that can match `<function-token>`, because any CSS input must go through *consume a component value*. The three tokens in `<function-token> <any-value>)`, which is used *to allow for future expansion of the grammar* of a media query, a functional pseudo-class, and an url modifier, are consumed into a single function component value. To workaround this problem, they are replaced with `<function>` in `<general-enclosed>`, `<pseudo-class-selector>`, and `<url-modifier>`.
 
 The normalized token name and the matched CSS types are exposed by `type` defined as a `Set`. This has some notable consequences.
 

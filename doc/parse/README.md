@@ -38,13 +38,13 @@ The following list introduces the different levels of CSS structures:
     - `<declaration-list>`
   - `<declaration>`: `<ident>:` + list of component values
 
-CSS rule's block values are defined with one of the few productions that cannot be defined with a value definition in a non-trivial way. Nested rules and declarations must be validated according to the context defined by the parent rule(s):
+CSS rule's block values are defined with one of the few productions that cannot be defined with a simple value definition. Nested rules and declarations must be validated according to the context defined by the parent rule(s):
 
   - `<stylesheet>` accepts all rules excluding those defined by the context
   - `<rule-list>` accepts the rules defined by the context
   - `<declaration-list>` and `<style-block>` accept `<declaration>`s for properties/descriptors defined by the context
   - `<declaration-list>` also accepts (for back-compatibility with CSS 2) at-rules defined by the context
-  - `<style-rule>` also accepts style rules (whose selectors start with `&`), `@nest`, `@media`, and `@supports`
+  - `<style-rule>` also accepts nested style rules, `@media`, and `@supports`
 
 The output of the CSS parser can be a list of component values, a declaration, a `CSSStyleDeclaration`, a `CSSRule`, or a `CSSStyleSheet` (aka. CSSOM tree).
 
@@ -94,7 +94,7 @@ Reading *parse a CSS value* and subjacent procedures from CSSOM and CSS Syntax, 
   >
   >   Note: The only difference between a list of tokens and a list of component values is that some objects that "contain" things, like functions or blocks, are a single entity in the component-value list, but are multiple entities in a token list. This makes no difference to any of the algorithms in this specification.
 
-**Note:** a *CSS value* is not defined in any CSS specification but it is assumed as any level of value, from a single component value to a style sheet, but in the context of this procedure, it means a property value.
+**Note:** a *CSS value* is not defined in any CSS specification but it is assumed as a value of any level, from a single component value to a style sheet, but in the context of this procedure, it means a property value.
 
 Functions and simple blocks are assigned other component values when parsing a list of component values (step 2, repeatedly [consume a component value](https://drafts.csswg.org/css-syntax-3/#consume-a-component-value)):
 
@@ -120,22 +120,18 @@ The previous sections raises a fundamental question about the result returned fr
 
 [*Serialize a CSS value*](https://drafts.csswg.org/cssom-1/#serialize-a-css-value) only enforces idempotence, ie. `assert.strictEqual(serialize(parse(input)), serialize(parse(serialize(parse(input)))))`, but the parsing of some productions make it hard not to transform/mutate the input. For example, math functions, `<urange>`, and `<an+b>`, require to be parsed into specific representations, and component value(s) must be associated to the matched productions in order to later apply their specific serialization rules.
 
-`linear-gradient(red 0% 50%)` is valid but the trailing comma after `<linear-color-stop>` in `<color-stop-list>` (the main argument of `linear-gradient()`), defined as `<linear-color-stop> , [ <linear-color-hint>? , <linear-color-stop> ]#`, cannot be omitted. So it is expected that component values are inserted in the input list in order to get a match with `red 0%, red 50%`, ie. `,` and `red` must be inserted between `0%` and `50%`.
-
 To overcome these challenges, this library defines the following requirements for the CSS parser:
 
-  - a component value must be implemented as a plain object with a `type` property as a `Set` filled¹ with the matching production(s) (learn more about the [data structure used to represent a CSS value](value-data-structure.md))
-  - the input list of component values must be replaced by the result of matching a value definition², in which component values must be automatically sorted according to their position in the value definition
-  - omitted values³ must be represented in the resulting list with a data structure similar to a component value
-  - production specific rules must be processed in functions (hooks) running either before matching the value definition, or after, on its result, to discard an invalid value according to the rule, to add or remove optional component values⁴, to create a specific representation of the input value (math function, `<urange>`, `<an+b>`)
+  - a component value must be implemented as a plain object with a `type` property as a `Set` filled with the matching production(s) (learn more about the [data structure used to represent a CSS value](value-data-structure.md))
+  - the input list of component values must be replaced with the result of matching a value definition¹, in which component values must be automatically sorted according to their position in the value definition
+  - omitted values² must be represented in the resulting list with a data structure similar to a component value
+  - production specific rules must be processed in functions (hooks) running either before matching the value definition, or after, on its result, to discard an invalid value according to the rule, to add or remove optional component values³, to create a specific representation of the input value (math function, `<urange>`, `<an+b>`)
 
-¹ Mutations on the input list would be problematic when backtracking to match an alternative value definition, but replacing component values takes place on a new list.
+¹ Therefore the result can be a single component value instead of a list, which is a deviation from *parse a CSS value* but *serialize a CSS value* somewhat handles this with *represent the value of the declaration as a list*, and it is an implementation detail that may change later.
 
-² Therefore the result can be a single component value instead of a list, which is a deviation from *parse a CSS value* but *serialize a CSS value* somewhat handles this with *represent the value of the declaration as a list*, and it is an implementation detail that may change later.
+² Omitted values exist in value definitions containing a multiplier allowing 0 or more occurrences, or a combination of `||` separated symbols.
 
-³ Omitted values exist in value definitions containing a multiplier allowing 0 or more occurrences, or a combination of `||` separated symbols.
-
-⁴ When no specific serialization rules prevents it, optional values are removed once at parse time instead of at serialization time, but this is an implementation detail that may change later.
+³ When no specific serialization rules prevents it, optional values are removed once at parse time instead of at serialization time, but this is an implementation detail that may change later.
 
 ## Parse a style sheet
 
@@ -222,7 +218,7 @@ Because *parse something according to a CSS grammar* runs *parse a list of compo
 
 See the full list of [the CSS parser entry points](entry-points.md).
 
-The entry points should not be called on an intermediate parsing step, ie. *parse a rule* and *parse a declaration* cannot receive an object that would result from another entry point, but only a string provided to an interface. Furthermore, whereas the entry points for a list of rules, a list of declarations, and a style block's content, do nothing more than the corresponding *consume* algorithms, *parse a declaration* and *parse a rule* return syntax errors when a property name cannot be found and when the input has zero or more than one rule, respectively.
+The entry points should not be called on an intermediate parsing step, ie. *parse a rule* and *parse a declaration* cannot receive an object that would result from another entry point, but only a string provided to an interface. Furthermore, whereas the entry points for a list of rules, a list of declarations, and a style block's content, do nothing more than the corresponding *consume* algorithms, *parse a rule* and *parse a declaration* return syntax errors when the input has zero or more than one rule and when a property name cannot be found, respectively.
 
 Actually, all the above entry points can be wrapped in a corresponding *parse a CSS* function completing the procedure with the recursive parsing of the consumed contents according to the context and the corresponding grammar.
 
@@ -262,7 +258,7 @@ As noted before, a declaration value must match the value definition of the decl
   >
   > Within a `<style-block>` or `<declaration-list>`, `!important` is automatically invalid on any descriptors. If the rule accepts properties, the spec for the rule must define whether the properties interact with the cascade, and with what specificity. If they don’t interact with the cascade, properties containing `!important` are automatically invalid; otherwise using `!important` is valid and causes the declaration to be important for the purposes of the cascade.
 
-**Issue:** the properties allowed in directly nested style rules, `@nest`, and conditional at-rules (`@media` and `@supports`) nested in a style rule, are not defined, as well as their interaction with the cascade, but it is assumed that all existing properties are allowed and interact "normally" with the cascade.
+**Issue:** the properties allowed in style rules, and conditional at-rules (`@media` and `@supports`) nested in a style rule, are not defined, as well as their interaction with the cascade, but it is assumed that all existing properties are allowed and interact "normally" with the cascade.
 
   > For rules that use `<rule-list>`, the spec for the rule must define what types of rules are valid inside the rule, same as `<declaration-list>`, and unrecognized rules must similarly be removed from the rule’s value.
   >
@@ -270,7 +266,7 @@ As noted before, a declaration value must match the value definition of the decl
 
 Some examples:
 
-  - `@media` contains `<stylesheet>` expanded to all rules excluding non top-level rules, but it contains `<style-block>` when nested in a style rule or `@nest`
+  - `@media` contains `<stylesheet>` expanded to all rules excluding non top-level rules, but it contains `<style-block>` when nested in a style rule
   - `@keyframes` contains `<rule-list>` expanded to a list of rules matching `<keyframe-selector># { <declaration-list> }`, where `<declaration-list>` is expanded to a list of declarations for animatable properties
   - `@font-feature-values` contains `<declaration-list>` expanded to a declaration for `font-display` or at-rules matching `<font-feature-value-type> { <declaration-list> }`
 

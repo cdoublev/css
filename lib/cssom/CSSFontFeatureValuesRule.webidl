@@ -1,5 +1,5 @@
 
-// https://drafts.csswg.org/css-fonts-4/#cssfontfeaturevaluesrule%E2%91%A0
+// https://drafts.csswg.org/css-fonts-4/#cssfontfeaturevaluesrule
 [Exposed=Window]
 interface CSSFontFeatureValuesRule : CSSRule {
     attribute CSSOMString fontFamily;

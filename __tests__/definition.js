@@ -365,10 +365,9 @@ describe('group', () => {
 })
 describe('context rules', () => {
     it("represents the expansion of <'property'>", () => {
-        const root = { definition: {} }
         const definition = parse("<'color'>")
         expect(parse('<number>#', { parent: { definition } })).toEqual(repeat(number, 1, 20, ','))
-        expect(parse('<number>#', { parent: { definition, parent: root } })).toEqual(number)
+        expect(parse('<number>#', { parent: { definition, parent: { definition: {} } } })).toEqual(number)
     })
     it('represents the expansion of <calc-sum>', () => {
         const parent = { definition: parse('<calc-sum>') }
@@ -421,6 +420,8 @@ describe('serialize', () => {
         ['a && b'],
         ['a || b'],
         ['a | b'],
+        ['[(a)]?'],
+        ['[fn(a)]?'],
         ['[a b]?'],
         ['[a{2}]?'],
         ['[a? b?]!'],

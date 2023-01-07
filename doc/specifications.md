@@ -34,16 +34,16 @@ The CSSWG defines [complementary classes](https://www.w3.org/blog/CSS/2007/11/01
 
 There may be a CR labelled with *level n* at the testing phase and a corresponding WD labelled with *level n+1* at a previous or the same stage. There may even be two CRs or WDs with different levels at the same stage.
 
-Because this library relies on the data extracted by `@webref/css` from specifications, it relies on *a curated list of technical Web specifications that are deemed relevant for the Web platform* in their most up to date versions, which correspond to the files located in the [`ed` (editor drafts) folder of the `w3c/webref` repository](https://github.com/w3c/webref/tree/main/ed/css).
+Because this library relies on the data extracted by `w3c/reffy` from specifications, it relies on *a curated list of technical Web specifications that are deemed relevant for the Web platform* in their most up to date versions, which correspond to the files located in the [`ed` (editor drafts) folder of the `w3c/webref` repository](https://github.com/w3c/webref/tree/main/ed/css).
 
 This folder may contain multiple levels of a specification: the level corresponding to the last *full* version and one or more (higher) levels, which corresponds to *delta* versions and only includes the differences with the full version.
 
-The "level-less" URL of a specification most often references the last delta (but still relevant) version if any, otherwise the last full version, eg:
+The "level-less" URL of a specification most often references the last delta (but still relevant) version if any, otherwise the last full version, eg. (at the time of writing this documentation):
 
   - https://drafts.csswg.org/css-syntax/ provides the same content than https://drafts.csswg.org/css-syntax-3/
   - https://drafts.csswg.org/css-conditional/ provides the content of level 5 as delta from level 3 (full)
   - https://drafts.csswg.org/css-conditional-4/ provides the content of level 4 as delta from level 3 (full)
 
-But `@webref/css` also references CSS Backgrounds and Borders Level 4, which is a delta version, and https://drafts.csswg.org/css-backgrounds/ refers to Level 3.
+But `w3c/webref` also references CSS Backgrounds and Borders Level 4, which is a delta version, and https://drafts.csswg.org/css-backgrounds/ refers to Level 3.
 
 A "level-less" URL is handy for documenting code because it does not need to be updated. But on the other hand, it refers to a dynamic content that could later no longer apply to the related code. Furthermore, the level is a hint of the supported version, therefore a JSDOC `@link` must use the URL that includes the highest level of the specification whose content is related to the code it applies to.

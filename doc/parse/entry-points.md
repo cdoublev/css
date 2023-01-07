@@ -23,7 +23,6 @@
 - [parse a CSS selector list](#parse-a-CSS-selector-list)
 - [parse a CSS forgiving selector list](#parse-a-CSS-forgiving-selector-list)
 - [parse a CSS relative selector list](#parse-a-CSS-relative-selector-list)
-- [parse a CSS forgiving relative selector list](#parse-a-CSS-forgiving-relative-selector-list)
 - [parse a CSS page selector list](#parse-a-CSS-page-selector)
 - [parse a CSS `@page`](#parse-a-CSS-page)
 
@@ -113,11 +112,6 @@
           <a href="#parse-a-CSS-relative-selector-list">
             CSS Selectors - parse a CSS relative selector list
           </a> (via <i>parse something according to a CSS grammar</i>)
-        </li>
-        <li>
-          <a href="#parse-a-CSS-forgiving-relative-selector-list">
-            CSS Selectors - parse a CSS forgiving relative selector list
-          </a> (<i>via parse a comma-separated list according to a CSS grammar</i>)
         </li>
         <li>
           <a href="https://drafts.csswg.org/css-counter-styles-3/#the-csscounterstylerule-interface">
@@ -306,11 +300,6 @@
         <li>
           <a href="https://drafts.csswg.org/css-nesting-1/#dom-cssstylerule-insertrule">
             CSS Nesting - <code>CSSStyleRule.insertRule()</code>
-          </a> (via <i>insert a CSS rule</i>)
-        </li>
-        <li>
-          <a href="https://drafts.csswg.org/css-nesting-1/#dom-cssnestingrule-insertrule">
-            CSS Nesting - <code>CSSNestingRule.insertRule()</code>
           </a> (via <i>insert a CSS rule</i>)
         </li>
       </ul>
@@ -737,11 +726,6 @@
             CSS Nesting - <code>CSSStyleRule.insertRule()</code>
           </a> (via <i>insert a CSS rule</i>)
         </li>
-        <li>
-          <a href="https://drafts.csswg.org/css-nesting-1/#dom-cssnestingrule-insertrule">
-            CSS Nesting - <code>CSSNestingRule.insertRule()</code>
-          </a> (via <i>insert a CSS rule</i>)
-        </li>
       </ul>
     </td>
   </tr>
@@ -806,11 +790,6 @@
         <li>
           <a href="https://drafts.csswg.org/css-nesting-1/#dom-cssstylerule-insertrule">
             CSS Nesting - <code>CSSStyleRule.insertRule()</code>
-          </a> (via <i>insert a CSS rule</i>)
-        </li>
-        <li>
-          <a href="https://drafts.csswg.org/css-nesting-1/#dom-cssnestingrule-insertrule">
-            CSS Nesting - <code>CSSNestingRule.insertRule()</code>
           </a> (via <i>insert a CSS rule</i>)
         </li>
       </ul>
@@ -987,11 +966,6 @@
             CSSOM - <code>CSSStyleRule.selectorText</code>
           </a>
         </li>
-        <li>
-          <a href="https://drafts.csswg.org/css-nesting-1/#dom-cssnestingrule-selectortext">
-            CSS Nesting - <code>CSSNestingRule.selectorText</code>
-          </a>
-        </li>
       </ul>
     </td>
   </tr>
@@ -1070,35 +1044,6 @@
     </td>
   </tr>
   <tr><th>Public uses</th><td></td></tr>
-</table>
-
-[Top ↑](#the-css-parser-entry-points)
-
-***
-
-<table id="parse-a-CSS-forgiving-relative-selector-list">
-  <tr><th>Algorithm</th><td>Parse a CSS forgiving relative selector list</td></tr>
-  <tr>
-    <th>Definition</th>
-    <td>
-      <a href="https://drafts.csswg.org/selectors-4/#typedef-forgiving-relative-selector-list">
-        CSS Selectors
-      </a>
-    </td>
-  </tr>
-  <tr>
-    <th>Internal uses</th>
-    <td>
-      <ul>
-        <li>
-          <a href="https://drafts.csswg.org/selectors-4/#relational">
-            CSS Selectors - parse <code>&lt;:has()></code>
-          </a>
-        </li>
-      </ul>
-    </td>
-  </tr>
-  <tr><th>Public uses</th><td>none</td></tr>
 </table>
 
 [Top ↑](#the-css-parser-entry-points)

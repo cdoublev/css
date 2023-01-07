@@ -1,10 +1,15 @@
 /**
- * This script generates definitions extracted by @webref/css from latest W3C
+ * This script generates definitions extracted by w3c/reffy from latest W3C
  * Editor's Drafts specifications:
  *
  *   - ./lib/descriptors/definitions.js
  *   - ./lib/properties/definitions.js
  *   - ./lib/values/definitions.js
+ *
+ * It also reports missing or outdated definitions from:
+ *
+ *   - ./lib/rules/definitions.js
+ *   - ./lib/values/pseudos.js
  */
 const { addQuotes, logError, tab } = require('../lib/utils/script.js')
 const { join, resolve } = require('path')
@@ -14,130 +19,74 @@ const deprecatedColors = require('../lib/values/deprecated-colors.js')
 const { definitions: dimensions } = require('../lib/values/dimensions.js')
 const fs = require('node:fs/promises')
 const logical = require('../lib/properties/logical.js')
-const { listAll } = require('./webref.js')
 const namedColors = require('../lib/values/named-colors.js')
+const pseudos = require('../lib/values/pseudos.js')
+const { rules } = require('../lib/rules/definitions.js')
 const shorthands = require('../lib/properties/shorthands.js')
 const structures = require('../lib/values/structures.js')
 const systemColors = require('../lib/values/system-colors.js')
 const terminals = require('../lib/parse/terminals.js')
+const webref = require('./webref.js')
 
 const logicalGroups = Object.keys(logical)
 
+const reportErrors = process.env.NODE_ENV === 'development'
 const outputPaths = {
     descriptors: resolve(join(__dirname, '..', 'lib', 'descriptors', 'definitions.js')),
     properties: resolve(join(__dirname, '..', 'lib', 'properties', 'definitions.js')),
     types: resolve(join(__dirname, '..', 'lib', 'values', 'definitions.js')),
 }
-
 const header = `\n// Generated from ${__filename}\n\nmodule.exports = {\n`
 
-const excludedTypes = [
-    // Terminals
-    '(-token',
-    ')-token',
-    '[-token',
-    ']-token',
-    '{-token',
-    '}-token',
-    'CDC-token',
-    'CDO-token',
-    'EOF-token',
-    'at-keyword-token',
-    'bad-string-token',
-    'bad-url-token',
-    'colon-token',
-    'comma-token',
-    'delim-token',
-    'semicolon-token',
-    'whitespace-token',
-    ...structures,
-    ...Object.keys(terminals),
-    // Aliases (defined in prose)
-    ...compatibility.values.aliases.keys(),
-    // https://github.com/w3c/csswg-drafts/issues/7301
-    'length-percentages',
-]
-
 /* eslint-disable sort-keys */
-
 const initialTypes = {
     // Custom types
     'css-wide-keyword': cssWideKeywords.join(' | '),
-    // TODO: report @webref/css issue "`value` written in prose and not extracted"
+    // TODO: report w3c/csswg-drafts issue "Define `<type>` with a production rule"
     'absolute-size': 'xx-small | x-small | small | medium | large | x-large | xx-large',
     'content-level': 'element | content | text | attr(<custom-ident>) | <counter()> | <counters()>',
     'q-name': '<wq-name>',
     'relative-size': 'larger | smaller',
     'x': '<number>',
     'y': '<number>',
+    // https://github.com/w3c/csswg-drafts/issues/7632
+    'font-src': '<url> [format(<font-format>)]? [tech(<font-tech>#)]? | local(<font-face-name>)',
 }
-
 const replaced = {
     descriptors: {
         '@color-profile': {
             // https://github.com/w3c/webref/issues/707
-            'components': {
-                initial: '',
-            },
-            'src': {
-                initial: '',
-            },
+            'components': { initial: '' },
+            'src': { initial: '' },
         },
         '@counter-style': {
             // https://github.com/w3c/csswg-drafts/issues/7417
-            'negative': {
-                initial: '"-"',
-            },
-            'prefix': {
-                initial: '""',
-            },
-            'suffix': {
-                initial: '". "',
-            },
+            'negative': { initial: '"-"' },
+            'prefix': { initial: '""' },
+            'suffix': { initial: '". "' },
             // https://github.com/w3c/webref/issues/707
-            'additive-symbols': {
-                initial: '',
-            },
-            'symbols': {
-                initial: '',
-            },
+            'additive-symbols': { initial: '' },
+            'symbols': { initial: '' },
         },
         '@font-face': {
             // https://github.com/w3c/csswg-drafts/issues/7418
-            'font-size': {
-                value: 'auto | normal | [<number>]{1,2}',
-            },
-            'src': {
-                initial: '',
-            },
+            'font-size': { initial: 'auto' },
+            // https://github.com/w3c/csswg-drafts/issues/7632
+            'src': { initial: '', value: '<font-src-list>' },
             // https://github.com/w3c/webref/issues/707
-            'font-family': {
-                initial: '',
-            },
+            'font-family': { initial: '' },
         },
         '@font-palette-values': {
             // https://github.com/w3c/webref/issues/707
-            'base-palette': {
-                initial: '',
-            },
-            'font-family': {
-                initial: '',
-            },
-            'override-colors': {
-                initial: '',
-            },
+            'base-palette': { initial: '' },
+            'font-family': { initial: '' },
+            'override-colors': { initial: '' },
         },
         '@property': {
             // https://github.com/w3c/webref/issues/707
-            'inherits': {
-                initial: '',
-            },
-            'initial-value': {
-                initial: '',
-            },
-            'syntax': {
-                initial: '',
-            },
+            'inherits': { initial: '' },
+            'initial-value': { initial: '' },
+            'syntax': { initial: '' },
         },
     },
     properties: {
@@ -177,11 +126,16 @@ const replaced = {
     types: {
         // https://github.com/w3c/csswg-drafts/issues/7368
         'content-list': '[<string> | <content()> | contents | <image> | <counter> | <quote> | <target> | <leader()>]+',
+        // https://github.com/w3c/csswg-drafts/issues/8092
+        'family-name': '<custom-ident>+ | <string>',
+        'font-face-name': '<custom-ident>+ | <string>',
         // https://github.com/w3c/csswg-drafts/issues/7016
         'general-enclosed': '<function> | (<ident> <any-value>)',
         'pseudo-class-selector': "':' <ident> | ':' <function>",
         // https://github.com/w3c/fxtf-drafts/issues/411
         'path()': "path(<'fill-rule'>?, <string>)",
+        // https://github.com/w3c/csswg-drafts/issues/7897
+        'single-transition': '<time> || <easing-function> || <time> || [none | <single-transition-property>]',
         // TODO: support new grammars from CSS Images 4
         'conic-gradient()': 'conic-gradient([from <angle>]? [at <position>]?, <angular-color-stop-list>)',
         'linear-gradient()': 'linear-gradient([<angle> | to <side-or-corner>]?, <color-stop-list>)',
@@ -195,7 +149,7 @@ const replaced = {
         'oklab()': 'oklab([<percentage> | <number> | none] [<percentage> | <number> | none] [<percentage> | <number> | none] [/ [<alpha-value> | none] ]?)',
         'oklch()': 'oklch([<percentage> | <number> | none] [<percentage> | <number> | none] [<hue> | none] [/ [<alpha-value> | none]]?)',
         'rgb()': 'rgb([<percentage> | none]{3} [/ [<alpha-value> | none]]?) | rgb([<number> | none]{3} [/ [<alpha-value> | none]]?)',
-        // Written in prose
+        // TODO: report w3c/csswg-drafts issue "Define `<type>` with a production rule"
         'age': 'child | young | old',
         'basic-shape': '<basic-shape-rect> | <circle()> | <ellipse()> | <polygon()> | <path()>',
         'bottom': '<length> | auto',
@@ -207,7 +161,6 @@ const replaced = {
         'end-value': '<number> | <dimension> | <percentage>',
         'ending-shape': 'circle | ellipse',
         'extension-name': '<dashed-ident>',
-        'family-name': '<string> | <custom-ident>',
         'gender': 'male | female | neutral',
         'generic-family': 'cursive | emoji | fangsong | fantasy | math | monospace | sans-serif | serif | system-ui | ui-monospace | ui-rounded | ui-sans-serif | ui-serif',
         'hsla()': 'hsla([<hue> | none] [<percentage> | none] [<percentage> | none] [/ [<alpha-value> | none]]?)',
@@ -246,13 +199,13 @@ const replaced = {
         'url-set': '<image-set()>',
     },
 }
-
-/**
- * Definitions existing in different specifications and which are ignored for
- * the corresponding specification.
- */
 const excluded = {
-    descriptors: {},
+    descriptors: {
+        'css-round-display': [
+            // https://github.com/w3c/csswg-drafts/issues/8097
+            'viewport-fit',
+        ],
+    },
     properties: {
         'CSS': [
             // Superseded by CSS Backgrounds and Borders
@@ -366,11 +319,11 @@ const excluded = {
             'unicode-bidi',
         ],
         'SVG': [
-            // Prefer definition from CSS Images
+            // Prefer CSS Images
             'image-rendering',
-            // Prefer definition from CSS Sizing
+            // Prefer CSS Sizing
             'inline-size',
-            // Prefer definition from CSS Shapes
+            // Prefer CSS Shapes
             'shape-inside',
             'shape-margin',
         ],
@@ -438,11 +391,11 @@ const excluded = {
             'min-inline-size',
         ],
         'css-ui': [
-            // Prefer definition from SVG
+            // Prefer SVG
             'pointer-events',
         ],
         'fill-stroke': [
-            // Prefer definitions from SVG
+            // Prefer SVG
             'fill',
             'fill-opacity',
             'fill-rule',
@@ -474,7 +427,44 @@ const excluded = {
             'stroke-width',
         ],
     },
+    rules: {},
+    selectors: {
+        '*': [
+            // https://github.com/w3c/reffy/issues/1137
+            '&',
+            '+',
+            '>',
+            '||',
+            '~',
+            // Non-required alias
+            ':matches()',
+        ],
+    },
     types: {
+        '*': [
+            // Terminals
+            '(-token',
+            ')-token',
+            '[-token',
+            ']-token',
+            '{-token',
+            '}-token',
+            'CDC-token',
+            'CDO-token',
+            'EOF-token',
+            'at-keyword-token',
+            'bad-string-token',
+            'bad-url-token',
+            'colon-token',
+            'comma-token',
+            'delim-token',
+            'semicolon-token',
+            'whitespace-token',
+            ...structures,
+            ...Object.keys(terminals),
+            // Aliases
+            ...compatibility.values.aliases.keys(),
+        ],
         'CSS': [
             // Obsoleted by CSS Backgrounds
             'border-style',
@@ -497,11 +487,12 @@ const excluded = {
             'position',
         ],
         'css-conditional-5': [
-            // Duplicate of CSS Fonts
+            // https://github.com/w3c/csswg-drafts/issues/8110
+            'font-format',
             'font-tech',
         ],
         'css-gcpm': [
-            // Prefer definitions from CSS Generated Content
+            // Prefer CSS Generated Content
             'content()',
             'string()',
         ],
@@ -510,11 +501,11 @@ const excluded = {
             'element()',
         ],
         'css-masking': [
-            // Superseded by CSS Shapes
+            // https://github.com/w3c/fxtf-drafts/pull/468
             'rect()',
         ],
         'fill-stroke': [
-            // Prefer definition from SVG
+            // Prefer SVG
             'paint',
         ],
         'filter-effects': [
@@ -536,8 +527,87 @@ const excluded = {
         ],
     },
 }
-
 /* eslint-enable sort-keys */
+
+const descriptors = []
+const properties = []
+const types = [...Object.entries(initialTypes), ...Object.entries(replaced.types)]
+
+/**
+ * @param {object[]} selectors
+ * @param {string} key
+ */
+function reportMissingPseudoSelectors(selectors, key) {
+    const { classes, elements } = pseudos
+    const { selectors: { '*': skipFromAllSpecs = [], [key]: skip = [] } } = excluded
+    selectors.forEach(({ name }) => {
+        if (skip.includes(name) || skipFromAllSpecs.includes(name)) {
+            return
+        }
+        if (name.startsWith('::')) {
+            if (!elements[name.endsWith('()') ? 'functions' : 'identifiers'][name.slice(2)]) {
+                console.log(`There is a new pseudo-element "${name}" defined in [${key}]`)
+            }
+            return
+        }
+        if (name.endsWith('()')) {
+            if (!classes.functions[name.slice(1)]) {
+                console.log(`There is a new pseudo-class "${name}" defined in [${key}]`)
+            }
+            return
+        }
+        // Ignore pseudo-elements with legacy syntax and `:lang()` incorrectly named `:lang` in CSS 2
+        if (!classes.identifiers.includes(name.slice(1)) && key !== 'CSS') {
+            console.log(`There is a new pseudo-class "${name}" defined in [${key}]`)
+        }
+    })
+}
+
+/**
+ * @param {string} name
+ * @param {string} value
+ * @param {object} rule
+ * @returns {boolean}
+ */
+function isUpdatedRule(name, value, { prelude, value: block }) {
+    let definition = name
+    if (prelude) {
+        definition += ` ${prelude}`
+    }
+    if (block) {
+        definition += ` { ${block} }`
+    } else {
+        definition += ' ;'
+    }
+    value = normalizeValue(value).replace('};', '}')
+    return value !== definition
+}
+
+/**
+ * @param {string} name
+ * @param {object} context
+ * @param {number} [depth]
+ * @returns {object|null}
+ */
+function findRule(name, context = rules, depth = 1) {
+    if (depth < 3) {
+        const { [name]: rule } = context
+        if (rule) {
+            return rule
+        }
+        for (const rule of Object.values(context)) {
+            const { names, rules } = rule
+            if (names?.includes(name)) {
+                return rule
+            }
+            const child = findRule(name, rules, depth + 1)
+            if (child) {
+                return child
+            }
+        }
+    }
+    return null
+}
 
 /**
  * @param {string} value
@@ -628,10 +698,12 @@ function serializeDescriptors(descriptors) {
     return descriptors.reduce(
         (string, [rule, definitions]) => {
             string += `${tab(1)}${addQuotes(rule)}: {\n`
-            definitions.sort(sortByName).forEach(([descriptor, { initial, value }]) => {
+            definitions.sort(sortByName).forEach(([descriptor, { initial, type, value }]) => {
                 string += `${tab(2)}${addQuotes(descriptor)}: {\n`
                 if (initial) {
                     string += `${tab(3)}initial: ${addQuotes(initial)},\n`
+                } else if (type) {
+                    string += `${tab(3)}type: '${type}',\n`
                 }
                 string += `${tab(3)}value: ${addQuotes(normalizeValue(value))},\n${tab(2)}},\n`
             })
@@ -651,55 +723,77 @@ function sortByName([a], [b]) {
 }
 
 /**
- * @param {string[][]} types [[type, value, key]]
  * @param {object} definitions
  * @param {string} key
  */
-function addTypes(types, definitions = {}, key) {
-    const { types: { [key]: skip = [] } } = excluded
-    Object.entries(definitions).forEach(([type, { value }]) => {
-        // `<type>` -> `type`
-        type = type.slice(1, -1)
-        if (excludedTypes.includes(type) || replaced.types[type] || skip.includes(type)) {
-            return
-        }
-        if (initialTypes[type]) {
-            console.error(`The type "${type}" (manually defined) is now extracted from: ${key}`)
-            return
-        }
-        const entry = types.find(([name]) => name === type)
-        if (entry) {
-            const [base1, v1 = 1] = entry[2].split(/-(\d)$/)
-            const [base2, v2 = 1] = key.split(/-(\d)$/)
-            if (base1 !== base2) {
-                throw Error(`Unhandled duplicate definitions for the type "${type}"`)
+function addTypes(definitions = [], key) {
+    const { types: { '*': skipFromAllSpecs = [], [key]: skip = [] } } = excluded
+    definitions.forEach(({ name, type, value, values }) => {
+        if (type === 'value') {
+            if (!/^<.+>$/.test(name)) {
+                return
             }
-            if (v1 < v2) {
-                entry.splice(1, 2, value, key)
+            // Type only defined with a prose specific to its namespace
+            if (value === name) {
+                return
             }
-        } else {
-            types.push([type, value, key])
+            type = 'type'
         }
+        if (type === 'type' || type === 'function') {
+            // `<type>` -> `type`
+            if (type === 'type') {
+                name = name.slice(1, -1)
+            }
+            if (replaced.types[name] || skip.includes(name) || skipFromAllSpecs.includes(name)) {
+                addTypes(values, key)
+                return
+            }
+            if (initialTypes[name]) {
+                if (value && reportErrors) {
+                    console.log(`The value of type "${name}" is now extracted from [${key}]`)
+                }
+                return
+            }
+            if (!value) {
+                if (reportErrors && !(replaced[name] || structures[name])) {
+                    console.log(`The value of type "${name}" is defined in prose in [${key}] and must be replaced with a value definiton`)
+                }
+                return
+            }
+            const entry = types.find(([type]) => type === name)
+            if (entry) {
+                const [base1, v1 = 1] = entry[2].split(/-(\d)$/)
+                const [base2, v2 = 1] = key.split(/-(\d)$/)
+                if (base1 !== base2) {
+                    throw Error(`Unhandled duplicate definitions for the type "${name}"`)
+                }
+                if (v1 < v2) {
+                    entry.splice(1, 2, value, key)
+                }
+            } else {
+                types.push([name, value, key])
+            }
+        }
+        addTypes(values, key)
     })
 }
 
 /**
- * @param {*[][]} properties [[property, definition, key]]
  * @param {object} definitions
  * @param {string} key
  */
-function addProperties(properties, definitions = {}, key) {
+function addProperties(definitions = [], key) {
     const { properties: { aliases, mappings } } = compatibility
-    const { properties: { [key]: skip = [] } } = excluded
-    Object.entries(definitions).forEach(([property, definition]) => {
-        if (aliases.has(property) || mappings.has(property) || skip.includes(property)) {
+    const { properties: { '*': skipFromAllSpecs = [], [key]: skip = [] } } = excluded
+    definitions.forEach(({ name, values, ...definition }) => {
+        if (aliases.has(name) || mappings.has(name) || skip.includes(name) || skipFromAllSpecs.includes(name)) {
             return
         }
-        const { properties: { [property]: replacement } } = replaced
+        const { properties: { [name]: replacement } } = replaced
         if (replacement) {
             definition = { ...definition, ...replacement }
         }
-        const entry = properties.find(([name]) => name === property)
+        const entry = properties.find(([property]) => property === name)
         if (entry) {
             const [, prevDefinition, prevKey] = entry
             const { newValues: prevNewValues } = prevDefinition
@@ -711,53 +805,77 @@ function addProperties(properties, definitions = {}, key) {
             } else if (prevNewValues) {
                 entry.splice(1, 1, { ...definition, value: `${value} | ${prevNewValues}` }, key)
             } else if (base1 !== base2) {
-                throw Error(`Unhandled duplicate definitions for the property "${property}"`)
+                throw Error(`Unhandled duplicate definitions for the property "${name}"`)
             } else if (v1 < v2) {
                 entry.splice(1, 2, definition, key)
             }
         } else {
-            properties.push([property, definition, key])
+            properties.push([name, definition, key])
         }
+        addTypes(values, key)
     })
 }
 
 /**
- * @param {*[][]} descriptors [[rule, [[descriptor, definition, key]]]]
- * @param {object} definitions
+ * @param {object[]} definitions
+ * @param {string} rule
  * @param {string} key
  */
-function addDescriptors(descriptors, definitions = {}, key) {
-    const { descriptors: { aliases, mappings } } = compatibility
-    Object.entries(definitions).forEach(([rule, { descriptors: definitions }]) =>
-        definitions.forEach(({ initial = '', name, value }) => {
-            if (aliases.has(name) || mappings.has(name)) {
-                return
-            }
-            const replacement = replaced.descriptors[rule]?.[name]
-            if (replacement) {
-                ({ initial = initial, value = value } = replacement)
-            }
-            const context = descriptors.find(([key]) => key === rule)
-            if (context) {
-                const [, entries] = context
-                const entry = entries.find(([key]) => key === name)
-                if (entry) {
-                    const [,, prevKey] = entry
-                    const [base1, v1 = 1] = prevKey.split(/-(\d)$/)
-                    const [base2, v2 = 1] = key.split(/-(\d)$/)
-                    if (base1 !== base2) {
-                        throw Error(`Unhandled duplicate definitions for the descriptor "${name}"`)
-                    }
-                    if (v2 < v1) {
-                        return
-                    }
-                    context.splice(rule.indexOf(entry), 1)
+function addDescriptors(definitions = [], rule, key) {
+    const { descriptors: { '*': skipFromAllSpecs = [], [key]: skip = [] } } = excluded
+    definitions.forEach(({ initial = '', name, type, value, values }) => {
+        if (skip.includes(name) || skipFromAllSpecs.includes(name)) {
+            return
+        }
+        const replacement = replaced.descriptors[rule]?.[name]
+        if (replacement) {
+            ({ initial = initial, type, value = value, values } = replacement)
+        }
+        const context = descriptors.find(([key]) => key === rule)
+        if (context) {
+            const [, entries] = context
+            const entry = entries.find(([key]) => key === name)
+            if (entry) {
+                const [,, prevKey] = entry
+                const [base1, v1 = 1] = prevKey.split(/-(\d)$/)
+                const [base2, v2 = 1] = key.split(/-(\d)$/)
+                if (base1 !== base2) {
+                    throw Error(`Unhandled duplicate definitions for the descriptor "${name}"`)
                 }
-                entries.push([name, { initial, value }, key])
-            } else {
-                descriptors.push([rule, [[name, { initial, value }, key]]])
+                if (v2 < v1) {
+                    return
+                }
+                context.splice(rule.indexOf(entry), 1)
             }
-        }))
+            entries.push([name, { initial, type, value }, key])
+        } else {
+            descriptors.push([rule, [[name, { initial, type, value }, key]]])
+        }
+        addTypes(values, key)
+    })
+}
+
+/**
+ * @param {object[]} definitions
+ * @param {string} key
+ */
+function addRules(definitions = [], key) {
+    const { rules: { aliases, mappings } } = compatibility
+    definitions.forEach(({ name, descriptors: definitions, value }) => {
+        const id = name.slice(1)
+        if (aliases.has(id) || mappings.has(id)) {
+            return
+        }
+        const rule = findRule(id)
+        if (rule) {
+            if (reportErrors && value && isUpdatedRule(name, value, rule)) {
+                console.log(`There is a new definition for the rule "${name}" in [${key}]`)
+            }
+            addDescriptors(definitions, name, key)
+        } else if (reportErrors) {
+            console.log(`There is a new rule "${name}" defined in [${key}]`)
+        }
+    })
 }
 
 /**
@@ -766,14 +884,13 @@ function addDescriptors(descriptors, definitions = {}, key) {
  */
 function build(specifications) {
 
-    const descriptors = []
-    const properties = []
-    const types = [...Object.entries(initialTypes), ...Object.entries(replaced.types)]
-
-    Object.entries(specifications).forEach(([key, definition]) => {
-        addDescriptors(descriptors, definition.atrules, key)
-        addProperties(properties, definition.properties, key)
-        addTypes(types, definition.valuespaces, key)
+    Object.entries(specifications).forEach(([key, { atrules, properties, selectors, values }]) => {
+        addProperties(properties, key)
+        addTypes(values, key)
+        addRules(atrules, key)
+        if (reportErrors) {
+            reportMissingPseudoSelectors(selectors, key)
+        }
     })
 
     return Promise.all([
@@ -783,4 +900,4 @@ function build(specifications) {
     ])
 }
 
-listAll().then(build).catch(logError)
+webref.listAll().then(build).catch(logError)

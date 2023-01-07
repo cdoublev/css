@@ -47,7 +47,19 @@ A longhand declaration cannot be assigned an empty string as a pending-substitut
 >
 > If all of the component longhand properties for a given shorthand are pending-substitution values from the same original shorthand value, the shorthand property must serialize to that original (`var()`-containing) value.
 
-Declaring all longhands with the same value is not equivalent to declaring the shorthand with this value:
+Declaring all longhands with the same value is not always equivalent to declaring the shorthand with this value. For example:
+
+```js
+style.cssText = `
+  --custom: 1px 2px;
+  margin-block-width:       var(--custom); /* valid at computed value time */
+  margin-block-start-width: var(--custom); /* invalid at computed value time */
+  margin-block-end-width:   var(--custom); /* invalid at computed value time */
+`
+style.marginBlockWidth; // ''
+```
+
+Therefore the shorthand should serialize to empty string:
 
 > Otherwise, if any of the component longhand properties for a given shorthand are pending-substitution values, or contain `var()` functions of their own that have not yet been substituted, the shorthand property must serialize to the empty string.
 

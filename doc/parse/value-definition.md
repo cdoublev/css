@@ -90,13 +90,15 @@ A whitespace is almost always optional between component values, eg. `1px+1px` i
 
 ## Extracting and curating CSS value definitions
 
-The CSS value definitions are extracted by [`@webref/css`](https://github.com/w3c/webref) from CSS specifications, and then produced in these files:
+The CSS value definitions are extracted by [`w3c/reffy`](https://github.com/w3c/reffy) from CSS specifications, and then written to these files:
 
   - /lib/descriptors/definitions.js
   - /lib/properties/definitions.js
   - /lib/values/definitions.js
 
-Some definitions cannot be extracted by `@webref/css`, are written in prose, or the same CSS value can be defined in different specifications, sometimes with different definitions, for different reasons:
+Rules are manually defined in lib/rules/definitions.js.
+
+Some definitions cannot be extracted by `w3c/reffy`, are written in prose, or the same CSS value can be defined in different specifications, sometimes with different definitions, for different reasons:
 
   - a specification is partially or entirely superseded by one or more specifications
   - a definition is duplicated instead of linking to a definition from an authoritative specification
@@ -104,7 +106,7 @@ Some definitions cannot be extracted by `@webref/css`, are written in prose, or 
 
 The following processing steps are applied to work around these problems:
 
-  - replace a definition written in prose by the appropriate value definition
+  - replace a definition written in prose with the appropriate value definition
   - give priority to the definition from the authoritative specification
   - append new values to the definition from the authoritative specification
 

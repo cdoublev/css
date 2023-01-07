@@ -10,7 +10,7 @@ A **shorthand** allows to declare multiple sub-properties by specifying a single
 
 There must be a mapping from each shorthand to its longhand sub-properties, in canonical order, to parse a shorthand value to longhand declarations (aka. shorthand expansion) and vice versa, to serialize a shorthand value from longhand declarations. This mapping must include reset-only sub-properties because the shorthand must serialize to `''` when some reset-only sub-property is not declared with its initial value.
 
-**[Issue:](https://github.com/w3c/csswg-drafts/issues/6894)** the canonical order is not clearly defined, and it can correspond to an older syntax if backward compatibility with this syntax must be supported, which is never the case in this library.
+**[Issue](https://github.com/w3c/csswg-drafts/issues/6894):** the canonical order is not clearly defined, and it can correspond to an older syntax if backward compatibility with this syntax must be supported, which is never the case in this library.
 
 ## Expansion
 
@@ -36,7 +36,7 @@ For each longhand in `lib/properties/definitions.js`, `scripts/initial.js` must 
 
 `initial.serialized` is assigned the result from serializing `initial.parsed`. It can be used to omit a longhand declaration value when serializing a shorthand, by comparing it with the result from the serialization of the longhand declaration value. This is easier and less complex than comparing component values.
 
-**[Issue:](https://github.com/w3c/csswg-drafts/issues/7629)** `properties[longhand].initial.serialized` cannot be the initial value as defined in `longhand` definition table, because some initial values do not correspond to the result from a round trip (parse then serialize), eg. the initial value of `border-*-color` is `currentColor` which should serialize to `currentcolor`.
+**[Issue](https://github.com/w3c/csswg-drafts/issues/7629):** `properties[longhand].initial.serialized` cannot be the initial value as defined in `longhand` definition table, because some initial values do not correspond to the result from a round trip (parse then serialize), eg. the initial value of `border-*-color` is `currentColor` which should serialize to `currentcolor`.
 
 ## Serialization
 
@@ -61,6 +61,10 @@ A shorthand must serialize to:
   - the value composed from the declaration values for its longhand sup-properties according to the shorthand grammar and the shortest representation principle (detailed further below)
     - some directional longhand sub-property values must be omitted when they are equal
     - etc.
+
+**[Issue](https://github.com/w3c/csswg-drafts/issues/7983):** theoretically, a shorthand must serialize when all its longhands are declared with an equivalent substitution value, but comparing these values is non-trivial, eg. `var(--custom)` and `var(--custom) /* comment */`, `foo(bar(var(--custom)))` and `foo(var(--custom))`, etc.
+
+**[Issue](https://github.com/w3c/csswg-drafts/issues/2515):** theoretically, a shorthand must serialize when some of its longhands are declared with an equivalent pending-substitution value, whereas others are declared with a value of their own, but this is non-trivial, as noted for the previous issue.
 
 When running the implementation of *serialize a CSS value*, all longhands are guaranteed to have a declaration with the same priority (cf. definitions of `CSSStyleDeclaration.getPropertyValue()`, and *serialize a CSS block*, ie. `(get) CSSStyleDeclaration.cssText`).
 
