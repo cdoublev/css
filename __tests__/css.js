@@ -59,6 +59,9 @@ describe('CSS.supports()', () => {
             ['font-tech(color-svg)'],
             // <supports-selector-fn>
             ['selector(undeclared|*)', false],
+            ['selector(::-webkit-unknown)', false],
+            ['selector(::before:is(type))', false],
+            ['selector(:is(::before))', false],
             ['selector(type + .class)'],
         ]
         conditions.forEach(([condition, expected = true]) => expect(CSS.supports(condition)).toBe(expected))

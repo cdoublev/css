@@ -36,6 +36,9 @@ function time(value, unit, type = [], representation) {
 function ident(value, type = [], representation) {
     return component(value, ['ident', ...type], representation)
 }
+function customIdent(value, type = [], representation) {
+    return ident(value, ['custom-ident', ...type], representation)
+}
 function keyword(value, type = [], representation) {
     return ident(value, ['keyword', ...type], representation)
 }
@@ -1053,8 +1056,10 @@ describe('<ident>', () => {
 })
 describe('keyword', () => {
     it('parses a valid value', () => {
-        expect(parse('solid', 'inherit', true, false)).toEqual(keyword('inherit', ['css-wide-keyword']))
-        expect(parse('solid', 'solid', false, false)).toEqual(keyword('solid'))
+        expect(parse('solid', 'inherit', true, false))
+            .toEqual(keyword('inherit', ['css-wide-keyword']))
+        expect(parse('solid', 'solid', false, false))
+            .toEqual(keyword('solid'))
     })
     it('parses and serializes a valid value', () => {
         // CSS-wide keyword
@@ -1093,7 +1098,7 @@ describe('<custom-ident>', () => {
     })
     it('parses a valid value', () => {
         expect(parse('<custom-ident>', 'customIdentifier', false, false))
-            .toEqual(ident('customIdentifier', ['custom-ident']))
+            .toEqual(customIdent('customIdentifier'))
     })
     it('parses and serializes a valid value', () => {
         const valid = [
@@ -1389,9 +1394,11 @@ describe('<signless-integer>', () => {
         invalid.forEach(input => expect(parse('<signless-integer>', input, false, false)).toBeNull())
     })
     it('parses a valid value', () => {
-        expect(parse('<signless-integer>', '1', false, false)).toEqual(number(1, ['signless-integer']))
+        expect(parse('<signless-integer>', '1', false, false))
+            .toEqual(number(1, ['signless-integer']))
         // https://github.com/w3c/csswg-drafts/issues/7289
-        expect(parse('<signless-integer>', '1e+1', false, false)).toEqual(number(10, ['signless-integer'], '1e+1'))
+        expect(parse('<signless-integer>', '1e+1', false, false))
+            .toEqual(number(10, ['signless-integer'], '1e+1'))
     })
 })
 describe('<signed-integer>', () => {
@@ -1521,8 +1528,10 @@ describe('<length>', () => {
         invalid.forEach(input => expect(parse('<length [0,∞]>', input, false, false)).toBeNull())
     })
     it('parses a valid value', () => {
-        expect(parse('<length>', '0', false, false)).toEqual(length(0, 'px', undefined, '0'))
-        expect(parse('<length>', '1px', false, false)).toEqual(length(1, 'px'))
+        expect(parse('<length>', '0', false, false))
+            .toEqual(length(0, 'px', undefined, '0'))
+        expect(parse('<length>', '1px', false, false))
+            .toEqual(length(1, 'px'))
     })
     it('parses and serializes a valid value', () => {
         const valid = [
@@ -1593,8 +1602,10 @@ describe('<alpha-value>', () => {
         invalid.forEach(input => expect(parse('<alpha-value>', input, false, false)).toBeNull())
     })
     it('parses a valid value', () => {
-        expect(parse('<alpha-value>', '1', false, false)).toEqual(number(1, ['alpha-value']))
-        expect(parse('<alpha-value>', '1%', false, false)).toEqual(percentage(1, ['alpha-value']))
+        expect(parse('<alpha-value>', '1', false, false))
+            .toEqual(number(1, ['alpha-value']))
+        expect(parse('<alpha-value>', '1%', false, false))
+            .toEqual(percentage(1, ['alpha-value']))
     })
     it('parses and serializes a valid value', () => {
         const valid = [
@@ -1627,8 +1638,10 @@ describe('<angle>', () => {
         invalid.forEach(input => expect(parse('<angle [0,1deg]>', input, false, false)).toBeNull())
     })
     it('parses a valid value', () => {
-        expect(parse('<angle>', '0', false, false)).toEqual(angle(0, 'deg', undefined, '0'))
-        expect(parse('<angle>', '1deg', false, false)).toEqual(angle(1, 'deg'))
+        expect(parse('<angle>', '0', false, false))
+            .toEqual(angle(0, 'deg', undefined, '0'))
+        expect(parse('<angle>', '1deg', false, false))
+            .toEqual(angle(1, 'deg'))
     })
     it('parses and serializes a valid value', () => {
         const valid = [
@@ -1738,8 +1751,10 @@ describe('<n-dimension>', () => {
         invalid.forEach(input => expect(parse('<n-dimension>', input, false, false)).toBeNull())
     })
     it('parses a valid value', () => {
-        expect(parse('<n-dimension>', '1n', false, false)).toEqual(dimension(1, 'n', ['n-dimension']))
-        expect(parse('<n-dimension>', '1N', false, false)).toEqual(dimension(1, 'n', ['n-dimension'], '1N'))
+        expect(parse('<n-dimension>', '1n', false, false))
+            .toEqual(dimension(1, 'n', ['n-dimension']))
+        expect(parse('<n-dimension>', '1N', false, false))
+            .toEqual(dimension(1, 'n', ['n-dimension'], '1N'))
     })
 })
 describe('<ndash-dimension>', () => {
@@ -1752,8 +1767,10 @@ describe('<ndash-dimension>', () => {
         invalid.forEach(input => expect(parse('<ndash-dimension>', input, false, false)).toBeNull())
     })
     it('parses a valid value', () => {
-        expect(parse('<ndash-dimension>', '1n-', false, false)).toEqual(dimension(1, 'n-', ['ndash-dimension']))
-        expect(parse('<ndash-dimension>', '1N-', false, false)).toEqual(dimension(1, 'n-', ['ndash-dimension'], '1N-'))
+        expect(parse('<ndash-dimension>', '1n-', false, false))
+            .toEqual(dimension(1, 'n-', ['ndash-dimension']))
+        expect(parse('<ndash-dimension>', '1N-', false, false))
+            .toEqual(dimension(1, 'n-', ['ndash-dimension'], '1N-'))
     })
 })
 describe('<ndashdigit-dimension>', () => {
@@ -2885,7 +2902,18 @@ describe('<container-name>', () => {
     })
     it('parses a valid value', () => {
         expect(parse('<container-name>', 'name', false, false))
-            .toEqual(ident('name', ['custom-ident', 'container-name']))
+            .toEqual(customIdent('name', ['container-name']))
+    })
+})
+describe('<family-name>', () => {
+    it('fails to parse an invalid value', () => {
+        expect(parse('<family-name>', 'serif', false, false)).toBeNull()
+    })
+    it('parses a valid value', () => {
+        expect(parse('<family-name>', '"serif"', false, false))
+            .toEqual(string('serif', ['family-name']))
+        expect(parse('<family-name>', 'the serif', false, false))
+            .toEqual(list([customIdent('the'), customIdent('serif')], ' ', ['family-name']))
     })
 })
 describe('<feature-tag-value>', () => {
@@ -3094,10 +3122,12 @@ describe('<image-set()>', () => {
         expect(parse('<image-set()>', 'image-set(cross-fade(image-set("image.jpg" 1x)))', false, false)).toBeNull()
     })
     it('parses a valid value', () => {
+
         const url = string('image.jpg')
         const resolution = dimension(1, 'x', ['resolution'])
         const format = omitted('type(<string>)')
         const option = list([url, list([resolution, format])], ' ', ['image-set-option'])
+
         expect(parse('<image-set()>', 'image-set("image.jpg" 1x)', false, false)).toEqual({
             name: 'image-set',
             representation: 'image-set("image.jpg" 1x)',
@@ -3115,7 +3145,7 @@ describe('<keyframes-name>', () => {
     })
     it('parses a valid value', () => {
         expect(parse('<keyframes-name>', 'animation', false, false))
-            .toEqual(ident('animation', ['custom-ident', 'keyframes-name']))
+            .toEqual(customIdent('animation', ['keyframes-name']))
     })
     it('parses and serializes a valid value', () => {
         const valid = [
@@ -3132,7 +3162,8 @@ describe('<keyframe-selector>', () => {
         expect(parse('<keyframe-selector>', 'none', false, false)).toBeNull()
     })
     it('parses a valid value', () => {
-        expect(parse('<keyframe-selector>', '0%', false, false)).toEqual(percentage(0, ['keyframe-selector']))
+        expect(parse('<keyframe-selector>', '0%', false, false))
+            .toEqual(percentage(0, ['keyframe-selector']))
     })
     it('parses and serializes a valid value', () => {
         expect(parse('<keyframe-selector>', 'from')).toBe('0%')
@@ -3145,7 +3176,9 @@ describe('<line-names>', () => {
         expect(parse('<line-names>', '[span]', false, false)).toBeNull()
     })
     it('parses a valid value', () => {
-        const name = ident('name', ['custom-ident'])
+
+        const name = customIdent('name')
+
         expect(parse('<line-names>', '[name name]', false, false)).toEqual({
             associatedToken: '[',
             representation: '[name name]',
@@ -3166,7 +3199,8 @@ describe('<media-type>', () => {
         invalid.forEach(input => expect(parse('<media-type>', input, false, false)).toBeNull())
     })
     it('parses a valid value', () => {
-        expect(parse('<media-type>', 'all', false, false)).toEqual(ident('all', ['media-type']))
+        expect(parse('<media-type>', 'all', false, false))
+            .toEqual(ident('all', ['media-type']))
     })
 })
 describe('<mf-comparison>', () => {
@@ -3195,7 +3229,7 @@ describe('<mf-name>', () => {
     })
 })
 describe('<page-selector-list>', () => {
-    it('fails to parse and invalid value', () => {
+    it('fails to parse an invalid value', () => {
         const invalid = [
             // Invalid whitespace
             'toc :left',
@@ -3312,6 +3346,7 @@ describe('<font-src-list>', () => {
             ['url("font.ttf") format("truetype")', 'url("font.ttf") format(truetype)'],
             ['url("font.ttf") format("truetype-variations")', 'url("font.ttf") format(truetype) tech(variations)'],
             ['url("font.woff") format("woff")', 'url("font.woff") format(woff)'],
+            ['url("font.woff") format("woff-variations")', 'url("font.woff") format(woff) tech(variations)'],
             ['url("font.woff2") format("woff2")', 'url("font.woff2") format(woff2)'],
             ['url("font.woff2") format("woff2-variations")', 'url("font.woff2") format(woff2) tech(variations)'],
         ]
@@ -3381,12 +3416,14 @@ describe('<selector-list>', () => {
         invalid.forEach(input => expect(parse('<selector-list>', input, false, false)).toBeNull())
     })
     it('parses a valid value', () => {
+
         const subclass = list([delimiter('.'), ident('class', ['ident-token'])], '', ['class-selector', 'subclass-selector'])
         const subclasses = list([subclass], '')
         const compound = list([omitted('<type-selector>?'), subclasses], '', ['compound-selector'])
         const complexUnit = list([compound, list([], '')], '', ['complex-selector-unit'])
         const complex = list([complexUnit, list()], ' ', ['complex-selector'])
         const selectors = list([complex], ',', ['complex-selector-list', 'selector-list'])
+
         expect(parse('<selector-list>', '.class', false, false)).toEqual(selectors)
     })
     it('parses and serializes a valid value', () => {
@@ -3420,7 +3457,7 @@ describe('<selector-list>', () => {
             ['::before:is(:defined, type, #id, .class, :root, :not(:root), :not(:hover))', '::before:is(:defined, :not(:hover))'],
             ['::before:not(:defined, :not(:hover))'],
             ['::marker:not(:only-child)'],
-            // Pseudo-classing with structured pseudo-element (none exists in the specs yet)
+            // Pseudo-classing structured pseudo-element (none exists in the specs yet)
             // ['::structured:empty'],
             // ['::structured:has(p)'],
             // ['::structured-child:only-child'],

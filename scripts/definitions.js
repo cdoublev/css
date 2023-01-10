@@ -18,6 +18,7 @@ const cssWideKeywords = require('../lib/values/css-wide-keywords.js')
 const deprecatedColors = require('../lib/values/deprecated-colors.js')
 const { definitions: dimensions } = require('../lib/values/dimensions.js')
 const fs = require('node:fs/promises')
+const genericFamilies = require('../lib/values/generic-families.js')
 const logical = require('../lib/properties/logical.js')
 const namedColors = require('../lib/values/named-colors.js')
 const pseudos = require('../lib/values/pseudos.js')
@@ -126,9 +127,9 @@ const replaced = {
     types: {
         // https://github.com/w3c/csswg-drafts/issues/7368
         'content-list': '[<string> | <content()> | contents | <image> | <counter> | <quote> | <target> | <leader()>]+',
-        // https://github.com/w3c/csswg-drafts/issues/8092
+        // https://github.com/w3c/csswg-drafts/issues/8187
         'family-name': '<custom-ident>+ | <string>',
-        'font-face-name': '<custom-ident>+ | <string>',
+        'font-face-name': '<family-name>',
         // https://github.com/w3c/csswg-drafts/issues/7016
         'general-enclosed': '<function> | (<ident> <any-value>)',
         'pseudo-class-selector': "':' <ident> | ':' <function>",
@@ -162,7 +163,7 @@ const replaced = {
         'ending-shape': 'circle | ellipse',
         'extension-name': '<dashed-ident>',
         'gender': 'male | female | neutral',
-        'generic-family': 'cursive | emoji | fangsong | fantasy | math | monospace | sans-serif | serif | system-ui | ui-monospace | ui-rounded | ui-sans-serif | ui-serif',
+        'generic-family': genericFamilies.join(' | '),
         'hsla()': 'hsla([<hue> | none] [<percentage> | none] [<percentage> | none] [/ [<alpha-value> | none]]?)',
         'id': '<id-selector>',
         'lang': '<ident> | <string>',

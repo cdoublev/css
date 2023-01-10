@@ -17,7 +17,7 @@ It uses the [CSS value definition syntax](value-definition.md), eg. `<foo>`, whi
 
 ## The CSS grammar: syntax and semantic
 
-The CSS grammar is composed of three levels of rules: lexic, syntax, and semantic. The lexic and syntax, aka. the basic syntax, define structures while the semantic define their meaning in a given context. For example, `opacity: red` is a valid `<declaration>` but its value is invalid according to the value definition of its (property) name.
+The CSS grammar is composed of three levels of rules: lexic, syntax, and semantic. Lexic and syntax, aka. the basic syntax, define structures while the semantic define their meaning in a given context. For example, `opacity: red` is a valid `<declaration>` but its value is invalid according to the value definition of its (property) name.
 
 In CSS specifications, *grammar* always refers to a production or a value definition, and implicitly includes any specific rules written in prose. Theoretically, the CSS grammar can be defined only with production rules, but hard-coding semantic rules in production rules is not always trivial. Furthermore, an error when parsing a rule or declaration must not cause the whole process to fail.
 

@@ -169,13 +169,13 @@ To parse `<media-query-list>` and `<forgiving-selector-list>`, the parser must *
 
 ### Context
 
-Parsing a list of component values against a grammar may require to know the context.
+Parsing an input against a grammar may require to know the context.
 
-As a reminder, the context is the object that is assigned the list of component values being parsed, but it also represents any higher level parent object(s). The parser "enters" in a context when it starts to parse a style sheet, a rule, a declaration, a function, a simple block, or a production.
+As a reminder, the context is any sibling or higher level value or value definition, where *higher level* means a parent production, function, block, declaration, or rule. The parser "enters" in a context when it starts to parse a style sheet, a rule, a declaration, a function, a simple block, or a non-terminal.
 
 For example, parsing a prelude may require to know which rule it belongs to. This raises the question of how to represent, access, and apply context rules.
 
-Looking at how to access context first, it can be achieved by ensuring the parser keeps track of each parsed production, with a parse tree. But it will not work when using an interface like `CSSRule.insertRule()` and some grammar is sensitive to a context at a higher level than `CSSRule`.
+Looking first at how to access the context value, its definition, or both, it can be achieved by ensuring the parser keeps track of each parsed production, with a parse tree. But it will not work when using an interface like `CSSRule.insertRule()` and some grammar is sensitive to a context at a higher level than `CSSRule`.
 
 For example, the rule's block value of `@media` and `@supports` must be defined with `<style-block>` instead of `<stylesheet>`, when these rules are nested in a style rule.
 
@@ -323,17 +323,3 @@ Some cases not subject to comma-elision rules:
 
   - `x a?, x`
   - `x, a? x`
-
-A hook for pre/postprocessing `,` depends on looking behind/ahead `list.current`:
-
-  - cases with `list.index === -1`
-    - `,` must be omitted when matching   `b` against `a?, b`
-    - `,` must be invalid when matching `, b` against `a?, b`
-  - cases with `list.next(2).includes(',')` or `list.prev(2).includes(',')`
-    - `,` must be omitted when matching  `a, c` against `a, b?, c`
-    - `,` must be invalid when matching `a,, c` against `a, b?, c`
-  - cases with `list.consume(' ', true) && list.atEnd()`
-    - `,` must be omitted when matching  `a` against `a, b?`
-    - `,` must be invalid when matching `a,` against `a, b?`
-
-A `replace` hook cannot prevent leading/adjacent/trailing `,`. A single `preprocess` hook or a combination of a `postprocess` and `replace` hooks must be used.
