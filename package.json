@@ -42,7 +42,7 @@
     "@webref/css": "^6.2.0",
     "domexception": "^4.0.0",
     "webidl-conversions": "^7.0.0",
-    "webref": "w3c/webref#270af652be3dd2c9826b75725ce359e012727141"
+    "webref": "w3c/webref#4d4109c1ccc33014d208ca85bdc3915c60572b68"
   },
   "devDependencies": {
     "@babel/core": "^7.20.7",

@@ -441,6 +441,13 @@ const excluded = {
             ':matches()',
         ],
     },
+    specifications: [
+        'css-color-6',
+        'css-color-hdr',
+        'css-conditional-values',
+        'css-gcpm-4',
+        'selectors-nonelement',
+    ],
     types: {
         '*': [
             // Terminals
@@ -886,6 +893,9 @@ function addRules(definitions = [], key) {
 function build(specifications) {
 
     Object.entries(specifications).forEach(([key, { atrules, properties, selectors, values }]) => {
+        if (excluded.specifications.includes(key)) {
+            return
+        }
         addProperties(properties, key)
         addTypes(values, key)
         addRules(atrules, key)

@@ -23,7 +23,7 @@ A **derivation** is the path that is followed to traverse the input and the prod
 
 A **derivation tree** (aka. concrete tree or parse tree) is a hierarchical representation of this traversal. A branch node represents a non-terminal, a combination, or a repetition, as a container for zero or more component values. A leaf node represents a terminal as a component value.
 
-**Note:** in graph theory, a parse tree is a graph that is acyclic, finite, undirected, connected, rooted, ie. there is exactly one bidirectional path to each vertex (node) and there is a vertex designated as the root.
+**Note:** in graph theory, a parse tree is a graph that is acyclic, finite, undirected, connected, rooted, ie. there is exactly one bidirectional path between two nodes and there is a node designated as the root of the tree.
 
 This traversal can start from the root node, follow a **pre-order**, which means a parent node is visited before its children, and end to the rightmost leaf node, resulting to a *leftmost derivation*. Or it can start from the leftmost leaf node, follow a **post-order**, which means a parent node is visited after its children, and end to the root node, resulting to a *rightmost derivation in reverse*.
 
@@ -37,15 +37,13 @@ An **abstract syntax tree** is the result of simplifying the parse tree in order
 
 Some grammars are said to be **context-sensitive** or **context-free**.
 
-In Chomsky hierarchy, which organizes formal grammar classes, a context-sensitive grammar is a grammar whose production rules vary depending on their sibling productions. Such sensitivity almost never occurs in programming languages.
+In Chomsky hierarchy, which organizes formal grammar classes, a context-sensitive grammar is a grammar whose production rules vary depending on sibling productions, which almost never occurs in programming languages.
 
-**Note:** it currently exists for CSS pseudo-elements compounded with a pseudo-class.
-
-However, some CSS grammars are sensitive to the context defined by higher level productions:
+In CSS, an example is `<pseudo-element-selector><pseudo-class-selector>`. But CSS productions can also be sensitive to a higher level context:
 
   - a parent production: `<parent> = <children>`
-  - a production of a function or simple block: `parent(<children>)` or `(<children>)`
-  - a production of a rule: `@parent { <children> }`
+  - a function or simple block: `parent(<children>)` or `(<children>)`
+  - a rule: `@parent { <children> }`
 
 ### Ambiguity
 
@@ -53,13 +51,13 @@ An **ambiguity** exists when multiple derivations exist for the same input.
 
 When a grammar is ambiguous, a priority must be decided, either ahead of time (statically), per production or with first, last, or longest match priority, or at parse time (dynamically), depending on the context or with backtracking.
 
-A canonical example to illustrate a parsing ambiguity is the grammar of math operations, which involves associativity and precedence rules. The priorities associated to these rules are important because the (semantic) result can be different.
+A canonical example to illustrate a parsing ambiguity is the grammar of math operations, which involves associativity and precedence rules. The priorities associated with these rules are important because the (semantic) result could be different.
 
 As in math operations, left associativity is usually expected for parsing programming languages. The parser must read the input from left to right: `1 - 2 + 3` must be interpreted to `2` instead of `4`.
 
-Precedence rules can be hard-coded in the value definition. `1 + 2 * 3` must be interpreted to `7` instead of `9`, which means that a calculation must be defined with a slighlty more complex grammar than `<calc-value> [['+' | '-' | '*' | '/'] <calc-value>]*`.
+Precedence rules must be hard-coded in value definitions. `1 + 2 * 3` must be interpreted to `7` instead of `9`, which means that a calculation must be defined with a slighlty more complex grammar than `<calc-value> [['+' | '-' | '*' | '/'] <calc-value>]*`.
 
-Many ambiguities can be resolved with backtracking: when given `a a` as input, a backtracking parser successfully matches `a | a a` after backtracking instead of failing after matching the first choice, or instead of re-ordering `a | a a` to `a a | a`, which is equivalent to deciding a longest match priority.
+Many ambiguities can be resolved with backtracking: when given `a a` as input, a backtracking parser successfully matches `a | a a` after backtracking instead of failing after matching the first choice, or instead of re-ordering `a | a a` to `a a | a`, which is equivalent to deciding on a longest match priority.
 
 Detecting ambiguities is non-trivial when symbols can be combined in any order or multiplied a varying number of times. Generating a LL/LR (Left to right, Leftmost/Rightmost derivation) parser from a grammar is the only guarantee that it is unambiguous.
 
@@ -69,7 +67,7 @@ An **automaton** is a machine (computing device) used to study computational pro
 
 A **deterministic** automaton is equivalent to a pure function: for a given (internal) state and input, it will always transition to the same next state and produce the same output. There cannot be anything else to resolve the next state, like an external state (aka. qualitative state or context) or randomness.
 
-Look-ahead of more than one input token and backtracking do not make an automaton undeterministic but these operations have a higher time complexity. Similarly, the external state (stored in memory) can be updated in a deterministic way but it makes the machine dependent on the size of its memory (space complexity), which is totally acceptable for modern computing devices.
+Look-ahead (of more than one input token) and backtracking do not make an automaton undeterministic but these operations have a higher complexity. Similarly, an external state stored in memory can be updated in a deterministic way but it makes the machine dependent on the size of its memory (space complexity), which is totally acceptable for modern computing devices.
 
 Chomsky hierarchy defines a nomenclature of formal grammars:
 
@@ -116,23 +114,25 @@ The following quotes from [these](https://github.com/w3c/csswg-drafts/issues/292
   > - **tabatkins:** Yes, <dfn id="greedy">greedy means the first thing to match a segment claims that segment forever, even if it would cause the overall match to fail.</dfn> <dfn id="longest match">Longest match is somewhat greedy - the parse that consumes the most tokens for a production is the one that wins, even if it would cause the overall match to fail, but that is not necessarily the "first" (it depends on how you order the productions).</dfn> [...]
   > - **tabatkins:** CSS grammar parsing is not longest match, at least in general.
 
-One would expect to read combined symbols in the same direction as the input. For example, `a a a` would match the first alternative in `[a | a a] a?` and the last `a` would not be omitted. But the CSS value definition syntax does not define such priority.
+One would expect to read combined symbols in the same direction as the input. For example, `a a` would match the first alternative in `[a | a a] a?` and `a?` would not be omitted. But the CSS value definition syntax does not define such priority.
 
-And when parsing `a a a` against `[a | a a] a` and assuming it has already found a match for the shorter alternative, the parser must not immediately look for `a a` as a longer match. Instead, while the input is not fully consumed, it backtracks to find an overall match.
+**Note:** the CSS grammar defines some priorities, like `<number>` or `<integer>` over `<length>` (or `<length-percentage>`) to match `0`, for example in `<length> | <number>` or `<length-percentage> | <number>`.
+
+And when parsing `a a a` against `[a | a a] a`, assuming the parser first finds a match against the first alternative, it must not immediately try to find a longer match with the other alternative. Instead, while the input is not fully consumed, it backtracks to find an overall match.
 
 Looking for the longest match would rarely make sense. For example, `<color>` is defined with `<hex-color> | <named-color> | transparent | <rgb()> | <rgba()> | ...`: it would be useless to try other alternatives when matching `#000 false` against `<color> true`, noting that `<named-color>` expands to even more alternatives.
 
-Actually, there are only a few productions that can yield a different match with backtracking, and they would not need it if their alternatives were sorted in a different order and if a sequence of combined symbols would be defined to be read from left to right.
+Actually, there are only a few productions that can yield a different match with backtracking, and they would not need it if their alternatives were sorted in a different order and reading combined symbols were defined from left to right.
 
-It would also be useless to parse multiple times a function block value that matched its (context-free) value definition. For example, a gradient function as the only input value for `background` would be parsed many times, even if all permutations not starting with `<bg-image>` are skipped.
+It would also be useless to parse multiple times a function block value that matched its (context-free) value definition. For example, a gradient function as the only input value for `background` would be parsed many times, even when all permutations not starting with `<bg-image>` are skipped.
 
 Similarly, backtracking is useless when a function block value failed to match its (context-free) value definition, or when a value failed to match a production specific rule written in prose: the whole input is guaranteed to be invalid.
 
-When running parse functions recursively, the only escape to short-circuit and abort parsing, is to throw an error handled in a main parse function, noting that `try {} catch` increases time complexity. However, there should be appropriate error boundaries to let the parser continue its work at a higher level.
+When running parse functions recursively, the only escape to short-circuit and abort parsing, is to throw an error handled in a main parse function, noting that `try {} catch` increases time complexity. However, there should be appropriate error boundaries to let the parser continue at a higher level.
 
-Any value definition that includes a choice can yield a different result after backtracking: symbols combined with `|`, `||`, `&&`, or qualified by a multiplier where `min < max`.
+Any value definition including a choice can yield a different result after backtracking: symbols combined with `|`, `||`, `&&`, or qualified by a multiplier where `min < max`.
 
-Backtracking requires to save an **execution state** to move back at the parse tree node (derivation step) that corresponds to the last choice, which means discarding matched component values and restoring the input index.
+Backtracking requires to save an **execution state** to move back at the parse tree node (derivation step) and the index in the list of component values that corresponds to the last choice, and to discard the corresponding matched component values.
 
 ### Parsing flow
 
@@ -140,18 +140,18 @@ To [parse a CSS style sheet](https://drafts.csswg.org/css-syntax-3/#parse-a-css-
 
 **Note**: *parse a stylesheet* receives a `location` argument but only from [*fetch an @import*](https://drafts.csswg.org/css-cascade-4/#fetch-an-import), defined in Cascade 4 but removed in Cascade 5, therefore it can be replaced with *parse a list of rules* implemented with a `topLevel` flag (unset by default), noting that `CSSStyleSheet.replace()` and `CSSStyleSheet.replaceSync()` do not need to set this flag because they do not require to be backward-compatible regarding the handling of `<!--` and `-->` wrapping a top-level qualified rule.
 
-But [`@page`](https://drafts.csswg.org/css-page-3/#syntax-page-selector), a top-level rule existing since CSS 1, must be parsed with *parse something according to a CSS grammar*, which must *parse a list of component values*, which does not consume a rule as an object, before matching the list against `@page <page-selector-list> { <declaration-list> }`.
-
-This means there is a problem either in CSS Paged Media, which should not define `@page` to be parsed with *parse something according to a CSS grammar*, or in CSS Syntax, which should define *consume an at-rule* and *consume a qualified rule* so that they return a list of component values instead of an object with a `name`, `prelude`, `value`, assigned the corresponding slices of the list.
+But [`@page`](https://drafts.csswg.org/css-page-3/#syntax-page-selector), a top-level rule existing since CSS 1, must be parsed with *parse something according to a CSS grammar*, which must *parse a list of component values*, which does not consume rules as objects, before matching the list against `@page <page-selector-list> { <declaration-list> }`.
 
 What a rule's value definition like `@page <page-selector-list> { <declaration-list> }` represents is unclear because of this problem. It could be either:
 
   1. an `<at-keyword-token>` whose value is `page`, followed by component values matching `<page-selector-list>`, followed by a simple block whose `value` is a sublist of component values matching `<declaration-list>`
   2. a single object whose `name`, `prelude`, and `value`, match the corresponding parts of the value definition, similarly as for a function `name` and `value`
 
-[`<declaration-list>`](https://drafts.csswg.org/css-syntax-3/#typedef-declaration-list) must be parsed with *consume a list of declarations*, which must *consume an at-rule* or *consume a declaration*. All parser algorithms defined in CSS Syntax can handle a list of tokens or component values as input, and consume component values from tokens, which means that no input can match a production representing a token. Yet some value definitions contains productions representing tokens (see [value-data-structure.md](./value-data-structure.md)).
+This means there is a problem either in CSS Paged Media, which should not define `@page` to be parsed with *parse something according to a CSS grammar*, or in CSS Syntax, which should define *consume an at-rule* and *consume a qualified rule* so that they return a list of component values instead of an object with a `name`, `prelude`, `value`, assigned the corresponding slices of the list.
 
-The parser must not only be able to parse a grammar by matching a value definition, but also by applying a syntax algorithm before validating the result against the context, then matching the result of the algorithm against the appropriate grammar(s), and possibly excluding or replacing invalid parts of the result.
+[`<declaration-list>`](https://drafts.csswg.org/css-syntax-3/#typedef-declaration-list) must be parsed with *consume a list of declarations*, which must *consume an at-rule* or *consume a declaration*. All parser algorithms defined in CSS Syntax can handle a list of tokens or component values as input, and consume component values from tokens, which means that no input can match a production representing a token. Yet some value definitions includes productions representing tokens (see [value-data-structure.md](./value-data-structure.md)).
+
+The parser must not only be able to parse a grammar by matching a value definition, but also by applying a syntax algorithm before validating the result against the context, then matching it against the appropriate grammar(s), and possibly excluding or replacing invalid parts.
 
 To parse `<declaration-list>`, `<style-block>`, `<rule-list>`, `<stylesheet>`, the parser must first run *consume a list of declarations*, *consume a style block's content*, *consume a list of rules*, respectively, then validate their contents (rules and/or declarations) according to the context, and parse them against the corresponding grammar.
 
@@ -171,15 +171,15 @@ To parse `<media-query-list>` and `<forgiving-selector-list>`, the parser must *
 
 Parsing an input against a grammar may require to know the context.
 
-As a reminder, the context is any sibling or higher level value or value definition, where *higher level* means a parent production, function, block, declaration, or rule. The parser "enters" in a context when it starts to parse a style sheet, a rule, a declaration, a function, a simple block, or a non-terminal.
+As a reminder, the context is either a sibling or parent production, a containing function, block, declaration, or rule. The parser "enters" in a context when it starts to parse the corresponding value.
 
 For example, parsing a prelude may require to know which rule it belongs to. This raises the question of how to represent, access, and apply context rules.
 
-Looking first at how to access the context value, its definition, or both, it can be achieved by ensuring the parser keeps track of each parsed production, with a parse tree. But it will not work when using an interface like `CSSRule.insertRule()` and some grammar is sensitive to a context at a higher level than `CSSRule`.
+Looking first at how to access the context value, its definition, or both, it can be achieved by ensuring the parser keeps track of each parsed value as a parse tree node. But this would not work when using an interface like `CSSRule.insertRule()` and some grammar is sensitive to a higher level context than `CSSRule`: there will be no parse tree node representing it.
 
 For example, the rule's block value of `@media` and `@supports` must be defined with `<style-block>` instead of `<stylesheet>`, when these rules are nested in a style rule.
 
-The whole context can only be resolved from the CSSOM tree. Actually, it is also required to validate that any namespace prefix used in a selector has been declared in a top-level `@namespace`.
+The whole rule context can only be resolved from the CSSOM tree. Actually, it is also required to validate that any namespace prefix used in a selector has been declared in a top-level `@namespace`.
 
 **Note:** `*` and null are the only valid namespace prefixes allowed in `Element.querySelector[All]()` because this interface does not provide a way to resolve the declared namespaces to the parser.
 
@@ -191,7 +191,7 @@ This static context definition must define:
   - the property/descriptor names that can be declared in a rule's block value
   - how property/descriptor declarations participate to the cascade
 
-A production can also be sensitive to the context defined by a parent or sibling production.
+A production can also be sensitive to the context defined by a sibling or parent production.
 
 For example, there must be a whitespace preceding `+` and `-` in `<calc-sum>`: the semantic context is `<calc-sum>` and the syntactic context is the whitespace.
 
@@ -216,11 +216,11 @@ Instead of assigning functions to value definition objects, the parser could rec
 
 ### Context tree
 
-Since some rule definitions depend on their own context (a parent rule or the style sheet), they are represented with a hierarchical data structure: a tree whose root node defines the context of a style sheet.
+Since some rule definitions are context-sensitive, they are represented with a hierarchical data structure: a tree whose root node defines a style sheet.
 
-`ParseContext` is built in parallel to parsing rules and expose the definition and value of the current context and its parent context. For example, this is required to parse a conditional rule nested in a style rule, ie. when `ParseContext.parent.definition.value` is `<style-block>`.
+`ParseContext` is built in parallel to parsing rules and expose the current context definition, value, and any parent context. This is required to parse a conditional rule nested in a style rule, ie. when `ParseContext.parent.definition.value` is `<style-block>`, for example.
 
-Some data in the rule must be used to resolve its definition against the current context definition.
+Some data of the object representing the rule must be used to resolve its definition against the current context definition.
 
 At-rules have a `name` when parsed as plain objects but it is not always exposed by the corresponding CSSOM interface (extending `CSSRule`), or it may represent a different value. To overcome this, a `type` is resolved from the plain object `rule.name` against the current context definition, and is added to `rule.type`.
 

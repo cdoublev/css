@@ -92,11 +92,13 @@ A whitespace is almost always optional between component values, eg. `1px+1px` i
 
 The CSS value definitions are extracted by [`w3c/reffy`](https://github.com/w3c/reffy) from CSS specifications, and then written to these files:
 
-  - /lib/descriptors/definitions.js
-  - /lib/properties/definitions.js
-  - /lib/values/definitions.js
+  - `/lib/descriptors/definitions.js`
+  - `/lib/properties/definitions.js`
+  - `/lib/values/definitions.js`
 
-Rules are manually defined in lib/rules/definitions.js.
+Rules are manually defined in `lib/rules/definitions.js`.
+
+Some definitions are extracted from specifications whose status is `Unofficial Draft` and/or that have a warning `Not Ready` (for implementation). These specifications are either entirely or partially ignored.
 
 Some definitions cannot be extracted by `w3c/reffy`, are written in prose, or the same CSS value can be defined in different specifications, sometimes with different definitions, for different reasons:
 

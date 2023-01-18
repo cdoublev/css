@@ -12,7 +12,7 @@ const whiteSpace = require('../lib/values/white-space.js')
  * @param {object} [privateData]
  * @returns {CSSStyleDeclaration}
  */
-function createStyleDeclaration(privateData = {}) {
+function createStyleBlock(privateData = {}) {
     return CSSStyleDeclaration.create(globalThis, undefined, privateData)
 }
 
@@ -28,7 +28,7 @@ beforeAll(() => {
 describe('CSSStyleDeclaration', () => {
     it('has all properties and methods', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
         const prototype = Object.getPrototypeOf(style)
 
         // Camel/kebab/pascal cased attributes
@@ -60,18 +60,18 @@ describe('CSSStyleDeclaration', () => {
         expect(style['border-top-color']).toBe('green')
 
         // Simple alias
-        style.order = '1'
-        expect(style.order).toBe('1')
+        style.layoutOrder = '1'
+        expect(style.layoutOrder).toBe('1')
         expect(style['-webkit-order']).toBe('1')
         expect(style.webkitOrder).toBe('1')
         expect(style.WebkitOrder).toBe('1')
         style.webkitOrder = '2'
-        expect(style.order).toBe('2')
+        expect(style.layoutOrder).toBe('2')
         expect(style['-webkit-order']).toBe('2')
         expect(style.webkitOrder).toBe('2')
         expect(style.WebkitOrder).toBe('2')
         style.WebkitOrder = '3'
-        expect(style.order).toBe('3')
+        expect(style.layoutOrder).toBe('3')
         expect(style['-webkit-order']).toBe('3')
         expect(style.webkitOrder).toBe('3')
         expect(style.WebkitOrder).toBe('3')
@@ -96,8 +96,8 @@ describe('CSSStyleDeclaration', () => {
         // Property indices map to the corresponding declaration name
         expect(style[0]).toBe('border-top-color')
         expect(style.item(0)).toBe('border-top-color')
-        expect(style[1]).toBe('order')
-        expect(style.item(1)).toBe('order')
+        expect(style[1]).toBe('layout-order')
+        expect(style.item(1)).toBe('layout-order')
         expect(style[2]).toBe('-webkit-box-align')
         expect(style.item(2)).toBe('-webkit-box-align')
         expect(style[3]).toBeUndefined()
@@ -108,9 +108,9 @@ describe('CSSStyleDeclaration', () => {
         style.borderTopColor = ''
         expect(style.getPropertyValue('border-top-color')).toBe('')
         expect(style).toHaveLength(2)
-        expect(style[0]).toBe('order')
-        expect(style.item(0)).toBe('order')
-        style.setProperty('order', '')
+        expect(style[0]).toBe('layout-order')
+        expect(style.item(0)).toBe('layout-order')
+        style.setProperty('layout-order', '')
         expect(style).toHaveLength(1)
         expect(style[0]).toBe('-webkit-box-align')
         expect(style.item(0)).toBe('-webkit-box-align')
@@ -135,7 +135,7 @@ describe('CSSStyleDeclaration', () => {
     })
     it('constructs a new instance with a reference to a parent CSS rule', () => {
         const parentRule = {}
-        const style = createStyleDeclaration({ parentRule })
+        const style = createStyleBlock({ parentRule })
         expect(style.parentRule).toBe(parentRule)
     })
     it('constructs a new instance with the declarations resulting from parsing `Element.style`', () => {
@@ -144,14 +144,14 @@ describe('CSSStyleDeclaration', () => {
                 return 'font-size: 10px;'
             },
         }
-        const style = createStyleDeclaration({ ownerNode: element })
+        const style = createStyleBlock({ ownerNode: element })
         expect(style.fontSize).toBe('10px')
     })
     it('constructs a new read-only instance with the declarations from `getComputedStyle()`', () => {
 
         const value = { type: new Set(['dimension', 'length']), unit: 'px', value: 10 }
         const declarations = [{ name: 'font-size', value }]
-        const style = createStyleDeclaration({ computed: true, declarations, ownerNode: {} })
+        const style = createStyleBlock({ computed: true, declarations, ownerNode: {} })
         const error = createError(UPDATE_COMPUTED_STYLE_DECLARATION_ERROR)
 
         expect(style.fontSize).toBe('10px')
@@ -161,27 +161,26 @@ describe('CSSStyleDeclaration', () => {
         expect(() => style.removeProperty('font-size', '20px')).toThrow(error)
     })
     it('does not throw when failing to parse `cssText`', () => {
-        const style = createStyleDeclaration()
-        style.cssText = 'color: '
-        expect(style.cssText).toBe('')
+        const style = createStyleBlock()
         style.color = 'black'
-        style.cssText = 'float: '
+        expect(style.cssText).toBe('color: black;')
+        style.cssText = 'color: '
         expect(style.cssText).toBe('')
     })
     it('ignores a rule in `cssText`', () => {
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
         style.cssText = 'color: green; @page { color: red }; .selector { color: red }; font-size: 12px'
         expect(style.cssText).toBe('color: green; font-size: 12px;')
     })
     it('stores declarations in the order specified in `cssText`', () => {
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
         style.cssText = 'color: orange; width: 1px; color: green'
         expect(style.cssText).toBe('width: 1px; color: green;')
         style.cssText = 'color: green !important; width: 1px; color: orange'
         expect(style.cssText).toBe('color: green !important; width: 1px;')
     })
     it('does not store a declaration for an invalid property specified with `setProperty()`', () => {
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
         style.setProperty(' font-size', '1px')
         expect(style.fontSize).toBe('')
         style.setProperty('font-size', '1px !important')
@@ -190,18 +189,18 @@ describe('CSSStyleDeclaration', () => {
         expect(style.fontSize).toBe('')
     })
     it('does not store a declaration value specified with a priority with `setProperty()`', () => {
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
         style.setProperty('font-size', '1px !important')
         expect(style.fontSize).toBe('')
     })
     it('normalizes a declaration property to lowercase with `setProperty()`', () => {
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
         style.setProperty('FoNt-SiZe', '12px')
         expect(style.fontSize).toBe('12px')
         expect(style.getPropertyValue('font-size')).toBe('12px')
     })
     it('throws an error when declaring a value that cannot be converted to string', () => {
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
         expect(() => (style.opacity = Symbol('0')))
             .toThrow("Failed to set the 'opacity' property on 'CSSStyleDeclaration': The provided value is a symbol, which cannot be converted to a string.")
         expect(() => (style.opacity = { toString: () => [0] }))
@@ -209,7 +208,7 @@ describe('CSSStyleDeclaration', () => {
     })
     it('declares a non-string value that can be converted to string', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         style.opacity = { toString: () => '0' }
         expect(style.opacity).toBe('0')
@@ -243,7 +242,7 @@ describe('CSSStyleDeclaration', () => {
     })
     it('updates a declaration not preceded by a declaration for a property of the same logical property group', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         style.borderTopColor = 'orange'
         style.width = '1px'
@@ -259,7 +258,7 @@ describe('CSSStyleDeclaration', () => {
     })
     it('removes then append a declaration followed by a declaration for a property of the same logical property group and with a different mapping', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         style.borderTopColor = 'green'
         style.borderBlockStartColor = 'orange'
@@ -292,7 +291,7 @@ describe('CSSFontFaceRule.style', () => {
 
     it('does not store an invalid declaration', () => {
 
-        const style = createStyleDeclaration({ parentRule })
+        const style = createStyleBlock({ parentRule })
 
         // Invalid name
         style.fontSizeAdjust = 'none'
@@ -326,7 +325,7 @@ describe('CSSFontFaceRule.style', () => {
     })
     it('stores a valid declaration', () => {
 
-        const style = createStyleDeclaration({ parentRule })
+        const style = createStyleBlock({ parentRule })
 
         // Descriptor specific value
         // style.fontDisplay = 'auto' // Not supported yet
@@ -360,7 +359,7 @@ describe('CSSKeyframeRule.style', () => {
 
     it('does not store an invalid declaration', () => {
 
-        const style = createStyleDeclaration({ parentRule })
+        const style = createStyleBlock({ parentRule })
 
         // Invalid name
         style.animationDelay = '1s'
@@ -378,7 +377,7 @@ describe('CSSKeyframeRule.style', () => {
     })
     it('stores a valid declaration', () => {
 
-        const style = createStyleDeclaration({ parentRule })
+        const style = createStyleBlock({ parentRule })
 
         // Property specific value
         style.color = 'red'
@@ -420,7 +419,7 @@ describe('CSSMarginRule.style', () => {
 
     it('does not store an invalid declaration', () => {
 
-        const style = createStyleDeclaration({ parentRule })
+        const style = createStyleBlock({ parentRule })
 
         // Invalid name
         style.top = '1px'
@@ -432,7 +431,7 @@ describe('CSSMarginRule.style', () => {
     })
     it('stores a valid declaration', () => {
 
-        const style = createStyleDeclaration({ parentRule })
+        const style = createStyleBlock({ parentRule })
 
         // Property specific value
         style.color = 'red'
@@ -476,7 +475,7 @@ describe('CSSPageRule.style', () => {
 
     it('does not store an invalid declaration', () => {
 
-        const style = createStyleDeclaration({ parentRule })
+        const style = createStyleBlock({ parentRule })
 
         // Invalid name
         style.top = '1px'
@@ -504,7 +503,7 @@ describe('CSSPageRule.style', () => {
     })
     it('stores a valid declaration', () => {
 
-        const style = createStyleDeclaration({ parentRule })
+        const style = createStyleBlock({ parentRule })
 
         // Descriptor specific value
         // style.size = '1px' // Not supported yet
@@ -556,7 +555,7 @@ describe('CSSPageRule.style', () => {
 
 describe('--*', () => {
     it('fails to parse an invalid value', () => {
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
         const invalid = [
             // <bad-string-token>
             '"\n"',
@@ -586,7 +585,7 @@ describe('--*', () => {
     })
     it('parses and serializes a valid value', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         style.setProperty('--custom', 'red')
         expect(style.getPropertyValue('--custom')).toBe('red')
@@ -629,7 +628,7 @@ describe('--*', () => {
 })
 describe('border-bottom-left-radius, border-bottom-right-radius, border-top-left-radius, border-top-right-radius', () => {
     it('parses and serializes a valid value', () => {
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
         style.borderBottomLeftRadius = '1px 1px'
         expect(style.borderBottomLeftRadius).toBe('1px')
         style.borderBottomLeftRadius = '1px 2px'
@@ -638,7 +637,7 @@ describe('border-bottom-left-radius, border-bottom-right-radius, border-top-left
 })
 describe('border-image-outset, mask-border-outset', () => {
     it('parses and serializes a valid value', () => {
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
         style.borderImageOutset = '0 1 2 2'
         expect(style.borderImageOutset).toBe('0 1 2 2')
         style.borderImageOutset = '0 1 2 1'
@@ -651,14 +650,14 @@ describe('border-image-outset, mask-border-outset', () => {
 })
 describe('border-image-repeat, mask-border-repeat', () => {
     it('parses and serializes a valid value', () => {
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
         style.borderImageRepeat = 'stretch stretch'
         expect(style.borderImageRepeat).toBe('stretch')
     })
 })
 describe('border-image-slice, mask-border-slice', () => {
     it('parses and serializes a valid value', () => {
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
         style.borderImageSlice = '0 1 2 2 fill'
         expect(style.borderImageSlice).toBe('0 1 2 2 fill')
         style.borderImageSlice = '0 1 2 1'
@@ -671,7 +670,7 @@ describe('border-image-slice, mask-border-slice', () => {
 })
 describe('border-image-width, mask-border-width', () => {
     it('parses and serializes a valid value', () => {
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
         style.borderImageWidth = '0 1 2 2'
         expect(style.borderImageWidth).toBe('0 1 2 2')
         style.borderImageWidth = '0 1 2 1'
@@ -685,7 +684,7 @@ describe('border-image-width, mask-border-width', () => {
 describe('break-after, break-before, page-break-after, page-break-before', () => {
     it('fails to parse an invalid value', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Unmapped target value
         style.pageBreakAfter = 'recto'
@@ -695,7 +694,7 @@ describe('break-after, break-before, page-break-after, page-break-before', () =>
     })
     it('parses and serializes a valid value', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Unmapped value
         style.breakAfter = 'recto'
@@ -729,7 +728,7 @@ describe('break-after, break-before, page-break-after, page-break-before', () =>
 describe('break-inside, page-break-inside', () => {
     it('fails to parse an invalid value', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Unmapped target value
         style.pageBreakInside = 'avoid-page'
@@ -739,7 +738,7 @@ describe('break-inside, page-break-inside', () => {
     })
     it('parses and serializes a valid value', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Unmapped value
         style.breakInside = 'avoid-page'
@@ -759,9 +758,24 @@ describe('break-inside, page-break-inside', () => {
         expect(style.cssText).toBe('break-inside: var(--custom);')
     })
 })
+describe('container-name', () => {
+    it('fails to parse an invalid value', () => {
+        const style = createStyleBlock()
+        const invalid = ['and', 'or', 'not', 'name none']
+        invalid.forEach(input => {
+            style.containerName = input
+            expect(style.containerName).toBe('')
+        })
+    })
+    it('parses and serializes a valid value', () => {
+        const style = createStyleBlock()
+        style.containerName = 'none'
+        expect(style.containerName).toBe('none')
+    })
+})
 describe('float', () => {
     it('mirrors cssFloat', () => {
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
         style.cssFloat = 'left'
         expect(style.float).toBe('left')
         expect(style.cssText).toBe('float: left;')
@@ -773,7 +787,7 @@ describe('float', () => {
 describe.skip('glyph-orientation-vertical, text-orientation', () => {
     it('parses and serializes a valid value', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Legacy mapped value
         const mapping = [
@@ -806,7 +820,7 @@ describe.skip('glyph-orientation-vertical, text-orientation', () => {
 })
 describe('grid-template-areas', () => {
     it('fails to parse an invalid value', () => {
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
         const invalid = [
             // Trash token
             '"a !"',
@@ -832,7 +846,7 @@ describe('grid-template-areas', () => {
         })
     })
     it('parses and serializes a valid value', () => {
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
         style.gridTemplateAreas = '"  a  .b.  c  " "a . . . c'
         expect(style.gridTemplateAreas).toBe('"a . b . c" "a . . . c"')
     })
@@ -840,7 +854,7 @@ describe('grid-template-areas', () => {
 describe('grid-template-columns, grid-template-rows', () => {
     it('parses and serializes a valid value', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Empty line names are omitted except for subgrid axis (browser conformance)
         style.gridTemplateRows = 'subgrid [] repeat(1, [] [a] [])'
@@ -853,7 +867,7 @@ describe('grid-template-columns, grid-template-rows', () => {
 })
 describe('image-rendering', () => {
     it('parses and serializes a valid value', () => {
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
         // Legacy mapped value
         style.imageRendering = 'optimizeSpeed'
         expect(style.imageRendering).toBe('optimizespeed')
@@ -876,7 +890,7 @@ describe('all', () => {
 
     it('parses longhand declarations from a shorthand value', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         longhands.forEach(longhand => style[longhand] = 'initial')
         expect(style).toHaveLength(longhands.length)
@@ -888,7 +902,7 @@ describe('all', () => {
     })
     it('serializes a shorthand value from the declarations of its longhands', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // All equal longhand values
         longhands.forEach(longhand => style[longhand] = 'initial')
@@ -932,7 +946,7 @@ describe('animation', () => {
 
     it('parses longhand declarations from a shorthand value', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Initial longhand values
         style.animation = animation
@@ -966,7 +980,7 @@ describe('animation', () => {
     })
     it('serializes a shorthand value from the declarations of its longhands', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Initial longhand values
         longhands.forEach(longhand => style[longhand] = initial(longhand))
@@ -1000,7 +1014,7 @@ describe('background', () => {
 
     it('parses longhand declarations from a shorthand value', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Initial longhand values (repeated)
         style.background = 'transparent none 0% 0% / auto repeat scroll padding-box border-box'
@@ -1072,7 +1086,7 @@ describe('background', () => {
     })
     it('serializes a shorthand value from the declarations of its longhands', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Initial longhand values
         longhands.forEach(longhand => style[longhand] = initial(longhand))
@@ -1130,7 +1144,7 @@ describe('background', () => {
 describe('background-position', () => {
     it('parses and serializes a valid value', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         /**
          * https://github.com/w3c/csswg-drafts/issues/2274
@@ -1167,7 +1181,7 @@ describe('block-step', () => {
 
     it('parses longhand declarations from a shorthand value', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Initial longhand values
         style.blockStep = 'none margin auto up'
@@ -1184,7 +1198,7 @@ describe('block-step', () => {
     })
     it('serializes a shorthand value from the declarations of its longhands', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Initial longhand values
         longhands.forEach(longhand => style[longhand] = initial(longhand))
@@ -1198,7 +1212,7 @@ describe('border', () => {
 
     it('parses longhand declarations from a shorthand value', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Initial longhand values
         style.border = 'medium none currentColor'
@@ -1215,7 +1229,7 @@ describe('border', () => {
     })
     it('serializes a shorthand value from the declarations of its longhands', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Initial longhand values
         longhands.forEach(longhand => style[longhand] = initial(longhand))
@@ -1247,7 +1261,7 @@ describe('border-block, border-inline', () => {
 
     it('parses longhand declarations from a shorthand value', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Initial longhand values
         style.borderBlock = 'medium none currentColor'
@@ -1264,7 +1278,7 @@ describe('border-block, border-inline', () => {
     })
     it('serializes a shorthand value from the declarations of its longhands', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Initial longhand values
         longhands.forEach(longhand => style[longhand] = initial(longhand))
@@ -1291,7 +1305,7 @@ describe('border-block-color, border-inline-color', () => {
 
     it('parses longhand declarations from a shorthand value', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Initial longhand values
         style.borderBlockColor = 'currentColor currentColor'
@@ -1308,7 +1322,7 @@ describe('border-block-color, border-inline-color', () => {
     })
     it('serializes a shorthand value from the declarations of its longhands', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Initial longhand values
         longhands.forEach(longhand => style[longhand] = initial(longhand))
@@ -1322,7 +1336,7 @@ describe('border-block-style, border-inline-style', () => {
 
     it('parses longhand declarations from a shorthand value', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Initial longhand values
         style.borderBlockStyle = 'none none'
@@ -1339,7 +1353,7 @@ describe('border-block-style, border-inline-style', () => {
     })
     it('serializes a shorthand value from the declarations of its longhands', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Initial longhand values
         longhands.forEach(longhand => style[longhand] = initial(longhand))
@@ -1353,7 +1367,7 @@ describe('border-block-width, border-inline-width', () => {
 
     it('parses longhand declarations from a shorthand value', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Initial longhand values
         style.borderBlockWidth = 'medium medium'
@@ -1370,7 +1384,7 @@ describe('border-block-width, border-inline-width', () => {
     })
     it('serializes a shorthand value from the declarations of its longhands', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Initial longhand values
         longhands.forEach(longhand => style[longhand] = initial(longhand))
@@ -1384,7 +1398,7 @@ describe('border-bottom, border-left, border-right, border-top', () => {
 
     it('parses longhand declarations from a shorthand value', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Initial longhand values
         style.borderTop = 'medium none currentColor'
@@ -1401,7 +1415,7 @@ describe('border-bottom, border-left, border-right, border-top', () => {
     })
     it('serializes a shorthand value from the declarations of its longhands', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Initial longhand values
         longhands.forEach(longhand => style[longhand] = initial(longhand))
@@ -1419,7 +1433,7 @@ describe('border-color', () => {
 
     it('parses longhand declarations from a shorthand value', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Initial longhand values
         style.borderColor = 'currentColor currentColor currentColor currentColor'
@@ -1445,7 +1459,7 @@ describe('border-color', () => {
     })
     it('serializes a shorthand value from the declarations of its longhands', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Initial longhand values
         longhands.forEach(longhand => style[longhand] = initial(longhand))
@@ -1467,7 +1481,7 @@ describe('border-image', () => {
 
     it('parses longhand declarations from a shorthand value', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Initial longhand values
         style.borderImage = 'none 100% / 1 / 0 stretch'
@@ -1484,7 +1498,7 @@ describe('border-image', () => {
     })
     it('serializes a shorthand value from the declarations of its longhands', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Initial longhand values
         longhands.forEach(longhand => style[longhand] = initial(longhand))
@@ -1498,7 +1512,7 @@ describe('border-radius', () => {
 
     it('parses longhand declarations from a shorthand value', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Initial longhand values
         style.borderRadius = '0 0 0 0 / 0 0 0 0'
@@ -1536,7 +1550,7 @@ describe('border-radius', () => {
     })
     it('serializes a shorthand value from the declarations of its longhands', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Initial longhand values
         longhands.forEach(longhand => style[longhand] = initial(longhand))
@@ -1550,7 +1564,7 @@ describe('border-style', () => {
 
     it('parses longhand declarations from a shorthand value', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Initial longhand values
         style.borderStyle = 'none none none none'
@@ -1576,7 +1590,7 @@ describe('border-style', () => {
     })
     it('serializes a shorthand value from the declarations of its longhands', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Initial longhand values
         longhands.forEach(longhand => style[longhand] = initial(longhand))
@@ -1590,7 +1604,7 @@ describe('border-width', () => {
 
     it('parses longhand declarations from a shorthand value', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Initial longhand values
         style.borderWidth = 'medium medium medium medium'
@@ -1616,7 +1630,7 @@ describe('border-width', () => {
     })
     it('serializes a shorthand value from the declarations of its longhands', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Initial longhand values
         longhands.forEach(longhand => style[longhand] = initial(longhand))
@@ -1630,7 +1644,7 @@ describe('caret', () => {
 
     it('parses longhand declarations from a shorthand value', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Initial longhand values
         style.caret = 'auto auto'
@@ -1647,7 +1661,7 @@ describe('caret', () => {
     })
     it('serializes a shorthand value from the declarations of its longhands', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Initial longhand values
         longhands.forEach(longhand => style[longhand] = initial(longhand))
@@ -1661,7 +1675,7 @@ describe('column-rule', () => {
 
     it('parses longhand declarations from a shorthand value', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Initial longhand values
         style.columnRule = 'medium none currentColor'
@@ -1678,7 +1692,7 @@ describe('column-rule', () => {
     })
     it('serializes a shorthand value from the declarations of its longhands', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Initial longhand values
         longhands.forEach(longhand => style[longhand] = initial(longhand))
@@ -1692,7 +1706,7 @@ describe('columns', () => {
 
     it('parses longhand declarations from a shorthand value', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Initial longhand values
         style.columns = 'auto auto'
@@ -1709,7 +1723,7 @@ describe('columns', () => {
     })
     it('serializes a shorthand value from the declarations of its longhands', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Initial longhand values
         longhands.forEach(longhand => style[longhand] = initial(longhand))
@@ -1723,7 +1737,7 @@ describe('contain-intrinsic-size', () => {
 
     it('parses longhand declarations from a shorthand value', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Initial longhand values
         style.containIntrinsicSize = 'none none'
@@ -1740,7 +1754,7 @@ describe('contain-intrinsic-size', () => {
     })
     it('serializes a shorthand value from the declarations of its longhands', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Initial longhand values
         longhands.forEach(longhand => style[longhand] = initial(longhand))
@@ -1754,7 +1768,7 @@ describe('container', () => {
 
     it('parses longhand declarations from a shorthand value', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Initial longhand values
         style.container = 'none / normal'
@@ -1771,7 +1785,7 @@ describe('container', () => {
     })
     it('serializes a shorthand value from the declarations of its longhands', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Initial longhand values
         longhands.forEach(longhand => style[longhand] = initial(longhand))
@@ -1785,7 +1799,7 @@ describe('corners', () => {
 
     it('parses longhand declarations from a shorthand value', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Initial longhand values
         style.corners = 'round 0'
@@ -1802,7 +1816,7 @@ describe('corners', () => {
     })
     it('serializes a shorthand value from the declarations of its longhands', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Initial longhand values
         longhands.forEach(longhand => style[longhand] = initial(longhand))
@@ -1816,7 +1830,7 @@ describe('cue, pause, rest', () => {
 
     it('parses longhand declarations from a shorthand value', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Initial longhand values
         style.cue = 'none none'
@@ -1833,7 +1847,7 @@ describe('cue, pause, rest', () => {
     })
     it('serializes a shorthand value from the declarations of its longhands', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Initial longhand values
         longhands.forEach(longhand => style[longhand] = initial(longhand))
@@ -1847,7 +1861,7 @@ describe('flex', () => {
 
     it('parses longhand declarations from a shorthand value', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Initial longhand values
         style.flex = '0 1 auto'
@@ -1888,7 +1902,7 @@ describe('flex', () => {
     })
     it('serializes a shorthand value from the declarations of its longhands', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Initial longhand values
         longhands.forEach(longhand => style[longhand] = initial(longhand))
@@ -1902,7 +1916,7 @@ describe('flex-flow', () => {
 
     it('parses longhand declarations from a shorthand value', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Initial longhand values
         style.flexFlow = 'row nowrap'
@@ -1919,7 +1933,7 @@ describe('flex-flow', () => {
     })
     it('serializes a shorthand value from the declarations of its longhands', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Initial longhand values
         longhands.forEach(longhand => style[longhand] = initial(longhand))
@@ -1933,7 +1947,7 @@ describe('font', () => {
 
     it('parses longhand declarations from a shorthand value', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Initial longhand values
         style.font = 'normal normal normal normal medium / normal monospace'
@@ -1960,7 +1974,7 @@ describe('font', () => {
     })
     it('serializes a shorthand value from the declarations of its longhands', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Initial longhand values
         longhands.forEach(longhand => style[longhand] = initial(longhand))
@@ -1985,7 +1999,7 @@ describe('font-variant', () => {
 
     it('parses longhand declarations from a shorthand value', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Initial longhand values
         style.fontVariant = 'normal'
@@ -2012,7 +2026,7 @@ describe('font-variant', () => {
     })
     it('serializes a shorthand value from the declarations of its longhands', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Initial longhand values
         longhands.forEach(longhand => style[longhand] = initial(longhand))
@@ -2026,7 +2040,7 @@ describe('font-synthesis', () => {
 
     it('parses longhand declarations from a shorthand value', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Initial longhand values
         style.fontSynthesis = 'weight style small-caps'
@@ -2060,7 +2074,7 @@ describe('font-synthesis', () => {
     })
     it('serializes a shorthand value from the declarations of its longhands', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Initial longhand values
         longhands.forEach(longhand => style[longhand] = initial(longhand))
@@ -2074,7 +2088,7 @@ describe('gap', () => {
 
     it('parses longhand declarations from a shorthand value', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Initial longhand values
         style.gap = 'normal normal'
@@ -2091,7 +2105,7 @@ describe('gap', () => {
     })
     it('serializes a shorthand value from the declarations of its longhands', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Initial longhand values
         longhands.forEach(longhand => style[longhand] = initial(longhand))
@@ -2105,7 +2119,7 @@ describe('grid', () => {
 
     it('parses longhand declarations from a shorthand value', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Initial longhand values (not all longhands can be explicitly declared)
         style.grid = 'none'
@@ -2146,7 +2160,7 @@ describe('grid', () => {
     })
     it('serializes a shorthand value from the declarations of its longhands', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Initial longhand values
         longhands.forEach(longhand => style[longhand] = initial(longhand))
@@ -2202,7 +2216,7 @@ describe('grid-area', () => {
 
     it('parses longhand declarations from a shorthand value', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Initial longhand values
         style.gridArea = 'auto / auto / auto / auto'
@@ -2234,7 +2248,7 @@ describe('grid-area', () => {
     })
     it('serializes a shorthand value from the declarations of its longhands', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Initial longhand values
         longhands.forEach(longhand => style[longhand] = initial(longhand))
@@ -2248,7 +2262,7 @@ describe('grid-column, grid-row', () => {
 
     it('parses longhand declarations from a shorthand value', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Initial longhand values
         style.gridColumn = 'auto / auto'
@@ -2276,7 +2290,7 @@ describe('grid-column, grid-row', () => {
     })
     it('serializes a shorthand value from the declarations of its longhands', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Initial longhand values
         longhands.forEach(longhand => style[longhand] = initial(longhand))
@@ -2290,7 +2304,7 @@ describe('grid-template', () => {
 
     it('parses longhand declarations from a shorthand value', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Initial longhand values (not all longhands can be explicitly declared)
         style.gridTemplate = 'none'
@@ -2324,7 +2338,7 @@ describe('grid-template', () => {
     })
     it('serializes a shorthand value from the declarations of its longhands', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Initial longhand values
         longhands.forEach(longhand => style[longhand] = initial(longhand))
@@ -2397,7 +2411,7 @@ describe('inset', () => {
 
     it('parses longhand declarations from a shorthand value', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Initial longhand values
         style.inset = 'auto auto auto auto'
@@ -2423,7 +2437,7 @@ describe('inset', () => {
     })
     it('serializes a shorthand value from the declarations of its longhands', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Initial longhand values
         longhands.forEach(longhand => style[longhand] = initial(longhand))
@@ -2437,7 +2451,7 @@ describe('inset-block, inset-inline', () => {
 
     it('parses longhand declarations from a shorthand value', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Initial longhand values
         style.insetBlock = 'auto auto'
@@ -2454,7 +2468,7 @@ describe('inset-block, inset-inline', () => {
     })
     it('serializes a shorthand value from the declarations of its longhands', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Initial longhand values
         longhands.forEach(longhand => style[longhand] = initial(longhand))
@@ -2468,7 +2482,7 @@ describe('line-clamp', () => {
 
     it('parses longhand declarations from a shorthand value', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Initial longhand values (not all longhands can be explicitly declared)
         style.lineClamp = 'none'
@@ -2487,7 +2501,7 @@ describe('line-clamp', () => {
     })
     it('serializes a shorthand value from the declarations of its longhands', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Initial longhand values
         longhands.forEach(longhand => style[longhand] = initial(longhand))
@@ -2512,7 +2526,7 @@ describe('list-style', () => {
 
     it('parses longhand declarations from a shorthand value', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Initial longhand values
         style.listStyle = 'outside none disc'
@@ -2534,7 +2548,7 @@ describe('list-style', () => {
     })
     it('serializes a shorthand value from the declarations of its longhands', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Initial longhand values
         longhands.forEach(longhand => style[longhand] = initial(longhand))
@@ -2548,7 +2562,7 @@ describe('margin', () => {
 
     it('parses longhand declarations from a shorthand value', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Initial longhand values
         style.margin = '0 0 0 0'
@@ -2574,7 +2588,7 @@ describe('margin', () => {
     })
     it('serializes a shorthand value from the declarations of its longhands', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Initial longhand values
         longhands.forEach(longhand => style[longhand] = initial(longhand))
@@ -2588,7 +2602,7 @@ describe('margin-block, margin-inline', () => {
 
     it('parses longhand declarations from a shorthand value', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Initial longhand values
         style.marginBlock = '0 0'
@@ -2605,7 +2619,7 @@ describe('margin-block, margin-inline', () => {
     })
     it('serializes a shorthand value from the declarations of its longhands', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Initial longhand values
         longhands.forEach(longhand => style[longhand] = initial(longhand))
@@ -2619,7 +2633,7 @@ describe('marker', () => {
 
     it('parses longhand declarations from a shorthand value', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Initial longhand values (not all longhands can be explicitly declared)
         style.marker = 'none'
@@ -2630,7 +2644,7 @@ describe('marker', () => {
     })
     it('serializes a shorthand value from the declarations of its longhands', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Initial longhand values
         longhands.forEach(longhand => style[longhand] = initial(longhand))
@@ -2644,7 +2658,7 @@ describe('mask', () => {
 
     it('parses longhand declarations from a shorthand value', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Initial longhand values
         style.mask = 'none 0% 0% / auto repeat border-box border-box add match-source'
@@ -2700,7 +2714,7 @@ describe('mask', () => {
     })
     it('serializes a shorthand value from the declarations of its longhands', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Initial longhand values
         longhands.forEach(longhand => style[longhand] = initial(longhand))
@@ -2730,7 +2744,7 @@ describe('mask-border', () => {
 
     it('parses longhand declarations from a shorthand value', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Initial longhand values
         style.maskBorder = 'none 0 / auto / 0 stretch alpha'
@@ -2747,7 +2761,7 @@ describe('mask-border', () => {
     })
     it('serializes a shorthand value from the declarations of its longhands', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Initial longhand values
         longhands.forEach(longhand => style[longhand] = initial(longhand))
@@ -2761,7 +2775,7 @@ describe('offset', () => {
 
     it('parses longhand declarations from a shorthand value', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Initial longhand values
         style.offset = 'auto none 0 auto / auto'
@@ -2775,16 +2789,71 @@ describe('offset', () => {
         longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
         expect(style.offset).toBe('auto')
         expect(style.cssText).toBe('offset: auto;')
-        style.offset = 'auto none'
+        style.offset = 'auto / left'
+        longhands.forEach(longhand =>
+            style[longhand] = longhand === 'offset-anchor'
+                ? 'left center'
+                : initial(longhand))
+        expect(style.offset).toBe('auto / left center')
+        expect(style.cssText).toBe('offset: auto / left center;')
     })
     it('serializes a shorthand value from the declarations of its longhands', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Initial longhand values
         longhands.forEach(longhand => style[longhand] = initial(longhand))
         expect(style.offset).toBe('auto')
         expect(style.cssText).toBe('offset: auto;')
+    })
+})
+describe('order', () => {
+
+    const longhands = shorthands.get('order')
+
+    it('parses longhand declarations from a shorthand value', () => {
+
+        const style = createStyleBlock()
+
+        // Initial longhand values
+        style.order = '0 0'
+        expect(style).toHaveLength(longhands.length)
+        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
+        expect(style.order).toBe('0')
+        expect(style.cssText).toBe('order: 0;')
+
+        // Missing longhand values
+        style.order = '0'
+        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
+        expect(style.order).toBe('0')
+        expect(style.cssText).toBe('order: 0;')
+        style.order = '0'
+
+        // Order prefix
+        style.order = 'layout 1'
+        expect(style.layoutOrder).toBe('1')
+        expect(style.readingOrder).toBe('0')
+        expect(style.order).toBe('1')
+        expect(style.cssText).toBe('order: 1;')
+        style.order = 'reading 1'
+        expect(style.layoutOrder).toBe('0')
+        expect(style.readingOrder).toBe('1')
+        expect(style.order).toBe('0 1')
+        expect(style.cssText).toBe('order: 0 1;')
+        style.order = 'reading-and-layout 1'
+        expect(style.layoutOrder).toBe('1')
+        expect(style.readingOrder).toBe('1')
+        expect(style.order).toBe('1 1')
+        expect(style.cssText).toBe('order: 1 1;')
+    })
+    it('serializes a shorthand value from the declarations of its longhands', () => {
+
+        const style = createStyleBlock()
+
+        // Initial longhand values
+        longhands.forEach(longhand => style[longhand] = initial(longhand))
+        expect(style.order).toBe('0')
+        expect(style.cssText).toBe('order: 0;')
     })
 })
 describe('outline', () => {
@@ -2793,7 +2862,7 @@ describe('outline', () => {
 
     it('parses longhand declarations from a shorthand value', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Initial longhand values
         style.outline = 'medium none invert'
@@ -2810,7 +2879,7 @@ describe('outline', () => {
     })
     it('serializes a shorthand value from the declarations of its longhands', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Initial longhand values
         longhands.forEach(longhand => style[longhand] = initial(longhand))
@@ -2824,7 +2893,7 @@ describe('overflow', () => {
 
     it('parses longhand declarations from a shorthand value', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Initial longhand values
         style.overflow = 'visible visible'
@@ -2841,7 +2910,7 @@ describe('overflow', () => {
     })
     it('serializes a shorthand value from the declarations of its longhands', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Initial longhand values
         longhands.forEach(longhand => style[longhand] = initial(longhand))
@@ -2855,7 +2924,7 @@ describe('overflow-clip-margin', () => {
 
     it('parses longhand declarations from a shorthand value', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Initial longhand values
         style.overflowClipMargin = '0px'
@@ -2866,7 +2935,7 @@ describe('overflow-clip-margin', () => {
     })
     it('serializes a shorthand value from the declarations of its longhands', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Initial longhand values
         longhands.forEach(longhand => style[longhand] = initial(longhand))
@@ -2880,7 +2949,7 @@ describe('overflow-clip-margin-block, overflow-clip-margin-inline', () => {
 
     it('parses longhand declarations from a shorthand value', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Initial longhand values
         style.overflowClipMarginBlock = '0px'
@@ -2891,7 +2960,7 @@ describe('overflow-clip-margin-block, overflow-clip-margin-inline', () => {
     })
     it('serializes a shorthand value from the declarations of its longhands', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Initial longhand values
         longhands.forEach(longhand => style[longhand] = initial(longhand))
@@ -2905,7 +2974,7 @@ describe('overscroll-behavior', () => {
 
     it('parses longhand declarations from a shorthand value', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Initial longhand values
         style.overscrollBehavior = 'auto auto'
@@ -2922,7 +2991,7 @@ describe('overscroll-behavior', () => {
     })
     it('serializes a shorthand value from the declarations of its longhands', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Initial longhand values
         longhands.forEach(longhand => style[longhand] = initial(longhand))
@@ -2936,7 +3005,7 @@ describe('padding', () => {
 
     it('parses longhand declarations from a shorthand value', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Initial longhand values
         style.padding = '0 0 0 0'
@@ -2962,7 +3031,7 @@ describe('padding', () => {
     })
     it('serializes a shorthand value from the declarations of its longhands', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Initial longhand values
         longhands.forEach(longhand => style[longhand] = initial(longhand))
@@ -2976,7 +3045,7 @@ describe('padding-block, padding-inline', () => {
 
     it('parses longhand declarations from a shorthand value', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Initial longhand values
         style.paddingBlock = '0 0'
@@ -2993,7 +3062,7 @@ describe('padding-block, padding-inline', () => {
     })
     it('serializes a shorthand value from the declarations of its longhands', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Initial longhand values
         longhands.forEach(longhand => style[longhand] = initial(longhand))
@@ -3007,7 +3076,7 @@ describe('place-content', () => {
 
     it('parses longhand declarations from a shorthand value', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Initial longhand values
         style.placeContent = 'normal normal'
@@ -3036,7 +3105,7 @@ describe('place-content', () => {
     })
     it('serializes a shorthand value from the declarations of its longhands', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Initial longhand values
         longhands.forEach(longhand => style[longhand] = initial(longhand))
@@ -3050,7 +3119,7 @@ describe('place-items', () => {
 
     it('parses longhand declarations from a shorthand value', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Initial longhand values
         style.placeItems = 'normal legacy'
@@ -3068,7 +3137,7 @@ describe('place-items', () => {
     })
     it('serializes a shorthand value from the declarations of its longhands', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Initial longhand values
         longhands.forEach(longhand => style[longhand] = initial(longhand))
@@ -3082,7 +3151,7 @@ describe('place-self', () => {
 
     it('parses longhand declarations from a shorthand value', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Initial longhand values
         style.placeSelf = 'auto auto'
@@ -3100,7 +3169,7 @@ describe('place-self', () => {
     })
     it('serializes a shorthand value from the declarations of its longhands', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Initial longhand values
         longhands.forEach(longhand => style[longhand] = initial(longhand))
@@ -3114,7 +3183,7 @@ describe('scroll-margin', () => {
 
     it('parses longhand declarations from a shorthand value', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Initial longhand values
         style.scrollMargin = '0 0 0 0'
@@ -3140,7 +3209,7 @@ describe('scroll-margin', () => {
     })
     it('serializes a shorthand value from the declarations of its longhands', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Initial longhand values
         longhands.forEach(longhand => style[longhand] = initial(longhand))
@@ -3154,7 +3223,7 @@ describe('scroll-margin-block, scroll-margin-inline', () => {
 
     it('parses longhand declarations from a shorthand value', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Initial longhand values
         style.scrollMarginBlock = '0 0'
@@ -3171,7 +3240,7 @@ describe('scroll-margin-block, scroll-margin-inline', () => {
     })
     it('serializes a shorthand value from the declarations of its longhands', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Initial longhand values
         longhands.forEach(longhand => style[longhand] = initial(longhand))
@@ -3185,7 +3254,7 @@ describe('scroll-padding', () => {
 
     it('parses longhand declarations from a shorthand value', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Initial longhand values
         style.scrollPadding = 'auto auto auto auto'
@@ -3211,7 +3280,7 @@ describe('scroll-padding', () => {
     })
     it('serializes a shorthand value from the declarations of its longhands', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Initial longhand values
         longhands.forEach(longhand => style[longhand] = initial(longhand))
@@ -3225,7 +3294,7 @@ describe('scroll-padding-block, scroll-padding-inline', () => {
 
     it('parses longhand declarations from a shorthand value', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Initial longhand values
         style.scrollPaddingBlock = 'auto auto'
@@ -3242,7 +3311,7 @@ describe('scroll-padding-block, scroll-padding-inline', () => {
     })
     it('serializes a shorthand value from the declarations of its longhands', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Initial longhand values
         longhands.forEach(longhand => style[longhand] = initial(longhand))
@@ -3256,7 +3325,7 @@ describe('scroll-start', () => {
 
     it('parses longhand declarations from a shorthand value', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Initial longhand values
         style.scrollStart = 'auto auto'
@@ -3273,7 +3342,7 @@ describe('scroll-start', () => {
     })
     it('serializes a shorthand value from the declarations of its longhands', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Initial longhand values
         longhands.forEach(longhand => style[longhand] = initial(longhand))
@@ -3291,7 +3360,7 @@ describe('scroll-timeline', () => {
 
     it('parses longhand declarations from a shorthand value', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Invalid `none` in repeated longhand values
         style.scrollTimeline = 'none, 1s'
@@ -3324,7 +3393,7 @@ describe('scroll-timeline', () => {
     })
     it('serializes a shorthand value from the declarations of its longhands', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Initial longhand values
         longhands.forEach(longhand => style[longhand] = initial(longhand))
@@ -3354,7 +3423,7 @@ describe('text-align', () => {
 
     it('parses longhand declarations from a shorthand value', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Initial longhand values (not all longhands can be explicitly declared)
         style.textAlign = 'start'
@@ -3377,7 +3446,7 @@ describe('text-align', () => {
     })
     it('serializes a shorthand value from the declarations of its longhands', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Initial longhand values
         longhands.forEach(longhand => style[longhand] = initial(longhand))
@@ -3391,7 +3460,7 @@ describe('text-emphasis', () => {
 
     it('parses longhand declarations from a shorthand value', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Initial longhand values
         style.textEmphasis = 'none currentcolor'
@@ -3408,7 +3477,7 @@ describe('text-emphasis', () => {
     })
     it('serializes a shorthand value from the declarations of its longhands', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Initial longhand values
         longhands.forEach(longhand => style[longhand] = initial(longhand))
@@ -3422,7 +3491,7 @@ describe('text-decoration', () => {
 
     it('parses longhand declarations from a shorthand value', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Initial longhand values
         style.textDecoration = 'none auto solid currentcolor'
@@ -3439,7 +3508,7 @@ describe('text-decoration', () => {
     })
     it('serializes a shorthand value from the declarations of its longhands', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Initial longhand values
         longhands.forEach(longhand => style[longhand] = initial(longhand))
@@ -3457,7 +3526,7 @@ describe('transition', () => {
 
     it('parses longhand declarations from a shorthand value', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Invalid `none` in repeated longhand values
         style.transition = 'none, 1s'
@@ -3484,7 +3553,7 @@ describe('transition', () => {
     })
     it('serializes a shorthand value from the declarations of its longhands', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Initial longhand values
         longhands.forEach(longhand => style[longhand] = initial(longhand))
@@ -3514,7 +3583,7 @@ describe('vertical-align', () => {
 
     it('parses longhand declarations from a shorthand value', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Initial longhand values (not all longhands can be explicitly declared)
         style.verticalAlign = 'baseline 0'
@@ -3531,7 +3600,7 @@ describe('vertical-align', () => {
     })
     it('serializes a shorthand value from the declarations of its longhands', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Initial longhand values
         longhands.forEach(longhand => style[longhand] = initial(longhand))
@@ -3545,7 +3614,7 @@ describe('view-timeline', () => {
 
     it('parses longhand declarations from a shorthand value', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Invalid `none` in repeated longhand values
         style.viewTimeline = 'none, 1s'
@@ -3578,7 +3647,7 @@ describe('view-timeline', () => {
     })
     it('serializes a shorthand value from the declarations of its longhands', () => {
 
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
 
         // Initial longhand values
         longhands.forEach(longhand => style[longhand] = initial(longhand))
@@ -3607,7 +3676,7 @@ describe('white-space', () => {
     const longhands = shorthands.get('white-space')
 
     it('parses longhand declarations from a shorthand value', () => {
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
         whiteSpace.forEach((expected, input) => {
             style.whiteSpace = input
             longhands.forEach((longhand, index) => expect(style[longhand]).toBe(expected[index].value))
@@ -3616,7 +3685,7 @@ describe('white-space', () => {
         })
     })
     it('serializes a shorthand value from the declarations of its longhands', () => {
-        const style = createStyleDeclaration()
+        const style = createStyleBlock()
         whiteSpace.forEach((input, expected) => {
             longhands.forEach((longhand, index) => style[longhand] = input[index].value)
             expect(style.whiteSpace).toBe(expected)

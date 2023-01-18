@@ -1,8 +1,8 @@
 
-const create = require('../lib/parse/stream.js')
+const Stream = require('../lib/parse/stream.js')
 
 const string = 'hello'
-const stream = create(string)
+const stream = new Stream(string)
 
 beforeEach(() => {
     stream.reset()
@@ -65,13 +65,13 @@ describe('consumeRunOf(...items)', () => {
         expect(stream.index).toBe(3)
     })
     it('consumes all consecutive occurrences of given items at the front of the stream', () => {
-        const stream = create('csscsscss.')
+        const stream = new Stream('csscsscss.')
         expect(stream.consumeRunOf('c', 's')).toBe('csscsscss')
         expect(stream.current).toBe('s')
         expect(stream.index).toBe(8)
     })
     it('consumes all consecutive items matching a given predicate function at the front of the stream', () => {
-        const stream = create('csscsscss.')
+        const stream = new Stream('csscsscss.')
         expect(stream.consumeRunOf(char => char === 'c' || char === 's')).toBe('csscsscss')
         expect(stream.current).toBe('s')
         expect(stream.index).toBe(8)
@@ -162,7 +162,7 @@ describe('atEnd()', () => {
 describe('loops', () => {
     it('iterates over the stream items', () => {
         const string = 'hello world!'
-        const stream = create(string)
+        const stream = new Stream(string)
         let index = 0
         expect(stream.current).toBeUndefined()
         for (const char of stream) {
@@ -182,7 +182,7 @@ describe('loops', () => {
     })
     it('iterates over a slice of the stream items while iterating over all stream items', () => {
         const string = 'a nested word'
-        const stream = create(string)
+        const stream = new Stream(string)
         let nested = ''
         parentLoop: for (const _ of stream) {
             if (stream.consume(' ')) {
@@ -198,7 +198,7 @@ describe('loops', () => {
     })
     it('consumes a stream item while the stream is not at end', () => {
         const string = 'a nested word'
-        const stream = create(string)
+        const stream = new Stream(string)
         let nested = ''
         while (!stream.atEnd()) {
             const current = stream.consume()
@@ -214,7 +214,7 @@ describe('loops', () => {
         expect(nested).toBe('nested')
     })
     it('reconsumes an item while iterating over the stream items', () => {
-        const stream = create(string)
+        const stream = new Stream(string)
         let output = ''
         let i = 0
         for (const char of stream) {
@@ -230,7 +230,7 @@ describe('loops', () => {
 it('works with array', () => {
 
     const array = ['hello', ' ', 'world', '!']
-    const stream = create(array)
+    const stream = new Stream(array)
 
     expect(stream.current).toBeUndefined()
     expect(stream.next()).toBe('hello')

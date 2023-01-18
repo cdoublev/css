@@ -671,12 +671,12 @@ describe('backtracking', () => {
     })
     /**
      * There is no definition of the following requirement in specifications but
-     * since value definitions generally encode the expected order to resolve a
-     * parsing ambiguity, as in the value definition of `background`, it applies
-     * to this library.
+     * since value definitions generally encode the parsing order to resolve an
+     * ambiguity, like in the value definition of `background`.
      */
     it('parses a value in lexicographic order', () => {
 
+        // <media-type> and <mf-name> represent <ident>
         const definition = 'a || <media-type> || <mf-name>'
         const a = keyword('a')
         const screenMediaType = ident('screen', ['media-type'])
@@ -2780,25 +2780,24 @@ describe('<color>', () => {
         const valid = [
             // Out of range arguments
             ['lab(-1 -126 0 / -1)', 'lab(0 -126 0 / 0)'],
-            ['lab(101 126 0 / 2)', 'lab(101 126 0)'],
+            ['lab(101 126 0 / 2)', 'lab(100 126 0)'],
             ['lab(0 0 0 / -1%)', 'lab(0 0 0 / 0)'],
             ['lab(0 0 0 / 101%)', 'lab(0 0 0)'],
             // Map <percentage> to <number>
             ['lab(-1% -101% 0% / -1%)', 'lab(0 -126.25 0 / 0)'],
-            ['lab(101% 101% 0% / 101%)', 'lab(101 126.25 0)'],
+            ['lab(101% 101% 0% / 101%)', 'lab(100 126.25 0)'],
             // Preserve `none`
             ['lab(none none none / none)', 'lab(none none none / none)'],
             // Math function
             ['lab(calc(-1) calc(-126) 0 / calc(-1))', 'lab(0 -126 0 / 0)'],
-            ['lab(calc(101) calc(126) 0 / calc(2))', 'lab(101 126 0)'],
+            ['lab(calc(101) calc(126) 0 / calc(2))', 'lab(100 126 0)'],
             ['lab(calc(-1%) calc(-101%) 0 / calc(-1%))', 'lab(0 -126.25 0 / 0)'],
-            ['lab(calc(101%) calc(101%) 0 / calc(101%))', 'lab(101 126.25 0)'],
+            ['lab(calc(101%) calc(101%) 0 / calc(101%))', 'lab(100 126.25 0)'],
             // Precision (browser conformance: TBD, at least 16 bit)
             ['lab(0.0000001 0.0000001 0 / 0.499)', 'lab(0 0 0 / 0.498)'],
             ['lab(0.00000051 0.00000051 0 / 0.501)', 'lab(0.000001 0.000001 0 / 0.5)'],
             ['lab(0.0000001% 0.0000001% 0 / 49.9%)', 'lab(0 0 0 / 0.498)'],
             ['lab(0.00000051% 0.00000041% 0 / 50.1%)', 'lab(0.000001 0.000001 0 / 0.5)'],
-
         ]
         valid.forEach(([input, expected]) => expect(parse('<color>', input)).toBe(expected))
     })
@@ -2806,17 +2805,17 @@ describe('<color>', () => {
         const valid = [
             // Out of range arguments
             ['lch(-1 -1 -540 / -1)', 'lch(0 0 180 / 0)'],
-            ['lch(101 151 540 / 2)', 'lch(101 151 180)'],
+            ['lch(101 151 540 / 2)', 'lch(100 151 180)'],
             // Map <angle> and <percentage> to <number>
             ['lch(-1% -1% -540deg / -1%)', 'lch(0 0 180 / 0)'],
-            ['lch(101% 101% 540deg / 101%)', 'lch(101 151.5 180)'],
+            ['lch(101% 101% 540deg / 101%)', 'lch(100 151.5 180)'],
             // Preserve `none`
             ['lch(none none none / none)', 'lch(none none none / none)'],
             // Math function
             ['lch(calc(-1) calc(-1) calc(-540) / calc(-1))', 'lch(0 0 180 / 0)'],
-            ['lch(calc(101) calc(151) calc(540) / calc(2))', 'lch(101 151 180)'],
+            ['lch(calc(101) calc(151) calc(540) / calc(2))', 'lch(100 151 180)'],
             ['lch(calc(-1%) calc(-1%) calc(-540deg) / calc(-1%))', 'lch(0 0 180 / 0)'],
-            ['lch(calc(101%) calc(101%) calc(540deg) / calc(101%))', 'lch(101 151.5 180)'],
+            ['lch(calc(101%) calc(101%) calc(540deg) / calc(101%))', 'lch(100 151.5 180)'],
             // Precision (browser conformance: TBD, at least 16 bit)
             ['lch(0.0000001 0.0000001 0.0000001 / 0.499)', 'lch(0 0 0 / 0.498)'],
             ['lch(0.00000051 0.00000051 0.00000051 / 0.501)', 'lch(0.000001 0.000001 0.000001 / 0.5)'],
@@ -2829,17 +2828,17 @@ describe('<color>', () => {
         const valid = [
             // Out of range arguments
             ['oklab(-1 -0.41 0 / -1)', 'oklab(0 -0.41 0 / 0)'],
-            ['oklab(1.1 0.41 0 / 2)', 'oklab(1.1 0.41 0)'],
+            ['oklab(1.1 0.41 0 / 2)', 'oklab(1 0.41 0)'],
             // Map <percentage> to <number>
             ['oklab(-1% -101% 0 / -1%)', 'oklab(0 -0.404 0 / 0)'],
-            ['oklab(101% 101% 0 / 101%)', 'oklab(1.01 0.404 0)'],
+            ['oklab(101% 101% 0 / 101%)', 'oklab(1 0.404 0)'],
             // Preserve `none`
             ['oklab(none none none / none)', 'oklab(none none none / none)'],
             // Math function
             ['oklab(calc(-1) calc(-0.41) calc(0) / calc(-1))', 'oklab(0 -0.41 0 / 0)'],
-            ['oklab(calc(1.1) calc(0.41) calc(0) / calc(2))', 'oklab(1.1 0.41 0)'],
+            ['oklab(calc(1.1) calc(0.41) calc(0) / calc(2))', 'oklab(1 0.41 0)'],
             ['oklab(calc(-1%) calc(-101%) calc(0) / calc(-1%))', 'oklab(0 -0.404 0 / 0)'],
-            ['oklab(calc(101%) calc(101%) calc(0) / calc(101%))', 'oklab(1.01 0.404 0)'],
+            ['oklab(calc(101%) calc(101%) calc(0) / calc(101%))', 'oklab(1 0.404 0)'],
             // Precision (browser conformance: TBD, at least 16 bit)
             ['oklab(0.0000001 0.0000001 0 / 0.499)', 'oklab(0 0 0 / 0.498)'],
             ['oklab(0.00000051 0.00000051 0 / 0.501)', 'oklab(0.000001 0.000001 0 / 0.5)'],
@@ -2852,17 +2851,17 @@ describe('<color>', () => {
         const valid = [
             // Out of range arguments
             ['oklch(-1 -1 -540 / -1)', 'oklch(0 0 180 / 0)'],
-            ['oklch(1.1 0.41 540 / 2)', 'oklch(1.1 0.41 180)'],
+            ['oklch(1.1 0.41 540 / 2)', 'oklch(1 0.41 180)'],
             // Map <angle> and <percentage> to <number>
             ['oklch(-1% -1% -540deg / -1%)', 'oklch(0 0 180 / 0)'],
-            ['oklch(101% 101% 540deg / 101%)', 'oklch(1.01 0.404 180)'],
+            ['oklch(101% 101% 540deg / 101%)', 'oklch(1 0.404 180)'],
             // Preserve `none`
             ['oklch(none none none / none)', 'oklch(none none none / none)'],
             // Math function
             ['oklch(calc(-1) calc(-1) calc(-540) / calc(-1))', 'oklch(0 0 180 / 0)'],
-            ['oklch(calc(1.1) calc(0.41) calc(540) / calc(2))', 'oklch(1.1 0.41 180)'],
+            ['oklch(calc(1.1) calc(0.41) calc(540) / calc(2))', 'oklch(1 0.41 180)'],
             ['oklch(calc(-1%) calc(-1%) calc(-540deg) / calc(-1%))', 'oklch(0 0 180 / 0)'],
-            ['oklch(calc(101%) calc(101%) calc(540deg) / calc(101%))', 'oklch(1.01 0.404 180)'],
+            ['oklch(calc(101%) calc(101%) calc(540deg) / calc(101%))', 'oklch(1 0.404 180)'],
             // Precision (browser conformance: TBD, at least 16 bit)
             ['oklch(0.0000001 0.0000001 0.0000001 / 0.499)', 'oklch(0 0 0 / 0.498)'],
             ['oklch(0.00000051 0.00000051 0.00000051 / 0.501)', 'oklch(0.000001 0.000001 0.000001 / 0.5)'],
@@ -2875,8 +2874,12 @@ describe('<color>', () => {
         const valid = [
             // Explicit `xyz` color space
             ['color(xyz 0 0 0)', 'color(xyz-d65 0 0 0)'],
+            // Out of range arguments
+            ['color(srgb -1 -1 -1 / -1)', 'color(srgb -1 -1 -1 / 0)'],
+            ['color(srgb 1.1 1.1 1.1 / 2)', 'color(srgb 1.1 1.1 1.1)'],
             // Map <percentage> to <number>
-            ['color(srgb 0% 100% calc(100%))', 'color(srgb 0 1 1)'],
+            ['color(srgb -1% -1% -1% / -1%)', 'color(srgb -0.01 -0.01 -0.01 / 0)'],
+            ['color(srgb 101% 101% 101%)', 'color(srgb 1.01 1.01 1.01)'],
             // Preserve `none`
             ['color(srgb none none none / none)'],
             // Math function
@@ -2905,7 +2908,7 @@ describe('<container-name>', () => {
             .toEqual(customIdent('name', ['container-name']))
     })
 })
-describe('<family-name>', () => {
+describe('<family-name>, <font-face-name>', () => {
     it('fails to parse an invalid value', () => {
         expect(parse('<family-name>', 'serif', false, false)).toBeNull()
     })
