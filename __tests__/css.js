@@ -1,11 +1,11 @@
 
-const { install } = require('../lib/index.js')
+const css = require('../lib/index.js')
 
 let CSS
 
 beforeAll(() => {
-    install()
-    ;({ CSS } = globalThis)
+    css.install()
+    CSS = globalThis.CSS
 })
 
 describe('CSS.escape()', () => {
@@ -54,6 +54,7 @@ describe('CSS.supports()', () => {
             // <supports-decl> not nested in parens
             ['color: green'],
             // <supports-font-format-fn>
+            ['font-format("woff")', false],
             ['font-format(woff)'],
             // <supports-font-tech-fn>
             ['font-tech(color-svg)'],

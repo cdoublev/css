@@ -5,12 +5,13 @@
  * `serialized` to the result from serializing `parsed`.
  */
 const { addQuotes, logError, tab } = require('../lib/utils/script.js')
-const { createParser, parseCSSDescriptorValue, parseCSSPropertyValue } = require('../lib/parse/syntax.js')
+const { Parser } = require('../lib/parse/syntax.js')
 const descriptors = require('../lib/descriptors/definitions.js')
 const fs = require('node:fs/promises')
 const path = require('path')
 const properties = require('../lib/properties/definitions.js')
 const { serializeCSSValue } = require('../lib/serialize.js')
+const shorthands = require('../lib/properties/shorthands.js')
 
 const outputPath = {
     descriptors: path.resolve(__dirname, '../lib/descriptors/definitions.js'),
@@ -19,11 +20,9 @@ const outputPath = {
 const dependency = "const { createList } = require('../values/value.js')"
 const header = `\n// Generated from ${__filename}\n\n${dependency}\n\nmodule.exports = {\n`
 
-// Initialize Parser with style sheet context
 const parentStyleSheet = { type: 'text/css' }
 const styleRule = { parentStyleSheet, type: new Set(['style']) }
-const parser = createParser(parentStyleSheet)
-const { context: styleSheetContext } = parser
+const styleRuleParser = new Parser(styleRule)
 
 /**
  * @param {Set} type
@@ -42,7 +41,7 @@ function serializeTypes(type) {
 function serializeListArguments(separator, types, tabs) {
     // Remove default `type` argument (empty set)
     if (types.size === 0) {
-        // Remove default `separator` argument (whitespace)
+        // Remove default `separator` argument (white space)
         if (separator === ' ') {
             return ''
         }
@@ -91,12 +90,12 @@ function serializeComponentValue(component, depth = 3) {
  * @returns {string[]}
  */
 function getInitialPropertyValue(name, value) {
-    parser.context = parser.context.enter(styleRule, styleSheetContext)
-    value = parseCSSPropertyValue(value, name, parser)
+    value = styleRuleParser.parseDeclaration({ name, value })
     if (value === null) {
         console.error(`Parse error: cannot parse initial value of property "${name}"`)
         return ''
     }
+    ({ value } = value)
     return [serializeCSSValue({ name, value }), serializeComponentValue(value)]
 }
 
@@ -106,8 +105,11 @@ function getInitialPropertyValue(name, value) {
  */
 function serializePropertyDefinitions(properties) {
     return Object.entries(properties).reduce(
-        (string, [property, { group, initial, value }]) => {
+        (string, [property, { animate, group, initial, value }]) => {
             string += `${tab(1)}${addQuotes(property)}: {\n`
+            if (animate === false || shorthands.get(property)?.every(name => properties[name]?.animate === false)) {
+                string += `${tab(2)}animate: false,\n`
+            }
             if (group) {
                 string += `${tab(2)}group: ${addQuotes(group)},\n`
             }
@@ -133,13 +135,13 @@ function serializePropertyDefinitions(properties) {
  */
 function getInitialDescriptorValue(name, value, rule) {
     rule = rule.slice(1)
-    rule = { name: rule, parentStyleSheet, type: new Set([rule]) }
-    parser.context = parser.context.enter(rule, parser.context.parent)
-    value = parseCSSDescriptorValue(value, name, parser)
+    const parser = new Parser({ name: rule, parentStyleSheet, type: new Set([rule]) })
+    value = parser.parseDeclaration({ name, value }, parser)
     if (value === null) {
         console.error(`Parse error: cannot parse initial value of descriptor "${name}"`)
         return ''
     }
+    ({ value } = value)
     return [serializeCSSValue({ name, value }), serializeComponentValue(value, 4)]
 }
 

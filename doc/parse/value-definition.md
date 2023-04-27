@@ -86,7 +86,7 @@ A value is *optional* when there can be zero or more occurrences in the input. A
 
 A comma is optional when it is following or preceding an omitted value, eg. `a` matches `a, a?`, even if it is not defined with a multiplier.
 
-A whitespace is almost always optional between component values, eg. `1px+1px` is parsed to the same two component values. It is required before `+` and `-` in `<calc-sum>` and between two `<compound-selector>`s of a `<complex-selector>` when `<combinator>?` is omitted. It is forbidden in `<urange>` and top-level component values in `<compound-selector>`.
+A white space is almost always optional between component values, eg. `1px+1px` is parsed to the same two component values. It is required before `+` and `-` in `<calc-sum>` and between two `<compound-selector>`s of a `<complex-selector>` when `<combinator>?` is omitted. It is forbidden in `<urange>` and top-level component values in `<compound-selector>`.
 
 ## Extracting and curating CSS value definitions
 
@@ -121,3 +121,5 @@ Additionally, the following steps are applied:
   - replace `initial` longhand values with the result from a round trip (parse then serialize): the `initial` value of `border-<side>-color` (among other properties) is defined with `currentColor` instead of `currentcolor` ([issue](https://github.com/w3c/csswg-drafts/issues/7629)) but not all `initial` values must serialize to lowercase (eg. `unicode-range`)
   - trim extra whitespace after `(` and `[` or before `]` and `)` in `value`
   - remove extra `[]` in `value`
+
+[CSS Fill and Stroke 3](https://drafts.fxtf.org/fill-stroke-3/) is supposed to supersede [SVG Strokes](https://svgwg.org/specs/strokes/), which is supposed to supersede [SVG 2](https://svgwg.org/svg2-draft/), but browsers only implement definitions from SVG 2, therefore all definitions from CSS Fill and Stroke 3 and SVG Strokes are ignored.

@@ -219,12 +219,6 @@
           </a> (<code>Element.media</code> should be a valid <code>&lt;media-query-list></code>)
           <p>❌: CSS Syntax defines <i>parse a list of component values</i> as <a href="https://drafts.csswg.org/css-syntax-3/#parser-entry-points">the entry point</a> to use, but it should use <i>parse a comma-separated list according to a CSS grammar</i> using <code>&lt;media-query></code> (see issue in <a href="#parse-a-CSS-media-query-list">parse a CSS media query list</a>).</p>
         </li>
-        <li>
-          <a href="https://html.spec.whatwg.org/multipage/images.html#parse-a-sizes-attribute">
-            HTML - parse a sizes attribute
-          </a> (of <code>Element.sizes</code>)
-          <p>❌: it should use <i>parse a comma-separated list according to a CSS grammar</i> using <code>&lt;source-size></code> because it would avoid some processings in the current procedure.</p>
-        </li>
       </ul>
     </td>
   </tr>
@@ -934,7 +928,7 @@
   <tr>
     <th>Comments</th>
     <td>
-      <p>❌: CSS Media Queries defines the procedure with <i>parse a comma-separated list of component values</i> composed with <i>parse something according to a CSS grammar</i> using <code>&lt;media-query></code>, but it should use <i>parse a comma-separated list according to a CSS grammar</i> using <code>&lt;media-query></code> instead, because a whitespace as input (eg. from <code>Element.media</code>) will be parsed to an empty list instead of <code>not all</code>, and it should define this production specific rule: <i>an empty list must default to <code>all</code> and an invalid <code>&lt;media-query></code> must default to <code>not all</code></i>.</p>
+      <p>❌: CSS Media Queries defines the procedure with <i>parse a comma-separated list of component values</i> composed with <i>parse something according to a CSS grammar</i> using <code>&lt;media-query></code>, but it should use <i>parse a comma-separated list according to a CSS grammar</i> using <code>&lt;media-query></code> instead, because a white space as input (eg. from <code>Element.media</code>) will be parsed to an empty list instead of <code>not all</code>, and it should define this production specific rule: <i>an empty list must default to <code>all</code> and an invalid <code>&lt;media-query></code> must default to <code>not all</code></i>.</p>
     </td>
     </td>
   </tr>

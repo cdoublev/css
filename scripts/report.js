@@ -1,11 +1,11 @@
 
 const descriptors = require('../lib/descriptors/definitions.js')
 const parseDefinition = require('../lib/parse/definition.js')
+const { productions } = require('../lib/parse/syntax.js')
 const properties = require('../lib/properties/definitions.js')
-const structures = require('../lib/values/structures.js')
-const terminals = require('../lib/parse/terminals.js')
-const types = require('../lib/values/definitions.js')
 const webref = require('./webref.js')
+
+const { nonTerminals, structures, terminals } = productions
 
 const definitions = {
     properties: new Map(),
@@ -49,7 +49,7 @@ function parseDefinitionDeep(parent, { name, type, value }, context) {
         case 'property':
         case 'structure':
         case 'terminal':
-            if (structures.includes(name) || terminals[name] || types[name] || properties[name]) {
+            if (structures[name] || terminals[name] || nonTerminals[name] || properties[name]) {
                 return
             }
             throw Error(`There is no definition of the ${type} production <${name}>`)
@@ -62,7 +62,7 @@ function parseDefinitionDeep(parent, { name, type, value }, context) {
 
 function tryParseDefinition(name, definition, context) {
     try {
-        const node = parseDefinition(definition, { useCache: true })
+        const node = parseDefinition(definition, productions, { useCache: true })
         if (!context) {
             parseDefinitionDeep(name, node, context)
         }
@@ -117,7 +117,7 @@ function testParseCuratedDefinitions() {
     Object.entries(descriptors).forEach(([descriptor, definitions]) =>
         Object.values(definitions).forEach(({ value }) => tryParseDefinition(descriptor, value)))
     Object.entries(properties).forEach(([property, { value }]) => tryParseDefinition(property, value))
-    Object.entries(types).forEach(([type, definition]) => tryParseDefinition(type, definition))
+    Object.entries(nonTerminals).forEach(([type, definition]) => tryParseDefinition(type, definition))
     console.groupEnd('Errors in curated definitions')
 }
 

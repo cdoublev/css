@@ -39,21 +39,21 @@
     "test:inspect": "node --inspect-brk=0.0.0.0:9222 ./node_modules/.bin/jest --watchAll -b"
   },
   "dependencies": {
-    "@webref/css": "^6.2.0",
+    "@webref/css": "^6.5.1",
     "domexception": "^4.0.0",
     "webidl-conversions": "^7.0.0",
-    "webref": "w3c/webref#4d4109c1ccc33014d208ca85bdc3915c60572b68"
+    "webref": "w3c/webref#201bae5b5325423b5d184b02cf42150ebcbecd6e"
   },
   "devDependencies": {
-    "@babel/core": "^7.20.7",
-    "@babel/eslint-parser": "^7.19.1",
-    "@babel/preset-env": "^7.20.2",
+    "@babel/core": "^7.21.4",
+    "@babel/eslint-parser": "^7.21.3",
+    "@babel/preset-env": "^7.21.4",
     "@cdoublev/eslint-config": "^0.10.1",
-    "eslint": "^8.31.0",
+    "eslint": "^8.38.0",
     "eslint-plugin-jest": "^27.2.1",
     "eslint-plugin-node": "^11.1.0",
-    "jest": "^29.3.1",
-    "jest-junit": "^15.0.0",
+    "jest": "^29.5.0",
+    "jest-junit": "^16.0.0",
     "webidl2js": "^17.1.0"
   },
   "publishConfig": {

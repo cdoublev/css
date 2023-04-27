@@ -79,7 +79,6 @@ As an aside, it should be noted that some value definitions contains token types
     - `<class-selector>`
     - `<custom-arg>`
     - `<custom-selector>`
-    - `<general-enclosed>`
     - `<ns-prefix>`
     - `<page-selector>`
     - `<pseudo-class-selector>`
@@ -110,7 +109,7 @@ Instead, in this library, `<hash-token>` is implemented with a `type` that *has*
 <id-selector> = <id>
 ```
 
-`<numeric-token>` and `<dimension-token>` are defined with a `type` that is either `integer` or `number`, noting that the `type` of any number specified with the scientific notation is currently defined as `number` (even if eg. `1e1` is an integer), and `<integer>`, `<signed-integer>`, `<signless-integer>`, `<n-dimension>`, `<ndash-dimension>`, `<ndashdigit-dimension>`, are defined as a `<number-token>` whose `type` *is* `integer`.
+`<numeric-token>` and `<dimension-token>` are defined with a `type` that is either `integer` or `number`, noting that the `type` of any number specified with `.` or the scientific notation is currently defined as `number` (even if eg. `1.0` or `1e1` are integers), and `<integer>`, `<signed-integer>`, `<signless-integer>`, `<n-dimension>`, `<ndash-dimension>`, `<ndashdigit-dimension>`, are defined as a `<number-token>` whose `type` *is* `integer`.
 
 Instead, in this library, `<numeric-token>` is implemented with a `type` that only *has* `number`, and parsing these CSS types is implemented as matching a `<number-token>` or `<dimension-token>` whose `value` evaluates to an integer. A consequence is that eg. `nth-child(1e1)` or `nth-child(1e1n)` are valid if not otherwise discarded when parsing `<n-dimension>`.
 

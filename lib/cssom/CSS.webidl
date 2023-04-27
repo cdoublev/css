@@ -1,13 +1,11 @@
 
 // https://drafts.csswg.org/cssom-1/#namespacedef-css
-// `interface` replaces `namespace` which is not supported by `webidl2js` yet
+// https://drafts.csswg.org/css-conditional-3/#the-css-namespace
+// `namespace` is not supported by `webidl2js`
 [Exposed=Window]
+// namespace CSS {
 interface CSS {
     CSSOMString escape(CSSOMString ident);
-};
-
-// https://drafts.csswg.org/css-conditional-3/#the-css-namespace
-partial interface CSS {
     boolean supports(CSSOMString property, CSSOMString value);
     boolean supports(CSSOMString conditionText);
 };

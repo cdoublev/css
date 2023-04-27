@@ -1,5 +1,6 @@
 
-const parse = require('../lib/parse/definition.js')
+const parseDefinition = require('../lib/parse/definition.js')
+const { productions } = require('../lib/parse/syntax.js')
 const properties = require('../lib/properties/definitions.js')
 const { serializeDefinition: serialize } = require('../lib/serialize.js')
 const types = require('../lib/values/definitions.js')
@@ -46,6 +47,15 @@ function repeat(value, min, max, separator) {
  */
 function type(name) {
     return { name, type: 'non-terminal', value: types[name] }
+}
+
+/**
+ * @param {string} definition
+ * @param {object} [init]
+ * @returns {object}
+ */
+function parse(definition, init) {
+    return parseDefinition(definition, productions, init)
 }
 
 describe('type', () => {

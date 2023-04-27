@@ -8,31 +8,23 @@ const {
 } = require('../lib/cssom/CSSStyleSheet-impl.js')
 const { SET_INVALID_KEY_TEXT_ERROR } = require('../lib/cssom/CSSKeyframeRule-impl.js')
 const {
-    INSERT_RULE_INVALID_GRAMMAR_ERROR,
-    INSERT_RULE_INVALID_INDEX_ERROR,
-    INSERT_RULE_INVALID_POSITION_ERROR,
     INVALID_NAMESPACE_STATE_ERROR,
+    INVALID_RULE_INDEX_ERROR,
+    INVALID_RULE_POSITION_ERROR,
     INVALID_RULE_SYNTAX_ERROR,
 } = require('../lib/parse/syntax.js')
 const createError = require('../lib/error.js')
 
 const {
-    // CSSColorProfile,
-    // CSSContainerRule,
-    // CSSCounterStyleRule,
-    CSSFontFaceRule,
-    // CSSFontFeatureValuesRule,
-    // CSSFontPaletteValuesRule,
     CSSImportRule,
     CSSKeyframeRule,
     CSSKeyframesRule,
-    // CSSLayerBlockRule,
-    // CSSLayerStatementRule,
+    CSSLayerBlockRule,
+    CSSLayerStatementRule,
     CSSMarginRule,
     CSSMediaRule,
     CSSNamespaceRule,
     CSSPageRule,
-    // CSSPropertyRule,
     CSSRuleList,
     CSSStyleDeclaration,
     CSSStyleRule,
@@ -89,10 +81,6 @@ describe('CSSStyleSheet', () => {
     })
     it('creates a non-constructed CSSStyleSheet', () => {
 
-        const input = `
-            @import "./stylesheet.css";
-            .selector {}
-        `
         const location = 'http://github.com/cdoublev/css/'
         const media = 'all'
         const ownerNode = { type: 'HTMLLinkElement' }
@@ -104,7 +92,7 @@ describe('CSSStyleSheet', () => {
             ownerNode,
             title,
         }
-        const styleSheet = createStyleSheet(input, properties)
+        const styleSheet = createStyleSheet('', properties)
 
         expect(CSSStyleSheet.is(styleSheet)).toBeTruthy()
 
@@ -120,47 +108,53 @@ describe('CSSStyleSheet', () => {
 
         // CSSStyleSheet properties
         expect(CSSRuleList.is(styleSheet.cssRules)).toBeTruthy()
-        expect(CSSImportRule.is(styleSheet.cssRules[0])).toBeTruthy()
-        expect(CSSStyleRule.is(styleSheet.cssRules[1])).toBeTruthy()
         expect(styleSheet.ownerRule).toBeNull()
     })
 })
 describe('CSSStyleSheet.insertRule(), CSSStyleSheet.deleteRule()', () => {
     it('inserts and deletes a rule', () => {
 
-        const styleSheet = new globalThis.CSSStyleSheet()
+        const styleSheet = createStyleSheet()
         const { cssRules } = styleSheet
 
-        styleSheet.insertRule('.selector { color: red }', 0)
+        styleSheet.insertRule('@namespace svg "http://www.w3.org/2000/svg";', 0)
 
         expect(cssRules).toHaveLength(1)
 
-        const [styleRule] = cssRules
+        const [namespaceRule] = cssRules
 
-        expect(CSSStyleRule.is(styleRule)).toBeTruthy()
+        expect(CSSNamespaceRule.is(namespaceRule)).toBeTruthy()
 
-        styleSheet.insertRule('.selector { color: green }', 0)
+        styleSheet.insertRule('@namespace html "https://www.w3.org/1999/xhtml/";')
 
-        expect(cssRules[1]).toBe(styleRule)
+        expect(cssRules[1]).toBe(namespaceRule)
 
         styleSheet.deleteRule(1)
 
         expect(cssRules).toHaveLength(1)
-        expect(styleRule.parentStyleSheet).toBeNull()
-    })
-    it('returns a syntax error when trying to insert a statement that is not a rule', () => {
+        expect(namespaceRule.parentStyleSheet).toBeNull()
 
-        const styleSheet = new globalThis.CSSStyleSheet()
-        const error = createError(INVALID_RULE_SYNTAX_ERROR, true)
+        styleSheet.insertRule('@import "./page.css";')
+        styleSheet.insertRule('@layer reset;')
+        styleSheet.insertRule('@namespace svg "http://www.w3.org/2000/svg";', 3)
+        styleSheet.insertRule('@layer base;', 4)
+        styleSheet.insertRule('svg|rect {}', 5)
+
+        expect(cssRules).toHaveLength(6)
+    })
+    it('returns a syntax error when trying to insert an invalid rule according to the CSS syntax', () => {
+
+        const styleSheet = createStyleSheet()
+        const error = createError(INVALID_RULE_SYNTAX_ERROR)
 
         expect(styleSheet.insertRule('color: red')).toEqual(error)
     })
     it('throws an error when trying to insert/delete a rule in a stylesheet whose origin is not clean', () => {
 
-        const styleSheet = createStyleSheet('.selector { color: red }', { originClean: false })
+        const styleSheet = createStyleSheet('', { originClean: false })
         const error = createError(ACCESS_THIRD_PARTY_STYLESHEET_ERROR)
 
-        expect(() => styleSheet.insertRule('.selector { color: green }')).toThrow(error)
+        expect(() => styleSheet.insertRule('style {}')).toThrow(error)
         expect(() => styleSheet.deleteRule(0)).toThrow(error)
     })
     it('throws an error when trying to insert/delete a rule while modifications on the stylesheet are not allowed', () => {
@@ -168,10 +162,9 @@ describe('CSSStyleSheet.insertRule(), CSSStyleSheet.deleteRule()', () => {
         const styleSheet = new globalThis.CSSStyleSheet()
         const error = createError(UPDATE_LOCKED_STYLESHEET_ERROR)
 
-        styleSheet.insertRule('.selector { color: green }')
-        styleSheet.replace('.selector { color: orange }')
+        styleSheet.replace('')
 
-        expect(() => styleSheet.insertRule('.selector { color: red }')).toThrow(error)
+        expect(() => styleSheet.insertRule('style {}')).toThrow(error)
         expect(() => styleSheet.deleteRule(0)).toThrow(error)
     })
     it('throws an error when trying to insert @import in a constructed style sheet', () => {
@@ -179,52 +172,81 @@ describe('CSSStyleSheet.insertRule(), CSSStyleSheet.deleteRule()', () => {
         const styleSheet = new globalThis.CSSStyleSheet()
         const error = createError(INSERT_INVALID_IMPORT_ERROR)
 
-        expect(() => styleSheet.insertRule('@import "./stylesheet.css";')).toThrow(error)
+        expect(() => styleSheet.insertRule('@import "./global.css";')).toThrow(error)
     })
-    it('throws an error when trying to insert/delete a rule at an index greater than the length of the list of rules', () => {
+    it('throws an error when trying to insert/delete a rule at an index greater than the length of rules', () => {
 
-        const styleSheet = new globalThis.CSSStyleSheet()
-        const error = createError(INSERT_RULE_INVALID_INDEX_ERROR)
+        const styleSheet = createStyleSheet()
+        const error = createError(INVALID_RULE_INDEX_ERROR)
 
-        expect(() => styleSheet.insertRule('.selector { color: red }', 1)).toThrow(error)
+        expect(() => styleSheet.insertRule('style {}', 1)).toThrow(error)
         expect(() => styleSheet.deleteRule(0)).toThrow(error)
     })
-    it('throws an error when trying to insert an invalid rule', () => {
+    it('throws an error when trying to insert an invalid rule according to the CSS grammar', () => {
 
-        const styleSheet = new globalThis.CSSStyleSheet()
-        const error = createError(INSERT_RULE_INVALID_GRAMMAR_ERROR)
-
-        expect(() => styleSheet.insertRule('@namespace <bad-string-or-url>;', 0)).toThrow(error)
-    })
-    it('throws an error when trying to insert a rule at an invalid position', () => {
-
-        // Use a non-constructed style sheet in order to be allowed to insert @import
         const styleSheet = createStyleSheet()
-        const error = createError(INSERT_RULE_INVALID_POSITION_ERROR)
+        const error = createError(INVALID_RULE_SYNTAX_ERROR)
 
-        styleSheet.insertRule('@import "./stylesheet.css";')
+        expect(() => styleSheet.insertRule('@charset "utf-8";')).toThrow(error)
+    })
+    it('throws an error when trying to insert any other rule than @import or @layer before @import', () => {
+
+        const styleSheet = createStyleSheet('@import "./global.css";')
+        const error = createError(INVALID_RULE_POSITION_ERROR)
 
         expect(() => styleSheet.insertRule('@namespace svg "http://www.w3.org/2000/svg";')).toThrow(error)
-        expect(() => styleSheet.insertRule('.selector { color: red }')).toThrow(error)
-
-        styleSheet.insertRule('@namespace svg "http://www.w3.org/2000/svg";', 1)
-
-        expect(() => styleSheet.insertRule('.selector { color: red }', 1)).toThrow(error)
-        expect(() => styleSheet.insertRule('@import "./stylesheet.css";', 2)).toThrow(error)
-
-        styleSheet.insertRule('.selector { color: red }', 2)
-
-        expect(() => styleSheet.insertRule('@import "./stylesheet.css";', 3)).toThrow(error)
-        expect(() => styleSheet.insertRule('@namespace svg "http://www.w3.org/2000/svg";', 3)).toThrow(error)
+        expect(() => styleSheet.insertRule('style {}')).toThrow(error)
     })
-    it('throws an error when trying to insert @namespace if any rule that is not @namespace or @import rule exists', () => {
+    it('throws an error when trying to insert any other rule than @import, @namespace, or @layer before @namespace', () => {
 
-        const styleSheet = new globalThis.CSSStyleSheet()
+        const styleSheet = createStyleSheet('@namespace svg "http://www.w3.org/2000/svg";')
+        const error = createError(INVALID_RULE_POSITION_ERROR)
 
-        styleSheet.insertRule('.selector { color: red }')
+        expect(() => styleSheet.insertRule('style {}')).toThrow(error)
+    })
+    it('throws an error when trying to insert @import after any other rule than @import or @layer', () => {
 
-        expect(() => styleSheet.insertRule('@namespace svg "http://www.w3.org/2000/svg";'))
-            .toThrow(INVALID_NAMESPACE_STATE_ERROR)
+        const styleSheet = createStyleSheet('@namespace svg "http://www.w3.org/2000/svg";')
+        const error = createError(INVALID_RULE_POSITION_ERROR)
+
+        expect(() => styleSheet.insertRule('@import "./global.css";', 1)).toThrow(error)
+    })
+    it('throws an error when trying to insert @layer between @import and @import', () => {
+
+        const styleSheet = createStyleSheet(`
+            @import "./global.css";
+            @import "./page.css";
+        `)
+        const error = createError(INVALID_RULE_POSITION_ERROR)
+
+        expect(() => styleSheet.insertRule('@layer base;', 1)).toThrow(error)
+    })
+    it('throws an error when trying to insert @layer between @import and @namespace', () => {
+
+        const styleSheet = createStyleSheet(`
+            @import "./global.css";
+            @namespace svg "http://www.w3.org/2000/svg";
+        `)
+        const error = createError(INVALID_RULE_POSITION_ERROR)
+
+        expect(() => styleSheet.insertRule('@layer base;', 1)).toThrow(error)
+    })
+    it('throws an error when trying to insert @layer between @namespace and @namespace', () => {
+
+        const styleSheet = createStyleSheet(`
+            @namespace html "https://www.w3.org/1999/xhtml/";
+            @namespace svg "http://www.w3.org/2000/svg";
+        `)
+        const error = createError(INVALID_RULE_POSITION_ERROR)
+
+        expect(() => styleSheet.insertRule('@layer base;', 1)).toThrow(error)
+    })
+    it('throws an error when trying to insert @namespace if any other rule than @import, @layer, or @namespace exists', () => {
+
+        const styleSheet = createStyleSheet('style {}')
+        const error = createError(INVALID_NAMESPACE_STATE_ERROR)
+
+        expect(() => styleSheet.insertRule('@namespace svg "http://www.w3.org/2000/svg";')).toThrow(error)
     })
 })
 describe('CSSStyleSheet.replace(), CSSStyleSheet.replaceSync()', () => {
@@ -233,18 +255,21 @@ describe('CSSStyleSheet.replace(), CSSStyleSheet.replaceSync()', () => {
         const styleSheet = new globalThis.CSSStyleSheet()
         const { cssRules } = styleSheet
 
-        expect(await styleSheet.replace('.selector { color: orange }')).toBe(styleSheet)
+        expect(await styleSheet.replace('style { color: orange }')).toBe(styleSheet)
         expect(cssRules).toHaveLength(1)
         expect(cssRules[0].style.color).toBe('orange')
 
-        styleSheet.replaceSync('.selector { color: green }')
+        styleSheet.replaceSync('style { color: green }')
 
         expect(cssRules).toHaveLength(1)
         expect(cssRules[0].style.color).toBe('green')
     })
     it('throws an error when trying to replace rules of a non-constructed stylesheet', () => {
-        expect(() => createStyleSheet('.selector { color: red }').replaceSync(''))
-            .toThrow(UPDATE_LOCKED_STYLESHEET_ERROR)
+
+        const styleSheet = createStyleSheet()
+        const error = createError(UPDATE_LOCKED_STYLESHEET_ERROR)
+
+        expect(() => styleSheet.replaceSync('')).toThrow(error)
     })
     it('throws an error when trying to replace rules concurrently', async () => {
 
@@ -260,20 +285,15 @@ describe('CSSStyleSheet.replace(), CSSStyleSheet.replaceSync()', () => {
         const styleSheet = new globalThis.CSSStyleSheet()
         const { cssRules } = styleSheet
         const rules = `
-            @import "./stylesheet.css";
+            @import "./global.css";
             @namespace <bad-string-or-url>;
-            .selector { color: green }
+            style { color: green }
             color: red
         `
 
         styleSheet.replaceSync(rules)
 
-        expect(cssRules).toHaveLength(1)
-
-        const [styleRule] = cssRules
-
-        expect(CSSStyleRule.is(styleRule)).toBeTruthy()
-        expect(styleRule.style.color).toBe('green')
+        expect(CSSStyleRule.is(cssRules[0])).toBeTruthy()
     })
 })
 
@@ -302,8 +322,8 @@ describe('grammar rules', () => {
 
         // CSS Syntax throws invalid tokens away until reading `;`
         const { cssRules } = createStyleSheet(`
-            <!-- .selector { color: green } -->
-            .selector {
+            <!-- style {} -->
+            style {
                 <!-- color: red; -->;
                 color: green;
                 <!-- color: red; -->
@@ -322,93 +342,164 @@ describe('grammar rules', () => {
 
         expect(cssRules).toHaveLength(0)
     })
-    it('ignores a rule whose prelude or block value is invalid according to its production rule', () => {
+    it('ignores a rule whose prelude or block value is invalid according to its definition', () => {
 
         const { cssRules } = createStyleSheet(`
             @namespace ns {}
             @media all;
-            .selector;
+            style;
         `)
 
         expect(cssRules).toHaveLength(0)
     })
     it('ignores @charset', () => {
 
-        const { cssRules: [styleRule1, styleRule2] } = createStyleSheet(`
+        const { cssRules: [importRule, namespaceRule, styleRule] } = createStyleSheet(`
+            @import "./global.css";
             @charset "utf-8";
-            .selector {
-                color: green;
-            }
+            @namespace svg "http://www.w3.org/2000/svg";
             @charset "utf-8";
-            .selector {
-                color: green;
-            }
-        `)
-
-        expect(CSSStyleRule.is(styleRule1)).toBeTruthy()
-        expect(CSSStyleRule.is(styleRule2)).toBeTruthy()
-    })
-    it('ignores @import preceded by any other valid rule than @charset', () => {
-
-        const { cssRules: [styleRule1, styleRule2] } = createStyleSheet(`
-            .selector {
-                color: green;
-            }
-            @import "./stylesheet.css";
-            .selector {
-                color: green;
-            }
-        `)
-
-        expect(CSSStyleRule.is(styleRule1)).toBeTruthy()
-        expect(CSSStyleRule.is(styleRule2)).toBeTruthy()
-    })
-    it('does not ignore @import preceded by invalid rule(s) or followed by @charset', () => {
-
-        const { cssRules: [importRule] } = createStyleSheet(`
-            @namespace <bad-string-or-url>;
-            @import "./stylesheet.css";
+            style {}
             @charset "utf-8";
         `)
 
         expect(CSSImportRule.is(importRule)).toBeTruthy()
+        expect(CSSNamespaceRule.is(namespaceRule)).toBeTruthy()
+        expect(CSSStyleRule.is(styleRule)).toBeTruthy()
     })
-    it('ignores @namespace preceded by any other valid rules than @import or @charset', () => {
+    it('ignores @import following any other non-ignored rule than @layer', () => {
+
+        const { cssRules: [namespaceRule, styleRule] } = createStyleSheet(`
+            @namespace svg "http://www.w3.org/2000/svg";
+            @import "./global.css";
+            style {}
+        `)
+
+        expect(CSSNamespaceRule.is(namespaceRule)).toBeTruthy()
+        expect(CSSStyleRule.is(styleRule)).toBeTruthy()
+    })
+    it('ignores @import following @layer interleaved after another @import', () => {
+
+        const { cssRules: [, layerRule, styleRule] } = createStyleSheet(`
+            @import "./global.css";
+            @layer reset;
+            @import "./page.css";
+            style {}
+        `)
+
+        expect(CSSLayerStatementRule.is(layerRule)).toBeTruthy()
+        expect(CSSStyleRule.is(styleRule)).toBeTruthy()
+    })
+    it('does not ignore @import following @layer or ignored rules', () => {
+
+        const { cssRules: [, importRule, layerRule] } = createStyleSheet(`
+            @layer reset;
+            @charset "utf-8";
+            @namespace <bad-string-or-url>;
+            @import "./global.css";
+            @layer base;
+        `)
+
+        expect(CSSImportRule.is(importRule)).toBeTruthy()
+        expect(CSSLayerStatementRule.is(layerRule)).toBeTruthy()
+    })
+    it('does not ignore @import following ignored rules interleaved after another @import', () => {
+
+        const { cssRules: [, importRule, styleRule] } = createStyleSheet(`
+            @import "./global.css";
+            @charset "utf-8";
+            @namespace <bad-string-or-url>;
+            @layer <bad-ident>;
+            @import "./page.css";
+            style {}
+        `)
+
+        expect(CSSImportRule.is(importRule)).toBeTruthy()
+        expect(CSSStyleRule.is(styleRule)).toBeTruthy()
+    })
+    it('ignores @namespace following any other non-ignored rule than @import or @layer', () => {
 
         const { cssRules: [styleRule1, styleRule2] } = createStyleSheet(`
-            .selector {
-                color: green;
-            }
+            style {}
             @namespace svg "http://www.w3.org/2000/svg";
-            .selector {
-                color: green;
-            }
+            style {}
         `)
 
         expect(CSSStyleRule.is(styleRule1)).toBeTruthy()
         expect(CSSStyleRule.is(styleRule2)).toBeTruthy()
     })
-    it('does not ignore @namespace preceded by invalid rule(s) or followed by @charset or invalid @import', () => {
+    it('ignores @namespace following @layer interleaved after another @namespace', () => {
 
-        const { cssRules: [namespaceRule, ...otherRules] } = createStyleSheet(`
-            @import <bad-string-or-url>;
+        const { cssRules: [, layerRule, styleRule] } = createStyleSheet(`
+            @namespace html "https://www.w3.org/1999/xhtml/";
+            @layer reset;
             @namespace svg "http://www.w3.org/2000/svg";
-            @charset "UTF-8";
-            @import <bad-string-or-url>;
+            style {}
+        `)
+
+        expect(CSSLayerStatementRule.is(layerRule)).toBeTruthy()
+        expect(CSSStyleRule.is(styleRule)).toBeTruthy()
+    })
+    it('ignores @namespace following @layer interleaved after @import', () => {
+
+        const { cssRules: [, layerRule, styleRule] } = createStyleSheet(`
+            @import "./global.css";
+            @layer reset;
+            @namespace svg "http://www.w3.org/2000/svg";
+            style {}
+        `)
+
+        expect(CSSLayerStatementRule.is(layerRule)).toBeTruthy()
+        expect(CSSStyleRule.is(styleRule)).toBeTruthy()
+    })
+    it('does not ignore @namespace following @import, @layer, or ignored rule(s)', () => {
+
+        const { cssRules: [,, namespaceRule, layerRule] } = createStyleSheet(`
+            @layer reset;
+            @charset "utf-8";
+            @import "./global.css";
+            @namespace svg "http://www.w3.org/2000/svg";
+            @layer base;
         `)
 
         expect(CSSNamespaceRule.is(namespaceRule)).toBeTruthy()
-        expect(otherRules).toHaveLength(0)
+        expect(CSSLayerStatementRule.is(layerRule)).toBeTruthy()
+    })
+    it('does not ignore @namespace following ignored rules interleaved after another @namespace', () => {
+
+        const { cssRules: [, namespaceRule, layerRule] } = createStyleSheet(`
+            @namespace html "https://www.w3.org/1999/xhtml/";
+            @charset "utf-8";
+            @import <bad-string-or-url>;
+            @layer <bad-string-or-url>;
+            @namespace svg "http://www.w3.org/2000/svg";
+            @layer base;
+        `)
+
+        expect(CSSNamespaceRule.is(namespaceRule)).toBeTruthy()
+        expect(CSSLayerStatementRule.is(layerRule)).toBeTruthy()
     })
     it('ignores a rule not allowed at the top-level of the style sheet', () => {
 
-        // The nesting selector is valid but matches no element
         const { cssRules } = createStyleSheet(`
             @top-left {}
-            & {
-                color: green;
-            }
+            & { color: green }
             0% {}
+        `)
+
+        expect(cssRules).toHaveLength(1)
+        expect(CSSStyleRule.is(cssRules[0])).toBeTruthy()
+    })
+    it('ignores a rule not allowed in @layer', () => {
+
+        const { cssRules: [{ cssRules }] } = createStyleSheet(`
+            @layer reset {
+                @import "./global.css";
+                @namespace svg "http://www.w3.org/2000/svg";
+                @top-left {}
+                & { color: green }
+                0% {}
+            }
         `)
 
         expect(cssRules).toHaveLength(1)
@@ -418,12 +509,10 @@ describe('grammar rules', () => {
 
         const { cssRules: [{ cssRules }] } = createStyleSheet(`
             @media all {
-                @import "./stylesheet.css";
+                @import "./global.css";
                 @namespace svg "http://www.w3.org/2000/svg";
                 @top-left {}
-                & {
-                    color: green;
-                }
+                & { color: green }
                 0% {}
             }
         `)
@@ -435,12 +524,10 @@ describe('grammar rules', () => {
 
         const { cssRules: [{ cssRules }] } = createStyleSheet(`
             @supports (color: green) {
-                @import "./stylesheet.css";
+                @import "./global.css";
                 @namespace svg "http://www.w3.org/2000/svg";
                 @top-left {}
-                & {
-                    color: green;
-                }
+                & { color: green }
                 0% {}
             }
         `)
@@ -453,16 +540,15 @@ describe('grammar rules', () => {
         // CSS Syntax throws invalid tokens away until reading `;`
         const { cssRules: [{ cssRules }] } = createStyleSheet(`
             @keyframes myAnimation {
-                @import "./stylesheet.css";
+                @import "./global.css";
                 @namespace svg "http://www.w3.org/2000/svg";
                 @keyframes subAnimation {}
+                @layer reset;
                 @media all {}
                 @top-left {}
                 @supports (color: red) {}
-                .selector {}
-                0% {
-                    color: green;
-                }
+                style {}
+                0% { color: green }
                 & {}
             }
         `)
@@ -473,17 +559,16 @@ describe('grammar rules', () => {
     it('ignores a rule not allowed in @page', () => {
 
         // CSS Syntax throws invalid tokens away until reading `;`
-        const { cssRules: [{ cssRules, style: { color } }] } = createStyleSheet(`
+        const { cssRules: [{ cssRules }] } = createStyleSheet(`
             @page {
-                @import "./stylesheet.css";
+                @import "./global.css";
                 @namespace svg "http://www.w3.org/2000/svg";
                 @keyframes myAnimation {}
+                @layer reset;
                 @media all {}
                 @supports (color: red) {}
                 & {};
-                @top-left {
-                    color: green;
-                }
+                @top-left { color: green }
                 color: green;
                 0% {}
             }
@@ -491,17 +576,17 @@ describe('grammar rules', () => {
 
         expect(cssRules).toHaveLength(1)
         expect(CSSMarginRule.is(cssRules[0])).toBeTruthy()
-        expect(color).toBe('green')
     })
     it('ignores a rule not allowed in a keyframe rule', () => {
 
         // CSS Syntax throws invalid tokens away until reading `;`
-        const { cssRules: [{ cssRules: [{ style: { color } }] }] } = createStyleSheet(`
+        const { cssRules: [{ cssRules: [{ cssRules, style: { color } }] }] } = createStyleSheet(`
             @keyframes myAnimation {
                 0% {
-                    @import "./stylesheet.css";
+                    @import "./global.css";
                     @namespace svg "http://www.w3.org/2000/svg";
                     @keyframes myAnimation {}
+                    @layer reset;
                     @media all {}
                     @top-left {}
                     @supports (color: red) {}
@@ -512,17 +597,19 @@ describe('grammar rules', () => {
             }
         `)
 
+        expect(cssRules).toBeUndefined()
         expect(color).toBe('green')
     })
     it('ignores a rule not allowed in a margin rule', () => {
 
         // CSS Syntax throws invalid tokens away until reading `;`
-        const { cssRules: [{ cssRules: [{ style: { color } }] }] } = createStyleSheet(`
+        const { cssRules: [{ cssRules: [{ cssRules, style: { color } }] }] } = createStyleSheet(`
             @page {
                 @top-left {
-                    @import "./stylesheet.css";
+                    @import "./global.css";
                     @namespace svg "http://www.w3.org/2000/svg";
                     @keyframes myAnimation {}
+                    @layer reset;
                     @media all {}
                     @top-left {}
                     @supports (color: red) {}
@@ -533,28 +620,26 @@ describe('grammar rules', () => {
             }
         `)
 
+        expect(cssRules).toBeUndefined()
         expect(color).toBe('green')
     })
     it('ignores a rule not allowed in a style rule', () => {
 
         // CSS Syntax throws invalid tokens away until reading `;`
         const { cssRules: [{ cssRules, style }] } = createStyleSheet(`
-            .selector {
+            style {
                 top: 1px;
-                @import "./stylesheet.css";
+                @import "./global.css";
                 @namespace svg "http://www.w3.org/2000/svg";
                 @keyframes myAnimation {}
+                @layer reset;
                 @top-left {}
                 identifier {};
-                & {
-                    color: green;
-                }
-                @media all {
-                    color: green;
-                }
-                @supports (color: green) {
-                    color: green;
-                }
+                function() {};
+                & { color: green }
+                @layer { color: green }
+                @media all { color: green }
+                @supports (color: green) { color: green }
                 0% {};
                 bottom: 1px;
             }
@@ -562,33 +647,29 @@ describe('grammar rules', () => {
 
         expect(style.top).toBe('1px')
         expect(style.bottom).toBe('1px')
-        expect(cssRules).toHaveLength(3)
+        expect(cssRules).toHaveLength(4)
 
-        const [styleRule, mediaRule, supportsRule] = cssRules
+        const [styleRule, layerRule, mediaRule, supportsRule] = cssRules
 
         expect(CSSStyleRule.is(styleRule)).toBeTruthy()
+        expect(CSSLayerBlockRule.is(layerRule)).toBeTruthy()
         expect(CSSMediaRule.is(mediaRule)).toBeTruthy()
         expect(CSSSupportsRule.is(supportsRule)).toBeTruthy()
-        expect(styleRule.style.color).toBe('green')
-        // https://github.com/w3c/csswg-drafts/issues/7830
-        // expect(mediaRule.style.color).toBe('green')
-        // expect(supportsRule.style.color).toBe('green')
     })
     it('ignores a rule not allowed in a nested style rule', () => {
 
         // CSS Syntax throws invalid tokens away until reading `;`
         const { cssRules: [{ cssRules: [styleRule] }] } = createStyleSheet(`
-            .selector {
+            style {
                 & {
                     top: 1px;
-                    @import "./stylesheet.css";
+                    @import "./global.css";
                     @namespace svg "http://www.w3.org/2000/svg";
                     @keyframes myAnimation {}
+                    @layer reset;
                     @top-left {}
                     identifier {};
-                    & {
-                        color: green;
-                    }
+                    & { color: green }
                     bottom: 2px;
                     0% {};
                     bottom: 1px;
@@ -600,26 +681,24 @@ describe('grammar rules', () => {
 
         const { cssRules: [nestedStyleRule], style } = styleRule
 
+        expect(CSSStyleRule.is(nestedStyleRule)).toBeTruthy()
         expect(style.top).toBe('1px')
         expect(style.bottom).toBe('1px')
-        expect(CSSStyleRule.is(nestedStyleRule)).toBeTruthy()
-        expect(nestedStyleRule.style.color).toBe('green')
     })
     it('ignores a rule not allowed in a conditional rule nested in a style rule', () => {
 
         // CSS Syntax throws invalid tokens away until reading `;`
         const { cssRules: [{ cssRules: [mediaRule] }] } = createStyleSheet(`
-            .selector {
+            style {
                 @media all {
                     top: 1px;
-                    @import "./stylesheet.css";
+                    @import "./global.css";
                     @namespace svg "http://www.w3.org/2000/svg";
                     @keyframes myAnimation {}
+                    @layer reset;
                     @top-left {}
                     identifier {};
-                    @media all {
-                        color: green;
-                    }
+                    @media all { color: green }
                     0% {};
                     bottom: 1px;
                 }
@@ -628,27 +707,31 @@ describe('grammar rules', () => {
 
         expect(CSSMediaRule.is(mediaRule)).toBeTruthy()
 
-        const { cssRules: [nestedMediaRule], style } = mediaRule
+        const { cssRules: [implicitStyleRule, nestedMediaRule] } = mediaRule
 
-        // https://github.com/w3c/csswg-drafts/issues/7830
-        // expect(style.top).toBe('1px')
-        // expect(style.bottom).toBe('2px')
+        expect(CSSStyleRule.is(implicitStyleRule)).toBeTruthy()
+        expect(implicitStyleRule.style.top).toBe('1px')
+        expect(implicitStyleRule.style.bottom).toBe('1px')
         expect(CSSMediaRule.is(nestedMediaRule)).toBeTruthy()
-        // expect(nestedMediaRule.style.color).toBe('green')
     })
     it('ignores a style rule whose prelude includes an undeclared namespace prefix', () => {
 
         const input = `
-            @namespace svg url("http://www.w3.org/2000/svg");
+            @namespace svg "http://www.w3.org/2000/svg";
             svg|rect { fill: green }
             SVG|rect { fill: red }
+            @namespace html "https://www.w3.org/1999/xhtml/";
+            html|type {}
         `
-        const styleSheet = createStyleSheet(input)
-        const { cssRules } = styleSheet
+        const { cssRules } = createStyleSheet(input)
 
         expect(cssRules).toHaveLength(2)
 
-        const [, { selectorText, style: { fill } }] = cssRules
+        const [, styleRule] = cssRules
+
+        expect(CSSStyleRule.is(styleRule)).toBeTruthy()
+
+        const { selectorText, style: { fill } } = styleRule
 
         expect(selectorText).toBe('svg|rect')
         expect(fill).toBe('green')
@@ -658,7 +741,7 @@ describe('grammar rules', () => {
         // CSS Syntax throws invalid tokens away until reading `{}`
         const { cssRules: [styleRule] } = createStyleSheet(`
             color: red; {}
-            .selector { color: green }
+            style {}
             color: red;
         `)
 
@@ -670,28 +753,13 @@ describe('grammar rules', () => {
         const { cssRules: [mediaRule] } = createStyleSheet(`
             @media all {
                 color: red; {}
-                @media all {
-                    color: red;
-                }
-                .selector {
-                    color: green;
-                }
-                @supports (color: green) {
-                    color: red;
-                }
+                style {}
+                color: red;
             }
         `)
 
         expect(CSSMediaRule.is(mediaRule)).toBeTruthy()
-        expect(mediaRule.cssRules).toHaveLength(3)
-
-        const { cssRules: [nestedMediaRule, styleRule, supportsRule], style } = mediaRule
-
-        expect(CSSStyleRule.is(styleRule)).toBeTruthy()
-        // https://github.com/w3c/csswg-drafts/issues/7830
-        // expect(style).toBeNull()
-        // expect(nestedMediaRule.style).toBeNull()
-        // expect(supportsRule.style).toBeNull()
+        expect(CSSStyleRule.is(mediaRule.cssRules[0])).toBeTruthy()
     })
     it('ignores a declaration in <rule-list>', () => {
 
@@ -699,23 +767,18 @@ describe('grammar rules', () => {
         const { cssRules: [keyframesRule] } = createStyleSheet(`
             @keyframes myAnimation {
                 color: red; {}
-                to {
-                    color: green;
-                }
+                to {}
                 color: red;
             }
         `)
 
         expect(CSSKeyframesRule.is(keyframesRule)).toBeTruthy()
-
-        const { cssRules: [keyframeRule] } = keyframesRule
-
-        expect(CSSKeyframeRule.is(keyframeRule)).toBeTruthy()
+        expect(CSSKeyframeRule.is(keyframesRule.cssRules[0])).toBeTruthy()
     })
     it('ignores a declaration for an unknown property', () => {
 
         const { cssRules: [styleRule] } = createStyleSheet(`
-            .selector {
+            style {
                 unknown-before: red;
                 color: green;
                 unknown-after: red;
@@ -729,7 +792,7 @@ describe('grammar rules', () => {
     it('ignores a declaration of an invalid value', () => {
 
         const { cssRules: [styleRule] } = createStyleSheet(`
-            .selector {
+            style {
                 top: invalid;
                 color: green;
                 bottom: invalid;
@@ -793,6 +856,16 @@ describe('grammar rules', () => {
         expect(marginRule.style).toHaveLength(1)
         expect(marginRule.style.content).toBe('"important"')
     })
+    it('replaces a declaration for `display` in a keyframe rule', () => {
+        const { cssRules: [{ cssRules: [{ style: { display } }] }] } = createStyleSheet(`
+            @keyframes myAnimation {
+                to {
+                    display: none;
+                }
+            }
+        `)
+        expect(display).toBe('revert-layer')
+    })
     it('parses a vendor prefixed rule', () => {
         const { cssRules: [keyframesRule] } = createStyleSheet('@-webkit-keyframes myAnimation {}')
         expect(CSSKeyframesRule.is(keyframesRule)).toBeTruthy()
@@ -822,17 +895,17 @@ describe('CSSFontFeatureValuesRule', () => {})
 describe('CSSImportRule', () => {
     it('has all properties', () => {
 
-        const styleSheet = createStyleSheet('@import "./stylesheet.css";', { media: 'all' })
+        const styleSheet = createStyleSheet('@import "./global.css";', { media: 'all' })
         const { cssRules: [rule] } = styleSheet
         const { cssText, href, media, parentRule, parentStyleSheet, styleSheet: importedStyleSheet } = rule
 
         // CSSRule properties
-        expect(cssText).toBe('@import url("./stylesheet.css");')
+        expect(cssText).toBe('@import url("./global.css");')
         expect(parentRule).toBeNull()
         expect(parentStyleSheet).toBe(styleSheet)
 
         // CSSImportRule proeprties
-        expect(href).toBe('./stylesheet.css')
+        expect(href).toBe('./global.css')
         // expect(media).toBe(importedStyleSheet.media)
         // expect(CSSStyleSheet.is(importedStyleSheet)).toBeTruthy()
 
@@ -881,12 +954,12 @@ describe('CSSKeyframeRule', () => {
 describe('CSSKeyframesRule', () => {
     it('has all properties', () => {
 
-        const styleSheet = createStyleSheet('@keyframes myAnimation { to { color: green } }')
+        const styleSheet = createStyleSheet('@keyframes myAnimation { to {} }')
         const { cssRules: [rule] } = styleSheet
         const { cssRules, cssText, name, parentRule, parentStyleSheet } = rule
 
         // CSSRule properties
-        expect(cssText).toBe('@keyframes myAnimation {\n  100% {\n  color: green;\n}\n}')
+        expect(cssText).toBe('@keyframes myAnimation {\n  100% {}\n}')
         expect(parentRule).toBeNull()
         expect(parentStyleSheet).toBe(styleSheet)
 
@@ -900,13 +973,13 @@ describe('CSSKeyframesRule', () => {
         rule.name = 'myAnimationName'
 
         expect(rule.name).toBe('myAnimationName')
-        expect(rule.cssText).toBe('@keyframes myAnimationName {\n  100% {\n  color: green;\n}\n}')
+        expect(rule.cssText).toBe('@keyframes myAnimationName {\n  100% {}\n}')
     })
     it('has all methods', () => {
 
         const { cssRules: [rule] } = createStyleSheet('@keyframes myAnimation {}')
         const { cssRules: keyframes } = rule
-        const error = createError({ message: 'Failed to parse a rule', type: 'ParseError' })
+        const error = createError(INVALID_RULE_SYNTAX_ERROR, true)
 
         expect(keyframes).toHaveLength(0)
 
@@ -931,7 +1004,7 @@ describe('CSSKeyframesRule', () => {
         expect(to.parentRule).toBeNull()
         expect(rule.findRule('to')).toBe(keyframes[0])
 
-        rule.appendRule('50%, 100% { color: green }')
+        rule.appendRule('50%, 100% {}')
 
         expect(keyframes).toHaveLength(2)
         expect(rule.findRule('50%')).toBeNull()
@@ -946,6 +1019,42 @@ describe('CSSKeyframesRule', () => {
         rule.deleteRule('50%, 100%')
 
         expect(keyframes).toHaveLength(1)
+    })
+})
+describe('CSSLayerBlockRule', () => {
+    it('has all properties', () => {
+
+        const styleSheet = createStyleSheet(`
+            @layer reset {
+                style {}
+            }`)
+        const { cssRules: [{ cssRules, cssText, name, parentRule, parentStyleSheet }] } = styleSheet
+
+        // CSSRule properties
+        expect(cssText).toBe('@layer reset {\n  style {}\n}')
+        expect(parentRule).toBeNull()
+        expect(parentStyleSheet).toBe(styleSheet)
+
+        // CSSGroupingRule properties
+        expect(CSSRuleList.is(cssRules)).toBeTruthy()
+
+        // CSSLayerBlockRule properties
+        expect(name).toBe('reset')
+    })
+})
+describe('CSSLayerStatementRule', () => {
+    it('has all properties', () => {
+
+        const styleSheet = createStyleSheet('@layer reset;')
+        const { cssRules: [{ cssText, nameList, parentRule, parentStyleSheet }] } = styleSheet
+
+        // CSSRule properties
+        expect(cssText).toBe('@layer reset;')
+        expect(parentRule).toBeNull()
+        expect(parentStyleSheet).toBe(styleSheet)
+
+        // CSSLayerStatementRule properties
+        expect(nameList).toBe('reset')
     })
 })
 describe('CSSMarginRule', () => {
@@ -974,11 +1083,11 @@ describe('CSSMarginRule', () => {
 describe('CSSMediaRule', () => {
     it('has all properties', () => {
 
-        const styleSheet = createStyleSheet('@media all { .selector { color: green } }')
+        const styleSheet = createStyleSheet('@media all { style {} }')
         const { cssRules: [{ conditionText, cssRules, cssText, media, parentRule, parentStyleSheet }] } = styleSheet
 
         // CSSRule properties
-        expect(cssText).toBe('@media all {\n  .selector {\n  color: green;\n}\n}')
+        expect(cssText).toBe('@media all {\n  style {}\n}')
         expect(parentRule).toBeNull()
         expect(parentStyleSheet).toBe(styleSheet)
 
@@ -995,20 +1104,20 @@ describe('CSSMediaRule', () => {
 
         const { cssRules: [rule] } = createStyleSheet('@media all {}')
         const { cssRules } = rule
-        const error = createError({ message: 'Failed to parse a rule', type: 'ParseError' })
+        const error = createError(INVALID_RULE_SYNTAX_ERROR, true)
 
         expect(cssRules).toHaveLength(0)
 
-        rule.insertRule('.selector { color: orange }')
+        rule.insertRule('style { color: orange }')
 
         expect(cssRules).toHaveLength(1)
         expect(() => rule.insertRule('invalid')).toThrow(error)
 
-        rule.insertRule('.selector { color: red }')
+        rule.insertRule('style { color: red }')
 
         expect(cssRules).toHaveLength(2)
 
-        rule.insertRule('.selector { color: green }', 2)
+        rule.insertRule('style { color: green }', 2)
         const [styleRule] = cssRules
 
         expect(cssRules).toHaveLength(3)
@@ -1074,7 +1183,7 @@ describe('CSSPageRule', () => {
 
         const { cssRules: [rule] } = createStyleSheet('@page {}')
         const { cssRules } = rule
-        const error = createError({ message: 'Failed to parse a rule', type: 'ParseError' })
+        const error = createError(INVALID_RULE_SYNTAX_ERROR, true)
 
         expect(cssRules).toHaveLength(0)
 
@@ -1108,7 +1217,7 @@ describe('CSSStyleRule', () => {
     it('has all properties', () => {
 
         const styleSheet = createStyleSheet(`
-            .selector {
+            style {
                 color: red;
                 color: orange;
                 & .child {
@@ -1121,7 +1230,7 @@ describe('CSSStyleRule', () => {
         const { cssRules: [nestedStyleRule] } = styleRule
 
         // CSSRule properties
-        expect(styleRule.cssText).toBe('.selector {\n  color: orange;\n  & .child {\n  color: orange;\n}\n}')
+        expect(styleRule.cssText).toBe('style {\n  color: orange;\n  & .child {\n  color: orange;\n}\n}')
         expect(nestedStyleRule.cssText).toBe('& .child {\n  color: orange;\n}')
         expect(styleRule.parentRule).toBeNull()
         expect(nestedStyleRule.parentRule).toBe(styleRule)
@@ -1131,7 +1240,7 @@ describe('CSSStyleRule', () => {
         // CSSStyleRule properties
         expect(CSSRuleList.is(styleRule.cssRules)).toBeTruthy()
         expect(CSSRuleList.is(nestedStyleRule.cssRules)).toBeTruthy()
-        expect(styleRule.selectorText).toBe('.selector')
+        expect(styleRule.selectorText).toBe('style')
         expect(nestedStyleRule.selectorText).toBe('& .child')
         expect(CSSStyleDeclaration.is(styleRule.style)).toBeTruthy()
         expect(CSSStyleDeclaration.is(nestedStyleRule.style)).toBeTruthy()
@@ -1142,22 +1251,27 @@ describe('CSSStyleRule', () => {
         nestedStyleRule.style.color = 'green'
 
         // CSSStyleRule declarations must be shared with CSSStyleDeclaration
-        expect(styleRule.cssText).toBe('.selector {\n  color: green;\n  & .child {\n  color: green;\n}\n}')
+        expect(styleRule.cssText).toBe('style {\n  color: green;\n  & .child {\n  color: green;\n}\n}')
         expect(nestedStyleRule.cssText).toBe('& .child {\n  color: green;\n}')
 
-        styleRule.selectorText = '.selector-element'
-        nestedStyleRule.selectorText = '& .child-element'
+        styleRule.selectorText = 'parent'
+        nestedStyleRule.selectorText = '& child'
 
-        expect(styleRule.selectorText).toBe('.selector-element')
-        expect(nestedStyleRule.selectorText).toBe('& .child-element')
-        expect(styleRule.cssText).toBe('.selector-element {\n  color: green;\n  & .child-element {\n  color: green;\n}\n}')
-        expect(nestedStyleRule.cssText).toBe('& .child-element {\n  color: green;\n}')
+        expect(styleRule.selectorText).toBe('parent')
+        expect(nestedStyleRule.selectorText).toBe('& child')
+        expect(styleRule.cssText).toBe('parent {\n  color: green;\n  & child {\n  color: green;\n}\n}')
+        expect(nestedStyleRule.cssText).toBe('& child {\n  color: green;\n}')
+
+        nestedStyleRule.selectorText = 'identifier'
+        nestedStyleRule.selectorText = 'function()'
+
+        expect(nestedStyleRule.selectorText).toBe('& child')
     })
     it('has all methods', () => {
 
-        const { cssRules: [rule] } = createStyleSheet('.selector {}')
+        const { cssRules: [rule] } = createStyleSheet('style {}')
         const { cssRules } = rule
-        const error = createError({ message: 'Failed to parse a rule', type: 'ParseError' })
+        const error = createError(INVALID_RULE_SYNTAX_ERROR, true)
 
         expect(cssRules).toHaveLength(0)
 
@@ -1189,11 +1303,11 @@ describe('CSSStyleRule', () => {
 describe('CSSSupportsRule', () => {
     it('has all properties', () => {
 
-        const styleSheet = createStyleSheet('@supports (color: green) { .selector { color: green } }')
+        const styleSheet = createStyleSheet('@supports (color: green) { style {} }')
         const { cssRules: [{ conditionText, cssRules, cssText, parentRule, parentStyleSheet }] } = styleSheet
 
         // CSSRule properties
-        expect(cssText).toBe('@supports (color: green) {\n  .selector {\n  color: green;\n}\n}')
+        expect(cssText).toBe('@supports (color: green) {\n  style {}\n}')
         expect(parentRule).toBeNull()
         expect(parentStyleSheet).toBe(styleSheet)
 
@@ -1207,20 +1321,20 @@ describe('CSSSupportsRule', () => {
 
         const { cssRules: [rule] } = createStyleSheet('@supports (color: green) {}')
         const { cssRules } = rule
-        const error = createError({ message: 'Failed to parse a rule', type: 'ParseError' })
+        const error = createError(INVALID_RULE_SYNTAX_ERROR, true)
 
         expect(cssRules).toHaveLength(0)
 
-        rule.insertRule('.selector { color: orange }')
+        rule.insertRule('style { color: orange }')
 
         expect(cssRules).toHaveLength(1)
         expect(() => rule.insertRule('invalid')).toThrow(error)
 
-        rule.insertRule('.selector { color: red }')
+        rule.insertRule('style { color: red }')
 
         expect(cssRules).toHaveLength(2)
 
-        rule.insertRule('.selector { color: green }', 2)
+        rule.insertRule('style { color: green }', 2)
         const [styleRule] = cssRules
 
         expect(cssRules).toHaveLength(3)

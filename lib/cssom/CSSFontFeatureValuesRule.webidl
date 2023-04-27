@@ -12,9 +12,10 @@ interface CSSFontFeatureValuesRule : CSSRule {
 };
 
 // https://drafts.csswg.org/css-fonts-4/#cssfontfeaturevaluesmap
-// It should be a `maplike <CSSOMString, sequence<unsigned long>>` but `maplike`
-// is not supported by webidl2js
+// `maplike` is not supported by webidl2js
 [Exposed=Window]
-interface CSSFontFeatureValuesMap {
+// interface CSSFontFeatureValuesMap {
+interface CSSFontFeatureValuesMap : Map {
+    // maplike<CSSOMString, sequence<unsigned long>>;
     undefined set(CSSOMString featureValueName, (unsigned long or sequence<unsigned long>) values);
 };

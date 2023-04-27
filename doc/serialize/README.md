@@ -18,7 +18,7 @@ The second principle means sorting component values in the canonical order defin
 
 ## Declared to actual value
 
-`Element.style`, and multiple `CSSRule.style` and `HTMLElementStyle.style` existing at different locations, can have different declaration values for the same property and applying to the same `Element`. CSS cascade defines how to resolve a *cascaded value* from these declared values, and other values at later processing steps:
+`Element.style`, and multiple `CSSRule.style` and `HTMLElementStyle.style` existing at different locations, can have different declaration values applying to the same `Element` for the same property. CSS cascade defines how to resolve a *cascaded value* from these declared values, and other values at later processing stages:
 
   - *authored value*: the input value used to set the property
   - [declared value](https://drafts.csswg.org/css-cascade-5/#declared): *each property declaration applied to an element contributes a declared value for that property*
@@ -31,11 +31,11 @@ The second principle means sorting component values in the canonical order defin
 
 The specified value may serialize to a slightly different value than the authored value, according to the general serialization principles, and because the lexical parser does not keep minor details like trailing decimal 0, letter case, etc.
 
-The computed value is computed from the specified value according to the `Computed` line of the property definition table. It can be the same value than the specified value, or a value closer to its absolute equivalent, computed using data available before rendering, like property values of another `Element` or the viewport size.
+The computed value is resolved from the specified value according to the `Computed` line of the property definition table. It can be the same value than the specified value, or a value closer to its absolute equivalent, computed using data available before rendering, like property values of another `Element` or the viewport size.
 
 The used value may be further resolved after rendering the document.
 
-There are a few property/type specific rules defining their computed or used values across the specifications.
+There are a few property/type specific rules across specifications that define how to resolve their computed and used values.
 
 This is not defined in *serialize a CSS value* but how to serialize a value depends on how it is queried:
 
@@ -43,7 +43,7 @@ This is not defined in *serialize a CSS value* but how to serialize a value depe
   - the resolved value when queried from `getComputedStyle()` or the `Computed` tab of browser development tools
   - the actual value when queried from the `Style` tab of browser development tools
 
-Therefore this library is only concerned with the specified and resolved values.
+Therefore this library is only concerned with specified and resolved values.
 
 ## Model
 
@@ -51,11 +51,9 @@ Therefore this library is only concerned with the specified and resolved values.
 
 CSS values are currently represented either as a `List` or a plain object, with a `type` property.
 
-*Serialize a CSS value* accepts a single longhand declaration, or a list of declarations for a shorthand that must be reduced into a single declaration. Then the declaration value is represented as a list (plain array) of CSS component values, as defined in step 2.
+*Serialize a CSS value* accepts a single longhand declaration, or a list of declarations for a shorthand that must be reduced into a single declaration. Then the declaration value is represented as a list (plain array) of CSS component values, as defined in step 2, which must reduce it to represent the declaration value according to the shortest-serialization principle.
 
-This step 2 must reduce the list to represent the declaration value according to the shortest-serialization principle.
-
-`serializeCSSComponentValueList()` is a custom abstraction of its steps 3 to 5, which serialize the list without regard to any defined `type`, and can be used by other serialization functions:
+`serializeCSSComponentValueList()` is a custom abstraction of steps 3 to 5 that serialize the list without considering its `type`, and that can be used by other serialization functions:
 
   > 3. Remove any `<whitespace-token>`s from components.
   > 4. Replace each component value in components with the result of invoking serialize a CSS component value.

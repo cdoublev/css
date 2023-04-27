@@ -1,12 +1,12 @@
 
-const { atCenter, comma, notAll } = require('../lib/values/defaults.js')
 const { MAX_INTEGER, MIN_INTEGER } = require('../lib/values/integers.js')
-const { createParser, parseCSSGrammar, parseCSSPropertyValue } = require('../lib/parse/syntax.js')
+const { Parser, parseCSSGrammar, productions } = require('../lib/parse/syntax.js')
+const { serializeCSSComponentValue } = require('../lib/serialize.js')
 const { toDegrees, toRadians } = require('../lib/utils/math.js')
 const createOmitted = require('../lib/values/omitted.js')
 const { createList: list } = require('../lib/values/value.js')
+const { notAll } = require('../lib/values/defaults.js')
 const parseDefinition = require('../lib/parse/definition.js')
-const { serializeCSSValue } = require('../lib/serialize.js')
 
 // Helpers to create component values
 function component(value, type, representation = value) {
@@ -30,6 +30,9 @@ function angle(value, unit, type = [], representation) {
 function length(value, unit, type = [], representation) {
     return dimension(value, unit, ['length', ...type], representation)
 }
+function resolution(value, unit, type = [], representation) {
+    return dimension(value, unit, ['resolution', ...type], representation)
+}
 function time(value, unit, type = [], representation) {
     return dimension(value, unit, ['time', ...type], representation)
 }
@@ -52,38 +55,27 @@ function omitted(definition) {
     if (definition === ',' || definition === '/') {
         definition = `'${definition}'`
     }
-    const node = parseDefinition(definition)
-    return createOmitted(node)
+    return createOmitted(parseDefinition(definition, productions))
 }
 
 /**
  * @param {string} definition
  * @param {string} value
- * @param {boolean} [parseGlobals]
  * @param {boolean} [serialize]
- * @returns {function|string}
- *
- * Helper to allow a CSS-wide keyword or a custom variable to match the given
- * definition, and to return the representation resulting from parsing instead
- * of its serialization.
+ * @returns {object|object[]|string|null}
  */
-function parse(definition, value, parseGlobals = false, serialize = true) {
-    value = parseGlobals
-        ? parseCSSPropertyValue(value, 'color', parser)
-        : parseCSSGrammar(value, definition, parser)
-    if (value === null) {
-        if (serialize) {
-            return ''
-        }
-        return null
-    }
+function parse(definition, value, serialize = true) {
+    value = parseCSSGrammar(value, definition, parser)
     if (serialize) {
-        return serializeCSSValue({ name: 'color', value })
+        if (value) {
+            return serializeCSSComponentValue(value)
+        }
+        return ''
     }
     return value
 }
 
-// Initialize Parser with a default context
+// Initialize Parser with a style rule as context
 const rules = []
 const styleSheet = { _rules: rules, type: 'text/css' }
 const styleRule = { parentStyleSheet: styleSheet, type: new Set(['style']) }
@@ -93,7 +85,10 @@ rules.push(
     { parentStyleSheet: styleSheet, prefix: 'svg', type: new Set(['namespace']) },
     styleRule)
 
-const parser = createParser(styleRule)
+const parser = new Parser(styleRule)
+
+const a = keyword('a')
+const b = keyword('b')
 
 describe('combined types', () => {
     it('parses and serializes a value matched against a b', () => {
@@ -134,8 +129,8 @@ describe('multiplied types', () => {
     })
     it('parses a value matched against a?', () => {
         const definition = 'a?'
-        expect(parse(definition, '', false, false)).toEqual(omitted('a?'))
-        expect(parse(definition, 'a', false, false)).toEqual(keyword('a'))
+        expect(parse(definition, '', false)).toEqual(omitted('a?'))
+        expect(parse(definition, 'a', false)).toEqual(a)
     })
     it('parses and serializes a value matched against a*', () => {
         const definition = 'a*'
@@ -146,9 +141,9 @@ describe('multiplied types', () => {
     })
     it('parses a value matched against a*', () => {
         const definition = 'a*'
-        expect(parse(definition, '', false, false)).toEqual(list())
-        expect(parse(definition, 'a', false, false)).toEqual(list([keyword('a')]))
-        expect(parse(definition, 'a a', false, false)).toEqual(list([keyword('a'), keyword('a')]))
+        expect(parse(definition, '', false)).toEqual(list())
+        expect(parse(definition, 'a', false)).toEqual(list([a]))
+        expect(parse(definition, 'a a', false)).toEqual(list([a, a]))
     })
     it('parses and serializes a value matched against a+', () => {
         const definition = 'a+'
@@ -168,8 +163,8 @@ describe('multiplied types', () => {
     })
     it('parses a value matched against a#', () => {
         const definition = 'a#'
-        expect(parse(definition, 'a', false, false)).toEqual(list([keyword('a')], ','))
-        expect(parse(definition, 'a, a', false, false)).toEqual(list([keyword('a'), keyword('a')], ','))
+        expect(parse(definition, 'a', false)).toEqual(list([a], ','))
+        expect(parse(definition, 'a, a', false)).toEqual(list([a, a], ','))
     })
     it('parses and serializes a value matched against a#?', () => {
         const definition = 'a a#?'
@@ -205,8 +200,8 @@ describe('multiplied types', () => {
     })
     it('parses a value matched against a{2}', () => {
         const definition = 'a{2}'
-        expect(parse(definition, 'a', false, false)).toBeNull()
-        expect(parse(definition, 'a a', false, false)).toEqual(list([keyword('a'), keyword('a')]))
+        expect(parse(definition, 'a', false)).toBeNull()
+        expect(parse(definition, 'a a', false)).toEqual(list([a, a]))
     })
     it('parses and serializes a value matched against a{2,3}', () => {
         const definition = 'a{2,3}'
@@ -229,45 +224,45 @@ describe('multiplied types', () => {
     })
     it('parses a value matched against a{0,∞}', () => {
         const definition = 'a{0,∞}'
-        expect(parse(definition, '', false, false)).toEqual(list())
-        expect(parse(definition, 'a a', false, false)).toEqual(list([keyword('a'), keyword('a')]))
+        expect(parse(definition, '', false)).toEqual(list())
+        expect(parse(definition, 'a a', false)).toEqual(list([a, a]))
     })
     it('parses a value matched against [a b?]', () => {
         const definition = '[a b?]'
-        expect(parse(definition, '', false, false)).toBeNull()
-        expect(parse(definition, 'a', false, false)).toEqual(list([keyword('a'), omitted('b?')]))
-        expect(parse(definition, 'a b', false, false)).toEqual(list([keyword('a'), keyword('b')]))
+        expect(parse(definition, '', false)).toBeNull()
+        expect(parse(definition, 'a', false)).toEqual(list([a, omitted('b?')]))
+        expect(parse(definition, 'a b', false)).toEqual(list([a, b]))
     })
     it('parses a value matched against [a b?]?', () => {
         const definition = '[a b?]?'
-        expect(parse(definition, '', false, false)).toEqual(omitted('[a b?]?'))
-        expect(parse(definition, 'a', false, false)).toEqual(list([keyword('a'), omitted('b?')]))
-        expect(parse(definition, 'a b', false, false)).toEqual(list([keyword('a'), keyword('b')]))
+        expect(parse(definition, '', false)).toEqual(omitted('[a b?]?'))
+        expect(parse(definition, 'a', false)).toEqual(list([a, omitted('b?')]))
+        expect(parse(definition, 'a b', false)).toEqual(list([a, b]))
     })
     it('parses a value matched against [a b?]*', () => {
         const definition = '[a b?]*'
-        expect(parse(definition, '', false, false)).toEqual(list())
-        expect(parse(definition, 'a', false, false)).toEqual(list([list([keyword('a'), omitted('b?')])]))
-        expect(parse(definition, 'a b', false, false)).toEqual(list([list([keyword('a'), keyword('b')])]))
+        expect(parse(definition, '', false)).toEqual(list())
+        expect(parse(definition, 'a', false)).toEqual(list([list([a, omitted('b?')])]))
+        expect(parse(definition, 'a b', false)).toEqual(list([list([a, b])]))
     })
     it('parses a value matched against [a b?]#', () => {
         const definition = '[a b?]#'
-        expect(parse(definition, '', false, false)).toBeNull()
-        expect(parse(definition, 'a', false, false)).toEqual(list([list([keyword('a'), omitted('b?')])], ','))
-        expect(parse(definition, 'a b', false, false)).toEqual(list([list([keyword('a'), keyword('b')])], ','))
+        expect(parse(definition, '', false)).toBeNull()
+        expect(parse(definition, 'a', false)).toEqual(list([list([a, omitted('b?')])], ','))
+        expect(parse(definition, 'a b', false)).toEqual(list([list([a, b])], ','))
     })
     it('parses a value matched against [a? b?]', () => {
         const definition = '[a? b?]'
-        expect(parse(definition, '', false, false)).toEqual(list([omitted('a?'), omitted('b?')]))
-        expect(parse(definition, 'a', false, false)).toEqual(list([keyword('a'), omitted('b?')]))
-        expect(parse(definition, 'a b', false, false)).toEqual(list([keyword('a'), keyword('b')]))
+        expect(parse(definition, '', false)).toEqual(list([omitted('a?'), omitted('b?')]))
+        expect(parse(definition, 'a', false)).toEqual(list([a, omitted('b?')]))
+        expect(parse(definition, 'a b', false)).toEqual(list([a, b]))
     })
     it('parses a value matched against [a? b?]?', () => {
         const definition = '[a? b?]?'
-        expect(parse(definition, '', false, false)).toEqual(list([omitted('a?'), omitted('b?')]))
-        expect(parse(definition, 'a', false, false)).toEqual(list([keyword('a'), omitted('b?')]))
-        expect(parse(definition, 'b', false, false)).toEqual(list([omitted('a?'), keyword('b')]))
-        expect(parse(definition, 'a b', false, false)).toEqual(list([keyword('a'), keyword('b')]))
+        expect(parse(definition, '', false)).toEqual(list([omitted('a?'), omitted('b?')]))
+        expect(parse(definition, 'a', false)).toEqual(list([a, omitted('b?')]))
+        expect(parse(definition, 'b', false)).toEqual(list([omitted('a?'), b]))
+        expect(parse(definition, 'a b', false)).toEqual(list([a, b]))
     })
     it('parses and serializes a value matched against a [b? c?]!', () => {
         const definition = 'a [b? c?]!'
@@ -277,193 +272,144 @@ describe('multiplied types', () => {
     })
     it('parses a value matched against [a? b?]!', () => {
         const definition = '[a? b?]!'
-        expect(parse(definition, '', false, false)).toBeNull()
-        expect(parse(definition, 'a', false, false)).toEqual(list([keyword('a'), omitted('b?')]))
-        expect(parse(definition, 'b', false, false)).toEqual(list([omitted('a?'), keyword('b')]))
-        expect(parse(definition, 'a b', false, false)).toEqual(list([keyword('a'), keyword('b')]))
+        expect(parse(definition, '', false)).toBeNull()
+        expect(parse(definition, 'a', false)).toEqual(list([a, omitted('b?')]))
+        expect(parse(definition, 'b', false)).toEqual(list([omitted('a?'), b]))
+        expect(parse(definition, 'a b', false)).toEqual(list([a, b]))
     })
     it('parses a value matched against [a b]', () => {
         const definition = '[a b]'
-        expect(parse(definition, '', false, false)).toBeNull()
-        expect(parse(definition, 'a', false, false)).toBeNull()
-        expect(parse(definition, 'b', false, false)).toBeNull()
-        expect(parse(definition, 'a b', false, false)).toEqual(list([keyword('a'), keyword('b')]))
+        expect(parse(definition, '', false)).toBeNull()
+        expect(parse(definition, 'a', false)).toBeNull()
+        expect(parse(definition, 'b', false)).toBeNull()
+        expect(parse(definition, 'a b', false)).toEqual(list([a, b]))
     })
     it('parses a value matched against [a b]?', () => {
         const definition = '[a b]?'
-        expect(parse(definition, '', false, false)).toEqual(omitted('[a b]?'))
-        expect(parse(definition, 'a', false, false)).toBeNull()
-        expect(parse(definition, 'b', false, false)).toBeNull()
-        expect(parse(definition, 'a b', false, false)).toEqual(list([keyword('a'), keyword('b')]))
+        expect(parse(definition, '', false)).toEqual(omitted('[a b]?'))
+        expect(parse(definition, 'a', false)).toBeNull()
+        expect(parse(definition, 'b', false)).toBeNull()
+        expect(parse(definition, 'a b', false)).toEqual(list([a, b]))
     })
     it('parses a value matched against [a b]*', () => {
         const definition = '[a b]*'
-        expect(parse(definition, '', false, false)).toEqual(list())
-        expect(parse(definition, 'a', false, false)).toBeNull()
-        expect(parse(definition, 'b', false, false)).toBeNull()
-        expect(parse(definition, 'a b', false, false)).toEqual(list([list([keyword('a'), keyword('b')])]))
+        expect(parse(definition, '', false)).toEqual(list())
+        expect(parse(definition, 'a', false)).toBeNull()
+        expect(parse(definition, 'b', false)).toBeNull()
+        expect(parse(definition, 'a b', false)).toEqual(list([list([a, b])]))
     })
     it('parses a value matched against [a b]#', () => {
         const definition = '[a b]#'
-        expect(parse(definition, '', false, false)).toBeNull()
-        expect(parse(definition, 'a', false, false)).toBeNull()
-        expect(parse(definition, 'b', false, false)).toBeNull()
-        expect(parse(definition, 'a b', false, false)).toEqual(list([list([keyword('a'), keyword('b')])], ','))
+        expect(parse(definition, '', false)).toBeNull()
+        expect(parse(definition, 'a', false)).toBeNull()
+        expect(parse(definition, 'b', false)).toBeNull()
+        expect(parse(definition, 'a b', false)).toEqual(list([list([a, b])], ','))
     })
     it('parses a value matched against [a | b]', () => {
         const definition = '[a | b]'
-        expect(parse(definition, '', false, false)).toBeNull()
-        expect(parse(definition, 'a', false, false)).toEqual(keyword('a'))
-        expect(parse(definition, 'b', false, false)).toEqual(keyword('b'))
+        expect(parse(definition, '', false)).toBeNull()
+        expect(parse(definition, 'a', false)).toEqual(a)
+        expect(parse(definition, 'b', false)).toEqual(b)
     })
     it('parses a value matched against [a | b]?', () => {
         const definition = '[a | b]?'
-        expect(parse(definition, '', false, false)).toEqual(omitted('[a | b]?'))
-        expect(parse(definition, 'a', false, false)).toEqual(keyword('a'))
-        expect(parse(definition, 'b', false, false)).toEqual(keyword('b'))
+        expect(parse(definition, '', false)).toEqual(omitted('[a | b]?'))
+        expect(parse(definition, 'a', false)).toEqual(a)
+        expect(parse(definition, 'b', false)).toEqual(b)
     })
     it('parses a value matched against [a | b]*', () => {
         const definition = '[a | b]*'
-        expect(parse(definition, '', false, false)).toEqual(list())
-        expect(parse(definition, 'a', false, false)).toEqual(list([keyword('a')]))
-        expect(parse(definition, 'b', false, false)).toEqual(list([keyword('b')]))
+        expect(parse(definition, '', false)).toEqual(list())
+        expect(parse(definition, 'a', false)).toEqual(list([a]))
+        expect(parse(definition, 'b', false)).toEqual(list([b]))
     })
     it('parses a value matched against [a | b]#', () => {
         const definition = '[a | b]#'
-        expect(parse(definition, '', false, false)).toBeNull()
-        expect(parse(definition, 'a', false, false)).toEqual(list([keyword('a')], ','))
-        expect(parse(definition, 'b', false, false)).toEqual(list([keyword('b')], ','))
+        expect(parse(definition, '', false)).toBeNull()
+        expect(parse(definition, 'a', false)).toEqual(list([a], ','))
+        expect(parse(definition, 'b', false)).toEqual(list([b], ','))
     })
     it('parses a value matched against [a | b b]', () => {
         const definition = '[a | b b]'
-        expect(parse(definition, '', false, false)).toBeNull()
-        expect(parse(definition, 'a', false, false)).toEqual(keyword('a'))
-        expect(parse(definition, 'b b', false, false)).toEqual(list([keyword('b'), keyword('b')]))
+        expect(parse(definition, '', false)).toBeNull()
+        expect(parse(definition, 'a', false)).toEqual(a)
+        expect(parse(definition, 'b b', false)).toEqual(list([b, b]))
     })
     it('parses a value matched against [a | b b]?', () => {
         const definition = '[a | b b]?'
-        expect(parse(definition, '', false, false)).toEqual(omitted('[a | b b]?'))
-        expect(parse(definition, 'a', false, false)).toEqual(keyword('a'))
-        expect(parse(definition, 'b b', false, false)).toEqual(list([keyword('b'), keyword('b')]))
+        expect(parse(definition, '', false)).toEqual(omitted('[a | b b]?'))
+        expect(parse(definition, 'a', false)).toEqual(a)
+        expect(parse(definition, 'b b', false)).toEqual(list([b, b]))
     })
     it('parses a value matched against [a | b b]*', () => {
         const definition = '[a | b b]*'
-        expect(parse(definition, '', false, false)).toEqual(list())
-        expect(parse(definition, 'a', false, false)).toEqual(list([keyword('a')]))
-        expect(parse(definition, 'b b', false, false)).toEqual(list([list([keyword('b'), keyword('b')])]))
+        expect(parse(definition, '', false)).toEqual(list())
+        expect(parse(definition, 'a', false)).toEqual(list([a]))
+        expect(parse(definition, 'b b', false)).toEqual(list([list([b, b])]))
     })
     it('parses a value matched against [a | b b]#', () => {
         const definition = '[a | b b]#'
-        expect(parse(definition, '', false, false)).toBeNull()
-        expect(parse(definition, 'a', false, false)).toEqual(list([keyword('a')], ','))
-        expect(parse(definition, 'b b', false, false)).toEqual(list([list([keyword('b'), keyword('b')])], ','))
+        expect(parse(definition, '', false)).toBeNull()
+        expect(parse(definition, 'a', false)).toEqual(list([a], ','))
+        expect(parse(definition, 'b b', false)).toEqual(list([list([b, b])], ','))
     })
     it('parses a value matched against [a || b]', () => {
         const definition = '[a || b]'
-        expect(parse(definition, '', false, false))
-            .toBeNull()
-        expect(parse(definition, 'a', false, false))
-            .toEqual(list([keyword('a'), omitted('b')]))
-        expect(parse(definition, 'b', false, false))
-            .toEqual(list([omitted('a'), keyword('b')]))
-        expect(parse(definition, 'a b', false, false))
-            .toEqual(list([keyword('a'), keyword('b')]))
+        expect(parse(definition, '', false)).toBeNull()
+        expect(parse(definition, 'a', false)).toEqual(list([a, omitted('b')]))
+        expect(parse(definition, 'b', false)).toEqual(list([omitted('a'), b]))
+        expect(parse(definition, 'a b', false)).toEqual(list([a, b]))
     })
     it('parses a value matched against [a || b]?', () => {
         const definition = '[a || b]?'
-        expect(parse(definition, '', false, false))
-            .toEqual(omitted('[a || b]?'))
-        expect(parse(definition, 'a', false, false))
-            .toEqual(list([keyword('a'), omitted('b')]))
-        expect(parse(definition, 'b', false, false))
-            .toEqual(list([omitted('a'), keyword('b')]))
-        expect(parse(definition, 'a b', false, false))
-            .toEqual(list([keyword('a'), keyword('b')]))
+        expect(parse(definition, '', false)).toEqual(omitted('[a || b]?'))
+        expect(parse(definition, 'a', false)).toEqual(list([a, omitted('b')]))
+        expect(parse(definition, 'b', false)).toEqual(list([omitted('a'), b]))
+        expect(parse(definition, 'a b', false)).toEqual(list([a, b]))
     })
     it('parses a value matched against [a || b]*', () => {
         const definition = '[a || b]*'
-        expect(parse(definition, '', false, false))
-            .toEqual(list())
-        expect(parse(definition, 'a', false, false))
-            .toEqual(list([list([keyword('a'), omitted('b')])]))
-        expect(parse(definition, 'b', false, false))
-            .toEqual(list([list([omitted('a'), keyword('b')])]))
-        expect(parse(definition, 'a b', false, false))
-            .toEqual(list([list([keyword('a'), keyword('b')])]))
+        expect(parse(definition, '', false)).toEqual(list())
+        expect(parse(definition, 'a', false)).toEqual(list([list([a, omitted('b')])]))
+        expect(parse(definition, 'b', false)).toEqual(list([list([omitted('a'), b])]))
+        expect(parse(definition, 'a b', false)).toEqual(list([list([a, b])]))
     })
     it('parses a value matched against [a || b]#', () => {
         const definition = '[a || b]#'
-        expect(parse(definition, '', false, false)).toBeNull()
-        expect(parse(definition, 'a, b', false, false)).toEqual(list(
-            [
-                list([keyword('a'), omitted('b')]),
-                list([omitted('a'), keyword('b')]),
-            ],
-            ','))
-        expect(parse(definition, 'a', false, false)).toEqual(list(
-            [
-                list([keyword('a'), omitted('b')]),
-            ],
-            ','))
-        expect(parse(definition, 'b', false, false)).toEqual(list(
-            [
-                list([omitted('a'), keyword('b')]),
-            ],
-            ','))
-        expect(parse(definition, 'a b', false, false)).toEqual(list(
-            [
-                list([keyword('a'), keyword('b')]),
-            ],
-            ','))
-        expect(parse(definition, 'a b, b', false, false)).toEqual(list(
-            [
-                list([keyword('a'), keyword('b')]),
-                list([omitted('a'), keyword('b')]),
-            ],
-            ','))
+        expect(parse(definition, '', false)).toBeNull()
+        expect(parse(definition, 'a, b', false)).toEqual(list([list([a, omitted('b')]), list([omitted('a'), b])], ','))
+        expect(parse(definition, 'a', false)).toEqual(list([list([a, omitted('b')])], ','))
+        expect(parse(definition, 'b', false)).toEqual(list([list([omitted('a'), b])], ','))
+        expect(parse(definition, 'a b', false)).toEqual(list([list([a, b])], ','))
+        expect(parse(definition, 'a b, b', false)).toEqual(list([list([a, b]), list([omitted('a'), b])], ','))
     })
     it('parses a value matched against [a || b b]', () => {
         const definition = '[a || b b]'
-        expect(parse(definition, '', false, false))
-            .toBeNull()
-        expect(parse(definition, 'a', false, false))
-            .toEqual(list([keyword('a'), omitted('b b')]))
-        expect(parse(definition, 'b b', false, false))
-            .toEqual(list([omitted('a'), list([keyword('b'), keyword('b')])]))
-        expect(parse(definition, 'a b b', false, false))
-            .toEqual(list([keyword('a'), list([keyword('b'), keyword('b')])]))
+        expect(parse(definition, '', false)).toBeNull()
+        expect(parse(definition, 'a', false)).toEqual(list([a, omitted('b b')]))
+        expect(parse(definition, 'b b', false)).toEqual(list([omitted('a'), list([b, b])]))
+        expect(parse(definition, 'a b b', false)).toEqual(list([a, list([b, b])]))
     })
     it('parses a value matched against [a || b b]?', () => {
         const definition = '[a || b b]?'
-        expect(parse(definition, '', false, false))
-            .toEqual(omitted('[a || b b]?'))
-        expect(parse(definition, 'a', false, false))
-            .toEqual(list([keyword('a'), omitted('b b')]))
-        expect(parse(definition, 'b b', false, false))
-            .toEqual(list([omitted('a'), list([keyword('b'), keyword('b')])]))
-        expect(parse(definition, 'a b b', false, false))
-            .toEqual(list([keyword('a'), list([keyword('b'), keyword('b')])]))
+        expect(parse(definition, '', false)).toEqual(omitted('[a || b b]?'))
+        expect(parse(definition, 'a', false)).toEqual(list([a, omitted('b b')]))
+        expect(parse(definition, 'b b', false)).toEqual(list([omitted('a'), list([b, b])]))
+        expect(parse(definition, 'a b b', false)).toEqual(list([a, list([b, b])]))
     })
     it('parses a value matched against [a || b b]*', () => {
         const definition = '[a || b b]*'
-        expect(parse(definition, '', false, false))
-            .toEqual(list())
-        expect(parse(definition, 'a', false, false))
-            .toEqual(list([list([keyword('a'), omitted('b b')])]))
-        expect(parse(definition, 'b b', false, false))
-            .toEqual(list([list([omitted('a'), list([keyword('b'), keyword('b')])])]))
-        expect(parse(definition, 'a b b', false, false))
-            .toEqual(list([list([keyword('a'), list([keyword('b'), keyword('b')])])]))
+        expect(parse(definition, '', false)).toEqual(list())
+        expect(parse(definition, 'a', false)).toEqual(list([list([a, omitted('b b')])]))
+        expect(parse(definition, 'b b', false)).toEqual(list([list([omitted('a'), list([b, b])])]))
+        expect(parse(definition, 'a b b', false)).toEqual(list([list([a, list([b, b])])]))
     })
     it('parses a value matched against [a || b b]#', () => {
         const definition = '[a || b b]#'
-        expect(parse(definition, '', false, false)).toBeNull()
-        expect(parse(definition, 'a', false, false))
-            .toEqual(list([list([keyword('a'), omitted('b b')])], ','))
-        expect(parse(definition, 'b b', false, false))
-            .toEqual(list([list([omitted('a'), list([keyword('b'), keyword('b')])])], ','))
-        expect(parse(definition, 'a b b', false, false))
-            .toEqual(list([list([keyword('a'), list([keyword('b'), keyword('b')])])], ','))
+        expect(parse(definition, '', false)).toBeNull()
+        expect(parse(definition, 'a', false)).toEqual(list([list([a, omitted('b b')])], ','))
+        expect(parse(definition, 'b b', false)).toEqual(list([list([omitted('a'), list([b, b])])], ','))
+        expect(parse(definition, 'a b b', false)).toEqual(list([list([a, list([b, b])])], ','))
     })
 })
 describe('backtracking', () => {
@@ -671,31 +617,23 @@ describe('backtracking', () => {
     })
     /**
      * There is no definition of the following requirement in specifications but
-     * since value definitions generally encode the parsing order to resolve an
-     * ambiguity, like in the value definition of `background`.
+     * combination order generally encode priorities to resolve an ambiguity.
      */
     it('parses a value in lexicographic order', () => {
 
         // <media-type> and <mf-name> represent <ident>
         const definition = 'a || <media-type> || <mf-name>'
-        const a = keyword('a')
         const screenMediaType = ident('screen', ['media-type'])
         const screenMediaFeature = ident('screen', ['mf-name'])
         const colorMediaType = ident('color', ['media-type'])
         const colorMediaFeature = ident('color', ['mf-name'])
 
-        expect(parse(definition, 'a screen color', false, false))
-            .toEqual(list([a, screenMediaType, colorMediaFeature]))
-        expect(parse(definition, 'a color screen', false, false))
-            .toEqual(list([a, colorMediaType, screenMediaFeature]))
-        expect(parse(definition, 'screen a color', false, false))
-            .toEqual(list([a, screenMediaType, colorMediaFeature]))
-        expect(parse(definition, 'screen color a', false, false))
-            .toEqual(list([a, screenMediaType, colorMediaFeature]))
-        expect(parse(definition, 'color a screen', false, false))
-            .toEqual(list([a, colorMediaType, screenMediaFeature]))
-        expect(parse(definition, 'color screen a', false, false))
-            .toEqual(list([a, colorMediaType, screenMediaFeature]))
+        expect(parse(definition, 'a screen color', false)).toEqual(list([a, screenMediaType, colorMediaFeature]))
+        expect(parse(definition, 'a color screen', false)).toEqual(list([a, colorMediaType, screenMediaFeature]))
+        expect(parse(definition, 'screen a color', false)).toEqual(list([a, screenMediaType, colorMediaFeature]))
+        expect(parse(definition, 'screen color a', false)).toEqual(list([a, screenMediaType, colorMediaFeature]))
+        expect(parse(definition, 'color a screen', false)).toEqual(list([a, colorMediaType, screenMediaFeature]))
+        expect(parse(definition, 'color screen a', false)).toEqual(list([a, colorMediaType, screenMediaFeature]))
     })
     /**
      * Requirements:
@@ -825,7 +763,7 @@ describe('comma-separated types', () => {
         expect(parse(definition, 'a')).toBe('a')
         expect(parse(definition, 'a, a')).toBe('a, a')
     })
-    // Comma-ellision rules do or do not apply
+    // Comma-elision rules do or do not apply
     it('parses and serializes a value matched against a [a?, && a]', () => {
 
         const definition = 'a [a?, && a]'
@@ -890,10 +828,10 @@ describe('comma-separated types', () => {
     })
 })
 describe('optional whitespace', () => {
-    it('parses and serializes a value without optional whitespace', () => {
+    it('parses and serializes a value missing optional whitespace', () => {
         expect(parse('a a', 'a/**/a')).toBe('a a')
     })
-    it('parses and serializes a value with leading and trailing whitespaces', () => {
+    it('parses and serializes a value including leading and trailing whitespaces', () => {
         expect(parse('fn(a)', '  fn(  a  )  ')).toBe('fn(a)')
         expect(parse('(a)', '  (  a  )  ')).toBe('(a)')
     })
@@ -911,15 +849,14 @@ describe('<any-value>', () => {
             ']',
             '}',
         ]
-        invalid.forEach(input => expect(parse('<any-value>', input, false, false)).toBeNull())
+        invalid.forEach(input => expect(parse('<any-value>', input, false)).toBeNull())
     })
     it('parses a valid value', () => {
-        expect(parse('<any-value>', 'any value', false, false))
-            .toEqual(list([ident('any'), delimiter(' '), ident('value')], '', ['any-value']))
-        expect(parse('<any-value>', ';', false, false))
-            .toEqual(list([delimiter(';')], '', ['any-value']))
-        expect(parse('<any-value>', '!', false, false))
-            .toEqual(list([delimiter('!')], '', ['any-value']))
+        expect(parse('<any-value>', 'any value', false))
+            .toEqual(list([ident('any'), delimiter(' '), ident('value')], ' ', ['any-value']))
+    })
+    it('parses and serializes a valid value', () => {
+        expect(parse('<any-value>', '  /**/  !1e0;  /**/  ')).toBe('! 1;')
     })
 })
 describe('<declaration-value>', () => {
@@ -936,67 +873,33 @@ describe('<declaration-value>', () => {
             ';',
             '!',
         ]
-        invalid.forEach(input => expect(parse('<declaration-value>', input, false, false)).toBeNull())
+        invalid.forEach(input => expect(parse('<declaration-value>', input, false)).toBeNull())
     })
     it('parses a valid value', () => {
-        expect(parse('<declaration-value>', 'declaration value', false, false))
-            .toEqual(list([ident('declaration'), delimiter(' '), ident('value')], '', ['declaration-value']))
+        expect(parse('<declaration-value>', 'declaration value', false))
+            .toEqual(list([ident('declaration'), delimiter(' '), ident('value')], ' ', ['declaration-value']))
+    })
+    it('parses and serializes a valid value', () => {
+        expect(parse('<declaration-value>', '  /**/  1e0  /**/  ')).toBe('1')
     })
 })
 describe('<declaration>', () => {
     it('fails to parse an invalid value', () => {
-        const invalid = [
-            'color red',
-            'color: red;',
-        ]
-        invalid.forEach(input => expect(parse('<declaration>', input, true, false)).toBeNull())
+        expect(parse('<declaration>', 'color red', false)).toBeNull()
+        expect(parse('<declaration>', 'color: red;', false)).toBeNull()
     })
     it('parses a valid value', () => {
-        expect(parse('<declaration>', 'color: green !important', false, false)).toEqual({
+        expect(parse('<declaration>', 'color: green !important', false)).toEqual({
             important: true,
             name: 'color',
             type: new Set(['declaration']),
-            value: keyword('green', ['named-color', 'absolute-color-base', 'color']),
+            value: list([ident('green')]),
         })
     })
     it('parses and serializes a valid value', () => {
-        const valid = [
-            ['color :green !important  ', 'color: green !important'],
-            ['color: initial'],
-            ['color: var(--custom)'],
-            ['--custom: '],
-            ['--custom: green'],
-        ]
-        valid.forEach(([input, expected = input]) => expect(parse('<declaration>', input)).toBe(expected))
-    })
-})
-describe('<var()>', () => {
-    it('fails to parse an invalid value', () => {
-        const invalid = [
-            'var(--custom, var(--))',
-            'var(--custom, var(1px))',
-        ]
-        invalid.forEach(input => expect(parse('<var()>', input, true, false)).toBeNull())
-    })
-    it('parses a valid value', () => {
-        expect(parse('<var()>', 'var(--custom)', true, false)).toEqual(list(
-            [{
-                name: 'var',
-                representation: 'var(--custom)',
-                type: new Set(['function', 'var()']),
-                value: list([ident('--custom', ['custom-property-name'])], ''),
-            }],
-            ''))
-    })
-    it('parses and serializes a valid value', () => {
-        const valid = [
-            ['var(--custom'],
-            ['var(--custom, )'],
-            ['var(--custom, var(--fallback))'],
-            ['fn(var(--custom))'],
-            ['  /* comment */  var(  --PROPerty/*, fallback */, 1e0  )  ', 'var(  --PROPerty/*, fallback */, 1e0  )'],
-        ]
-        valid.forEach(([input, expected = input]) => expect(parse('a', input, true)).toBe(expected))
+        expect(parse('<declaration>', '  /**/  opacity :1e0 !important  /**/  ')).toBe('opacity: 1 !important')
+        expect(parse('<declaration>', '--custom:  /**/  1e0 !important  /**/  ')).toBe('--custom: 1e0 !important')
+        expect(parse('<declaration>', '--custom:')).toBe('--custom: ')
     })
 })
 
@@ -1012,10 +915,10 @@ describe('<ident>', () => {
             '\\\n',
             '-\\\n',
         ]
-        invalid.forEach(input => expect(parse('<ident>', input, false, false)).toBeNull())
+        invalid.forEach(input => expect(parse('<ident>', input, false)).toBeNull())
     })
     it('parses a valid value', () => {
-        expect(parse('<ident>', 'identifier', false, false)).toEqual(ident('identifier'))
+        expect(parse('<ident>', 'identifier', false)).toEqual(ident('identifier'))
     })
     it('parses and serializes a valid value', () => {
         const valid = [
@@ -1056,25 +959,19 @@ describe('<ident>', () => {
 })
 describe('keyword', () => {
     it('parses a valid value', () => {
-        expect(parse('solid', 'inherit', true, false))
-            .toEqual(keyword('inherit', ['css-wide-keyword']))
-        expect(parse('solid', 'solid', false, false))
-            .toEqual(keyword('solid'))
+        expect(parse('solid', 'solid', false)).toEqual(keyword('solid'))
     })
     it('parses and serializes a valid value', () => {
-        // CSS-wide keyword
-        expect(parse('solid', 'INItial', true)).toBe('initial')
-        expect(parse('solid', 'initial', true)).toBe('initial')
-        expect(parse('solid', 'inherit', true)).toBe('inherit')
-        expect(parse('solid', 'revert', true)).toBe('revert')
-        expect(parse('solid', 'unset', true)).toBe('unset')
-        // Pre-defined keyword
-        expect(parse('solid', 'SOLId')).toBe('solid')
-        // Legacy mapped value
-        expect(parse('flex', '-webkit-box')).toBe('-webkit-box')
-        expect(parse('flex', '-webkit-flex')).toBe('-webkit-flex')
-        expect(parse('inline-flex', '-webkit-inline-box')).toBe('-webkit-inline-box')
-        expect(parse('inline-flex', '-webkit-inline-flex')).toBe('-webkit-inline-flex')
+        const valid = [
+            // Case-insensitive
+            ['solid', 'SOLId', 'solid'],
+            // Legacy mapped value
+            ['flex', '-webkit-box'],
+            ['flex', '-webkit-flex'],
+            ['inline-flex', '-webkit-inline-box'],
+            ['inline-flex', '-webkit-inline-flex'],
+        ]
+        valid.forEach(([keyword, input, expected = input]) => expect(parse(keyword, input)).toBe(expected))
     })
 })
 describe('<custom-ident>', () => {
@@ -1094,11 +991,10 @@ describe('<custom-ident>', () => {
             'unset',
             'default',
         ]
-        invalid.forEach(input => expect(parse('<custom-ident>', input, false, false)).toBeNull())
+        invalid.forEach(input => expect(parse('<custom-ident>', input, false)).toBeNull())
     })
     it('parses a valid value', () => {
-        expect(parse('<custom-ident>', 'customIdentifier', false, false))
-            .toEqual(customIdent('customIdentifier'))
+        expect(parse('<custom-ident>', 'customIdentifier', false)).toEqual(customIdent('customIdentifier'))
     })
     it('parses and serializes a valid value', () => {
         const valid = [
@@ -1149,11 +1045,10 @@ describe('<dashed-ident>', () => {
             // Invalid escape sequence (parse error)
             '--identifier\\\n',
         ]
-        invalid.forEach(input => expect(parse('<dashed-ident>', input, false, false)).toBeNull())
+        invalid.forEach(input => expect(parse('<dashed-ident>', input, false)).toBeNull())
     })
     it('parses a valid value', () => {
-        expect(parse('<dashed-ident>', '--dashed-ident', false, false))
-            .toEqual(ident('--dashed-ident', ['dashed-ident']))
+        expect(parse('<dashed-ident>', '--dashed-ident', false)).toEqual(ident('--dashed-ident', ['dashed-ident']))
     })
     it('parses and serializes a valid value', () => {
         const valid = [
@@ -1184,11 +1079,10 @@ describe('<dashed-ident>', () => {
 })
 describe('<custom-property-name>', () => {
     it('fails to parse an invalid value', () => {
-        expect(parse('<custom-property-name>', '--', false, false)).toBeNull()
+        expect(parse('<custom-property-name>', '--', false)).toBeNull()
     })
     it('parses a valid value', () => {
-        expect(parse('<custom-property-name>', '--custom', false, false))
-            .toEqual(ident('--custom', ['custom-property-name']))
+        expect(parse('<custom-property-name>', '--custom', false)).toEqual(ident('--custom', ['custom-property-name']))
     })
 })
 describe('<ndashdigit-ident>', () => {
@@ -1198,15 +1092,15 @@ describe('<ndashdigit-ident>', () => {
             'n--1',
             'n-1-',
         ]
-        invalid.forEach(input => expect(parse('<ndashdigit-ident>', input, false, false)).toBeNull())
+        invalid.forEach(input => expect(parse('<ndashdigit-ident>', input, false)).toBeNull())
     })
     it('parses a valid value', () => {
-        expect(parse('<ndashdigit-ident>', 'n-1', false, false))
-            .toEqual(ident('n-1', ['ndashdigit-ident']))
-        expect(parse('<ndashdigit-ident>', 'N-1', false, false))
-            .toEqual(ident('n-1', ['ndashdigit-ident'], 'N-1'))
-        expect(parse('<ndashdigit-ident>', 'n-12', false, false))
-            .toEqual(ident('n-12', ['ndashdigit-ident']))
+        const valid = [
+            ['n-1', ident('n-1', ['ndashdigit-ident'])],
+            ['N-1', ident('n-1', ['ndashdigit-ident'], 'N-1')],
+            ['n-12', ident('n-12', ['ndashdigit-ident'])],
+        ]
+        valid.forEach(([input, expected]) => expect(parse('<ndashdigit-ident>', input, false)).toEqual(expected))
     })
 })
 describe('<dashndashdigit-ident>', () => {
@@ -1216,24 +1110,24 @@ describe('<dashndashdigit-ident>', () => {
             '-n--1',
             '-n-1-',
         ]
-        invalid.forEach(input => expect(parse('<dashndashdigit-ident>', input, false, false)).toBeNull())
+        invalid.forEach(input => expect(parse('<dashndashdigit-ident>', input, false)).toBeNull())
     })
     it('parses a valid value', () => {
-        expect(parse('<dashndashdigit-ident>', '-n-1', false, false))
-            .toEqual(ident('-n-1', ['dashndashdigit-ident']))
-        expect(parse('<dashndashdigit-ident>', '-N-1', false, false))
-            .toEqual(ident('-n-1', ['dashndashdigit-ident'], '-N-1'))
-        expect(parse('<dashndashdigit-ident>', '-n-12', false, false))
-            .toEqual(ident('-n-12', ['dashndashdigit-ident']))
+        const valid = [
+            ['-n-1', ident('-n-1', ['dashndashdigit-ident'])],
+            ['-N-1', ident('-n-1', ['dashndashdigit-ident'], '-N-1')],
+            ['-n-12', ident('-n-12', ['dashndashdigit-ident'])],
+        ]
+        valid.forEach(([input, expected]) => expect(parse('<dashndashdigit-ident>', input, false)).toEqual(expected))
     })
 })
 describe('<string>', () => {
     it('fails to parse an invalid value', () => {
-        expect(parse('<string>', '"\n"', false, false)).toBeNull()
+        expect(parse('<string>', '"\n"', false)).toBeNull()
     })
     it('parses a valid value', () => {
-        expect(parse('<string>', '"css"', false, false)).toEqual(string('css'))
-        expect(parse('<string>', '"css', false, false)).toEqual(string('css', undefined, '"css'))
+        expect(parse('<string>', '"css"', false)).toEqual(string('css'))
+        expect(parse('<string>', '"css', false)).toEqual(string('css', [], '"css'))
     })
     it('parses and serializes a valid value', () => {
         const valid = [
@@ -1274,26 +1168,29 @@ describe('<url>', () => {
             'url(inval\u0001id.url)',
             'url(inval\\\nid.url)',
         ]
-        invalid.forEach(input => expect(parse('<url>', input, false, false)).toBeNull())
+        invalid.forEach(input => expect(parse('<url>', input, false)).toBeNull())
     })
     it('parses a valid value', () => {
-        expect(parse('<url>', 'url(img.jpg)', false, false)).toEqual({
-            representation: 'url(img.jpg)',
-            type: new Set(['url-token', 'url']),
-            value: 'img.jpg',
-        })
-        expect(parse('<url>', 'url("img.jpg")', false, false)).toEqual({
-            name: 'url',
-            representation: 'url("img.jpg")',
-            type: new Set(['function', 'url']),
-            value: list([string('img.jpg'), list()]),
-        })
-        expect(parse('<url>', 'src("img.jpg")', false, false)).toEqual({
-            name: 'src',
-            representation: 'src("img.jpg")',
-            type: new Set(['function', 'url']),
-            value: list([string('img.jpg'), list()]),
-        })
+        const valid = [
+            ['url(img.jpg)', {
+                representation: 'url(img.jpg)',
+                type: new Set(['url-token', 'url()', 'url']),
+                value: 'img.jpg',
+            }],
+            ['url("img.jpg")', {
+                name: 'url',
+                representation: 'url("img.jpg")',
+                type: new Set(['function', 'url()', 'url']),
+                value: list([string('img.jpg'), list()]),
+            }],
+            ['src("img.jpg")', {
+                name: 'src',
+                representation: 'src("img.jpg")',
+                type: new Set(['function', 'src()', 'url']),
+                value: list([string('img.jpg'), list()]),
+            }],
+        ]
+        valid.forEach(([input, expected]) => expect(parse('<url>', input, false)).toEqual(expected))
     })
     it('parses and serializes an unclosed URL', () => {
         const valid = [
@@ -1332,53 +1229,58 @@ describe('<url>', () => {
 describe('<zero>', () => {
     it('fails to parse an invalid value', () => {
         const invalid = [
-            '+0',
-            '0e1',
+            '1',
             '0px',
             'calc(0)',
         ]
-        invalid.forEach(input => expect(parse('<zero>', input, false, false)).toBeNull())
+        invalid.forEach(input => expect(parse('<zero>', input, false)).toBeNull())
     })
     it('parses a valid value', () => {
-        expect(parse('<zero>', '0', false, false)).toEqual(number(0, ['zero']))
+        expect(parse('<zero>', '0', false)).toEqual(number(0, ['zero']))
     })
     it('parses and serializes a valid value', () => {
-        expect(parse('<zero>', '0')).toBe('0')
+        const valid = [
+            '0.0',
+            '+0',
+            '0e1',
+        ]
+        valid.forEach(input => expect(parse('<zero>', input)).toBe('0'))
     })
 })
 describe('<integer>', () => {
     it('fails to parse an invalid value', () => {
         const invalid = [
+            '-1',
             '1.1',
             '1e-1',
             '1px',
             'calc(1px)',
         ]
-        invalid.forEach(input => expect(parse('<integer [0,∞]>', input, false, false)).toBeNull())
+        invalid.forEach(input => expect(parse('<integer [0,∞]>', input, false)).toBeNull())
     })
     it('parses a valid value', () => {
-        expect(parse('<integer>', '1', false, false)).toEqual(number(1, ['integer']))
+        expect(parse('<integer>', '1', false)).toEqual(number(1, ['integer']))
     })
     it('parses and serializes a valid value', () => {
         const valid = [
-            // https://github.com/w3c/csswg-drafts/issues/7289
+            // Scientific notation (https://github.com/w3c/csswg-drafts/issues/7289)
+            ['1.0', '1'],
             ['1e1', '10'],
             ['1e+1', '10'],
             ['1234567'],
             // 8 bits signed integer (browser conformance)
             [`${MIN_INTEGER - 1}`, MIN_INTEGER],
             [`${MAX_INTEGER + 1}`, MAX_INTEGER],
+            // Priority over <length> in "either" combination types
+            ['0', '0', '<length> | <integer>'],
+            ['0', '0', '<length> || <integer>'],
+            ['0', '0', '<length-percentage> | <integer>'],
+            ['0', '0', '<length-percentage> || <integer>'],
+            ['0 1', '0px 1', '<length> && <integer>'],
+            ['0 1', '1 0px', '<integer> && <length>'],
         ]
-        valid.forEach(([input, expected = input]) => expect(parse('<integer>', input)).toBe(expected))
-    })
-    it('parses 0 with priority over <length> in `|` or `||` combinations', () => {
-        // https://github.com/w3c/csswg-drafts/issues/489
-        expect(parse('<length> | <integer>', '0')).toBe('0')
-        expect(parse('<length> || <integer>', '0')).toBe('0')
-        expect(parse('<length-percentage> | <integer>', '0')).toBe('0')
-        expect(parse('<length-percentage> || <integer>', '0')).toBe('0')
-        expect(parse('<length> && <integer>', '0 1')).toBe('0px 1')
-        expect(parse('<integer> && <length>', '0 1')).toBe('1 0px')
+        valid.forEach(([input, expected = input, definition = '<integer>']) =>
+            expect(parse(definition, input)).toBe(expected))
     })
 })
 describe('<signless-integer>', () => {
@@ -1391,14 +1293,10 @@ describe('<signless-integer>', () => {
             '1px',
             'calc(1)',
         ]
-        invalid.forEach(input => expect(parse('<signless-integer>', input, false, false)).toBeNull())
+        invalid.forEach(input => expect(parse('<signless-integer>', input, false)).toBeNull())
     })
     it('parses a valid value', () => {
-        expect(parse('<signless-integer>', '1', false, false))
-            .toEqual(number(1, ['signless-integer']))
-        // https://github.com/w3c/csswg-drafts/issues/7289
-        expect(parse('<signless-integer>', '1e+1', false, false))
-            .toEqual(number(10, ['signless-integer'], '1e+1'))
+        expect(parse('<signless-integer>', '1', false)).toEqual(number(1, ['signless-integer']))
     })
 })
 describe('<signed-integer>', () => {
@@ -1410,28 +1308,24 @@ describe('<signed-integer>', () => {
             '+1px',
             'calc(+1)',
         ]
-        invalid.forEach(input => expect(parse('<signed-integer>', input, false, false)).toBeNull())
+        invalid.forEach(input => expect(parse('<signed-integer>', input, false)).toBeNull())
     })
     it('parses a valid value', () => {
-        expect(parse('<signed-integer>', '+1', false, false))
-            .toEqual(number(1, ['signed-integer'], '+1'))
-        expect(parse('<signed-integer>', '-1', false, false))
-            .toEqual(number(-1, ['signed-integer'], '-1'))
-        expect(parse('<signed-integer>', '+1e1', false, false))
-            .toEqual(number(10, ['signed-integer'], '+1e1'))
+        expect(parse('<signed-integer>', '+1', false)).toEqual(number(1, ['signed-integer'], '+1'))
+        expect(parse('<signed-integer>', '-1', false)).toEqual(number(-1, ['signed-integer'], '-1'))
     })
 })
 describe('<number>', () => {
     it('fails to parse an invalid value', () => {
         const invalid = [
-            '1px',
             '-1',
+            '1px',
             'calc(1px)',
         ]
-        invalid.forEach(input => expect(parse('<number [0,∞]>', input, false, false)).toBeNull())
+        invalid.forEach(input => expect(parse('<number [0,∞]>', input, false)).toBeNull())
     })
     it('parses a valid value', () => {
-        expect(parse('<number>', '1', false, false)).toEqual(number(1))
+        expect(parse('<number>', '1', false)).toEqual(number(1))
     })
     it('parses and serializes a valid value', () => {
         const valid = [
@@ -1450,17 +1344,16 @@ describe('<number>', () => {
             ['0.1234567', '0.123457'],
             ['1.234567'],
             ['1.2345678', '1.234568'],
+            // Priority over <length> in "either" combination types
+            ['0', '0', '<length> | <number>'],
+            ['0', '0', '<length> || <number>'],
+            ['0', '0', '<length-percentage> | <number>'],
+            ['0', '0', '<length-percentage> || <number>'],
+            ['0 1', '0px 1', '<length> && <number>'],
+            ['0 1', '1 0px', '<number> && <length>'],
         ]
-        valid.forEach(([input, expected = input]) => expect(parse('<number>', input)).toBe(expected))
-    })
-    it('parses 0 with priority over <length> in `|` or `||` combinations', () => {
-        // https://github.com/w3c/csswg-drafts/issues/489
-        expect(parse('<length> | <number>', '0')).toBe('0')
-        expect(parse('<length> || <number>', '0')).toBe('0')
-        expect(parse('<length-percentage> | <number>', '0')).toBe('0')
-        expect(parse('<length-percentage> || <number>', '0')).toBe('0')
-        expect(parse('<length> && <number>', '0 1')).toBe('0px 1')
-        expect(parse('<number> && <length>', '0 1')).toBe('1 0px')
+        valid.forEach(([input, expected = input, definition = '<number>']) =>
+            expect(parse(definition, input)).toBe(expected))
     })
 })
 describe('<dimension-token>', () => {
@@ -1474,10 +1367,10 @@ describe('<dimension-token>', () => {
             '1\\\n',
             '1-\\\n',
         ]
-        invalid.forEach(input => expect(parse('<dimension-token>', input, false, false)).toBeNull())
+        invalid.forEach(input => expect(parse('<dimension-token>', input, false)).toBeNull())
     })
     it('parses a valid value', () => {
-        expect(parse('<dimension-token>', '1identifier', false, false))
+        expect(parse('<dimension-token>', '1identifier', false))
             .toEqual(dimension(1, 'identifier', ['dimension-token']))
     })
     it('parses and serializes a valid value', () => {
@@ -1525,13 +1418,11 @@ describe('<length>', () => {
             '1%',
             'calc(1)',
         ]
-        invalid.forEach(input => expect(parse('<length [0,∞]>', input, false, false)).toBeNull())
+        invalid.forEach(input => expect(parse('<length [0,∞]>', input, false)).toBeNull())
     })
     it('parses a valid value', () => {
-        expect(parse('<length>', '0', false, false))
-            .toEqual(length(0, 'px', undefined, '0'))
-        expect(parse('<length>', '1px', false, false))
-            .toEqual(length(1, 'px'))
+        expect(parse('<length>', '0', false)).toEqual({ type: new Set(['dimension', 'length']), unit: 'px', value: 0 })
+        expect(parse('<length>', '1px', false)).toEqual(length(1, 'px'))
     })
     it('parses and serializes a valid value', () => {
         const valid = [
@@ -1553,15 +1444,15 @@ describe('<length>', () => {
 describe('<percentage>', () => {
     it('fails to parse an invalid value', () => {
         const invalid = [
+            '-1%',
             '0',
             '1px',
-            '-1%',
             'calc(1)',
         ]
-        invalid.forEach(input => expect(parse('<percentage [0,∞]>', input, false, false)).toBeNull())
+        invalid.forEach(input => expect(parse('<percentage [0,∞]>', input, false)).toBeNull())
     })
     it('parses a valid value', () => {
-        expect(parse('<percentage>', '1%', false, false)).toEqual(percentage(1))
+        expect(parse('<percentage>', '1%', false)).toEqual(percentage(1))
     })
     it('parses and serializes a valid value', () => {
         const valid = [
@@ -1579,13 +1470,15 @@ describe('<percentage>', () => {
 })
 describe('<length-percentage>', () => {
     it('fails to parse an invalid value', () => {
-        expect(parse('<length-percentage [0,∞]>', '-1px', false, false)).toBeNull()
-        expect(parse('<length-percentage [0,∞]>', '-1%', false, false)).toBeNull()
-        expect(parse('<length-percentage>', '1deg', false, false)).toBeNull()
+        const invalid = [
+            '-1px',
+            '-1%',
+            '1deg',
+        ]
+        invalid.forEach(input => expect(parse('<length-percentage [0,∞]>', input, false)).toBeNull())
     })
     it('parses a valid value', () => {
-        expect(parse('<length-percentage>', '1px', false, false))
-            .toEqual(length(1, 'px', ['length-percentage']))
+        expect(parse('<length-percentage>', '1px', false)).toEqual(length(1, 'px', ['length-percentage']))
     })
     it('parses and serializes valid value', () => {
         expect(parse('<length-percentage>', '1px')).toBe('1px')
@@ -1593,33 +1486,15 @@ describe('<length-percentage>', () => {
     })
 })
 describe('<alpha-value>', () => {
-    it('fails to parse an invalid value', () => {
-        const invalid = [
-            '1px',
-            'calc(1px)',
-            'calc(0.5 + 50%)',
-        ]
-        invalid.forEach(input => expect(parse('<alpha-value>', input, false, false)).toBeNull())
-    })
     it('parses a valid value', () => {
-        expect(parse('<alpha-value>', '1', false, false))
-            .toEqual(number(1, ['alpha-value']))
-        expect(parse('<alpha-value>', '1%', false, false))
-            .toEqual(percentage(1, ['alpha-value']))
+        expect(parse('<alpha-value>', '1', false)).toEqual(number(1, ['alpha-value']))
+        expect(parse('<alpha-value>', '1%', false)).toEqual(percentage(1, ['alpha-value']))
     })
     it('parses and serializes a valid value', () => {
         const valid = [
-            // Scientific notation
-            ['1e0', '1'],
-            ['1e+0', '1'],
-            ['1e-1', '0.1'],
-            // Leading 0
-            ['.1', '0.1'],
-            // Trailing 0
-            ['0.10', '0.1'],
-            // Serializes to number
+            // To number
             ['50%', '0.5'],
-            // Clamped between 0 and 1 at computed value time
+            // Clamped at computed value time
             ['-1'],
             ['2'],
         ]
@@ -1635,13 +1510,23 @@ describe('<angle>', () => {
             '1px',
             'calc(1)',
         ]
-        invalid.forEach(input => expect(parse('<angle [0,1deg]>', input, false, false)).toBeNull())
+        invalid.forEach(input => expect(parse('<angle [0,1deg]>', input, false)).toBeNull())
     })
     it('parses a valid value', () => {
-        expect(parse('<angle>', '0', false, false))
-            .toEqual(angle(0, 'deg', undefined, '0'))
-        expect(parse('<angle>', '1deg', false, false))
-            .toEqual(angle(1, 'deg'))
+        const valid = [
+            ['<angle> | <zero>', '0', {
+                type: new Set(['dimension', 'angle']),
+                unit: 'deg',
+                value: 0,
+            }],
+            ['<angle-percentage> | <zero>', '0', {
+                type: new Set(['dimension', 'angle', 'angle-percentage']),
+                unit: 'deg',
+                value: 0,
+            }],
+            ['<angle>', '1deg', angle(1, 'deg')],
+        ]
+        valid.forEach(([definition, input, expected]) => expect(parse(definition, input, false)).toEqual(expected))
     })
     it('parses and serializes a valid value', () => {
         const valid = [
@@ -1656,7 +1541,39 @@ describe('<angle>', () => {
             // Case-insensitive
             ['1DEg', '1deg'],
         ]
-        valid.forEach(([input, expected = input]) => expect(parse('<angle [0,1turn]>', input)).toBe(expected))
+        valid.forEach(([input, expected = input, definition = '<angle [0,1turn]>']) =>
+            expect(parse(definition, input)).toBe(expected))
+    })
+})
+describe('<resolution>', () => {
+    it('fails to parse an invalid value', () => {
+        const invalid = [
+            '-1dppx',
+            '1dpi',
+            '1',
+            '1px',
+            'calc(1)',
+        ]
+        invalid.forEach(input => expect(parse('<resolution [0,1dppx]>', input, false)).toBeNull())
+    })
+    it('parses a valid value', () => {
+        expect(parse('<resolution>', '1dppx', false)).toEqual(resolution(1, 'dppx'))
+    })
+    it('parses and serializes a valid value', () => {
+        const valid = [
+            // Scientific notation
+            ['1e1dppx', '10dppx'],
+            ['1e+1dppx', '10dppx'],
+            ['1e-1dppx', '0.1dppx'],
+            // Leading 0
+            ['.1dppx', '0.1dppx'],
+            // Trailing 0
+            ['0.10dppx', '0.1dppx'],
+            // Case-insensitive
+            ['1DPpx', '1dppx'],
+        ]
+        valid.forEach(([input, expected = input, definition = '<resolution [0,1dpi]>']) =>
+            expect(parse(definition, input)).toBe(expected))
     })
 })
 describe('<time>', () => {
@@ -1667,10 +1584,10 @@ describe('<time>', () => {
             '1px',
             'calc(1)',
         ]
-        invalid.forEach(input => expect(parse('<time [0,1ms]>', input, false, false)).toBeNull())
+        invalid.forEach(input => expect(parse('<time [0,1ms]>', input, false)).toBeNull())
     })
     it('parses a valid value', () => {
-        expect(parse('<time>', '1s', false, false)).toEqual(time(1, 's'))
+        expect(parse('<time>', '1s', false)).toEqual(time(1, 's'))
     })
     it('parses and serializes a valid value', () => {
         const valid = [
@@ -1699,10 +1616,10 @@ describe('<dimension>', () => {
             '1\\\n',
             '1-\\\n',
         ]
-        invalid.forEach(input => expect(parse('<dimension>', input, false, false)).toBeNull())
+        invalid.forEach(input => expect(parse('<dimension>', input, false)).toBeNull())
     })
     it('parses a valid value', () => {
-        expect(parse('<dimension>', '1identifier', false, false)).toEqual(dimension(1, 'identifier'))
+        expect(parse('<dimension>', '1identifier', false)).toEqual(dimension(1, 'identifier'))
     })
     it('parses and serializes a valid value', () => {
         const valid = [
@@ -1748,13 +1665,11 @@ describe('<n-dimension>', () => {
             '1.1n',
             'calc(1n)',
         ]
-        invalid.forEach(input => expect(parse('<n-dimension>', input, false, false)).toBeNull())
+        invalid.forEach(input => expect(parse('<n-dimension>', input, false)).toBeNull())
     })
     it('parses a valid value', () => {
-        expect(parse('<n-dimension>', '1n', false, false))
-            .toEqual(dimension(1, 'n', ['n-dimension']))
-        expect(parse('<n-dimension>', '1N', false, false))
-            .toEqual(dimension(1, 'n', ['n-dimension'], '1N'))
+        expect(parse('<n-dimension>', '1n', false)).toEqual(dimension(1, 'n', ['n-dimension']))
+        expect(parse('<n-dimension>', '1N', false)).toEqual(dimension(1, 'n', ['n-dimension'], '1N'))
     })
 })
 describe('<ndash-dimension>', () => {
@@ -1764,13 +1679,11 @@ describe('<ndash-dimension>', () => {
             '1.1n-',
             'calc(1n-)',
         ]
-        invalid.forEach(input => expect(parse('<ndash-dimension>', input, false, false)).toBeNull())
+        invalid.forEach(input => expect(parse('<ndash-dimension>', input, false)).toBeNull())
     })
     it('parses a valid value', () => {
-        expect(parse('<ndash-dimension>', '1n-', false, false))
-            .toEqual(dimension(1, 'n-', ['ndash-dimension']))
-        expect(parse('<ndash-dimension>', '1N-', false, false))
-            .toEqual(dimension(1, 'n-', ['ndash-dimension'], '1N-'))
+        expect(parse('<ndash-dimension>', '1n-', false)).toEqual(dimension(1, 'n-', ['ndash-dimension']))
+        expect(parse('<ndash-dimension>', '1N-', false)).toEqual(dimension(1, 'n-', ['ndash-dimension'], '1N-'))
     })
 })
 describe('<ndashdigit-dimension>', () => {
@@ -1780,15 +1693,15 @@ describe('<ndashdigit-dimension>', () => {
             '1.1n-1',
             'calc(1n-1)',
         ]
-        invalid.forEach(input => expect(parse('<ndashdigit-dimension>', input, false, false)).toBeNull())
+        invalid.forEach(input => expect(parse('<ndashdigit-dimension>', input, false)).toBeNull())
     })
     it('parses a valid value', () => {
-        expect(parse('<ndashdigit-dimension>', '1n-1', false, false))
-            .toEqual(dimension(1, 'n-1', ['ndashdigit-dimension']))
-        expect(parse('<ndashdigit-dimension>', '1N-1', false, false))
-            .toEqual(dimension(1, 'n-1', ['ndashdigit-dimension'], '1N-1'))
-        expect(parse('<ndashdigit-dimension>', '1n-11', false, false))
-            .toEqual(dimension(1, 'n-11', ['ndashdigit-dimension']))
+        const valid = [
+            ['1n-1', dimension(1, 'n-1', ['ndashdigit-dimension'])],
+            ['1N-1', dimension(1, 'n-1', ['ndashdigit-dimension'], '1N-1')],
+            ['1n-11', dimension(1, 'n-11', ['ndashdigit-dimension'])],
+        ]
+        valid.forEach(([input, expected]) => expect(parse('<ndashdigit-dimension>', input, false)).toEqual(expected))
     })
 })
 describe('<urange>', () => {
@@ -1825,10 +1738,10 @@ describe('<urange>', () => {
             // Start code point must be lower or equal than end code point
             'U+1-0',
         ]
-        invalid.forEach(input => expect(parse('<urange>', input, false, false)).toBeNull())
+        invalid.forEach(input => expect(parse('<urange>', input, false)).toBeNull())
     })
     it('parses a valid value', () => {
-        expect(parse('<urange>', 'U+0-f', false, false)).toEqual({
+        expect(parse('<urange>', 'U+0-f', false)).toEqual({
             end: 15,
             start: 0,
             type: new Set(['urange']),
@@ -1852,15 +1765,15 @@ describe('<an+b>', () => {
             '+ n -1',
             '+ n - 1',
         ]
-        invalid.forEach(input => expect(parse('<an+b>', input, false, false)).toBeNull())
+        invalid.forEach(input => expect(parse('<an+b>', input, false)).toBeNull())
     })
     it('parses a valid value', () => {
-        expect(parse('<an+b>', 'even', false, false)).toEqual({
+        expect(parse('<an+b>', 'even', false)).toEqual({
             representation: 'even',
             type: new Set(['an+b']),
             value: { a: 2, b: 0 },
         })
-        expect(parse('<an+b>', '1n+1', false, false)).toEqual({
+        expect(parse('<an+b>', '1n+1', false)).toEqual({
             representation: '1n+1',
             type: new Set(['an+b']),
             value: { a: 1, b: 1 },
@@ -1903,246 +1816,257 @@ describe('<an+b>', () => {
 
 describe('<calc()>', () => {
     it('fails to parse an invalid value', () => {
-
-        // Whitespace is required on both sides of `+` and `-`
-        expect(parse('<number>', 'calc(1+ 1)')).toBe('')
-        expect(parse('<number>', 'calc(1 +1)')).toBe('')
-        expect(parse('<number>', 'calc(1- 1)')).toBe('')
-        expect(parse('<number>', 'calc(1 -1)')).toBe('')
-
-        // Maximum 32 <calc-value>
-        expect(parse('<number>', `calc(${[...Array(32)].reduce((n, _, i) => `${n} ${i < 15 ? '+' : '*'} 1`, '0')})`)).toBe('')
-        expect(parse('<number>', `calc(${[...Array(32)].reduce(n => `(${n})`, '1')})`)).toBe('')
-        expect(parse('<number>', `calc(${[...Array(32)].reduce(n => `calc(${n})`, '1')})`)).toBe('')
-        expect(parse('<number>', `calc((1) + ${[...Array(30)].reduce(n => `(${n})`, '1')})`)).toBe('')
-        expect(parse('<number>', `calc(calc(1) + ${[...Array(30)].reduce(n => `calc(${n})`, '1')})`)).toBe('')
-
-        // Resolved type mismatch
-        expect(parse('<number>', 'calc(1px)')).toBe('')
-        expect(parse('<number>', 'calc(1%)')).toBe('')
-        expect(parse('<length>', 'calc(1)')).toBe('')
-        expect(parse('<length>', 'calc(1%)')).toBe('')
-        expect(parse('<length>', 'calc(1px + 1s)')).toBe('')
-        expect(parse('<number>', 'calc(1px - 1s)')).toBe('')
-        expect(parse('<number>', 'calc(1px * 1s)')).toBe('')
-        expect(parse('<number>', 'calc(1px / 1s)')).toBe('')
-        expect(parse('<length>', 'calc(1px + 1)')).toBe('')
-        expect(parse('<length>', 'calc(1px - 1)')).toBe('')
-        expect(parse('<length>', 'calc(1 + 1px)')).toBe('')
-        expect(parse('<length>', 'calc(1 - 1px)')).toBe('')
-        expect(parse('<length>', 'calc(1 / 1px)')).toBe('')
-        expect(parse('<length>', 'calc(1px * 1px)')).toBe('')
-        expect(parse('<length>', 'calc(1px / 1px)')).toBe('')
-        expect(parse('<number>', 'calc(1px / 1px / 1px)')).toBe('')
-        expect(parse('<percentage>', 'calc(1% * 1%)')).toBe('')
-        expect(parse('<percentage>', 'calc(1% / 1%)')).toBe('')
-        expect(parse('<percentage>', 'calc(1 / 1%)')).toBe('')
-
-        // <dimension> does not match a type that a math function can resolve to
-        expect(parse('<dimension>', 'calc(1n)')).toBe('')
-
-        // 0 is parsed as <number> in calculations
-        expect(parse('<length>', 'calc(0 + 1px)')).toBe('')
-        expect(parse('<length>', 'calc(0 - 1px)')).toBe('')
-
-        // <number> and <percentage> are not combinable
-        expect(parse('<number> | <percentage>', 'calc(1 + 1%)')).toBe('')
-        expect(parse('<number> | <percentage>', 'calc(1 - 1%)')).toBe('')
+        const invalid = [
+            // Whitespace is required on both sides of `+` and `-`
+            ['<number>', 'calc(1+ 1)'],
+            ['<number>', 'calc(1 +1)'],
+            ['<number>', 'calc(1- 1)'],
+            ['<number>', 'calc(1 -1)'],
+            // Maximum 32 <calc-value>
+            ['<number>', `calc(${[...Array(32)].reduce((n, _, i) => `${n} ${i < 15 ? '+' : '*'} 1`, '0')})`],
+            ['<number>', `calc(${[...Array(32)].reduce(n => `(${n})`, '1')})`],
+            ['<number>', `calc(${[...Array(32)].reduce(n => `calc(${n})`, '1')})`],
+            ['<number>', `calc((1) + ${[...Array(30)].reduce(n => `(${n})`, '1')})`],
+            ['<number>', `calc(calc(1) + ${[...Array(30)].reduce(n => `calc(${n})`, '1')})`],
+            // Resolved type mismatch
+            ['<number>', 'calc(1px)'],
+            ['<number>', 'calc(1%)'],
+            ['<length>', 'calc(1)'],
+            ['<length>', 'calc(1%)'],
+            ['<length>', 'calc(1px + 1s)'],
+            ['<number>', 'calc(1px - 1s)'],
+            ['<number>', 'calc(1px * 1s)'],
+            ['<number>', 'calc(1px / 1s)'],
+            ['<length>', 'calc(1px + 1)'],
+            ['<length>', 'calc(1px - 1)'],
+            ['<length>', 'calc(1 + 1px)'],
+            ['<length>', 'calc(1 - 1px)'],
+            ['<length>', 'calc(1 / 1px)'],
+            ['<length>', 'calc(1px * 1px)'],
+            ['<length>', 'calc(1px / 1px)'],
+            ['<number>', 'calc(1px / 1px / 1px)'],
+            ['<percentage>', 'calc(1% * 1%)'],
+            ['<percentage>', 'calc(1% / 1%)'],
+            ['<percentage>', 'calc(1 / 1%)'],
+            // <dimension> does not match a type that a math function can resolve to
+            ['<dimension>', 'calc(1n)'],
+            // 0 is parsed as <number> in calculations
+            ['<length>', 'calc(0 + 1px)'],
+            ['<length>', 'calc(0 - 1px)'],
+            // <number> and <percentage> are not combinable
+            ['<number> | <percentage>', 'calc(1 + 1%)'],
+            ['<number> | <percentage>', 'calc(1 - 1%)'],
+        ]
+        invalid.forEach(([definition, input]) => expect(parse(definition, input, false)).toBeNull())
     })
     it('parses a valid value', () => {
 
         const one = number(1, ['calc-value'])
         const two = number(2, ['calc-value'])
 
-        // Unresolved calculations
-        expect(parse('<calc()>', 'calc(1)', false, false)).toEqual({
-            name: 'calc',
-            representation: 'calc(1)',
-            type: new Set(['function', 'calc()']),
-            value: one,
-        })
-        expect(parse('<calc()>', 'calc(1 + 2)', false, false)).toEqual({
-            name: 'calc',
-            representation: 'calc(1 + 2)',
-            type: new Set(['function', 'calc()']),
-            value: {
-                type: new Set(['calc-sum']),
-                value: [one, two],
-            },
-        })
-        expect(parse('<calc()>', 'calc(1 - 2)', false, false)).toEqual({
-            name: 'calc',
-            representation: 'calc(1 - 2)',
-            type: new Set(['function', 'calc()']),
-            value: {
-                type: new Set(['calc-sum']),
-                value: [one, { type: new Set(['calc-negate']), value: two }],
-            },
-        })
-        expect(parse('<calc()>', 'calc(1 * 2)', false, false)).toEqual({
-            name: 'calc',
-            representation: 'calc(1 * 2)',
-            type: new Set(['function', 'calc()']),
-            value: {
-                type: new Set(['calc-product']),
-                value: [one, two],
-            },
-        })
-        expect(parse('<calc()>', 'calc(1 / 2)', false, false)).toEqual({
-            name: 'calc',
-            representation: 'calc(1 / 2)',
-            type: new Set(['function', 'calc()']),
-            value: {
-                type: new Set(['calc-product']),
-                value: [one, { type: new Set(['calc-invert']), value: two }],
-            },
-        })
-
-        // Resolved calculations
-        expect(parse('<number>', 'calc(1)', false, false)).toEqual({
-            name: 'calc',
-            numericType: new Map(),
-            range: undefined,
-            representation: 'calc(1)',
-            round: false,
-            type: new Set(['function', 'calc()']),
-            value: number(1, ['calc-value']),
-        })
-        expect(parse('<number>', 'calc(1 + 2)', false, false)).toEqual({
-            name: 'calc',
-            numericType: new Map(),
-            range: undefined,
-            representation: 'calc(1 + 2)',
-            round: false,
-            type: new Set(['function', 'calc()']),
-            value: {
-                type: new Set(['number', 'calc-value']),
-                value: 3,
-            },
-        })
+        const valid = [
+            // Unresolved calculations
+            ['<calc()>', 'calc(1)', {
+                name: 'calc',
+                representation: 'calc(1)',
+                type: new Set(['function', 'calc()']),
+                value: one,
+            }],
+            ['<calc()>', 'calc(1 + 2)', {
+                name: 'calc',
+                representation: 'calc(1 + 2)',
+                type: new Set(['function', 'calc()']),
+                value: {
+                    type: new Set(['calc-sum']),
+                    value: [one, two],
+                },
+            }],
+            ['<calc()>', 'calc(1 - 2)', {
+                name: 'calc',
+                representation: 'calc(1 - 2)',
+                type: new Set(['function', 'calc()']),
+                value: {
+                    type: new Set(['calc-sum']),
+                    value: [one, { type: new Set(['calc-negate']), value: two }],
+                },
+            }],
+            ['<calc()>', 'calc(1 * 2)', {
+                name: 'calc',
+                representation: 'calc(1 * 2)',
+                type: new Set(['function', 'calc()']),
+                value: {
+                    type: new Set(['calc-product']),
+                    value: [one, two],
+                },
+            }],
+            ['<calc()>', 'calc(1 / 2)', {
+                name: 'calc',
+                representation: 'calc(1 / 2)',
+                type: new Set(['function', 'calc()']),
+                value: {
+                    type: new Set(['calc-product']),
+                    value: [one, { type: new Set(['calc-invert']), value: two }],
+                },
+            }],
+            // Resolved calculations
+            ['<number>', 'calc(1)', {
+                name: 'calc',
+                numericType: new Map(),
+                range: undefined,
+                representation: 'calc(1)',
+                round: false,
+                type: new Set(['function', 'calc()']),
+                value: number(1, ['calc-value']),
+            }],
+            ['<number>', 'calc(1 + 2)', {
+                name: 'calc',
+                numericType: new Map(),
+                range: undefined,
+                representation: 'calc(1 + 2)',
+                round: false,
+                type: new Set(['function', 'calc()']),
+                value: {
+                    type: new Set(['number', 'calc-value']),
+                    value: 3,
+                },
+            }],
+        ]
+        valid.forEach(([definition, input, expected]) => expect(parse(definition, input, false)).toEqual(expected))
     })
     it('parses and serializes calc() with a single operand', () => {
-        // <number>, <percentage>, <dimension>
-        expect(parse('<number>', 'CALc(1)')).toBe('calc(1)')
-        expect(parse('<percentage>', 'calc(1%)')).toBe('calc(1%)')
-        expect(parse('<length>', 'calc(1px)')).toBe('calc(1px)')
-        // <type-percentage>
-        expect(parse('<number> | <percentage>', 'calc(1)')).toBe('calc(1)')
-        expect(parse('<number> | <percentage>', 'calc(100%)')).toBe('calc(1)')
-        expect(parse('<length-percentage>', 'calc(1px)')).toBe('calc(1px)')
-        expect(parse('<length-percentage>', 'calc(1%)')).toBe('calc(1%)')
-        expect(parse('<length> | <percentage>', 'calc(1%)')).toBe('calc(1%)')
-        expect(parse('<length> | <percentage>', 'calc(1px)')).toBe('calc(1px)')
-        expect(parse('a | <percentage> | b | <length> | c', 'calc(1px)')).toBe('calc(1px)')
-        // Nested calculation or math function
-        expect(parse('<number>', 'calc((1))')).toBe('calc(1)')
-        expect(parse('<number>', 'calc(calc(1))')).toBe('calc(1)')
-        expect(parse('<number>', 'calc(min(1))')).toBe('calc(1)')
-        expect(parse('<length>', 'calc((1em))')).toBe('calc(1em)')
-        expect(parse('<length>', 'calc(calc(calc(1em)))')).toBe('calc(1em)')
-        expect(parse('<number>', 'calc(sign(1em))')).toBe('sign(1em)')
-        expect(parse('<length>', 'calc(min(1em))')).toBe('calc(1em)')
-        expect(parse('<length-percentage>', 'calc(min(1%))')).toBe('calc(1%)')
+        const valid = [
+            // <number>, <percentage>, <dimension>
+            ['<number>', 'CALc(1)', 'calc(1)'],
+            ['<percentage>', 'calc(1%)', 'calc(1%)'],
+            ['<length>', 'calc(1px)', 'calc(1px)'],
+            // <type-percentage>
+            ['<number> | <percentage>', 'calc(1)', 'calc(1)'],
+            ['<number> | <percentage>', 'calc(100%)', 'calc(1)'],
+            ['<length-percentage>', 'calc(1px)', 'calc(1px)'],
+            ['<length-percentage>', 'calc(1%)', 'calc(1%)'],
+            ['<length> | <percentage>', 'calc(1%)', 'calc(1%)'],
+            ['<length> | <percentage>', 'calc(1px)', 'calc(1px)'],
+            ['a | <percentage> | b | <length> | c', 'calc(1px)', 'calc(1px)'],
+            // Nested calculation or math function
+            ['<number>', 'calc((1))', 'calc(1)'],
+            ['<number>', 'calc(calc(1))', 'calc(1)'],
+            ['<number>', 'calc(min(1))', 'calc(1)'],
+            ['<length>', 'calc((1em))', 'calc(1em)'],
+            ['<length>', 'calc(calc(calc(1em)))', 'calc(1em)'],
+            ['<number>', 'calc(sign(1em))', 'sign(1em)'],
+            ['<length>', 'calc(min(1em))', 'calc(1em)'],
+            ['<length-percentage>', 'calc(min(1%))', 'calc(1%)'],
+        ]
+        valid.forEach(([definition, input, expected]) => expect(parse(definition, input)).toBe(expected))
     })
     it('parses and serializes calc() with operands of the same type and with the same unit', () => {
-        // Consecutive run of operations
-        expect(parse('<number>', 'calc(1 + 1 + 1 + 1)')).toBe('calc(4)')
-        expect(parse('<number>', 'calc(4 - 1 - 1 - 1)')).toBe('calc(1)')
-        expect(parse('<number>', 'calc(1 * 2 * 3 * 4)')).toBe('calc(24)')
-        expect(parse('<number>', 'calc(42 / 2 / 3 / 7)')).toBe('calc(1)')
-        expect(parse('<number>', 'calc(1 + 2 * 3 - 2 / 1)')).toBe('calc(5)')
-        // Addition or substraction of <dimension>s or <percentage>s
-        expect(parse('<length>', 'calc(1px + 1px)')).toBe('calc(2px)')
-        expect(parse('<length>', 'calc(1px - 1px)')).toBe('calc(0px)')
-        expect(parse('<percentage>', 'calc(1% + 1%)')).toBe('calc(2%)')
-        expect(parse('<percentage>', 'calc(1% - 1%)')).toBe('calc(0%)')
-        // Multiplication of <dimension>s or <percentage>s (eg. <area>, <speed>, etc.)
-        // Division of <dimension>s or <percentage>s
-        expect(parse('<number>', 'calc(6px / 2px)')).toBe('calc(3)')
-        expect(parse('<number>', 'calc(6% / 2%)')).toBe('calc(3)')
-        // Nested calculations
-        expect(parse('<number>', 'calc(1 + 2 * (3 + 4))')).toBe('calc(15)')
-        expect(parse('<number>', 'calc((1 + 2) * 3 / (4 + 5))')).toBe('calc(1)')
-        expect(parse('<number>', 'calc(calc(1 + 2) * 3 / calc(4 + 5))')).toBe('calc(1)')
-        expect(parse('<length>', 'calc((3px + 2px) * 3)')).toBe('calc(15px)')
-        // Nested math functions
-        expect(parse('<number>', 'calc(min(1, 2) + sign(1))')).toBe('calc(2)')
-        expect(parse('<number>', 'calc(min(1, 2) - sign(1))')).toBe('calc(0)')
-        expect(parse('<number>', 'calc(min(1, 2) * sign(1))')).toBe('calc(1)')
-        expect(parse('<number>', 'calc(min(1, 2) / sign(1))')).toBe('calc(1)')
-        expect(parse('<length>', 'calc(min(1px, 2px) + 1px)')).toBe('calc(2px)')
-        expect(parse('<length>', 'calc(min(1px, 2px) - 1px)')).toBe('calc(0px)')
-        expect(parse('<length>', 'calc(min(1px, 2px) * sign(1px))')).toBe('calc(1px)')
-        expect(parse('<length>', 'calc(min(1px, 2px) / sign(1px))')).toBe('calc(1px)')
-        // Maximum 32 <calc-value>
-        expect(parse('<number>', `calc(${[...Array(31)].reduce((n, _, i) => `${n} ${i < 15 ? '+' : '*'} 1`, '0')})`)).toBe('calc(15)')
-        expect(parse('<number>', `calc(${[...Array(31)].reduce(n => `(${n})`, '1')})`)).toBe('calc(1)')
-        expect(parse('<number>', `calc(${[...Array(31)].reduce(n => `calc(${n})`, '1')})`)).toBe('calc(1)')
-        expect(parse('<number>{2}', `calc(${[...Array(31)].reduce(n => `${n} + 1`, '1')}) calc(1)`)).toBe('calc(32) calc(1)')
-        expect(parse('<number>{2}', `calc(${[...Array(31)].reduce(n => `calc(${n})`, '1')}) calc(calc(1))`)).toBe('calc(1) calc(1)')
+        const valid = [
+            // Consecutive run of operations
+            ['<number>', 'calc(1 + 1 + 1 + 1)', 'calc(4)'],
+            ['<number>', 'calc(4 - 1 - 1 - 1)', 'calc(1)'],
+            ['<number>', 'calc(1 * 2 * 3 * 4)', 'calc(24)'],
+            ['<number>', 'calc(42 / 2 / 3 / 7)', 'calc(1)'],
+            ['<number>', 'calc(1 + 2 * 3 - 2 / 1)', 'calc(5)'],
+            // Addition or substraction of <dimension>s or <percentage>s
+            ['<length>', 'calc(1px + 1px)', 'calc(2px)'],
+            ['<length>', 'calc(1px - 1px)', 'calc(0px)'],
+            ['<percentage>', 'calc(1% + 1%)', 'calc(2%)'],
+            ['<percentage>', 'calc(1% - 1%)', 'calc(0%)'],
+            // Multiplication of <dimension>s or <percentage>s (eg. <area>, <speed>, etc.)
+            // Division of <dimension>s or <percentage>s
+            ['<number>', 'calc(6px / 2px)', 'calc(3)'],
+            ['<number>', 'calc(6% / 2%)', 'calc(3)'],
+            // Nested calculations
+            ['<number>', 'calc(1 + 2 * (3 + 4))', 'calc(15)'],
+            ['<number>', 'calc((1 + 2) * 3 / (4 + 5))', 'calc(1)'],
+            ['<number>', 'calc(calc(1 + 2) * 3 / calc(4 + 5))', 'calc(1)'],
+            ['<length>', 'calc((3px + 2px) * 3)', 'calc(15px)'],
+            // Nested math functions
+            ['<number>', 'calc(min(1, 2) + sign(1))', 'calc(2)'],
+            ['<number>', 'calc(min(1, 2) - sign(1))', 'calc(0)'],
+            ['<number>', 'calc(min(1, 2) * sign(1))', 'calc(1)'],
+            ['<number>', 'calc(min(1, 2) / sign(1))', 'calc(1)'],
+            ['<length>', 'calc(min(1px, 2px) + 1px)', 'calc(2px)'],
+            ['<length>', 'calc(min(1px, 2px) - 1px)', 'calc(0px)'],
+            ['<length>', 'calc(min(1px, 2px) * sign(1px))', 'calc(1px)'],
+            ['<length>', 'calc(min(1px, 2px) / sign(1px))', 'calc(1px)'],
+            // Maximum 32 <calc-value>
+            ['<number>', `calc(${[...Array(31)].reduce((n, _, i) => `${n} ${i < 15 ? '+' : '*'} 1`, '0')})`, 'calc(15)'],
+            ['<number>', `calc(${[...Array(31)].reduce(n => `(${n})`, '1')})`, 'calc(1)'],
+            ['<number>', `calc(${[...Array(31)].reduce(n => `calc(${n})`, '1')})`, 'calc(1)'],
+            ['<number>{2}', `calc(${[...Array(31)].reduce(n => `${n} + 1`, '1')}) calc(1)`, 'calc(32) calc(1)'],
+            ['<number>{2}', `calc(${[...Array(31)].reduce(n => `calc(${n})`, '1')}) calc(calc(1))`, 'calc(1) calc(1)'],
+        ]
+        valid.forEach(([definition, input, expected]) => expect(parse(definition, input)).toBe(expected))
     })
     it('parses and serializes calc() with operands of the same type and with different units', () => {
-        // <length>
-        expect(parse('<length>', 'calc(1px + 1cm)')).toBe(`calc(${(1 + (96 / 2.54)).toFixed(6)}px)`)
-        expect(parse('<length>', 'calc(1px + 1mm)')).toBe(`calc(${(1 + (96 / 2.54 / 10)).toFixed(6)}px)`)
-        expect(parse('<length>', 'calc(1px + 1Q)')).toBe(`calc(${(1 + (96 / 2.54 / 40)).toFixed(6)}px)`)
-        expect(parse('<length>', 'calc(1px + 1in)')).toBe('calc(97px)')
-        expect(parse('<length>', 'calc(1px + 1pc)')).toBe('calc(17px)')
-        expect(parse('<length>', 'calc(1px + 1pt)')).toBe(`calc(${(1 + (96 / 72)).toFixed(6)}px)`)
-        expect(parse('<length>', 'calc(1em + 1px + 1em)')).toBe('calc(2em + 1px)')
-        expect(parse('<length>', 'calc(1em - 1px - 1em)')).toBe('calc(0em - 1px)')
-        expect(parse('<length>', 'calc(3em * 2 / 3)')).toBe('calc(2em)')
-        expect(parse('<length>', 'calc(6em / 2 * 3)')).toBe('calc(9em)')
-        expect(parse('<length>', 'calc(3 * 2em / 3)')).toBe('calc(2em)')
-        expect(parse('<length>', 'calc(2 / 3 * 3em)')).toBe('calc(2em)')
-        expect(parse('<length>', 'calc((1px + 1em) * 2)')).toBe('calc(2em + 2px)')
-        expect(parse('<length>', 'calc((2px + 2em) / 2)')).toBe('calc(1em + 1px)')
-        expect(parse('<length>', 'calc(min(1px, 1em))')).toBe('min(1em, 1px)')
-        expect(parse('<length>', 'calc(min(1em, 2px) + 1px)')).toBe('calc(1px + min(1em, 2px))')
-        expect(parse('<length>', 'calc(min(1em, 2px) - 1px)')).toBe('calc(-1px + min(1em, 2px))')
-        expect(parse('<length>', 'calc(min(1em, 2px) * sign(1px))')).toBe('min(1em, 2px)')
-        expect(parse('<length>', 'calc(min(1em, 2px) / sign(1px))')).toBe('min(1em, 2px)')
-        // <length-percentage>
-        expect(parse('<length-percentage>', 'calc(1px + 1%)')).toBe('calc(1% + 1px)')
-        expect(parse('<length-percentage>', 'calc(1px - 1%)')).toBe('calc(-1% + 1px)')
-        expect(parse('<length-percentage>', 'calc((1px + 1%) * 2)')).toBe('calc(2% + 2px)')
-        expect(parse('<length-percentage>', 'calc((2px + 2%) / 2)')).toBe('calc(1% + 1px)')
-        expect(parse('<length> | <percentage>', 'calc(1px + 1%)')).toBe('calc(1% + 1px)')
-        expect(parse('a | <percentage> | b | <length> | c', 'calc(1px + 1%)')).toBe('calc(1% + 1px)')
-        // <length> -> <number>
-        expect(parse('<number>', 'calc(1cm / 5mm)')).toBe('calc(2)')
-        expect(parse('<number>', 'calc(2 * 1px / 1em)')).toBe('calc(2px / 1em)')
-        expect(parse('<number>', 'calc(2 * (1px + 1em) / 1em)')).toBe('calc((2em + 2px) / 1em)')
-        expect(parse('<number>', 'calc(1px / 1em * 2)')).toBe('calc(2px / 1em)')
-        expect(parse('<number>', 'calc((1px + 1em) / 1em * 2)')).toBe('calc((2em + 2px) / 1em)')
-        // <angle>
-        expect(parse('<angle>', 'calc(1deg + 200grad)')).toBe('calc(181deg)')
-        expect(parse('<angle>', `calc(1deg + ${Math.PI.toString()}rad)`)).toBe('calc(181deg)')
-        expect(parse('<angle>', 'calc(1deg + 0.5turn)')).toBe('calc(181deg)')
-        // <frequency>
-        expect(parse('<frequency>', 'calc(1khz + 1hz)')).toBe('calc(1001hz)')
-        // <resolution>
-        expect(parse('<resolution>', 'calc(1dppx + 1x)')).toBe('calc(2dppx)')
-        expect(parse('<resolution>', 'calc(1dppx + 1dpcm)')).toBe(`calc(${(1 + (96 / 2.54)).toFixed(6)}dppx)`)
-        expect(parse('<resolution>', 'calc(1dppx + 1dpi)')).toBe('calc(97dppx)')
-        // <time>
-        expect(parse('<time>', 'calc(1s + 1ms)')).toBe('calc(1.001s)')
+        const valid = [
+            // <length>
+            ['<length>', 'calc(1px + 1cm)', `calc(${(1 + (96 / 2.54)).toFixed(6)}px)`],
+            ['<length>', 'calc(1px + 1mm)', `calc(${(1 + (96 / 2.54 / 10)).toFixed(6)}px)`],
+            ['<length>', 'calc(1px + 1Q)', `calc(${(1 + (96 / 2.54 / 40)).toFixed(6)}px)`],
+            ['<length>', 'calc(1px + 1in)', 'calc(97px)'],
+            ['<length>', 'calc(1px + 1pc)', 'calc(17px)'],
+            ['<length>', 'calc(1px + 1pt)', `calc(${(1 + (96 / 72)).toFixed(6)}px)`],
+            ['<length>', 'calc(1em + 1px + 1em)', 'calc(2em + 1px)'],
+            ['<length>', 'calc(1em - 1px - 1em)', 'calc(0em - 1px)'],
+            ['<length>', 'calc(3em * 2 / 3)', 'calc(2em)'],
+            ['<length>', 'calc(6em / 2 * 3)', 'calc(9em)'],
+            ['<length>', 'calc(3 * 2em / 3)', 'calc(2em)'],
+            ['<length>', 'calc(2 / 3 * 3em)', 'calc(2em)'],
+            ['<length>', 'calc((1px + 1em) * 2)', 'calc(2em + 2px)'],
+            ['<length>', 'calc((2px + 2em) / 2)', 'calc(1em + 1px)'],
+            ['<length>', 'calc(min(1px, 1em))', 'min(1em, 1px)'],
+            ['<length>', 'calc(min(1em, 2px) + 1px)', 'calc(1px + min(1em, 2px))'],
+            ['<length>', 'calc(min(1em, 2px) - 1px)', 'calc(-1px + min(1em, 2px))'],
+            ['<length>', 'calc(min(1em, 2px) * sign(1px))', 'min(1em, 2px)'],
+            ['<length>', 'calc(min(1em, 2px) / sign(1px))', 'min(1em, 2px)'],
+            // <length-percentage>
+            ['<length-percentage>', 'calc(1px + 1%)', 'calc(1% + 1px)'],
+            ['<length-percentage>', 'calc(1px - 1%)', 'calc(-1% + 1px)'],
+            ['<length-percentage>', 'calc((1px + 1%) * 2)', 'calc(2% + 2px)'],
+            ['<length-percentage>', 'calc((2px + 2%) / 2)', 'calc(1% + 1px)'],
+            ['<length> | <percentage>', 'calc(1px + 1%)', 'calc(1% + 1px)'],
+            ['a | <percentage> | b | <length> | c', 'calc(1px + 1%)', 'calc(1% + 1px)'],
+            // <length> -> <number>
+            ['<number>', 'calc(1cm / 5mm)', 'calc(2)'],
+            ['<number>', 'calc(2 * 1px / 1em)', 'calc(2px / 1em)'],
+            ['<number>', 'calc(2 * (1px + 1em) / 1em)', 'calc((2em + 2px) / 1em)'],
+            ['<number>', 'calc(1px / 1em * 2)', 'calc(2px / 1em)'],
+            ['<number>', 'calc((1px + 1em) / 1em * 2)', 'calc((2em + 2px) / 1em)'],
+            // <angle>
+            ['<angle>', 'calc(1deg + 200grad)', 'calc(181deg)'],
+            ['<angle>', `calc(1deg + ${Math.PI.toString()}rad)`, 'calc(181deg)'],
+            ['<angle>', 'calc(1deg + 0.5turn)', 'calc(181deg)'],
+            // <frequency>
+            ['<frequency>', 'calc(1khz + 1hz)', 'calc(1001hz)'],
+            // <resolution>
+            ['<resolution>', 'calc(1dppx + 1x)', 'calc(2dppx)'],
+            ['<resolution>', 'calc(1dppx + 1dpcm)', `calc(${(1 + (96 / 2.54)).toFixed(6)}dppx)`],
+            ['<resolution>', 'calc(1dppx + 1dpi)', 'calc(97dppx)'],
+            // <time>
+            ['<time>', 'calc(1s + 1ms)', 'calc(1.001s)'],
+        ]
+        valid.forEach(([definition, input, expected]) => expect(parse(definition, input)).toBe(expected))
     })
-    it('parses and serializes calc() resolved to an infinite number or not to a number', () => {
-        expect(parse('<number>', 'calc(Infinity)')).toBe('calc(infinity)')
-        // IEEE-754 semantics (tokenization turns -0 into 0)
-        expect(parse('<number>', 'calc(1 / 0)')).toBe('calc(infinity)')
-        expect(parse('<number>', 'calc(1 / -0)')).toBe('calc(infinity)')
-        expect(parse('<number>', 'calc(1 / (0 * -1))')).toBe('calc(-infinity)')
-        // Apply infinity to other operands
-        expect(parse('<length>', 'calc(1px + 2em / 0)')).toBe('calc(infinity * 1px + 1px)')
-        expect(parse('<length>', 'calc((2px + 2em) * infinity)')).toBe('calc(infinity * 1px + infinity * 1px)')
-        // NaN resolves to 0 when produced in a top-level calculation
-        expect(parse('<number>', 'calc(nan)')).toBe('calc(0)')
-        expect(parse('<number>', 'calc(0 / 0)')).toBe('calc(0)')
-        expect(parse('<number>', 'calc(calc(NaN))')).toBe('calc(0)')
-        expect(parse('<length>', 'calc(min(1em, 0px / 0) + 1px)')).toBe('calc(1px + min(1em, NaN * 1px))')
-        expect(parse('<length>', 'calc(min(1em, 0px * NaN) + 1px)')).toBe('calc(1px + min(1em, NaN * 1px))')
+    it('parses and serializes calc() with operands whose numeric part is infinite or not a number', () => {
+        const valid = [
+            // <calc-constant>
+            ['<number>', 'calc(Infinity)', 'calc(infinity)'],
+            ['<number>', 'calc(0 - Infinity)', 'calc(-infinity)'],
+            ['<number>', 'calc(nan)', 'calc(NaN)'],
+            ['<number>', 'calc(0 - nan)', 'calc(NaN)'],
+            // IEEE-754 semantics
+            ['<number>', 'calc(1 / 0)', 'calc(infinity)'],
+            ['<number>', 'calc(-1 / 0)', 'calc(-infinity)'],
+            ['<number>', 'calc(1 / -0)', 'calc(infinity)'],
+            ['<number>', 'calc(1 / (0 * -1))', 'calc(-infinity)'],
+            // Partial simplification
+            ['<length>', 'calc(1px + 2em / 0)', 'calc(infinity * 1px + 1px)'],
+            ['<length>', 'calc((2px + 2em) * infinity)', 'calc(infinity * 1px + infinity * 1px)'],
+            ['<length>', 'calc((2px + 2em) * NaN)', 'calc(NaN * 1px + NaN * 1px)'],
+        ]
+        valid.forEach(([definition, input, expected]) => expect(parse(definition, input)).toBe(expected))
     })
     it('parses and serializes calc() without performing range checking or rounding in a specified value', () => {
         expect(parse('<integer>', 'calc(1 / 2)')).toBe('calc(0.5)')
@@ -2151,19 +2075,22 @@ describe('<calc()>', () => {
 })
 describe('<min()>, <max()>', () => {
     it('fails to parse an invalid value', () => {
-        // Maximum 32 <calc-value>
-        expect(parse('<number>', `min(${[...Array(16)].map(() => '1 + 1').join(', ')}, 1)`)).toBe('')
-        expect(parse('<number>', `min(${[...Array(16)].map(() => '((1))').join(', ')}, (1))`)).toBe('')
-        // Maximum 32 arguments
-        expect(parse('<number>', `min(${[...Array(33)].map(() => 1).join(', ')})`)).toBe('')
-        // Arguments should resolve to the same type
-        expect(parse('<number>', 'min(1px, 1)')).toBe('')
-        expect(parse('<number>', 'min(1px / 1px, 1)')).toBe('')
-        expect(parse('<length>', 'min(1, 1px)')).toBe('')
-        expect(parse('<number> | <percentage>', 'min(1%, 1)')).toBe('')
+        const invalid = [
+            // Maximum 32 <calc-value>
+            ['<number>', `min(${[...Array(16)].map(() => '1 + 1').join(', ')}, 1)`],
+            ['<number>', `min(${[...Array(16)].map(() => '((1))').join(', ')}, (1))`],
+            // Maximum 32 arguments
+            ['<number>', `min(${[...Array(33)].map(() => 1).join(', ')})`],
+            // Arguments should resolve to the same type
+            ['<number>', 'min(1px, 1)'],
+            ['<number>', 'min(1px / 1px, 1)'],
+            ['<length>', 'min(1, 1px)'],
+            ['<number> | <percentage>', 'min(1%, 1)'],
+        ]
+        invalid.forEach(([definition, input]) => expect(parse(definition, input, false)).toBeNull())
     })
     it('parses a valid value', () => {
-        expect(parse('<min()>', 'min(1)', false, false)).toEqual({
+        expect(parse('<min()>', 'min(1)', false)).toEqual({
             name: 'min',
             representation: 'min(1)',
             type: new Set(['function', 'min()']),
@@ -2171,167 +2098,203 @@ describe('<min()>, <max()>', () => {
         })
     })
     it('parses and serializes a valid value', () => {
-        // Single argument
-        expect(parse('<number>', 'min(0)')).toBe('calc(0)')
-        expect(parse('<length>', 'min(1em)')).toBe('calc(1em)')
-        expect(parse('<length-percentage>', 'min(1%)')).toBe('calc(1%)')
-        // Multiple arguments
-        expect(parse('<number>', 'min(0, 1)')).toBe('calc(0)')
-        expect(parse('<number>', 'max(0, 1)')).toBe('calc(1)')
-        expect(parse('<percentage>', 'min(0%, 1%)')).toBe('calc(0%)')
-        expect(parse('<length>', 'min(1px, 1in)')).toBe('calc(1px)')
-        expect(parse('<length>', 'max(1px, 1in)')).toBe('calc(96px)')
-        expect(parse('<length>', 'min(1px, 1em)')).toBe('min(1em, 1px)')
-        expect(parse('<length-percentage>', 'min(min(1px, 1%), 1px)')).toBe('min(min(1%, 1px), 1px)')
-        // Maximum 32 <calc-value>
-        expect(parse('<number>', `min(${[...Array(15)].map(() => '1 + 1').join(', ')}, 1)`)).toBe('calc(1)')
-        expect(parse('<number>', `min(${[...Array(15)].map(() => '(1)').join(', ')}, (1))`)).toBe('calc(1)')
-        // Maximum 32 arguments
-        expect(parse('<number>', `min(${[...Array(32)].map((_, i) => i).join(', ')})`)).toBe('calc(0)')
+        const valid = [
+            // Single argument
+            ['<number>', 'min(0)', 'calc(0)'],
+            ['<length>', 'min(1em)', 'calc(1em)'],
+            ['<length-percentage>', 'min(1%)', 'calc(1%)'],
+            // Multiple arguments
+            ['<number>', 'min(0, 1)', 'calc(0)'],
+            ['<number>', 'max(0, 1)', 'calc(1)'],
+            ['<percentage>', 'min(0%, 1%)', 'calc(0%)'],
+            ['<length>', 'min(1px, 1in)', 'calc(1px)'],
+            ['<length>', 'max(1px, 1in)', 'calc(96px)'],
+            ['<length>', 'min(1px, 1em)', 'min(1em, 1px)'],
+            ['<length-percentage>', 'min(min(1px, 1%), 1px)', 'min(min(1%, 1px), 1px)'],
+            // Maximum 32 <calc-value>
+            ['<number>', `min(${[...Array(15)].map(() => '1 + 1').join(', ')}, 1)`, 'calc(1)'],
+            ['<number>', `min(${[...Array(15)].map(() => '(1)').join(', ')}, (1))`, 'calc(1)'],
+            // Maximum 32 arguments
+            ['<number>', `min(${[...Array(32)].map((_, i) => i).join(', ')})`, 'calc(0)'],
+        ]
+        valid.forEach(([definition, input, expected]) => expect(parse(definition, input)).toBe(expected))
     })
 })
 describe('<clamp()>', () => {
     it('fails to parse an invalid value', () => {
-        // Arguments should resolve to the same type
-        expect(parse('<number>', 'clamp(1, 1px, 1)')).toBe('')
-        expect(parse('<number>', 'clamp(1, 1px / 1px, 1)')).toBe('')
-        expect(parse('<length>', 'clamp(1px, 1, 1px)')).toBe('')
-        expect(parse('<number> | <percentage>', 'clamp(1, 1%, 1)')).toBe('')
+        const invalid = [
+            // Arguments should resolve to the same type
+            ['<number>', 'clamp(1, 1px, 1)'],
+            ['<number>', 'clamp(1, 1px / 1px, 1)'],
+            ['<length>', 'clamp(1px, 1, 1px)'],
+            ['<number> | <percentage>', 'clamp(1, 1%, 1)'],
+        ]
+        invalid.forEach(([definition, input]) => expect(parse(definition, input, false)).toBeNull())
     })
     it('parses and serializes a valid value', () => {
-        expect(parse('<length>', 'clamp(0px, 1px, 2px)')).toBe('calc(1px)')
-        expect(parse('<length>', 'clamp(0px, 2px, 1px)')).toBe('calc(1px)')
-        expect(parse('<length>', 'clamp(1px, 0px, 2px)')).toBe('calc(1px)')
-        expect(parse('<length>', 'clamp(1px, 2px, 0px)')).toBe('calc(1px)')
-        expect(parse('<length>', 'clamp(0px, 1in, 2px)')).toBe('calc(2px)')
-        expect(parse('<length>', 'clamp(0em, 1px, 2px)')).toBe('clamp(0em, 1px, 2px)')
-        expect(parse('<length-percentage>', 'clamp(clamp(0%, 1px, 2px), 1px, 2px)'))
-            .toBe('clamp(clamp(0%, 1px, 2px), 1px, 2px)')
+        const valid = [
+            ['<length>', 'clamp(0px, 1px, 2px)', 'calc(1px)'],
+            ['<length>', 'clamp(0px, 2px, 1px)', 'calc(1px)'],
+            ['<length>', 'clamp(1px, 0px, 2px)', 'calc(1px)'],
+            ['<length>', 'clamp(1px, 2px, 0px)', 'calc(1px)'],
+            ['<length>', 'clamp(0px, 1in, 2px)', 'calc(2px)'],
+            ['<length>', 'clamp(0em, 1px, 2px)', 'clamp(0em, 1px, 2px)'],
+            ['<length-percentage>', 'clamp(clamp(0%, 1px, 2px), 1px, 2px)', 'clamp(clamp(0%, 1px, 2px), 1px, 2px)'],
+        ]
+        valid.forEach(([definition, input, expected]) => expect(parse(definition, input)).toBe(expected))
     })
 })
 describe('<round()>', () => {
     it('fails to parse an invalid value', () => {
-        // Arguments should resolve to the same type
-        expect(parse('<number>', 'round(1px, 1)')).toBe('')
-        expect(parse('<number>', 'round(1px / 1px, 1)')).toBe('')
-        expect(parse('<length>', 'round(1, 1px)')).toBe('')
-        expect(parse('<number> | <percentage>', 'round(1%, 1)')).toBe('')
+        const invalid = [
+            // Arguments should resolve to the same type
+            ['<number>', 'round(1px, 1)'],
+            ['<number>', 'round(1px / 1px, 1)'],
+            ['<length>', 'round(1, 1px)'],
+            ['<number> | <percentage>', 'round(1%, 1)'],
+        ]
+        invalid.forEach(([definition, input]) => expect(parse(definition, input, false)).toBeNull())
     })
     it('parses and serializes a valid value', () => {
-        expect(parse('<length>', 'round(1.1px, 1px)')).toBe('calc(1px)')
-        expect(parse('<length>', 'round(1px, 2px)')).toBe('calc(2px)')
-        expect(parse('<length>', 'round(up, 1.1px, 1px)')).toBe('calc(2px)')
-        expect(parse('<length>', 'round(down, 1.9px, 1px)')).toBe('calc(1px)')
-        expect(parse('<length>', 'round(to-zero, 1px, 2px)')).toBe('calc(0px)')
-        expect(parse('<length>', 'round(to-zero, -1px, 2px)')).toBe('calc(0px)')
-        expect(parse('<length>', 'round(nearest, 1cm, 1px)')).toBe('calc(38px)')
-        expect(parse('<length>', 'round(1em, 1px)')).toBe('round(1em, 1px)')
-        expect(parse('<length-percentage>', 'round(round(1%, 1px), 1px)')).toBe('round(round(1%, 1px), 1px)')
+        const valid = [
+            ['<length>', 'round(1.1px, 1px)', 'calc(1px)'],
+            ['<length>', 'round(1px, 2px)', 'calc(2px)'],
+            ['<length>', 'round(up, 1.1px, 1px)', 'calc(2px)'],
+            ['<length>', 'round(down, 1.9px, 1px)', 'calc(1px)'],
+            ['<length>', 'round(to-zero, 1px, 2px)', 'calc(0px)'],
+            ['<length>', 'round(to-zero, -1px, 2px)', 'calc(0px)'],
+            ['<length>', 'round(nearest, 1cm, 1px)', 'calc(38px)'],
+            ['<length>', 'round(1em, 1px)', 'round(1em, 1px)'],
+            ['<length-percentage>', 'round(round(1%, 1px), 1px)', 'round(round(1%, 1px), 1px)'],
+        ]
+        valid.forEach(([definition, input, expected]) => expect(parse(definition, input)).toBe(expected))
     })
     it('parses and serializes round() resulting to 0⁻, 0⁺, NaN, or Infinity', () => {
-        // Rounding 0⁻ or 0⁺ is preserved as is (it is a multiple of every number)
-        expect(parse('<integer>', 'calc(1 / round(0 * -1, 1))')).toBe('calc(-infinity)')
-        // Rounding up to 0 results to 0⁻
-        expect(parse('<integer>', 'calc(1 / round(-1, 2))')).toBe('calc(-infinity)')
-        // 0 as step value results to NaN
-        expect(parse('<length>', 'calc(1em + round(1px, 0px))')).toBe('calc(1em + NaN * 1px)')
-        // An infinite input and step values result to NaN
-        expect(parse('<length>', 'calc(1em + round(1px / 0, 1px / 0))')).toBe('calc(1em + NaN * 1px)')
-        expect(parse('<length>', 'calc(1em + round(1px / 0, -1px / 0))')).toBe('calc(1em + NaN * 1px)')
-        expect(parse('<length>', 'calc(1em + round(-1px / 0, 1px / 0))')).toBe('calc(1em + NaN * 1px)')
-        expect(parse('<length>', 'calc(1em + round(-1px / 0, -1px / 0))')).toBe('calc(1em + NaN * 1px)')
-        // An infinite input value results to the same infinite value (if step value is finite and not 0)
-        expect(parse('<integer>', 'round(-infinity, 1)')).toBe('calc(-infinity)')
-        expect(parse('<integer>', 'round(infinity, 1)')).toBe('calc(infinity)')
-        // Rounding to nearest/zero with an infinite step value results to 0⁻ if input value is negative or 0⁻ (but finite)
-        expect(parse('<integer>', 'calc(1 / round(-1, -infinity))')).toBe('calc(-infinity)')
-        expect(parse('<integer>', 'calc(1 / round(-1, infinity))')).toBe('calc(-infinity)')
-        expect(parse('<integer>', 'calc(1 / round(0 * -1, -infinity))')).toBe('calc(-infinity)')
-        expect(parse('<integer>', 'calc(1 / round(0 * -1, infinity))')).toBe('calc(-infinity)')
-        expect(parse('<integer>', 'calc(1 / round(to-zero, -1, -infinity))')).toBe('calc(-infinity)')
-        expect(parse('<integer>', 'calc(1 / round(to-zero, -1, infinity))')).toBe('calc(-infinity)')
-        expect(parse('<integer>', 'calc(1 / round(to-zero, 0 * -1, -infinity))')).toBe('calc(-infinity)')
-        expect(parse('<integer>', 'calc(1 / round(to-zero, 0 * -1, infinity))')).toBe('calc(-infinity)')
-        // Rounding to nearest/zero with an infinite step value results to 0⁺ if input value is 0⁺ or positive (but finite)
-        expect(parse('<integer>', 'round(0, -infinity)')).toBe('calc(0)')
-        expect(parse('<integer>', 'round(0, infinity)')).toBe('calc(0)')
-        expect(parse('<integer>', 'round(1, -infinity)')).toBe('calc(0)')
-        expect(parse('<integer>', 'round(1, infinity)')).toBe('calc(0)')
-        expect(parse('<integer>', 'round(to-zero, 0, -infinity)')).toBe('calc(0)')
-        expect(parse('<integer>', 'round(to-zero, 0, infinity)')).toBe('calc(0)')
-        expect(parse('<integer>', 'round(to-zero, 1, -infinity)')).toBe('calc(0)')
-        expect(parse('<integer>', 'round(to-zero, 1, infinity)')).toBe('calc(0)')
-        // Rounding up with an infinite step value results to 0⁻ if input value is negative or 0⁻ (but finite)
-        expect(parse('<integer>', 'calc(1 / round(up, 0 * -1, infinity))')).toBe('calc(-infinity)')
-        expect(parse('<integer>', 'calc(1 / round(up, -1, infinity))')).toBe('calc(-infinity)')
-        // Rounding up with an infinite step value results to the same input value if it is 0⁺ (but finite)
-        expect(parse('<integer>', 'round(up, 0, infinity)')).toBe('calc(0)')
-        // Rounding up with an infinite step value results to Infinity if input value is positive (but finite)
-        expect(parse('<integer>', 'round(up, 1, infinity)')).toBe('calc(infinity)')
-        // Rounding down with an infinite step value results to -Infinity if input value is negative (but finite)
-        expect(parse('<integer>', 'round(down, -1, infinity)')).toBe('calc(-infinity)')
-        // Rounding down with an infinite step value results to the same input value if it is 0⁻
-        expect(parse('<integer>', 'calc(1 / round(down, 0 * -1, infinity))')).toBe('calc(-infinity)')
-        // Rounding down with an infinite step value results to the same input value if it is 0⁺ or positive (but finite)
-        expect(parse('<integer>', 'round(down, 0, infinity)')).toBe('calc(0)')
-        expect(parse('<integer>', 'round(down, 1, infinity)')).toBe('calc(0)')
+        const valid = [
+            // Rounding 0⁻ or 0⁺ is preserved as is (it is a multiple of every number)
+            ['calc(1 / round(-0, 1))', 'calc(infinity)'],
+            ['calc(1 / round(-1 * 0, 1))', 'calc(-infinity)'],
+            // Rounding up to 0 results to 0⁻
+            ['calc(1 / round(-1, 2))', 'calc(-infinity)'],
+            // 0 as step value results to NaN
+            ['round(1, 0)', 'calc(NaN)'],
+            // An infinite input and step values result to NaN
+            ['round(1 / 0, 1 / 0)', 'calc(NaN)'],
+            ['round(1 / 0, -1 / 0)', 'calc(NaN)'],
+            ['round(-1 / 0, 1 / 0)', 'calc(NaN)'],
+            ['round(-1 / 0, -1 / 0)', 'calc(NaN)'],
+            // An infinite input value results to the same infinite value (if step value is finite and not 0)
+            ['round(-infinity, 1)', 'calc(-infinity)'],
+            ['round(infinity, 1)', 'calc(infinity)'],
+            // Rounding to nearest/zero with an infinite step value results to 0⁻ if input value is negative or 0⁻ (but finite)
+            ['calc(1 / round(-1, -infinity))', 'calc(-infinity)'],
+            ['calc(1 / round(-1, infinity))', 'calc(-infinity)'],
+            ['calc(1 / round(0 * -1, -infinity))', 'calc(-infinity)'],
+            ['calc(1 / round(0 * -1, infinity))', 'calc(-infinity)'],
+            ['calc(1 / round(to-zero, -1, -infinity))', 'calc(-infinity)'],
+            ['calc(1 / round(to-zero, -1, infinity))', 'calc(-infinity)'],
+            ['calc(1 / round(to-zero, 0 * -1, -infinity))', 'calc(-infinity)'],
+            ['calc(1 / round(to-zero, 0 * -1, infinity))', 'calc(-infinity)'],
+            // Rounding to nearest/zero with an infinite step value results to 0⁺ if input value is 0⁺ or positive (but finite)
+            ['round(0, -infinity)', 'calc(0)'],
+            ['round(0, infinity)', 'calc(0)'],
+            ['round(1, -infinity)', 'calc(0)'],
+            ['round(1, infinity)', 'calc(0)'],
+            ['round(to-zero, 0, -infinity)', 'calc(0)'],
+            ['round(to-zero, 0, infinity)', 'calc(0)'],
+            ['round(to-zero, 1, -infinity)', 'calc(0)'],
+            ['round(to-zero, 1, infinity)', 'calc(0)'],
+            // Rounding up with an infinite step value results to 0⁻ if input value is negative or 0⁻ (but finite)
+            ['calc(1 / round(up, 0 * -1, infinity))', 'calc(-infinity)'],
+            ['calc(1 / round(up, -1, infinity))', 'calc(-infinity)'],
+            // Rounding up with an infinite step value results to the same input value if it is 0⁺ (but finite)
+            ['round(up, 0, infinity)', 'calc(0)'],
+            // Rounding up with an infinite step value results to Infinity if input value is positive (but finite)
+            ['round(up, 1, infinity)', 'calc(infinity)'],
+            // Rounding down with an infinite step value results to -Infinity if input value is negative (but finite)
+            ['round(down, -1, infinity)', 'calc(-infinity)'],
+            // Rounding down with an infinite step value results to the same input value if it is 0⁻
+            ['calc(1 / round(down, 0 * -1, infinity))', 'calc(-infinity)'],
+            // Rounding down with an infinite step value results to the same input value if it is 0⁺ or positive (but finite)
+            ['round(down, 0, infinity)', 'calc(0)'],
+            ['round(down, 1, infinity)', 'calc(0)'],
+        ]
+        valid.forEach(([input, expected]) => expect(parse('<number>', input)).toBe(expected))
     })
 })
 describe('<mod()>', () => {
     it('fails to parse an invalid value', () => {
-        // Arguments should resolve to the same type
-        expect(parse('<number>', 'mod(1px, 1)')).toBe('')
-        expect(parse('<number>', 'mod(1px / 1px, 1)')).toBe('')
-        expect(parse('<length>', 'mod(1, 1px)')).toBe('')
-        expect(parse('<number> | <percentage>', 'mod(1%, 1)')).toBe('')
+        const invalid = [
+            // Arguments should resolve to the same type
+            ['<number>', 'mod(1px, 1)'],
+            ['<number>', 'mod(1px / 1px, 1)'],
+            ['<length>', 'mod(1, 1px)'],
+            ['<number> | <percentage>', 'mod(1%, 1)'],
+        ]
+        invalid.forEach(([definition, input]) => expect(parse(definition, input, false)).toBeNull())
     })
     it('parses and serializes a valid value', () => {
-        expect(parse('<length>', 'mod(3px, 2px)')).toBe('calc(1px)')
-        expect(parse('<length>', 'mod(3px, -2px)')).toBe('calc(-1px)')
-        expect(parse('<length>', 'mod(-3px, 2px)')).toBe('calc(1px)')
-        expect(parse('<length>', 'mod(1in, 5px)')).toBe('calc(1px)')
-        expect(parse('<length>', 'mod(1em, 1px)')).toBe('mod(1em, 1px)')
-        expect(parse('<length-percentage>', 'mod(mod(1%, 1px), 1px)')).toBe('mod(mod(1%, 1px), 1px)')
+        const valid = [
+            ['<length>', 'mod(3px, 2px)', 'calc(1px)'],
+            ['<length>', 'mod(3px, -2px)', 'calc(-1px)'],
+            ['<length>', 'mod(-3px, 2px)', 'calc(1px)'],
+            ['<length>', 'mod(1in, 5px)', 'calc(1px)'],
+            ['<length>', 'mod(1em, 1px)', 'mod(1em, 1px)'],
+            ['<length-percentage>', 'mod(mod(1%, 1px), 1px)', 'mod(mod(1%, 1px), 1px)'],
+        ]
+        valid.forEach(([definition, input, expected]) => expect(parse(definition, input)).toBe(expected))
     })
     it('parses and serializes mod() resulting to NaN or Infinity', () => {
-        // 0 as modulus value results to NaN
-        expect(parse('<length>', 'calc(1em + mod(1px, 0px))')).toBe('calc(1em + NaN * 1px)')
-        // An infinite input value results to NaN
-        expect(parse('<length>', 'calc(1em + mod(1px / 0, 1px))')).toBe('calc(1em + NaN * 1px)')
-        // A positive infinite modulus value and a negative input value results to NaN (or the other way around)
-        expect(parse('<length>', 'calc(1em + mod(1px, -1px / 0))')).toBe('calc(1em + NaN * 1px)')
-        expect(parse('<length>', 'calc(1em + mod(-1px, 1px / 0))')).toBe('calc(1em + NaN * 1px)')
-        // An infinite modulus value results to the input value as is (if it has the same sign that the input value)
-        expect(parse('<integer>', 'mod(-1, -infinity)')).toBe('calc(-1)')
-        expect(parse('<integer>', 'mod(1, infinity)')).toBe('calc(1)')
+        const valid = [
+            // 0 as modulus value results to NaN
+            ['mod(1, 0)', 'calc(NaN)'],
+            // An infinite input value results to NaN
+            ['mod(1 / 0, 1)', 'calc(NaN)'],
+            // A positive infinite modulus value and a negative input value results to NaN (or the other way around)
+            ['mod(1, -1 / 0)', 'calc(NaN)'],
+            ['mod(-1, 1 / 0)', 'calc(NaN)'],
+            // An infinite modulus value results to the input value as is (if it has the same sign that the input value)
+            ['mod(-1, -infinity)', 'calc(-1)'],
+            ['mod(1, infinity)', 'calc(1)'],
+        ]
+        valid.forEach(([input, expected]) => expect(parse('<number>', input)).toBe(expected))
     })
 })
 describe('<rem()>', () => {
     it('fails to parse an invalid value', () => {
-        // Arguments should resolve to the same type
-        expect(parse('<number>', 'rem(1px, 1)')).toBe('')
-        expect(parse('<number>', 'rem(1px / 1px, 1)')).toBe('')
-        expect(parse('<number>', 'rem(1, 1px)')).toBe('')
-        expect(parse('<number> | <percentage>', 'rem(1%, 1)')).toBe('')
+        const invalid = [
+            // Arguments should resolve to the same type
+            ['<number>', 'rem(1px, 1)'],
+            ['<number>', 'rem(1px / 1px, 1)'],
+            ['<number>', 'rem(1, 1px)'],
+            ['<number> | <percentage>', 'rem(1%, 1)'],
+        ]
+        invalid.forEach(([definition, input]) => expect(parse(definition, input, false)).toBeNull())
     })
     it('parses and serializes a valid value', () => {
-        expect(parse('<length>', 'rem(3px, 2px)')).toBe('calc(1px)')
-        expect(parse('<length>', 'rem(3px, -2px)')).toBe('calc(1px)')
-        expect(parse('<length>', 'rem(-3px, 2px)')).toBe('calc(-1px)')
-        expect(parse('<length>', 'rem(1in, 5px)')).toBe('calc(1px)')
-        expect(parse('<length>', 'rem(1em, 1px)')).toBe('rem(1em, 1px)')
-        expect(parse('<length-percentage>', 'rem(rem(1%, 1px), 1px)')).toBe('rem(rem(1%, 1px), 1px)')
+        const valid = [
+            ['<length>', 'rem(3px, 2px)', 'calc(1px)'],
+            ['<length>', 'rem(3px, -2px)', 'calc(1px)'],
+            ['<length>', 'rem(-3px, 2px)', 'calc(-1px)'],
+            ['<length>', 'rem(1in, 5px)', 'calc(1px)'],
+            ['<length>', 'rem(1em, 1px)', 'rem(1em, 1px)'],
+            ['<length-percentage>', 'rem(rem(1%, 1px), 1px)', 'rem(rem(1%, 1px), 1px)'],
+        ]
+        valid.forEach(([definition, input, expected]) => expect(parse(definition, input)).toBe(expected))
     })
     it('parses and serializes rem() resulting to NaN or Infinity', () => {
-        // 0 as divisor value results to NaN
-        expect(parse('<length>', 'calc(1em + rem(1px, 0px))')).toBe('calc(1em + NaN * 1px)')
-        // An infinite input value results to NaN
-        expect(parse('<length>', 'calc(1em + rem(1px / 0, 1px))')).toBe('calc(1em + NaN * 1px)')
-        // An infinite modulus value results to the input value as is
-        expect(parse('<integer>', 'rem(1, infinity)')).toBe('calc(1)')
-        expect(parse('<integer>', 'rem(1, -infinity)')).toBe('calc(1)')
-        expect(parse('<integer>', 'rem(-1, -infinity)')).toBe('calc(-1)')
-        expect(parse('<integer>', 'rem(-1, infinity)')).toBe('calc(-1)')
+        const valid = [
+            // 0 as divisor value results to NaN
+            ['rem(1, 0)', 'calc(NaN)'],
+            // An infinite input value results to NaN
+            ['rem(1 / 0, 1)', 'calc(NaN)'],
+            // An infinite modulus value results to the input value as is
+            ['rem(1, infinity)', 'calc(1)'],
+            ['rem(1, -infinity)', 'calc(1)'],
+            ['rem(-1, -infinity)', 'calc(-1)'],
+            ['rem(-1, infinity)', 'calc(-1)'],
+        ]
+        valid.forEach(([input, expected]) => expect(parse('<number>', input)).toBe(expected))
     })
 })
 describe('<sin()>', () => {
@@ -2341,14 +2304,18 @@ describe('<sin()>', () => {
         expect(parse('<number> | <percentage>', 'sin(1%)')).toBe('')
     })
     it('parses and serializes a valid value', () => {
-        expect(parse('<number>', 'sin(45)')).toBe(`calc(${+Math.sin(45).toFixed(6)})`)
-        expect(parse('<number>', 'sin(45deg)')).toBe(`calc(${+Math.sin(toRadians(45)).toFixed(6)})`)
-        expect(parse('<number>', 'sin(1in / 2px)')).toBe(`calc(${+Math.sin(48).toFixed(6)})`)
-        expect(parse('<number>', 'sin(sin(90px / 2px))')).toBe(`calc(${+Math.sin(Math.sin(45)).toFixed(6)})`)
+        const valid = [
+            ['sin(45)', `calc(${+Math.sin(45).toFixed(6)})`],
+            ['sin(45deg)', `calc(${+Math.sin(toRadians(45)).toFixed(6)})`],
+            ['sin(1in / 2px)', `calc(${+Math.sin(48).toFixed(6)})`],
+            ['sin(sin(90px / 2px))', `calc(${+Math.sin(Math.sin(45)).toFixed(6)})`],
+        ]
+        valid.forEach(([input, expected]) => expect(parse('<number>', input)).toBe(expected))
     })
     it('parses and serializes sin() resulting to 0⁻', () => {
         // 0⁻ as input value results as is
-        expect(parse('<number>', 'calc(-1 / sin(0 * -1))')).toBe('calc(infinity)')
+        expect(parse('<number>', 'calc(1 / sin(-0))')).toBe('calc(infinity)')
+        expect(parse('<number>', 'calc(1 / sin(0 * -1))')).toBe('calc(-infinity)')
     })
 })
 describe('<cos()>', () => {
@@ -2358,10 +2325,13 @@ describe('<cos()>', () => {
         expect(parse('<number> | <percentage>', 'cos(1%)')).toBe('')
     })
     it('parses and serializes a valid value', () => {
-        expect(parse('<number>', 'cos(45)')).toBe(`calc(${+Math.cos(45).toFixed(6)})`)
-        expect(parse('<number>', 'cos(45deg)')).toBe(`calc(${+Math.cos(toRadians(45)).toFixed(6)})`)
-        expect(parse('<number>', 'cos(1in / 2px)')).toBe(`calc(${+Math.cos(48).toFixed(6)})`)
-        expect(parse('<number>', 'cos(cos(90px / 2px))')).toBe(`calc(${+Math.cos(Math.cos(45)).toFixed(6)})`)
+        const valid = [
+            ['cos(45)', `calc(${+Math.cos(45).toFixed(6)})`],
+            ['cos(45deg)', `calc(${+Math.cos(toRadians(45)).toFixed(6)})`],
+            ['cos(1in / 2px)', `calc(${+Math.cos(48).toFixed(6)})`],
+            ['cos(cos(90px / 2px))', `calc(${+Math.cos(Math.cos(45)).toFixed(6)})`],
+        ]
+        valid.forEach(([input, expected]) => expect(parse('<number>', input)).toBe(expected))
     })
 })
 describe('<tan()>', () => {
@@ -2371,94 +2341,131 @@ describe('<tan()>', () => {
         expect(parse('<number> | <percentage>', 'tan(1%)')).toBe('')
     })
     it('parses and serializes a valid value', () => {
-        expect(parse('<number>', 'tan(45)')).toBe(`calc(${+Math.tan(45).toFixed(6)})`)
-        expect(parse('<number>', 'tan(45deg)')).toBe('calc(1)')
-        expect(parse('<number>', 'tan(1in / 2px)')).toBe(`calc(${+Math.tan(48).toFixed(6)})`)
-        expect(parse('<number>', 'tan(tan(90px / 2px))')).toBe(`calc(${+Math.tan(Math.tan(45)).toFixed(6)})`)
+        const valid = [
+            ['tan(45)', `calc(${+Math.tan(45).toFixed(6)})`],
+            ['tan(45deg)', 'calc(1)'],
+            ['tan(1in / 2px)', `calc(${+Math.tan(48).toFixed(6)})`],
+            ['tan(tan(90px / 2px))', `calc(${+Math.tan(Math.tan(45)).toFixed(6)})`],
+        ]
+        valid.forEach(([input, expected]) => expect(parse('<number>', input)).toBe(expected))
     })
     it('parses and serializes tan() resulting to 0⁻, Infinity, or -Infinity', () => {
-        // 0⁻ as input value results as is
-        expect(parse('<number>', 'calc(-1 / tan(0 * -1))')).toBe('calc(infinity)')
-        // An asymptote as input value results to Infinity or -Infinity
-        expect(parse('<number>', 'tan(90deg)')).toBe('calc(infinity)')
-        expect(parse('<number>', 'tan(-270deg)')).toBe('calc(infinity)')
-        expect(parse('<number>', 'tan(450deg)')).toBe('calc(infinity)')
-        expect(parse('<number>', 'tan(-90deg)')).toBe('calc(-infinity)')
-        expect(parse('<number>', 'tan(270deg)')).toBe('calc(-infinity)')
-        expect(parse('<number>', 'tan(-450deg)')).toBe('calc(-infinity)')
+        const valid = [
+            // 0⁻ as input value results as is
+            ['calc(1 / tan(-0))', 'calc(infinity)'],
+            ['calc(1 / tan(-1 * 0))', 'calc(-infinity)'],
+            // An asymptote as input value results to Infinity or -Infinity
+            ['tan(90deg)', 'calc(infinity)'],
+            ['tan(-270deg)', 'calc(infinity)'],
+            ['tan(450deg)', 'calc(infinity)'],
+            ['tan(-90deg)', 'calc(-infinity)'],
+            ['tan(270deg)', 'calc(-infinity)'],
+            ['tan(-450deg)', 'calc(-infinity)'],
+        ]
+        valid.forEach(([input, expected]) => expect(parse('<number>', input)).toBe(expected))
     })
 })
 describe('<asin()>', () => {
     it('fails to parse an invalid value', () => {
-        // Argument should resolve to <number>
-        expect(parse('<angle>', 'asin(1deg)')).toBe('')
-        expect(parse('<angle-percentage>', 'asin(1%)')).toBe('')
-        expect(parse('<angle>', 'asin(asin(1))')).toBe('')
+        const invalid = [
+            // Argument should resolve to <number>
+            ['<angle>', 'asin(1deg)'],
+            ['<angle-percentage>', 'asin(1%)'],
+            ['<angle>', 'asin(asin(1))'],
+        ]
+        invalid.forEach(([definition, input]) => expect(parse(definition, input, false)).toBeNull())
     })
     it('parses and serializes a valid value', () => {
-        expect(parse('<angle>', 'asin(0.5)')).toBe('calc(30deg)')
-        expect(parse('<angle>', 'asin(1deg / 2deg)')).toBe('calc(30deg)')
-        expect(parse('<angle>', 'asin(1in / 192px)')).toBe('calc(30deg)')
+        const valid = [
+            ['asin(0.5)', 'calc(30deg)'],
+            ['asin(1deg / 2deg)', 'calc(30deg)'],
+            ['asin(1in / 192px)', 'calc(30deg)'],
+        ]
+        valid.forEach(([input, expected]) => expect(parse('<angle>', input)).toBe(expected))
     })
 })
 describe('<acos()>', () => {
     it('fails to parse an invalid value', () => {
-        // Argument should resolve to <number>
-        expect(parse('<angle>', 'acos(1deg)')).toBe('')
-        expect(parse('<angle-percentage>', 'acos(1%)')).toBe('')
-        expect(parse('<angle>', 'acos(acos(1))')).toBe('')
+        const invalid = [
+            // Argument should resolve to <number>
+            ['<angle>', 'acos(1deg)'],
+            ['<angle-percentage>', 'acos(1%)'],
+            ['<angle>', 'acos(acos(1))'],
+        ]
+        invalid.forEach(([definition, input]) => expect(parse(definition, input, false)).toBeNull())
     })
     it('parses and serializes a valid value', () => {
-        expect(parse('<angle>', 'acos(0.5)')).toBe('calc(60deg)')
-        expect(parse('<angle>', 'acos(1deg / 2deg)')).toBe('calc(60deg)')
-        expect(parse('<angle>', 'acos(1in / 192px)')).toBe('calc(60deg)')
+        const valid = [
+            ['acos(0.5)', 'calc(60deg)'],
+            ['acos(1deg / 2deg)', 'calc(60deg)'],
+            ['acos(1in / 192px)', 'calc(60deg)'],
+        ]
+        valid.forEach(([input, expected]) => expect(parse('<angle>', input)).toBe(expected))
     })
 })
 describe('<atan()>', () => {
     it('fails to parse an invalid value', () => {
-        // Argument should resolve to <number>
-        expect(parse('<angle>', 'atan(1deg)')).toBe('')
-        expect(parse('<angle-percentage>', 'atan(1%)')).toBe('')
-        expect(parse('<angle>', 'atan(atan(1))')).toBe('')
+        const invalid = [
+            // Argument should resolve to <number>
+            ['<angle>', 'atan(1deg)'],
+            ['<angle-percentage>', 'atan(1%)'],
+            ['<angle>', 'atan(atan(1))'],
+        ]
+        invalid.forEach(([definition, input]) => expect(parse(definition, input, false)).toBeNull())
     })
     it('parses and serializes a valid value', () => {
-        expect(parse('<angle>', 'atan(0.5)')).toBe(`calc(${+toDegrees(Math.atan(0.5)).toFixed(6)}deg)`)
-        expect(parse('<angle>', 'atan(1deg / 2deg)')).toBe(`calc(${+toDegrees(Math.atan(0.5)).toFixed(6)}deg)`)
-        expect(parse('<angle>', 'atan(1in / 192px)')).toBe(`calc(${+toDegrees(Math.atan(0.5)).toFixed(6)}deg)`)
+        const valid = [
+            ['atan(0.5)', `calc(${+toDegrees(Math.atan(0.5)).toFixed(6)}deg)`],
+            ['atan(1deg / 2deg)', `calc(${+toDegrees(Math.atan(0.5)).toFixed(6)}deg)`],
+            ['atan(1in / 192px)', `calc(${+toDegrees(Math.atan(0.5)).toFixed(6)}deg)`],
+        ]
+        valid.forEach(([input, expected]) => expect(parse('<angle>', input)).toBe(expected))
     })
 })
 describe('<atan2()>', () => {
     it('fails to parse an invalid value', () => {
-        // Arguments should resolve to the same type
-        expect(parse('<angle>', 'atan2(1, 1%)')).toBe('')
-        expect(parse('<angle>', 'atan2(1, 1px)')).toBe('')
-        expect(parse('<angle>', 'atan2(1%, 1)')).toBe('')
-        expect(parse('<angle>', 'atan2(1%, 1px)')).toBe('')
-        expect(parse('<angle>', 'atan2(1px, 1)')).toBe('')
-        expect(parse('<angle>', 'atan2(1px, 1%)')).toBe('')
-        expect(parse('<angle>', 'atan2(1px / 1px, 1))')).toBe('')
+        const invalid = [
+            // Arguments should resolve to the same type
+            'atan2(1, 1%)',
+            'atan2(1, 1px)',
+            'atan2(1%, 1)',
+            'atan2(1%, 1px)',
+            'atan2(1px, 1)',
+            'atan2(1px, 1%)',
+            'atan2(1px / 1px, 1))',
+        ]
+        invalid.forEach(input => expect(parse('<angle>', input, false)).toBeNull())
     })
     it('parses and serializes a valid value', () => {
-        expect(parse('<angle>', 'atan2(1, 1)')).toBe(`calc(${+toDegrees(Math.atan2(1, 1)).toFixed(6)}deg)`)
-        expect(parse('<angle>', 'atan2(1px, 1px)')).toBe(`calc(${+toDegrees(Math.atan2(1, 1)).toFixed(6)}deg)`)
-        expect(parse('<angle>', 'atan2(1in, 100px)')).toBe(`calc(${+toDegrees(Math.atan2(96, 100)).toFixed(6)}deg)`)
-        expect(parse('<angle>', 'atan2(1em, 1px)')).toBe('atan2(1em, 1px)')
-        expect(parse('<angle-percentage>', 'atan2(atan2(1%, 1deg), 1deg)')).toBe('atan2(atan2(1%, 1deg), 1deg)')
+        const valid = [
+            ['<angle>', 'atan2(1, 1)', `calc(${+toDegrees(Math.atan2(1, 1)).toFixed(6)}deg)`],
+            ['<angle>', 'atan2(1px, 1px)', `calc(${+toDegrees(Math.atan2(1, 1)).toFixed(6)}deg)`],
+            ['<angle>', 'atan2(1in, 100px)', `calc(${+toDegrees(Math.atan2(96, 100)).toFixed(6)}deg)`],
+            ['<angle>', 'atan2(1em, 1px)', 'atan2(1em, 1px)'],
+            ['<angle-percentage>', 'atan2(atan2(1%, 1deg), 1deg)', 'atan2(atan2(1%, 1deg), 1deg)'],
+        ]
+        valid.forEach(([definition, input, expected]) => expect(parse(definition, input)).toBe(expected))
     })
 })
 describe('<pow()>', () => {
     it('fails to parse an invalid value', () => {
-        // Argument should resolve to <number>s
-        expect(parse('<number>', 'pow(1px, 1px)')).toBe('')
-        expect(parse('<number>', 'pow(1px, 1)')).toBe('')
-        expect(parse('<number>', 'pow(1, 1px)')).toBe('')
-        expect(parse('<number> | <percentage>', 'pow(1%, 1)')).toBe('')
+        const invalid = [
+            // Argument should resolve to <number>s
+            ['<number>', 'pow(1px, 1px)'],
+            ['<number>', 'pow(1px, 1)'],
+            ['<number>', 'pow(1, 1px)'],
+            ['<number> | <percentage>', 'pow(1%, 1)'],
+        ]
+        invalid.forEach(([definition, input]) => expect(parse(definition, input, false)).toBeNull())
     })
     it('parses and serializes a valid value', () => {
-        expect(parse('<number>', 'pow(4, 2)')).toBe('calc(16)')
-        expect(parse('<number>', 'pow(4px / 1px, 2)')).toBe('calc(16)')
-        expect(parse('<number>', 'pow(1in / 24px, 2)')).toBe('calc(16)')
-        expect(parse('<number>', 'pow(pow(1em / 1px, 1), 1)')).toBe('pow(pow(1em / 1px, 1), 1)')
+        const valid = [
+            ['pow(4, 2)', 'calc(16)'],
+            ['pow(4px / 1px, 2)', 'calc(16)'],
+            ['pow(1in / 24px, 2)', 'calc(16)'],
+            ['pow(pow(1em / 1px, 1), 1)', 'pow(pow(1em / 1px, 1), 1)'],
+        ]
+        valid.forEach(([input, expected]) => expect(parse('<number>', input)).toBe(expected))
     })
 })
 describe('<sqrt()>', () => {
@@ -2468,42 +2475,57 @@ describe('<sqrt()>', () => {
         expect(parse('<number> | <percentage>', 'sqrt(1%)')).toBe('')
     })
     it('parses and serializes a valid value', () => {
-        expect(parse('<number>', 'sqrt(4)')).toBe('calc(2)')
-        expect(parse('<number>', 'sqrt(4px / 1px)')).toBe('calc(2)')
-        expect(parse('<number>', 'sqrt(1in / 1px)')).toBe(`calc(${Math.sqrt(96).toFixed(6)})`)
-        expect(parse('<number>', 'sqrt(sqrt(1em / 1px))')).toBe('sqrt(sqrt(1em / 1px))')
+        const valid = [
+            ['sqrt(4)', 'calc(2)'],
+            ['sqrt(4px / 1px)', 'calc(2)'],
+            ['sqrt(1in / 1px)', `calc(${Math.sqrt(96).toFixed(6)})`],
+            ['sqrt(sqrt(1em / 1px))', 'sqrt(sqrt(1em / 1px))'],
+        ]
+        valid.forEach(([input, expected]) => expect(parse('<number>', input)).toBe(expected))
     })
 })
 describe('<hypot()>', () => {
     it('fails to parse an invalid value', () => {
-        // Arguments should resolve to the same type
-        expect(parse('<number>', 'hypot(1px, 1)')).toBe('')
-        expect(parse('<length>', 'hypot(1, 1px)')).toBe('')
-        expect(parse('<number>', 'hypot(1px / 1px, 1)')).toBe('')
-        expect(parse('<number> | <percentage>', 'hypot(1%, 1)')).toBe('')
+        const invalid = [
+            // Arguments should resolve to the same type
+            ['<number>', 'hypot(1px, 1)'],
+            ['<length>', 'hypot(1, 1px)'],
+            ['<number>', 'hypot(1px / 1px, 1)'],
+            ['<number> | <percentage>', 'hypot(1%, 1)'],
+        ]
+        invalid.forEach(([definition, input]) => expect(parse(definition, input, false)).toBeNull())
     })
     it('parses and serializes a valid value', () => {
-        expect(parse('<number>', 'hypot(3, 4)')).toBe('calc(5)')
-        expect(parse('<length>', 'hypot(3px, 4px)')).toBe('calc(5px)')
-        expect(parse('<length>', 'hypot(1in, 72px)')).toBe('calc(120px)')
-        expect(parse('<length>', 'hypot(1em, 1px)')).toBe('hypot(1em, 1px)')
-        expect(parse('<length-percentage>', 'hypot(hypot(1%, 1px), 1px)')).toBe('hypot(hypot(1%, 1px), 1px)')
+        const valid = [
+            ['<number>', 'hypot(3, 4)', 'calc(5)'],
+            ['<length>', 'hypot(3px, 4px)', 'calc(5px)'],
+            ['<length>', 'hypot(1in, 72px)', 'calc(120px)'],
+            ['<length>', 'hypot(1em, 1px)', 'hypot(1em, 1px)'],
+            ['<length-percentage>', 'hypot(hypot(1%, 1px), 1px)', 'hypot(hypot(1%, 1px), 1px)'],
+        ]
+        valid.forEach(([definition, input, expected]) => expect(parse(definition, input)).toBe(expected))
     })
 })
 describe('<log()>', () => {
     it('fails to parse an invalid value', () => {
-        // Argument should be <number>(s)
-        expect(parse('<number>', 'log(1px, 1px)')).toBe('')
-        expect(parse('<number>', 'log(1px, 1)')).toBe('')
-        expect(parse('<number>', 'log(1, 1px)')).toBe('')
-        expect(parse('<number> | <percentage>', 'log(1%)')).toBe('')
+        const invalid = [
+            // Argument should be <number>(s)
+            ['<number>', 'log(1px, 1px)'],
+            ['<number>', 'log(1px, 1)'],
+            ['<number>', 'log(1, 1px)'],
+            ['<number> | <percentage>', 'log(1%)'],
+        ]
+        invalid.forEach(([definition, input]) => expect(parse(definition, input, false)).toBeNull())
     })
     it('parses and serializes a valid value', () => {
-        expect(parse('<number>', 'log(e)')).toBe('calc(1)')
-        expect(parse('<number>', 'log(8, 2)')).toBe('calc(3)')
-        expect(parse('<number>', 'log(96px / 12px, 2)')).toBe('calc(3)')
-        expect(parse('<number>', 'log(1in / 12px, 2)')).toBe('calc(3)')
-        expect(parse('<number>', 'log(log(1em / 1px))')).toBe('log(log(1em / 1px))')
+        const valid = [
+            ['log(e)', 'calc(1)'],
+            ['log(8, 2)', 'calc(3)'],
+            ['log(96px / 12px, 2)', 'calc(3)'],
+            ['log(1in / 12px, 2)', 'calc(3)'],
+            ['log(log(1em / 1px))', 'log(log(1em / 1px))'],
+        ]
+        valid.forEach(([input, expected]) => expect(parse('<number>', input)).toBe(expected))
     })
 })
 describe('<exp()>', () => {
@@ -2513,34 +2535,97 @@ describe('<exp()>', () => {
         expect(parse('<number> | <percentage>', 'exp(1%)')).toBe('')
     })
     it('parses and serializes a valid value', () => {
-        expect(parse('<number>', 'exp(1)')).toBe(`calc(${Math.E.toFixed(6)})`)
-        expect(parse('<number>', 'exp(1px / 1px)')).toBe(`calc(${Math.E.toFixed(6)})`)
-        expect(parse('<number>', 'exp(exp(1em / 1px))')).toBe('exp(exp(1em / 1px))')
+        const valid = [
+            ['exp(1)', `calc(${Math.E.toFixed(6)})`],
+            ['exp(1px / 1px)', `calc(${Math.E.toFixed(6)})`],
+            ['exp(exp(1em / 1px))', 'exp(exp(1em / 1px))'],
+        ]
+        valid.forEach(([input, expected]) => expect(parse('<number>', input)).toBe(expected))
     })
 })
 describe('<abs()>', () => {
     it('parses and serializes a valid value', () => {
-        expect(parse('<number>', 'abs(-1)')).toBe('calc(1)')
-        expect(parse('<number>', 'abs(-infinity)')).toBe('calc(infinity)')
-        expect(parse('<number> | <percentage>', 'abs(abs(-100%))')).toBe('calc(1)')
-        expect(parse('<length>', 'abs(-1px)')).toBe('calc(1px)')
-        expect(parse('<length>', 'abs(-1in)')).toBe('calc(96px)')
-        expect(parse('<length>', 'abs(-1em)')).toBe('abs(-1em)')
-        expect(parse('<length-percentage>', 'abs(abs(-1%))')).toBe('abs(abs(-1%))')
+        const valid = [
+            ['<number>', 'abs(-1)', 'calc(1)'],
+            ['<number>', 'abs(-infinity)', 'calc(infinity)'],
+            ['<number> | <percentage>', 'abs(abs(-100%))', 'calc(1)'],
+            ['<length>', 'abs(-1px)', 'calc(1px)'],
+            ['<length>', 'abs(-1in)', 'calc(96px)'],
+            ['<length>', 'abs(-1em)', 'abs(-1em)'],
+            ['<length-percentage>', 'abs(abs(-1%))', 'abs(abs(-1%))'],
+        ]
+        valid.forEach(([definition, input, expected]) => expect(parse(definition, input)).toBe(expected))
     })
 })
 describe('<sign()>', () => {
     it('parses and serializes a valid value', () => {
-        expect(parse('<number>', 'sign(-2)')).toBe('calc(-1)')
-        expect(parse('<number>', 'sign(-infinity)')).toBe('calc(-1)')
-        expect(parse('<number> | <percentage>', 'sign(sign(1%))')).toBe('calc(1)')
-        expect(parse('<number>', 'sign(1px)')).toBe('calc(1)')
-        expect(parse('<number>', 'sign(1in)')).toBe('calc(1)')
-        expect(parse('<number>', 'sign(sign(1em))')).toBe('sign(sign(1em))')
+        const valid = [
+            ['<number>', 'sign(-2)', 'calc(-1)'],
+            ['<number>', 'sign(-infinity)', 'calc(-1)'],
+            ['<number> | <percentage>', 'sign(sign(1%))', 'calc(1)'],
+            ['<number>', 'sign(1px)', 'calc(1)'],
+            ['<number>', 'sign(1in)', 'calc(1)'],
+            ['<number>', 'sign(sign(1em))', 'sign(sign(1em))'],
+        ]
+        valid.forEach(([definition, input, expected]) => expect(parse(definition, input)).toBe(expected))
     })
 })
 
 describe('<basic-shape>', () => {
+    it('parses a valid value', () => {
+
+        const comma = omitted(',')
+        const fillRule = omitted("<'fill-rule'>?")
+        const position = omitted('[at <position>]?')
+        const px = length(1, 'px', ['length-percentage'])
+        const radius = omitted("[round <'border-radius'>]?")
+
+        const valid = [
+            ['circle()', {
+                name: 'circle',
+                representation: 'circle()',
+                type: new Set(['function', 'circle()', 'basic-shape']),
+                value: list([omitted('<shape-radius>?'), position]),
+            }],
+            ['ellipse()', {
+                name: 'ellipse',
+                representation: 'ellipse()',
+                type: new Set(['function', 'ellipse()', 'basic-shape']),
+                value: list([omitted('[<shape-radius>{2}]?'), position]),
+            }],
+            ['inset(1px)', {
+                name: 'inset',
+                representation: 'inset(1px)',
+                type: new Set(['function', 'inset()', 'basic-shape-rect', 'basic-shape']),
+                value: list([list([px]), radius]),
+            }],
+            ['path("m 1 0 v 1")', {
+                name: 'path',
+                representation: 'path("m 1 0 v 1")',
+                type: new Set(['function', 'path()', 'basic-shape']),
+                value: list([fillRule, comma, string('m 1 0 v 1')]),
+            }],
+            ['polygon(1px 1px)', {
+                name: 'polygon',
+                representation: 'polygon(1px 1px)',
+                type: new Set(['function', 'polygon()', 'basic-shape']),
+                value: list([fillRule, comma, list([list([px, px])], ',')]),
+            }],
+            ['rect(1px 1px 1px 1px)', {
+                name: 'rect',
+                representation: 'rect(1px 1px 1px 1px)',
+                type: new Set(['function', 'rect()', 'basic-shape-rect', 'basic-shape']),
+                value: list([list([px, px, px, px]), radius]),
+            }],
+            ['xywh(1px 1px 1px 1px)', {
+                name: 'xywh',
+                representation: 'xywh(1px 1px 1px 1px)',
+                type: new Set(['function', 'xywh()', 'basic-shape-rect', 'basic-shape']),
+                value: list([list([px, px]), list([px, px]), radius]),
+            }],
+        ]
+        valid.forEach(([input, expected]) => expect(parse('<basic-shape>', input, false)).toEqual(expected))
+    })
     it('parses and serializes a valid value', () => {
         const valid = [
             ['circle()', 'circle(at center center)'],
@@ -2562,57 +2647,6 @@ describe('<basic-shape>', () => {
         ]
         valid.forEach(([input, expected = input]) => expect(parse('<basic-shape>', input)).toBe(expected))
     })
-    it('parses a valid value', () => {
-
-        const comma = omitted(',')
-        const fillRule = omitted("<'fill-rule'>?")
-        const position = omitted('[at <position>]?')
-        const px = length(1, 'px', ['length-percentage'])
-        const radius = omitted("[round <'border-radius'>]?")
-
-        expect(parse('<basic-shape>', 'circle()', false, false)).toEqual({
-            name: 'circle',
-            representation: 'circle()',
-            type: new Set(['function', 'circle()', 'basic-shape']),
-            value: list([omitted('<shape-radius>?'), position]),
-        })
-        expect(parse('<basic-shape>', 'ellipse()', false, false)).toEqual({
-            name: 'ellipse',
-            representation: 'ellipse()',
-            type: new Set(['function', 'ellipse()', 'basic-shape']),
-            value: list([omitted('[<shape-radius>{2}]?'), position]),
-        })
-        expect(parse('<basic-shape>', 'inset(1px)', false, false)).toEqual({
-            name: 'inset',
-            representation: 'inset(1px)',
-            type: new Set(['function', 'inset()', 'basic-shape-rect', 'basic-shape']),
-            value: list([list([px]), radius]),
-        })
-        expect(parse('<basic-shape>', 'path("m 1 0 v 1")', false, false)).toEqual({
-            name: 'path',
-            representation: 'path("m 1 0 v 1")',
-            type: new Set(['function', 'path()', 'basic-shape']),
-            value: list([fillRule, comma, string('m 1 0 v 1')]),
-        })
-        expect(parse('<basic-shape>', 'polygon(1px 1px)', false, false)).toEqual({
-            name: 'polygon',
-            representation: 'polygon(1px 1px)',
-            type: new Set(['function', 'polygon()', 'basic-shape']),
-            value: list([fillRule, comma, list([list([px, px])], ',')]),
-        })
-        expect(parse('<basic-shape>', 'rect(1px 1px 1px 1px)', false, false)).toEqual({
-            name: 'rect',
-            representation: 'rect(1px 1px 1px 1px)',
-            type: new Set(['function', 'rect()', 'basic-shape-rect', 'basic-shape']),
-            value: list([list([px, px, px, px]), radius]),
-        })
-        expect(parse('<basic-shape>', 'xywh(1px 1px 1px 1px)', false, false)).toEqual({
-            name: 'xywh',
-            representation: 'xywh(1px 1px 1px 1px)',
-            type: new Set(['function', 'xywh()', 'basic-shape-rect', 'basic-shape']),
-            value: list([list([px, px]), list([px, px]), radius]),
-        })
-    })
 })
 describe('<color>', () => {
     it('fails to parse an invalid value', () => {
@@ -2625,34 +2659,32 @@ describe('<color>', () => {
             '#1234567',
             '#123456789',
         ]
-        invalid.forEach(input => expect(parse('<color>', input, false, false)).toBeNull())
+        invalid.forEach(input => expect(parse('<color>', input, false)).toBeNull())
     })
     it('parses a valid value', () => {
-
-        expect(parse('<color>', 'red', false, false))
-            .toEqual(keyword('red', ['named-color', 'absolute-color-base', 'color']))
-        expect(parse('<color>', '#000', false, false))
-            .toEqual(hash('000', ['hex-color', 'absolute-color-base', 'color']))
-
         const zero = number(0)
         const rgb = list([
             list([zero, zero, zero], ','),
             omitted(','),
             omitted('<alpha-value>?'),
         ])
-
-        expect(parse('<color>', 'rgb(0, 0, 0)', false, false)).toEqual({
-            name: 'rgb',
-            representation: 'rgb(0, 0, 0)',
-            type: new Set(['function', 'rgb()', 'absolute-color-function', 'absolute-color-base', 'color']),
-            value: rgb,
-        })
-        expect(parse('<color>', 'rgba(0, 0, 0)', false, false)).toEqual({
-            name: 'rgba',
-            representation: 'rgba(0, 0, 0)',
-            type: new Set(['function', 'rgba()', 'absolute-color-function', 'absolute-color-base', 'color']),
-            value: rgb,
-        })
+        const valid = [
+            ['red', keyword('red', ['named-color', 'absolute-color-base', 'color'])],
+            ['#000', hash('000', ['hex-color', 'absolute-color-base', 'color'])],
+            ['rgb(0, 0, 0)', {
+                name: 'rgb',
+                representation: 'rgb(0, 0, 0)',
+                type: new Set(['function', 'legacy-rgb-syntax', 'rgb()', 'absolute-color-function', 'absolute-color-base', 'color']),
+                value: rgb,
+            }],
+            ['rgba(0, 0, 0)', {
+                name: 'rgba',
+                representation: 'rgba(0, 0, 0)',
+                type: new Set(['function', 'legacy-rgba-syntax', 'rgba()', 'absolute-color-function', 'absolute-color-base', 'color']),
+                value: rgb,
+            }],
+        ]
+        valid.forEach(([input, expected]) => expect(parse('<color>', input, false)).toEqual(expected))
     })
     it('parses and serializes <hex-color>', () => {
         const valid = [
@@ -2664,9 +2696,6 @@ describe('<color>', () => {
             ['#ff00ff66', 'rgba(255, 0, 255, 0.4)'],
         ]
         valid.forEach(([input, expected]) => expect(parse('<color>', input)).toBe(expected))
-    })
-    it('parses and serializes <deprecated-color>', () => {
-        expect(parse('<color>', 'ActiveBorder')).toBe('activeborder')
     })
     it('parses and serializes <rgb()> or <rgba()>', () => {
         const valid = [
@@ -2724,10 +2753,10 @@ describe('<color>', () => {
             ['hsla(0, 0%, 0%, 0%)', 'rgba(0, 0, 0, 0)'],
             ['hsla(0, 0%, 0%, 1)', 'rgb(0, 0, 0)'],
             // Out of range arguments
-            ['hsl(-540 -1% 50% / -1)', 'rgba(128, 128, 128, 0)'],
-            ['hsl(540 101% 50% / 2)', 'rgb(0, 255, 255)'],
-            ['hsl(-540deg 100% 50% / -1%)', 'rgba(0, 255, 255, 0)'],
-            ['hsl(540deg 100% 50% / 101%)', 'rgb(0, 255, 255)'],
+            ['hsl(-540 -1 50 / -1)', 'rgba(128, 128, 128, 0)'],
+            ['hsl(540 101 50 / 2)', 'rgb(0, 255, 255)'],
+            ['hsl(-540deg -1% 50% / -1%)', 'rgba(128, 128, 128, 0)'],
+            ['hsl(540deg 101% 50% / 101%)', 'rgb(0, 255, 255)'],
             // Map `none` to `0`
             ['hsl(none 100% 50% / none)', 'rgba(255, 0, 0, 0)'],
             ['hsl(0 none none)', 'rgb(0, 0, 0)'],
@@ -2758,7 +2787,7 @@ describe('<color>', () => {
             ['hwb(-540deg 0% 0% / 101%)', 'rgb(0, 255, 255)'],
             ['hwb(0 -1% 101%)', 'rgb(0, 0, 0)'],
             ['hwb(0 101% -1%)', 'rgb(255, 255, 255)'],
-            // Map `none` to `0` (deviates from the specification but it is browsers conformant)
+            // Map `none` to `0`
             ['hwb(none none none / none)', 'rgba(255, 0, 0, 0)'],
             ['hwb(0 none none)', 'rgb(255, 0, 0)'],
             // Math function
@@ -2901,21 +2930,37 @@ describe('<container-name>', () => {
             'not',
             'or',
         ]
-        invalid.forEach(input => expect(parse('<container-name>', input, false, false)).toBeNull())
+        invalid.forEach(input => expect(parse('<container-name>', input, false)).toBeNull())
     })
     it('parses a valid value', () => {
-        expect(parse('<container-name>', 'name', false, false))
-            .toEqual(customIdent('name', ['container-name']))
+        expect(parse('<container-name>', 'name', false)).toEqual(customIdent('name', ['container-name']))
     })
 })
-describe('<family-name>, <font-face-name>', () => {
+describe('<family-name>', () => {
     it('fails to parse an invalid value', () => {
-        expect(parse('<family-name>', 'serif', false, false)).toBeNull()
+        const invalid = [
+            // `font-family` in style rule, @font-face, @font-palette-values
+            ['serif', { name: 'font-family', type: 'property', value: '<family-name>' }],
+            // Prelude of `@font-feature-values`
+            ['serif', '<family-name>', { name: 'font-feature-values', type: 'rule' }],
+            // `voice-family` in style rule
+            ['male', { name: 'voice-family', type: 'property', value: '<family-name>' }],
+            ['preserve', { name: 'voice-family', type: 'property', value: '<family-name>' }],
+        ]
+        invalid.forEach(([input, definition, context]) => {
+            if (context) {
+                parser.contexts.push(context)
+                expect(parse(definition, input, false)).toBeNull()
+                parser.contexts.pop()
+            } else {
+                expect(parse(definition, input, false)).toBeNull()
+            }
+        })
     })
     it('parses a valid value', () => {
-        expect(parse('<family-name>', '"serif"', false, false))
+        expect(parse('<family-name>', '"serif"', false))
             .toEqual(string('serif', ['family-name']))
-        expect(parse('<family-name>', 'the serif', false, false))
+        expect(parse('<family-name>', 'the serif', false))
             .toEqual(list([customIdent('the'), customIdent('serif')], ' ', ['family-name']))
     })
 })
@@ -2928,10 +2973,10 @@ describe('<feature-tag-value>', () => {
             // Non-ASCII
             '"©aaa"',
         ]
-        invalid.forEach(input => expect(parse('<feature-tag-value>', input, false, false)).toBeNull())
+        invalid.forEach(input => expect(parse('<feature-tag-value>', input, false)).toBeNull())
     })
     it('parses a valid value', () => {
-        expect(parse('<feature-tag-value>', '"aaaa"', false, false))
+        expect(parse('<feature-tag-value>', '"aaaa"', false))
             .toEqual(list([string('aaaa'), omitted('[<integer> | on | off]?')], ' ', ['feature-tag-value']))
     })
 })
@@ -2976,41 +3021,39 @@ describe('<gradient>', () => {
             ' ',
             ['color-stop-list'])
 
-        expect(parse('<gradient>', 'conic-gradient(red, cyan)', false, false)).toEqual({
+        expect(parse('<gradient>', 'conic-gradient(red, cyan)', false)).toEqual({
             name: 'conic-gradient',
             representation: 'conic-gradient(red, cyan)',
             type: new Set(['function', 'conic-gradient()', 'gradient']),
             value: list([
-                omitted('[from <angle>]?'),
-                atCenter,
-                comma,
+                omitted('[[[from <angle> | <zero>]? [at <position>]?]! || <color-interpolation-method>]?'),
+                omitted(','),
                 angularStopList,
             ]),
         })
-        expect(parse('<gradient>', 'linear-gradient(red, cyan)', false, false)).toEqual({
+        expect(parse('<gradient>', 'linear-gradient(red, cyan)', false)).toEqual({
             name: 'linear-gradient',
             representation: 'linear-gradient(red, cyan)',
             type: new Set(['function', 'linear-gradient()', 'gradient']),
             value: list([
-                omitted('[<angle> | to <side-or-corner>]?'),
+                omitted('[<angle> | <zero> | to <side-or-corner> || <color-interpolation-method>]?'),
                 omitted(','),
                 linearStopList,
             ]),
         })
-        expect(parse('<gradient>', 'radial-gradient(red, cyan)', false, false)).toEqual({
+        expect(parse('<gradient>', 'radial-gradient(red, cyan)', false)).toEqual({
             name: 'radial-gradient',
             representation: 'radial-gradient(red, cyan)',
             type: new Set(['function', 'radial-gradient()', 'gradient']),
             value: list([
-                omitted('[<ending-shape> || <size>]?'),
-                atCenter,
-                comma,
+                omitted('[[[<rg-ending-shape> || <rg-size>]? [at <position>]?]! || <color-interpolation-method>]?'),
+                omitted(','),
                 linearStopList,
             ]),
         })
     })
     it('parses and serializes a valid value', () => {
-        [
+        const valid = [
             ['CONIC-gradient(red, cyan)', 'conic-gradient(at center center, red, cyan)'],
             ['LINEAR-gradient(red, cyan)', 'linear-gradient(red, cyan)'],
             ['RADIAL-gradient(red, cyan)', 'radial-gradient(at center center, red, cyan)'],
@@ -3023,16 +3066,19 @@ describe('<gradient>', () => {
             ['-webkit-repeating-linear-gradient(red, cyan)', 'repeating-linear-gradient(red, cyan)'],
             ['-webkit-radial-gradient(red, cyan)', 'radial-gradient(at center center, red, cyan)'],
             ['-webkit-repeating-radial-gradient(red, cyan)', 'repeating-radial-gradient(at center center, red, cyan)'],
-            // Simplified gradient configurations
+            // Simplified configuration
+            ['conic-gradient(in oklab, red, cyan)', 'conic-gradient(at center center, red, cyan)'],
             ['conic-gradient(from 0, red, cyan)', 'conic-gradient(at center center, red, cyan)'],
             ['conic-gradient(from 0deg, red, cyan)', 'conic-gradient(at center center, red, cyan)'],
             ['conic-gradient(from 0turn, red, cyan)', 'conic-gradient(at center center, red, cyan)'],
             ['conic-gradient(from 360deg, red, cyan)', 'conic-gradient(at center center, red, cyan)'],
             ['conic-gradient(from calc(360deg), red, cyan)', 'conic-gradient(at center center, red, cyan)'],
+            ['linear-gradient(in oklab, red, cyan)', 'linear-gradient(red, cyan)'],
             ['linear-gradient(180deg, red, cyan)', 'linear-gradient(red, cyan)'],
             ['linear-gradient(1.5turn, red, cyan)', 'linear-gradient(red, cyan)'],
             ['linear-gradient(to bottom, red, cyan)', 'linear-gradient(red, cyan)'],
             ['linear-gradient(calc(540deg), red, cyan)', 'linear-gradient(red, cyan)'],
+            ['radial-gradient(in oklab, red, cyan)', 'radial-gradient(at center center, red, cyan)'],
             ['radial-gradient(circle farthest-corner, red, cyan)', 'radial-gradient(circle at center center, red, cyan)'],
             ['radial-gradient(circle 1px, red, cyan)', 'radial-gradient(1px at center center, red, cyan)'],
             ['radial-gradient(ellipse farthest-corner, red, cyan)', 'radial-gradient(at center center, red, cyan)'],
@@ -3044,7 +3090,8 @@ describe('<gradient>', () => {
             ['linear-gradient(red 0% 50%, cyan 50% 0%)', 'linear-gradient(red 0%, red 50%, cyan 50%, cyan 0%)'],
             ['radial-gradient(red 0% 50%)', 'radial-gradient(at center center, red 0%, red 50%)'],
             ['radial-gradient(red 0% 50%, cyan 50% 0%)', 'radial-gradient(at center center, red 0%, red 50%, cyan 50%, cyan 0%)'],
-        ].forEach(([input, expected]) => expect(parse('<gradient>', input)).toBe(expected))
+        ]
+        valid.forEach(([input, expected]) => expect(parse('<gradient>', input)).toBe(expected))
     })
 })
 describe('<grid-line>', () => {
@@ -3055,10 +3102,10 @@ describe('<grid-line>', () => {
             '-1 auto',
             'span auto',
         ]
-        invalid.forEach(input => expect(parse('<grid-line>', input, false, false)).toBeNull())
+        invalid.forEach(input => expect(parse('<grid-line>', input, false)).toBeNull())
     })
     it('parses a valid value', () => {
-        expect(parse('<grid-line>', 'auto', false, false)).toEqual(keyword('auto', ['grid-line']))
+        expect(parse('<grid-line>', 'auto', false)).toEqual(keyword('auto', ['grid-line']))
     })
     it('parses and serializes a valid value', () => {
         expect(parse('<grid-line>', 'span 1')).toBe('span 1')
@@ -3076,10 +3123,10 @@ describe('<id-selector>', () => {
             '#\\\n',
             '#-\\\n',
         ]
-        invalid.forEach(input => expect(parse('<id-selector>', input, false, false)).toBeNull())
+        invalid.forEach(input => expect(parse('<id-selector>', input, false)).toBeNull())
     })
     it('parses a valid value', () => {
-        expect(parse('<id-selector>', '#identifier', false, false))
+        expect(parse('<id-selector>', '#identifier', false))
             .toEqual(hash('identifier', ['id', 'hash-token', 'id-selector']))
     })
     it('parses and serializes a valid value', () => {
@@ -3121,8 +3168,8 @@ describe('<id-selector>', () => {
 })
 describe('<image-set()>', () => {
     it('fails to parse an invalid value', () => {
-        expect(parse('<image-set()>', 'image-set(image-set("image.jpg" 1x))', false, false)).toBeNull()
-        expect(parse('<image-set()>', 'image-set(cross-fade(image-set("image.jpg" 1x)))', false, false)).toBeNull()
+        expect(parse('<image-set()>', 'image-set(image-set("image.jpg" 1x))', false)).toBeNull()
+        expect(parse('<image-set()>', 'image-set(cross-fade(image-set("image.jpg" 1x)))', false)).toBeNull()
     })
     it('parses a valid value', () => {
 
@@ -3131,7 +3178,7 @@ describe('<image-set()>', () => {
         const format = omitted('type(<string>)')
         const option = list([url, list([resolution, format])], ' ', ['image-set-option'])
 
-        expect(parse('<image-set()>', 'image-set("image.jpg" 1x)', false, false)).toEqual({
+        expect(parse('<image-set()>', 'image-set("image.jpg" 1x)', false)).toEqual({
             name: 'image-set',
             representation: 'image-set("image.jpg" 1x)',
             type: new Set(['function', 'image-set()']),
@@ -3144,11 +3191,10 @@ describe('<image-set()>', () => {
 })
 describe('<keyframes-name>', () => {
     it('fails to parse an invalid value', () => {
-        expect(parse('<keyframes-name>', 'none', false, false)).toBeNull()
+        expect(parse('<keyframes-name>', 'none', false)).toBeNull()
     })
     it('parses a valid value', () => {
-        expect(parse('<keyframes-name>', 'animation', false, false))
-            .toEqual(customIdent('animation', ['keyframes-name']))
+        expect(parse('<keyframes-name>', 'animation', false)).toEqual(customIdent('animation', ['keyframes-name']))
     })
     it('parses and serializes a valid value', () => {
         const valid = [
@@ -3162,27 +3208,42 @@ describe('<keyframes-name>', () => {
 })
 describe('<keyframe-selector>', () => {
     it('fails to parse an invalid value', () => {
-        expect(parse('<keyframe-selector>', 'none', false, false)).toBeNull()
+        expect(parse('<keyframe-selector>', 'none', false)).toBeNull()
     })
     it('parses a valid value', () => {
-        expect(parse('<keyframe-selector>', '0%', false, false))
-            .toEqual(percentage(0, ['keyframe-selector']))
+        expect(parse('<keyframe-selector>', '0%', false)).toEqual(percentage(0, ['keyframe-selector']))
     })
     it('parses and serializes a valid value', () => {
         expect(parse('<keyframe-selector>', 'from')).toBe('0%')
         expect(parse('<keyframe-selector>', 'to')).toBe('100%')
     })
 })
+describe('<layer-name>', () => {
+    it('fails to parse an invalid value', () => {
+        const invalid = [
+            // Invalid whitespace
+            'prefix .name',
+            'prefix. name',
+            // Invalid CSS-wide keyword
+            'initial',
+        ]
+        invalid.forEach(input => expect(parse('<layer-name>', input, false)).toBeNull())
+    })
+    it('parses a valid value', () => {
+        const name = list([ident('prefix'), list([list([delimiter('.'), ident('name')], '')], '')], '', ['layer-name'])
+        expect(parse('<layer-name>', 'prefix.name', false)).toEqual(name)
+    })
+})
 describe('<line-names>', () => {
     it('fails to parse an invalid value', () => {
-        expect(parse('<line-names>', '[auto]', false, false)).toBeNull()
-        expect(parse('<line-names>', '[span]', false, false)).toBeNull()
+        expect(parse('<line-names>', '[auto]', false)).toBeNull()
+        expect(parse('<line-names>', '[span]', false)).toBeNull()
     })
     it('parses a valid value', () => {
 
         const name = customIdent('name')
 
-        expect(parse('<line-names>', '[name name]', false, false)).toEqual({
+        expect(parse('<line-names>', '[name name]', false)).toEqual({
             associatedToken: '[',
             representation: '[name name]',
             type: new Set(['simple-block', 'line-names']),
@@ -3191,7 +3252,7 @@ describe('<line-names>', () => {
     })
 })
 describe('<media-type>', () => {
-    it('fails to parse an invalid valude', () => {
+    it('fails to parse an invalid value', () => {
         const invalid = [
             'and',
             'not',
@@ -3199,20 +3260,19 @@ describe('<media-type>', () => {
             'or',
             'layer',
         ]
-        invalid.forEach(input => expect(parse('<media-type>', input, false, false)).toBeNull())
+        invalid.forEach(input => expect(parse('<media-type>', input, false)).toBeNull())
     })
     it('parses a valid value', () => {
-        expect(parse('<media-type>', 'all', false, false))
-            .toEqual(ident('all', ['media-type']))
+        expect(parse('<media-type>', 'all', false)).toEqual(ident('all', ['media-type']))
     })
 })
 describe('<mf-comparison>', () => {
-    it('fails to parse an invalid valude', () => {
-        expect(parse('<mf-comparison>', '< =', false, false)).toBeNull()
-        expect(parse('<mf-comparison>', '> =', false, false)).toBeNull()
+    it('fails to parse an invalid value', () => {
+        expect(parse('<mf-comparison>', '< =', false)).toBeNull()
+        expect(parse('<mf-comparison>', '> =', false)).toBeNull()
     })
     it('parses a valid value', () => {
-        expect(parse('<mf-comparison>', '<=', false, false))
+        expect(parse('<mf-comparison>', '<=', false))
             .toEqual(list([delimiter('<'), delimiter('=')], '', ['mf-lt', 'mf-comparison']))
     })
 })
@@ -3227,18 +3287,14 @@ describe('<mf-name>', () => {
             ['-webkit-max-device-pixel-ratio', 'max-resolution'],
         ]
         names.forEach(([name, representation = name]) =>
-            expect(parse('<mf-name>', name, false, false))
-                .toEqual(ident(representation, type, name)))
+            expect(parse('<mf-name>', name, false)).toEqual(ident(representation, type, name)))
     })
 })
 describe('<page-selector-list>', () => {
     it('fails to parse an invalid value', () => {
-        const invalid = [
-            // Invalid whitespace
-            'toc :left',
-            'toc: left',
-        ]
-        invalid.forEach(input => expect(parse('<page-selector-list>', input, false, false)).toBeNull())
+        // Invalid whitespace
+        expect(parse('<page-selector-list>', 'toc :left', false)).toBeNull()
+        expect(parse('<page-selector-list>', 'toc: left', false)).toBeNull()
     })
     it('parses a valid value', () => {
 
@@ -3248,12 +3304,12 @@ describe('<page-selector-list>', () => {
         const selector = list([toc, pseudoChain], '', ['page-selector'])
         const selectors = list([selector], ',', ['page-selector-list'])
 
-        expect(parse('<page-selector-list>', 'toc:right', false, false)).toEqual(selectors)
+        expect(parse('<page-selector-list>', 'toc:right', false)).toEqual(selectors)
     })
 })
 describe('<position>', () => {
     it('parses a valid value', () => {
-        expect(parse('<position>', 'left', false, false))
+        expect(parse('<position>', 'left', false))
             .toEqual(list([keyword('left'), omitted('top | center | bottom')], ' ', ['position']))
     })
     it('parses and serializes a valid value', () => {
@@ -3267,6 +3323,57 @@ describe('<position>', () => {
         valid.forEach(([input, expected]) => expect(parse('<position>', input)).toBe(expected))
     })
 })
+describe('<ray()>', () => {
+    it('parses a valid value', () => {
+        expect(parse('<ray()>', 'ray(1deg)', false)).toEqual({
+            name: 'ray',
+            representation: 'ray(1deg)',
+            type: new Set(['function', 'ray()']),
+            value: list([angle(1, 'deg'), omitted('<ray-size>?'), omitted('contain?')]),
+        })
+    })
+    it('parses and serializes a valid value', () => {
+        expect(parse('<ray()>', 'ray(1deg closest-side)')).toBe('ray(1deg)')
+        expect(parse('<ray()>', 'ray(1deg closest-side contain)')).toBe('ray(1deg closest-side contain)')
+    })
+})
+describe('<shadow>', () => {
+    it('parses a valid value', () => {
+        expect(parse('<shadow>', '1px 1px', false)).toEqual(list(
+            [
+                omitted('<color>?'),
+                list([
+                    list([length(1, 'px'), length(1, 'px')]),
+                    omitted('<length [0,∞]>?'),
+                    omitted('<length>?'),
+                ]),
+                omitted('inset?'),
+            ],
+            ' ',
+            ['shadow']))
+    })
+    it('parses and serializes a valid value', () => {
+        expect(parse('<shadow>', 'currentColor 1px 1px 0px 0px')).toBe('1px 1px')
+    })
+})
+describe('<steps()>', () => {
+    it('fails to parse an invalid value', () => {
+        expect(parse('<steps()>', 'steps(0)', false)).toBeNull()
+        expect(parse('<steps()>', 'steps(1, jump-none)', false)).toBeNull()
+    })
+    it('parses a valid value', () => {
+        expect(parse('<steps()>', 'steps(1)', false)).toEqual({
+            name: 'steps',
+            representation: 'steps(1)',
+            type: new Set(['function', 'steps()']),
+            value: list([number(1, ['integer']), omitted(','), omitted('<step-position>?')]),
+        })
+    })
+    it('parses and serializes a valid value', () => {
+        expect(parse('<steps()>', 'steps(1, end)')).toBe('steps(1)')
+        expect(parse('<steps()>', 'steps(1, jump-end)')).toBe('steps(1)')
+    })
+})
 describe('<url-set>', () => {
     it('fails to parse an invalid value', () => {
         const invalid = [
@@ -3276,7 +3383,7 @@ describe('<url-set>', () => {
             'image-set(element(#image) 1x)',
             'image-set(linear-gradient(red, cyan) 1x)',
         ]
-        invalid.forEach(input => expect(parse('<url-set>', input, false, false)).toBeNull())
+        invalid.forEach(input => expect(parse('<url-set>', input, false)).toBeNull())
     })
     it('parses a valid value', () => {
 
@@ -3284,20 +3391,18 @@ describe('<url-set>', () => {
         const src = {
             name: 'src',
             representation: 'src("image.jpg")',
-            type: new Set(['function', 'url', 'image']),
+            type: new Set(['function', 'src()', 'url', 'image']),
             value: list([url, list()]),
         }
-        const resolution = dimension(1, 'x', ['resolution'])
-        const format = omitted('type(<string>)')
-        const hints = list([resolution, format])
+        const hints = list([resolution(1, 'x'), omitted('type(<string>)')])
 
-        expect(parse('<url-set>', 'image-set(src("image.jpg") 1x)', false, false)).toEqual({
+        expect(parse('<url-set>', 'image-set(src("image.jpg") 1x)', false)).toEqual({
             name: 'image-set',
             representation: 'image-set(src("image.jpg") 1x)',
             type: new Set(['function', 'image-set()', 'url-set']),
             value: list([list([src, hints], ' ', ['image-set-option'])], ','),
         })
-        expect(parse('<url-set>', 'image-set("image.jpg" 1x)', false, false)).toEqual({
+        expect(parse('<url-set>', 'image-set("image.jpg" 1x)', false)).toEqual({
             name: 'image-set',
             representation: 'image-set("image.jpg" 1x)',
             type: new Set(['function', 'image-set()', 'url-set']),
@@ -3308,13 +3413,13 @@ describe('<url-set>', () => {
 
 describe('<font-src-list>', () => {
     it('fails to parse an invalid value', () => {
-        expect(parse('<font-src-list>', 'url(font.eotf) format("embedded-opentype")', false, false)).toBeNull()
+        expect(parse('<font-src-list>', 'url(font.eotf) format("embedded-opentype")', false)).toBeNull()
     })
     it('parses a valid value', () => {
 
         const url = {
             representation: 'url(font.woff2)',
-            type: new Set(['url', 'url-token']),
+            type: new Set(['url-token', 'url()', 'url']),
             value: 'font.woff2',
         }
         const keywordFormat = {
@@ -3333,9 +3438,9 @@ describe('<font-src-list>', () => {
         }
         const tech = omitted('[tech(<font-tech>#)]?')
 
-        expect(parse('<font-src-list>', 'url(font.woff2) format(woff2)', false, false))
+        expect(parse('<font-src-list>', 'url(font.woff2) format(woff2)', false))
             .toEqual(list([list([url, keywordFormat, tech], ' ', ['font-src'])], ',', ['font-src-list']))
-        expect(parse('<font-src-list>', 'url(font.woff2) format("woff2")', false, false))
+        expect(parse('<font-src-list>', 'url(font.woff2) format("woff2")', false))
             .toEqual(list([list([url, stringFormat, tech], ' ', ['font-src'])], ',', ['font-src-list']))
     })
     it('parses and serializes a valid value', () => {
@@ -3380,6 +3485,14 @@ describe('<selector-list>', () => {
             // Invalid functional pseudo-class name
             ':hover()',
             ':marker()',
+            // Invalid functional pseudo-class argument
+            ':not(:host(:not(type > type))',
+            ':host(:has(type))',
+            ':host-context(:not(type > type))',
+            ':host-context(:has(type))',
+            '::slotted(:not(type > type))',
+            '::slotted(:has(type))',
+            ':has(:not(:has(type)))',
             // Invalid pseudo-element name
             '::hover',
             '::not',
@@ -3390,33 +3503,28 @@ describe('<selector-list>', () => {
             '::marker()',
             // Invalid pseudo-classing of pseudo-element
             '::before:current',
+            '::before:not(:current)',
+            '::before:not(type)',
+            '::before:not(:not(type))',
+            '::before:not(:hover > type)',
+            '::before:lang(fr)',
             '::marker:empty',
+            '::marker:not(:empty)',
             '::marker:has(:hover)',
             '::backdrop:only-child',
+            '::backdrop:not(:only-child)',
             '::backdrop:nth-child(1)',
-            '::before:lang(fr)',
-            '::before:not(type)',
-            '::before:not(#id)',
-            '::before:not(:current)',
-            '::marker:not(:empty)',
-            '::before:not(:hover > type)',
-            '::before:not(:not(type))',
-            // Invalid selector argument in nested functional pseudo-class
-            ':not(:host(:not(type > type))',
-            ':not(:host(:has(type)))',
-            ':not(:host-context(:not(type > type)))',
-            ':not(:host-context(:has(type)))',
-            '::slotted(:not(type > type))',
-            '::slotted(:has(type))',
-            ':has(:not(:has(type)))',
             // Invalid sub-pseudo-element
             '::marker::before',
-            '::marker::slotted(name)',
+            '::marker::slotted(type)',
             '::view-transition::view-transition-new(name)',
             // Invalid pseudo-element combination (no internal structure)
+            '::before span',
             '::before + span',
+            // https://github.com/w3c/csswg-drafts/issues/7503
+            '::before + &',
         ]
-        invalid.forEach(input => expect(parse('<selector-list>', input, false, false)).toBeNull())
+        invalid.forEach(input => expect(parse('<selector-list>', input, false)).toBeNull())
     })
     it('parses a valid value', () => {
 
@@ -3427,7 +3535,7 @@ describe('<selector-list>', () => {
         const complex = list([complexUnit, list()], ' ', ['complex-selector'])
         const selectors = list([complex], ',', ['complex-selector-list', 'selector-list'])
 
-        expect(parse('<selector-list>', '.class', false, false)).toEqual(selectors)
+        expect(parse('<selector-list>', '.class', false)).toEqual(selectors)
     })
     it('parses and serializes a valid value', () => {
         const valid = [
@@ -3445,27 +3553,36 @@ describe('<selector-list>', () => {
             ['::BEFORE', '::before'],
             ['::HIGHLIGHT(name)', '::highlight(name)'],
             ['::-WEBKIT-UNKNOWN', '::-webkit-unknown'],
+            // Forgiving pseudo-class selector
+            [':is(::before, type, undeclared|type, ::after)', ':is(type)'],
+            [':where(::before, type, undeclared|type, ::after)', ':where(type)'],
+            [':is()'],
+            [':where()'],
             // Pseudo-element as pseudo-class (back-compatibility with CSS2)
             [':after', '::after'],
             [':before', '::before'],
             [':first-letter', '::first-letter'],
             [':first-line', '::first-line'],
             // Pseudo-classing pseudo-element
-            ['::before:defined'],
             ['::before:hover'],
             ['::before:empty'],
+            ['::before:not(:hover, :not(:focus, :empty))'],
             ['::marker:only-child'],
             ['::marker:nth-child(1)'],
-            ['::before:is(type)', '::before:is()'],
-            ['::before:is(:defined, type, #id, .class, :root, :not(:root), :not(:hover))', '::before:is(:defined, :not(:hover))'],
-            ['::before:not(:defined, :not(:hover))'],
-            ['::marker:not(:only-child)'],
-            // Pseudo-classing structured pseudo-element (none exists in the specs yet)
+            ['::marker:not(:only-child, :not(:nth-child(1)))'],
+            ['::before:is(:hover, type, #id, .class, :root, :not(:root), :not(:focus))', '::before:is(:hover, :not(:focus))'],
+            // Pseudo-classing structured pseudo-element (none are defined yet)
             // ['::structured:empty'],
-            // ['::structured:has(p)'],
+            // ['::structured:has(span)'],
             // ['::structured-child:only-child'],
             // ['::structured-child:nth-child(1)'],
-            // ['::structured-child:not(:only-child)'],
+            // ['::structured-child:not(:only-child, :not(:nth-child(1)))'],
+            // https://github.com/w3c/csswg-drafts/issues/8517
+            ['::part(name):empty'],
+            ['::part(name):has(span)'],
+            ['::part(name):only-child'],
+            ['::part(name):nth-child(1)'],
+            ['::part(name):not(type, :not(:only-child, :nth-child(1)))'],
             // Sub-pseudo-element
             ['::after::marker'],
             ['::before::marker'],
@@ -3477,11 +3594,9 @@ describe('<selector-list>', () => {
             ['::view-transition-image-pair(name)::view-transition-old(name)'],
             ['::view-transition-image-pair(name)::view-transition-new(name)'],
             ['::part(name)::after'],
-            ['::part(name)::nth-fragment(1)'],
-            ['::part(name)::first-line'],
-            ['::slotted(name)::after'],
-            // Combination with structured pseudo-element (none exists in the specs yet)
-            // ['::structured p']
+            ['::slotted(type)::after'],
+            // Combination with structured pseudo-element (none are defined yet)
+            // ['::structured span'],
             // Nesting selector
             ['&'],
             ['&&'],
@@ -3502,7 +3617,7 @@ describe('<selector-list>', () => {
             [':hover&'],
             ['::before&'],
             ['::before:hover&'],
-            // Nesting-selector with structured pseudo-element (none exists in the specs yet)
+            // Nesting-selector with structured pseudo-element (none are defined yet)
             // ['::structured &'],
             ['type &'],
         ]
@@ -3520,10 +3635,8 @@ describe('<media-query-list>', () => {
         }
         const query = list([feature, list()], ' ', ['media-condition', 'media-query'])
 
-        expect(parse('<media-query-list>', '(color)', false, false))
-            .toEqual(list([query], ',', ['media-query-list']))
-        expect(parse('<media-query-list>', '1', false, false))
-            .toEqual(list([notAll], ',', ['media-query-list']))
+        expect(parse('<media-query-list>', '(color)', false)).toEqual(list([query], ',', ['media-query-list']))
+        expect(parse('<media-query-list>', '1', false)).toEqual(list([notAll], ',', ['media-query-list']))
     })
 })
 

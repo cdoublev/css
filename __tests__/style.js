@@ -3,6 +3,8 @@ const { cssom: { CSSStyleDeclaration }, install } = require('../lib/index.js')
 const { UPDATE_COMPUTED_STYLE_DECLARATION_ERROR } = require('../lib/cssom/CSSStyleDeclaration-impl.js')
 const createError = require('../lib/error.js')
 const { cssPropertyToIDLAttribute } = require('../lib/utils/script.js')
+const { keywords: cssWideKeywords } = require('../lib/values/substitutions.js')
+const display = require('../lib/values/display.js')
 const properties = require('../lib/properties/definitions.js')
 const propertyNames = require('../lib/properties/names.js')
 const shorthands = require('../lib/properties/shorthands.js')
@@ -59,7 +61,18 @@ describe('CSSStyleDeclaration', () => {
         expect(style.borderTopColor).toBe('green')
         expect(style['border-top-color']).toBe('green')
 
-        // Simple alias
+        // Custom property
+        style['--custom'] = 'blue'
+        expect(style.getPropertyValue('--custom')).toBe('')
+        style.setProperty('--custom', 'red')
+        expect(style.getPropertyValue('--Custom')).toBe('')
+        expect(style.getPropertyValue('--custom')).toBe('red')
+        style.cssText = '--custom: green'
+        expect(style.getPropertyValue('--custom')).toBe('green')
+        style.removeProperty('--custom')
+        expect(style.getPropertyValue('--custom')).toBe('')
+
+        // Longhand property alias
         style.layoutOrder = '1'
         expect(style.layoutOrder).toBe('1')
         expect(style['-webkit-order']).toBe('1')
@@ -76,7 +89,15 @@ describe('CSSStyleDeclaration', () => {
         expect(style.webkitOrder).toBe('3')
         expect(style.WebkitOrder).toBe('3')
 
-        // Mapping property
+        // Shorthand property alias
+        style.gap = 'normal'
+        expect(style.gap).toBe('normal')
+        expect(style.gridGap).toBe('normal')
+        style.gridGap = '1px'
+        expect(style.gap).toBe('1px')
+        expect(style.gridGap).toBe('1px')
+
+        // Mapped longhand property
         style['-webkit-box-align'] = 'start'
         expect(style['-webkit-box-align']).toBe('start')
         expect(style.webkitBoxAlign).toBe('start')
@@ -94,26 +115,28 @@ describe('CSSStyleDeclaration', () => {
         expect(style['align-items']).toBe('')
 
         // Property indices map to the corresponding declaration name
-        expect(style[0]).toBe('border-top-color')
-        expect(style.item(0)).toBe('border-top-color')
-        expect(style[1]).toBe('layout-order')
-        expect(style.item(1)).toBe('layout-order')
-        expect(style[2]).toBe('-webkit-box-align')
-        expect(style.item(2)).toBe('-webkit-box-align')
-        expect(style[3]).toBeUndefined()
-        expect(style.item(3)).toBe('')
-        expect(style).toHaveLength(3)
+        expect(style[0]).toBe('layout-order')
+        expect(style.item(0)).toBe('layout-order')
+        expect(style[1]).toBe('row-gap')
+        expect(style.item(1)).toBe('row-gap')
+        expect(style[2]).toBe('column-gap')
+        expect(style.item(2)).toBe('column-gap')
+        expect(style[3]).toBe('-webkit-box-align')
+        expect(style.item(3)).toBe('-webkit-box-align')
+        expect(style[4]).toBeUndefined()
+        expect(style.item(4)).toBe('')
+        expect(style).toHaveLength(4)
 
         // Create/read/update/delete declaration value(s)
         style.borderTopColor = ''
         expect(style.getPropertyValue('border-top-color')).toBe('')
-        expect(style).toHaveLength(2)
+        expect(style).toHaveLength(4)
         expect(style[0]).toBe('layout-order')
         expect(style.item(0)).toBe('layout-order')
         style.setProperty('layout-order', '')
-        expect(style).toHaveLength(1)
-        expect(style[0]).toBe('-webkit-box-align')
-        expect(style.item(0)).toBe('-webkit-box-align')
+        expect(style).toHaveLength(3)
+        expect(style[0]).toBe('row-gap')
+        expect(style.item(0)).toBe('row-gap')
         style.cssText = ''
         expect(style.cssText).toBe('')
         expect(style).toHaveLength(0)
@@ -138,7 +161,7 @@ describe('CSSStyleDeclaration', () => {
         const style = createStyleBlock({ parentRule })
         expect(style.parentRule).toBe(parentRule)
     })
-    it('constructs a new instance with the declarations resulting from parsing `Element.style`', () => {
+    it('constructs a new instance with declarations resulting from parsing `Element.style`', () => {
         const element = {
             getAttribute() {
                 return 'font-size: 10px;'
@@ -147,7 +170,7 @@ describe('CSSStyleDeclaration', () => {
         const style = createStyleBlock({ ownerNode: element })
         expect(style.fontSize).toBe('10px')
     })
-    it('constructs a new read-only instance with the declarations from `getComputedStyle()`', () => {
+    it('constructs a new instance with read-only declarations from `getComputedStyle()`', () => {
 
         const value = { type: new Set(['dimension', 'length']), unit: 'px', value: 10 }
         const declarations = [{ name: 'font-size', value }]
@@ -285,8 +308,8 @@ describe('CSSCounterStyle.style', () => {})
 describe('CSSFontFaceRule.style', () => {
 
     const parentRule = {
-        parentStyleSheet: { _rules: [], type: 'text/css' },
-        type: new Set(['at-rule', 'font-face']),
+        parentStyleSheet: { _rules: [] },
+        type: new Set(['font-face']),
     }
 
     it('does not store an invalid declaration', () => {
@@ -342,19 +365,30 @@ describe('CSSFontFaceRule.style', () => {
         expect(style.getPropertyValue('font-weight')).toBe('300 400')
         style.cssText = 'font-weight: 500 600'
         expect(style.getPropertyValue('font-weight')).toBe('500 600')
+
+        // Specific serialization rules
+        style.fontStretch = 'normal normal'
+        expect(style.fontStretch).toBe('normal')
+        style.fontStretch = 'normal 100%'
+        expect(style.fontStretch).toBe('100%')
+        style.fontStyle = 'oblique 14deg'
+        expect(style.fontStyle).toBe('oblique')
+        style.fontStyle = 'oblique 15deg 15deg'
+        expect(style.fontStyle).toBe('oblique 15deg')
+        style.fontWeight = 'normal normal'
+        expect(style.fontWeight).toBe('normal')
+        style.fontWeight = 'normal 400'
+        expect(style.fontWeight).toBe('400')
     })
 })
 describe('CSSKeyframeRule.style', () => {
 
-    const parentStyleSheet = { _rules: [], type: 'text/css' }
-    const keyframesRule = {
-        parentStyleSheet,
-        type: new Set(['at-rule', 'keyframes']),
-    }
+    const parentStyleSheet = { _rules: [] }
+    const keyframesRule = { parentStyleSheet, type: new Set(['keyframes']) }
     const parentRule = {
         parentRule: keyframesRule,
         parentStyleSheet,
-        type: new Set(['qualified-rule', 'keyframe']),
+        type: new Set(['keyframe']),
     }
 
     it('does not store an invalid declaration', () => {
@@ -406,15 +440,12 @@ describe('CSSKeyframeRule.style', () => {
 })
 describe('CSSMarginRule.style', () => {
 
-    const parentStyleSheet = { _rules: [], type: 'text/css' }
-    const pageRule = {
-        parentStyleSheet,
-        type: new Set(['at-rule', 'page']),
-    }
+    const parentStyleSheet = { _rules: [] }
+    const pageRule = { parentStyleSheet, type: new Set(['page']) }
     const parentRule = {
         parentRule: pageRule,
         parentStyleSheet,
-        type: new Set(['at-rule', 'margin']),
+        type: new Set(['margin']),
     }
 
     it('does not store an invalid declaration', () => {
@@ -469,8 +500,8 @@ describe('CSSMarginRule.style', () => {
 describe('CSSPageRule.style', () => {
 
     const parentRule = {
-        parentStyleSheet: { _rules: [], type: 'text/css' },
-        type: new Set(['at-rule', 'page']),
+        parentStyleSheet: { _rules: [] },
+        type: new Set(['page']),
     }
 
     it('does not store an invalid declaration', () => {
@@ -553,80 +584,122 @@ describe('CSSPageRule.style', () => {
     })
 })
 
-describe('--*', () => {
+describe('CSS-wide keyword', () => {
+    it('parses and serializes a valid value', () => {
+        const style = createStyleBlock()
+        cssWideKeywords.forEach(input => {
+            style.opacity = input.toUpperCase()
+            expect(style.opacity).toBe(input)
+        })
+    })
+})
+describe('arbitrary substitution value', () => {
     it('fails to parse an invalid value', () => {
         const style = createStyleBlock()
         const invalid = [
-            // <bad-string-token>
-            '"\n"',
-            // <bad-url-token>
-            'url(inval id.url)',
-            'url(inval\nid.url)',
-            'url(inval\tid.url)',
-            'url(inval"id.url)',
-            "url(inval'id.url)",
-            'url(inval(id.url)',
-            'url(inval\u0001id.url)',
-            'url(inval\\\nid.url)',
-            // Unmatched block associated token
-            ')',
-            ']',
-            '}',
-            // Top-level `;` or `!`
-            ';',
-            '!',
-            // Invalid custom variable
-            'var(--)',
+            'attr(var(--))',
+            'env(var(--))',
+            'random-item(var(--))',
+            'var(var(--))',
+            'attr(title, var(--))',
+            'env(ab-test-color, var(--))',
+            'random-item(key; 0; var(--))',
+            'var(--custom, var(--))',
         ]
         invalid.forEach(input => {
-            style.setProperty('--custom', input)
-            expect(style.getPropertyValue('--custom')).toBe('')
+            style.opacity = input
+            expect(style.opacity).toBe('')
         })
     })
     it('parses and serializes a valid value', () => {
-
         const style = createStyleBlock()
-
-        style.setProperty('--custom', 'red')
-        expect(style.getPropertyValue('--custom')).toBe('red')
-        style.cssText = '--custom: green'
-        expect(style.getPropertyValue('--custom')).toBe('green')
-        style.removeProperty('--custom')
-        expect(style.getPropertyValue('--custom')).toBe('')
-
-        // custom properties are not attributes
-        style['--custom'] = 'blue'
-        expect(style.getPropertyValue('--custom')).toBe('')
-
-        // custom properties are case-sensitive
-        expect(style.getPropertyValue('--Custom')).toBe('')
-
-        // Whitespaces and comments
-        const input = '  /* comment */  Red  ,  (  orange  /* comment */  )  ,  green  /* comment */  '
-        const trimmed = 'Red  ,  (  orange  /* comment */  )  ,  green'
-        style.setProperty('--custom', input)
-        expect(style.getPropertyValue('--custom')).toBe(trimmed)
-        expect(style.cssText).toBe(`--custom: ${trimmed};`)
-        style.cssText = `--custom:  ${input}`
-        expect(style.getPropertyValue('--custom')).toBe(trimmed)
-        expect(style.cssText).toBe(`--custom: ${trimmed};`)
-        style.setProperty('--custom', '  /* comment */  ')
-        expect(style.getPropertyValue('--custom')).toBe('')
-        expect(style.cssText).toBe('--custom: ;')
-        style.cssText = '--custom:  /* comment */  '
-        expect(style.getPropertyValue('--custom')).toBe('')
-        expect(style.cssText).toBe('--custom: ;')
-        style.cssText = '--custom:'
-        expect(style.getPropertyValue('--custom')).toBe('')
-        expect(style.cssText).toBe('--custom: ;')
-
-        // Guaranteed-invalid value (initial)
-        style.setProperty('--custom', 'initial')
-        expect(style.getPropertyValue('--custom')).toBe('initial')
-        expect(style.cssText).toBe('--custom: initial;')
+        const valid = [
+            // <attr()>
+            ['attr(title', 'attr(title)'],
+            ['attr(title, attr(alt))'],
+            ['fn(attr(title))'],
+            ['  /**/  attr(  title, /**/ "title"  )  ', 'attr(title, "title")'],
+            ['attr(title string, "")', 'attr(title)'],
+            ['attr(quantity number, "")', 'attr(quantity number, "")'],
+            // <env()>
+            ['env(ab-test-color', 'env(ab-test-color)'],
+            ['env(ab-test-color, env(ab-test-2))'],
+            ['fn(env(ab-test-color))'],
+            ['  /**/  env(  ab-test-color/*, 1 */, 0, 1e0  )  ', 'env(ab-test-color, 0, 1)'],
+            // <random-item()>
+            ['random-item(--key; 1; 2', 'random-item(--key; 1; 2)'],
+            ['random-item(--key; 1; random-item(--key; 2; 3))'],
+            ['fn(random-item(per-element; 1; 2))'],
+            ['  /**/  random-item(  --key/*; 1 */; 0; 1e0  )  ', 'random-item(--key; 0; 1)'],
+            // <var()>
+            ['var(--custom', 'var(--custom)'],
+            ['var(--custom, var(--fallback))'],
+            ['fn(var(--custom))'],
+            ['  /**/  var(  --PROPerty, /**/ 1e0 /**/)  ', 'var(--PROPerty, 1)'],
+            ['var(--custom,)', 'var(--custom,)'],
+            ['var(--custom, )', 'var(--custom,)'],
+        ]
+        valid.forEach(([input, expected = input]) => {
+            style.opacity = input
+            expect(style.opacity).toBe(expected)
+        })
     })
 })
-describe('border-bottom-left-radius, border-bottom-right-radius, border-top-left-radius, border-top-right-radius', () => {
+describe('top-level substitution values', () => {
+    it('fails to parse an invalid value', () => {
+        const style = createStyleBlock()
+        const invalid = [
+            // Not the only component value
+            ['mix(50%; red; green) url(bg.jpg) var(--custom)', 'background'],
+            ['toggle(red; green) url(bg.jpg) var(--custom)', 'background'],
+            // Invalid value for the property
+            ['mix(50%; 1s; var(--custom))', 'color'],
+            ['toggle(1s; var(--custom))', 'color'],
+            // Non-animatable property
+            ['mix(50%; 1s; 2s)', 'animation-duration'],
+        ]
+        invalid.forEach(([substitution, property = 'opacity']) => {
+            style[property] = substitution
+            expect(style.opacity).toBe('')
+        })
+    })
+    it('parses and serializes a valid value', () => {
+        const style = createStyleBlock()
+        const valid = [
+            ['  /**/  mix(  50%; 0; /**/ 1e0 /**/)  ', 'mix(50%; 0; 1)'],
+            ['mix(50%; 0; mix(50%; 0; 2))'],
+            ['  /**/  toggle(0; /**/ 1e0 /**/)  ', 'toggle(0; 1)'],
+            ['toggle(0; toggle(1; 2))'],
+        ]
+        valid.forEach(([input, expected = input]) => {
+            style.opacity = input
+            expect(style.opacity).toBe(expected)
+        })
+    })
+})
+
+describe('--*', () => {
+    it('parses and serializes a valid value', () => {
+        const style = createStyleBlock()
+        const valid = [
+            // Whitespaces and comments
+            ['  /**/  Red  ,  (  orange  /**/  )  ,  green  /**/  ', 'Red  ,  (  orange  /**/  )  ,  green'],
+            // Guaranteed-invalid value (initial)
+            ['  /**/  ', ''],
+            [''],
+            // Substitution value
+            ['initial'],
+            ['var(  --PROPerty, /**/ 1e0 /**/  )  ', 'var(  --PROPerty, /**/ 1e0 /**/  )'],
+            ['mix(50;/**/; 1e0 )  ', 'mix(50;/**/; 1e0 )'],
+        ]
+        valid.forEach(([input, expected = input]) => {
+            style.cssText = `--custom: ${input}`
+            expect(style.getPropertyValue('--custom')).toBe(expected)
+            expect(style.cssText).toBe(`--custom: ${expected};`)
+        })
+    })
+})
+describe('border-end-end-radius, border-end-start-radius, border-bottom-left-radius, border-bottom-right-radius, border-start-end-radius, border-start-start-radius, border-top-left-radius, border-top-right-radius', () => {
     it('parses and serializes a valid value', () => {
         const style = createStyleBlock()
         style.borderBottomLeftRadius = '1px 1px'
@@ -773,6 +846,15 @@ describe('container-name', () => {
         expect(style.containerName).toBe('none')
     })
 })
+describe('display', () => {
+    it('parses and serializes a valid value', () => {
+        const style = createStyleBlock()
+        display.aliases.forEach((to, from) => {
+            style.display = from
+            expect(style.display).toBe(to)
+        })
+    })
+})
 describe('float', () => {
     it('mirrors cssFloat', () => {
         const style = createStyleBlock()
@@ -875,14 +957,94 @@ describe('image-rendering', () => {
         expect(style.imageRendering).toBe('optimizequality')
     })
 })
+describe('offset-path', () => {
+    it('parses and serializes a valid value', () => {
+        const style = createStyleBlock()
+        style.offsetPath = 'url("path.svg") border-box'
+        expect(style.offsetPath).toBe('url("path.svg")')
+    })
+})
 
 describe('-webkit-line-clamp', () => {
-    it.todo('parses longhand declarations from a shorthand value')
-    it.todo('serializes a shorthand value from the declarations of its longhands')
+
+    const longhands = shorthands.get('-webkit-line-clamp')
+
+    it('parses longhand declarations from a shorthand value', () => {
+
+        const style = createStyleBlock()
+
+        // Initial longhand values (not all longhands can be explicitly declared)
+        style.webkitLineClamp = 'none'
+        expect(style).toHaveLength(longhands.length)
+        expect(style.maxLines).toBe('none')
+        expect(style.blockEllipsis).toBe('auto')
+        expect(style.continue).toBe('auto')
+        expect(style.webkitLineClamp).toBe('none')
+        expect(style.cssText).toBe('-webkit-line-clamp: none;')
+
+        // Missing longhand values
+        style.webkitLineClamp = '1'
+        expect(style.maxLines).toBe('1')
+        expect(style.blockEllipsis).toBe('auto')
+        expect(style.continue).toBe('-webkit-discard')
+        expect(style.webkitLineClamp).toBe('1')
+        expect(style.cssText).toBe('-webkit-line-clamp: 1;')
+    })
+    it('serializes a shorthand value from the declarations of its longhands', () => {
+
+        const style = createStyleBlock()
+
+        // Initial longhand values
+        longhands.forEach(longhand => style[longhand] = initial(longhand))
+        expect(style.webkitLineClamp).toBe('')
+        expect(style.cssText).toBe('line-clamp: none;')
+
+        // All longhands cannot always be represented
+        style.blockEllipsis = 'auto'
+        expect(style.webkitLineClamp).toBe('none')
+        expect(style.cssText).toBe('-webkit-line-clamp: none;')
+        style.continue = '-webkit-discard'
+        expect(style.webkitLineClamp).toBe('')
+        expect(style.cssText).toBe('max-lines: none; block-ellipsis: auto; continue: -webkit-discard;')
+        style.maxLines = '1'
+        expect(style.webkitLineClamp).toBe('1')
+        expect(style.cssText).toBe('-webkit-line-clamp: 1;')
+        style.blockEllipsis = 'auto'
+        style.continue = initial('continue')
+        expect(style.webkitLineClamp).toBe('')
+        expect(style.cssText).toBe('max-lines: 1; block-ellipsis: auto; continue: auto;')
+    })
 })
 describe('-webkit-text-stroke', () => {
-    it.todo('parses longhand declarations from a shorthand value')
-    it.todo('serializes a shorthand value from the declarations of its longhands')
+
+    const longhands = shorthands.get('-webkit-text-stroke')
+
+    it('parses longhand declarations from a shorthand value', () => {
+
+        const style = createStyleBlock()
+
+        // Initial longhand values
+        style.webkitTextStroke = '0px currentColor'
+        expect(style).toHaveLength(longhands.length)
+        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
+        expect(style.webkitTextStroke).toBe('0px')
+        expect(style.cssText).toBe('-webkit-text-stroke: 0px;')
+
+        // Missing longhand values
+        style.webkitTextStroke = '0px'
+        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
+        expect(style.webkitTextStroke).toBe('0px')
+        expect(style.cssText).toBe('-webkit-text-stroke: 0px;')
+    })
+    it('serializes a shorthand value from the declarations of its longhands', () => {
+
+        const style = createStyleBlock()
+
+        // Initial longhand values
+        longhands.forEach(longhand => style[longhand] = initial(longhand))
+        expect(style.webkitTextStroke).toBe('0px')
+        expect(style.cssText).toBe('-webkit-text-stroke: 0px;')
+    })
 })
 describe('all', () => {
 
@@ -911,7 +1073,7 @@ describe('all', () => {
 
         // Not all equal longhand values
         const [head, ...tail] = longhands
-        const exclude = ['all', 'border', 'text-decoration-skip']
+        const exclude = ['all', 'border']
         const initial = tail.reduce(
             (properties, property) => {
                 for (const [shorthand, longhands] of shorthands) {
@@ -919,15 +1081,7 @@ describe('all', () => {
                         continue
                     }
                     if (longhands.includes(property)) {
-                        if (property === 'corner-shape') {
-                            properties.add('border-end-end-radius')
-                            properties.add('border-end-start-radius')
-                            properties.add('border-start-end-radius')
-                            properties.add('border-start-start-radius')
-                            properties.add('corners')
-                        } else {
-                            properties.add(shorthand)
-                        }
+                        properties.add(shorthand)
                         return properties
                     }
                 }
@@ -942,7 +1096,7 @@ describe('all', () => {
 describe('animation', () => {
 
     const longhands = shorthands.get('animation')
-    const animation = '0s ease 0s 1 normal none running none auto'
+    const animation = 'auto ease 0s 1 normal none running none auto'
 
     it('parses longhand declarations from a shorthand value', () => {
 
@@ -956,7 +1110,7 @@ describe('animation', () => {
         expect(style.cssText).toBe(`animation: ${animation};`)
 
         // Missing longhand values
-        style.animation = initial(longhands[0])
+        style.animation = 'auto'
         longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
         expect(style.animation).toBe(animation)
         expect(style.cssText).toBe(`animation: ${animation};`)
@@ -967,16 +1121,6 @@ describe('animation', () => {
         longhands.forEach(longhand => expect(style[longhand]).toBe(`${initial(longhand)}, ${initial(longhand)}`))
         expect(style.animation).toBe(repeated)
         expect(style.cssText).toBe(`animation: ${repeated};`)
-
-        // More than one animation
-        style.animation = 'animation-1, animation-2'
-        longhands.forEach(longhand =>
-            expect(style[longhand])
-                .toBe(longhand === 'animation-name'
-                    ? 'animation-1, animation-2'
-                    : `${initial(longhand)}, ${initial(longhand)}`))
-        expect(style.animation).toBe('0s ease 0s 1 normal none running animation-1 auto, 0s ease 0s 1 normal none running animation-2 auto')
-        expect(style.cssText).toBe('animation: 0s ease 0s 1 normal none running animation-1 auto, 0s ease 0s 1 normal none running animation-2 auto;')
     })
     it('serializes a shorthand value from the declarations of its longhands', () => {
 
@@ -987,26 +1131,11 @@ describe('animation', () => {
         expect(style.animation).toBe(animation)
         expect(style.cssText).toBe(`animation: ${animation};`)
 
-        // Excess of animation-name values
-        longhands.forEach(longhand =>
-            style[longhand] = longhand === 'animation-name'
-                ? 'animation-1, animation-2'
-                : initial(longhand))
-        expect(style.background).toBe('')
-        expect(style.cssText).toBe('animation-duration: 0s; animation-timing-function: ease; animation-delay: 0s; animation-iteration-count: 1; animation-direction: normal; animation-fill-mode: none; animation-play-state: running; animation-name: animation-1, animation-2; animation-timeline: auto;')
-
-        // Lack of animation-name values
-        longhands.forEach(longhand =>
-            style[longhand] = longhand === 'animation-name'
-                ? 'animation-1'
-                : `${initial(longhand)}, ${initial(longhand)}`)
-        expect(style.background).toBe('')
-        expect(style.cssText).toBe('animation-duration: 0s, 0s; animation-timing-function: ease, ease; animation-delay: 0s, 0s; animation-iteration-count: 1, 1; animation-direction: normal, normal; animation-fill-mode: none, none; animation-play-state: running, running; animation-name: animation-1; animation-timeline: auto, auto;')
+        // Different lengths of longhand values
+        style.animationName = 'none, none'
+        expect(style.animation).toBe('')
+        expect(style.cssText).toBe('animation-duration: auto; animation-timing-function: ease; animation-delay: 0s; animation-iteration-count: 1; animation-direction: normal; animation-fill-mode: none; animation-play-state: running; animation-name: none, none; animation-timeline: auto;')
     })
-})
-describe('animation-delay', () => {
-    it.todo('parses longhand declarations from a shorthand value')
-    it.todo('serializes a shorthand value from the declarations of its longhands')
 })
 describe('background', () => {
 
@@ -1015,9 +1144,10 @@ describe('background', () => {
     it('parses longhand declarations from a shorthand value', () => {
 
         const style = createStyleBlock()
+        const background = 'none 0% 0% / auto repeat scroll padding-box border-box transparent'
 
-        // Initial longhand values (repeated)
-        style.background = 'transparent none 0% 0% / auto repeat scroll padding-box border-box'
+        // Initial longhand values
+        style.background = background
         expect(style).toHaveLength(longhands.length)
         longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
         expect(style.background).toBe('none')
@@ -1030,16 +1160,13 @@ describe('background', () => {
         expect(style.cssText).toBe('')
 
         // Missing longhand values + important
-        style.cssText = 'background: url("img.jpg") !important'
+        style.cssText = 'background: none !important'
         longhands.forEach(longhand => {
-            expect(style[longhand])
-                .toBe(longhand === 'background-image'
-                    ? 'url("img.jpg")'
-                    : initial(longhand))
+            expect(style[longhand]).toBe(initial(longhand))
             expect(style.getPropertyPriority(longhand)).toBe('important')
         })
-        expect(style.background).toBe('url("img.jpg")')
-        expect(style.cssText).toBe('background: url("img.jpg") !important;')
+        expect(style.background).toBe('none')
+        expect(style.cssText).toBe('background: none !important;')
         expect(style.getPropertyPriority('background')).toBe('important')
 
         // CSS-wide keyword
@@ -1055,7 +1182,7 @@ describe('background', () => {
         expect(style.cssText).toBe('background: var(--custom);')
 
         // Repeated longhand values
-        style.background = 'none, transparent'
+        style.background = `${background.replace(' transparent', '')}, ${background}`
         longhands.forEach(longhand =>
             expect(style[longhand])
                 .toBe(longhand === 'background-color'
@@ -1093,6 +1220,11 @@ describe('background', () => {
         expect(style.background).toBe('none')
         expect(style.cssText).toBe('background: none;')
 
+        // Different lengths of longhand values
+        style.backgroundImage = 'none, none'
+        expect(style.background).toBe('')
+        expect(style.cssText).toBe('background-image: none, none; background-position: 0% 0%; background-size: auto; background-repeat: repeat; background-attachment: scroll; background-origin: padding-box; background-clip: border-box; background-color: transparent;')
+
         // Missing longhand declaration
         style.backgroundImage = ''
         expect(style.background).toBe('')
@@ -1123,22 +1255,6 @@ describe('background', () => {
         style.backgroundImage = 'var(--custom)'
         expect(style.background).toBe('')
         expect(style.cssText).toBe('background-position: ; background-size: ; background-repeat: ; background-attachment: ; background-origin: ; background-clip: ; background-color: ; background-image: var(--custom);')
-
-        // Excess of background-image values
-        longhands.forEach(longhand =>
-            style[longhand] = longhand === 'background-image'
-                ? 'url(bg-1.jpg), url(bg-2.jpg)'
-                : initial(longhand))
-        expect(style.background).toBe('')
-        expect(style.cssText).toBe('background-position: 0% 0%; background-size: auto; background-repeat: repeat; background-attachment: scroll; background-origin: padding-box; background-clip: border-box; background-color: transparent; background-image: url("bg-1.jpg"), url("bg-2.jpg");')
-
-        // Lack of background-image values
-        longhands.forEach(longhand =>
-            style[longhand] = longhand === 'background-image'
-                ? 'url(bg-1.jpg)'
-                : `${initial(longhand)}, ${initial(longhand)}`)
-        expect(style.background).toBe('')
-        expect(style.cssText).toBe('background-position: 0% 0%, 0% 0%; background-size: auto, auto; background-repeat: repeat, repeat; background-attachment: scroll, scroll; background-origin: padding-box, padding-box; background-clip: border-box, border-box; background-color: transparent; background-image: url("bg-1.jpg");')
     })
 })
 describe('background-position', () => {
@@ -1271,7 +1387,7 @@ describe('border-block, border-inline', () => {
         expect(style.cssText).toBe('border-block: medium;')
 
         // Missing longhand values
-        style.borderBlock = initial(longhands[0])
+        style.borderBlock = 'medium'
         longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
         expect(style.borderBlock).toBe('medium')
         expect(style.cssText).toBe('border-block: medium;')
@@ -1314,7 +1430,7 @@ describe('border-block-color, border-inline-color', () => {
         expect(style.borderBlockColor).toBe('currentcolor')
         expect(style.cssText).toBe('border-block-color: currentcolor;')
 
-        // Implicit values
+        // Missing longhand values
         style.borderBlockColor = 'green'
         longhands.forEach(longhand => expect(style[longhand]).toBe('green'))
         expect(style.borderBlockColor).toBe('green')
@@ -1328,6 +1444,50 @@ describe('border-block-color, border-inline-color', () => {
         longhands.forEach(longhand => style[longhand] = initial(longhand))
         expect(style.borderBlockColor).toBe('currentcolor')
         expect(style.cssText).toBe('border-block-color: currentcolor;')
+    })
+})
+describe('border-block-end-radius, border-block-start-radius, border-bottom-radius, border-inline-end-radius, border-inline-start-radius, border-left-radius, border-right-radius, border-top-radius', () => {
+
+    const longhands = shorthands.get('border-block-end-radius')
+
+    it('parses longhand declarations from a shorthand value', () => {
+
+        const style = createStyleBlock()
+
+        // Initial longhand values
+        style.borderBlockEndRadius = '0 0 / 0 0'
+        expect(style).toHaveLength(longhands.length)
+        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
+        expect(style.borderBlockEndRadius).toBe('0px')
+        expect(style.cssText).toBe('border-block-end-radius: 0px;')
+
+        // Missing longhand values
+        style.borderBlockEndRadius = '1px'
+        longhands.forEach(longhand => expect(style[longhand]).toBe('1px'))
+        expect(style.borderBlockEndRadius).toBe('1px')
+        expect(style.cssText).toBe('border-block-end-radius: 1px;')
+        style.borderBlockEndRadius = '1px / calc(1px)'
+        longhands.forEach(longhand => expect(style[longhand]).toBe('1px calc(1px)'))
+        expect(style.borderBlockEndRadius).toBe('1px / calc(1px)')
+        expect(style.cssText).toBe('border-block-end-radius: 1px / calc(1px);')
+        style.borderBlockEndRadius = '1px / 2px'
+        longhands.forEach(longhand => expect(style[longhand]).toBe('1px 2px'))
+        expect(style.borderBlockEndRadius).toBe('1px / 2px')
+        expect(style.cssText).toBe('border-block-end-radius: 1px / 2px;')
+        style.borderBlockEndRadius = '1px 2px / 1px'
+        expect(style.borderEndStartRadius).toBe('1px')
+        expect(style.borderEndEndRadius).toBe('2px 1px')
+        expect(style.borderBlockEndRadius).toBe('1px 2px / 1px')
+        expect(style.cssText).toBe('border-block-end-radius: 1px 2px / 1px;')
+    })
+    it('serializes a shorthand value from the declarations of its longhands', () => {
+
+        const style = createStyleBlock()
+
+        // Initial longhand values
+        longhands.forEach(longhand => style[longhand] = initial(longhand))
+        expect(style.borderBlockEndRadius).toBe('0px')
+        expect(style.cssText).toBe('border-block-end-radius: 0px;')
     })
 })
 describe('border-block-style, border-inline-style', () => {
@@ -1345,7 +1505,7 @@ describe('border-block-style, border-inline-style', () => {
         expect(style.borderBlockStyle).toBe('none')
         expect(style.cssText).toBe('border-block-style: none;')
 
-        // Implicit values
+        // Missing longhand values
         style.borderBlockStyle = 'solid'
         longhands.forEach(longhand => expect(style[longhand]).toBe('solid'))
         expect(style.borderBlockStyle).toBe('solid')
@@ -1376,7 +1536,7 @@ describe('border-block-width, border-inline-width', () => {
         expect(style.borderBlockWidth).toBe('medium')
         expect(style.cssText).toBe('border-block-width: medium;')
 
-        // Implicit values
+        // Missing longhand values
         style.borderBlockWidth = '1px'
         longhands.forEach(longhand => expect(style[longhand]).toBe('1px'))
         expect(style.borderBlockWidth).toBe('1px')
@@ -1408,7 +1568,7 @@ describe('border-bottom, border-left, border-right, border-top', () => {
         expect(style.cssText).toBe('border-top: medium;')
 
         // Missing longhand values
-        style.borderTop = initial(longhands[0])
+        style.borderTop = 'medium'
         longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
         expect(style.borderTop).toBe('medium')
         expect(style.cssText).toBe('border-top: medium;')
@@ -1442,7 +1602,7 @@ describe('border-color', () => {
         expect(style.borderColor).toBe('currentcolor')
         expect(style.cssText).toBe('border-color: currentcolor;')
 
-        // Implicit values
+        // Missing longhand values
         const values = ['red', 'orange', 'green']
         style.borderColor = 'red'
         longhands.forEach(longhand => expect(style[longhand]).toBe('red'))
@@ -1491,7 +1651,7 @@ describe('border-image', () => {
         expect(style.cssText).toBe('border-image: none;')
 
         // Missing longhand values
-        style.borderImage = initial(longhands[0])
+        style.borderImage = 'none'
         longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
         expect(style.borderImage).toBe('none')
         expect(style.cssText).toBe('border-image: none;')
@@ -1521,23 +1681,17 @@ describe('border-radius', () => {
         expect(style.borderRadius).toBe('0px')
         expect(style.cssText).toBe('border-radius: 0px;')
 
-        // Implicit values
+        // Missing longhand values
         style.borderRadius = '1px'
         longhands.forEach(longhand => expect(style[longhand]).toBe('1px'))
         expect(style.borderRadius).toBe('1px')
         expect(style.cssText).toBe('border-radius: 1px;')
         style.borderRadius = '1px / calc(1px)'
-        expect(style.borderTopLeftRadius).toBe('1px calc(1px)')
-        expect(style.borderTopRightRadius).toBe('1px calc(1px)')
-        expect(style.borderBottomRightRadius).toBe('1px calc(1px)')
-        expect(style.borderBottomLeftRadius).toBe('1px calc(1px)')
+        longhands.forEach(longhand => expect(style[longhand]).toBe('1px calc(1px)'))
         expect(style.borderRadius).toBe('1px / calc(1px)')
         expect(style.cssText).toBe('border-radius: 1px / calc(1px);')
         style.borderRadius = '1px / 2px'
-        expect(style.borderTopLeftRadius).toBe('1px 2px')
-        expect(style.borderTopRightRadius).toBe('1px 2px')
-        expect(style.borderBottomRightRadius).toBe('1px 2px')
-        expect(style.borderBottomLeftRadius).toBe('1px 2px')
+        longhands.forEach(longhand => expect(style[longhand]).toBe('1px 2px'))
         expect(style.borderRadius).toBe('1px / 2px')
         expect(style.cssText).toBe('border-radius: 1px / 2px;')
         style.borderRadius = '1px 2px 3px 4px / 1px 2px'
@@ -1573,7 +1727,7 @@ describe('border-style', () => {
         expect(style.borderStyle).toBe('none')
         expect(style.cssText).toBe('border-style: none;')
 
-        // Implicit values
+        // Missing longhand values
         const values = ['dotted', 'dashed', 'solid']
         style.borderStyle = 'dotted'
         longhands.forEach(longhand => expect(style[longhand]).toBe('dotted'))
@@ -1613,7 +1767,7 @@ describe('border-width', () => {
         expect(style.borderWidth).toBe('medium')
         expect(style.cssText).toBe('border-width: medium;')
 
-        // Implicit values
+        // Missing longhand values
         const values = ['0px', '1px', '2px']
         style.borderWidth = '0px'
         longhands.forEach(longhand => expect(style[longhand]).toBe('0px'))
@@ -1638,6 +1792,60 @@ describe('border-width', () => {
         expect(style.cssText).toBe('border-width: medium;')
     })
 })
+describe('box-shadow', () => {
+
+    const longhands = shorthands.get('box-shadow')
+
+    it('parses longhand declarations from a shorthand value', () => {
+
+        const style = createStyleBlock()
+
+        // Initial longhand values
+        style.boxShadow = 'currentColor none 0 0 outset'
+        expect(style).toHaveLength(longhands.length)
+        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
+        expect(style.boxShadow).toBe('0px 0px')
+        expect(style.cssText).toBe('box-shadow: 0px 0px;')
+
+        // Missing longhand values
+        style.boxShadow = 'currentColor'
+        expect(style).toHaveLength(longhands.length)
+        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
+        expect(style.boxShadow).toBe('0px 0px')
+        expect(style.cssText).toBe('box-shadow: 0px 0px;')
+
+        // Repeated longhand values
+        style.boxShadow = 'currentcolor 0px 0px 0px 0px outset, currentcolor 0px 0px 0px 0px outset'
+        longhands.forEach(longhand => expect(style[longhand]).toBe(`${initial(longhand)}, ${initial(longhand)}`))
+        expect(style.boxShadow).toBe('0px 0px, 0px 0px')
+        expect(style.cssText).toBe('box-shadow: 0px 0px, 0px 0px;')
+
+        // none
+        style.boxShadow = 'none'
+        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
+        expect(style.boxShadow).toBe('0px 0px')
+        expect(style.cssText).toBe('box-shadow: 0px 0px;')
+    })
+    it('serializes a shorthand value from the declarations of its longhands', () => {
+
+        const style = createStyleBlock()
+
+        // Initial longhand values
+        longhands.forEach(longhand => style[longhand] = initial(longhand))
+        expect(style.boxShadow).toBe('0px 0px')
+        expect(style.cssText).toBe('box-shadow: 0px 0px;')
+
+        // Different lengths of longhand values
+        style.boxShadowOffset = '0px 0px, 0px 0px'
+        expect(style.boxShadow).toBe('')
+        expect(style.cssText).toBe('box-shadow-color: currentcolor; box-shadow-offset: 0px 0px, 0px 0px; box-shadow-blur: 0px; box-shadow-spread: 0px; box-shadow-position: outset;')
+
+        // Explicit box-shadow-offset
+        style.boxShadowOffset = '1px'
+        expect(style.boxShadow).toBe('1px 1px')
+        expect(style.cssText).toBe('box-shadow: 1px 1px;')
+    })
+})
 describe('caret', () => {
 
     const longhands = shorthands.get('caret')
@@ -1654,7 +1862,7 @@ describe('caret', () => {
         expect(style.cssText).toBe('caret: auto;')
 
         // Missing longhand values
-        style.caret = initial(longhands[0])
+        style.caret = 'auto'
         longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
         expect(style.caret).toBe('auto')
         expect(style.cssText).toBe('caret: auto;')
@@ -1685,7 +1893,7 @@ describe('column-rule', () => {
         expect(style.cssText).toBe('column-rule: medium;')
 
         // Missing longhand values
-        style.columnRule = initial(longhands[0])
+        style.columnRule = 'medium'
         longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
         expect(style.columnRule).toBe('medium')
         expect(style.cssText).toBe('column-rule: medium;')
@@ -1716,7 +1924,7 @@ describe('columns', () => {
         expect(style.cssText).toBe('columns: auto;')
 
         // Missing longhand values
-        style.columns = initial(longhands[0])
+        style.columns = 'auto'
         longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
         expect(style.columns).toBe('auto')
         expect(style.cssText).toBe('columns: auto;')
@@ -1747,10 +1955,10 @@ describe('contain-intrinsic-size', () => {
         expect(style.cssText).toBe('contain-intrinsic-size: none;')
 
         // Missing longhand values
-        style.containIntrinsicSize = initial(longhands[0])
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.containIntrinsicSize).toBe('none')
-        expect(style.cssText).toBe('contain-intrinsic-size: none;')
+        style.containIntrinsicSize = '1px'
+        longhands.forEach(longhand => expect(style[longhand]).toBe('1px'))
+        expect(style.containIntrinsicSize).toBe('1px')
+        expect(style.cssText).toBe('contain-intrinsic-size: 1px;')
     })
     it('serializes a shorthand value from the declarations of its longhands', () => {
 
@@ -1778,7 +1986,7 @@ describe('container', () => {
         expect(style.cssText).toBe('container: none;')
 
         // Missing longhand values
-        style.container = initial(longhands[0])
+        style.container = 'none'
         longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
         expect(style.container).toBe('none')
         expect(style.cssText).toBe('container: none;')
@@ -1809,10 +2017,18 @@ describe('corners', () => {
         expect(style.cssText).toBe('corners: round;')
 
         // Missing longhand values
-        style.corners = initial(longhands[0])
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.corners).toBe('round')
-        expect(style.cssText).toBe('corners: round;')
+        style.corners = 'angle'
+        longhands.forEach(longhand =>
+            expect(style[longhand])
+                .toBe(longhand === 'corner-shape' ? 'angle' : initial(longhand)))
+        expect(style.corners).toBe('angle')
+        expect(style.cssText).toBe('corners: angle;')
+        style.corners = '1px'
+        longhands.forEach(longhand =>
+            expect(style[longhand])
+                .toBe(longhand === 'corner-shape' ? initial(longhand) : '1px'))
+        expect(style.corners).toBe('1px')
+        expect(style.cssText).toBe('corners: 1px;')
     })
     it('serializes a shorthand value from the declarations of its longhands', () => {
 
@@ -1840,10 +2056,10 @@ describe('cue, pause, rest', () => {
         expect(style.cssText).toBe('cue: none;')
 
         // Missing longhand values
-        style.cue = initial(longhands[0])
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.cue).toBe('none')
-        expect(style.cssText).toBe('cue: none;')
+        style.cue = 'url("icon.wav")'
+        longhands.forEach(longhand => expect(style[longhand]).toBe('url("icon.wav")'))
+        expect(style.cue).toBe('url("icon.wav")')
+        expect(style.cssText).toBe('cue: url("icon.wav");')
     })
     it('serializes a shorthand value from the declarations of its longhands', () => {
 
@@ -1926,7 +2142,7 @@ describe('flex-flow', () => {
         expect(style.cssText).toBe('flex-flow: row;')
 
         // Missing longhand values
-        style.flexFlow = initial(longhands[0])
+        style.flexFlow = 'row'
         longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
         expect(style.flexFlow).toBe('row')
         expect(style.cssText).toBe('flex-flow: row;')
@@ -1984,13 +2200,13 @@ describe('font', () => {
         // Non CSS2 font-variant property
         style.fontVariantCaps = 'all-petite-caps'
         expect(style.font).toBe('')
-        expect(style.cssText).toBe('font-style: normal; font-variant: all-petite-caps; font-weight: normal; font-stretch: normal; font-size: medium; line-height: normal; font-family: monospace; font-feature-settings: normal; font-kerning: auto; font-language-override: normal; font-optical-sizing: auto; font-palette: normal; font-size-adjust: none; font-variation-settings: normal;')
+        expect(style.cssText).toBe('font-style: normal; font-variant: all-petite-caps; font-weight: normal; font-stretch: normal; font-size: medium; line-height: normal; font-family: monospace; font-feature-settings: normal; font-kerning: auto; font-language-override: normal; font-optical-sizing: auto; font-size-adjust: none; font-variation-settings: normal;')
         style.fontVariantCaps = initial('font-variant-caps')
 
         // Non CSS3 font-stretch property
         style.fontStretch = '110%'
         expect(style.font).toBe('')
-        expect(style.cssText).toBe('font-style: normal; font-variant: normal; font-weight: normal; font-stretch: 110%; font-size: medium; line-height: normal; font-family: monospace; font-feature-settings: normal; font-kerning: auto; font-language-override: normal; font-optical-sizing: auto; font-palette: normal; font-size-adjust: none; font-variation-settings: normal;')
+        expect(style.cssText).toBe('font-style: normal; font-variant: normal; font-weight: normal; font-stretch: 110%; font-size: medium; line-height: normal; font-family: monospace; font-feature-settings: normal; font-kerning: auto; font-language-override: normal; font-optical-sizing: auto; font-size-adjust: none; font-variation-settings: normal;')
     })
 })
 describe('font-variant', () => {
@@ -2009,7 +2225,7 @@ describe('font-variant', () => {
         expect(style.cssText).toBe('font-variant: normal;')
 
         // Missing longhand values
-        style.fontVariant = initial(longhands[0])
+        style.fontVariant = 'normal'
         longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
         expect(style.fontVariant).toBe('normal')
         expect(style.cssText).toBe('font-variant: normal;')
@@ -2098,10 +2314,10 @@ describe('gap', () => {
         expect(style.cssText).toBe('gap: normal;')
 
         // Missing longhand values
-        style.gap = initial(longhands[0])
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.gap).toBe('normal')
-        expect(style.cssText).toBe('gap: normal;')
+        style.gap = '1px'
+        longhands.forEach(longhand => expect(style[longhand]).toBe('1px'))
+        expect(style.gap).toBe('1px')
+        expect(style.cssText).toBe('gap: 1px;')
     })
     it('serializes a shorthand value from the declarations of its longhands', () => {
 
@@ -2225,7 +2441,7 @@ describe('grid-area', () => {
         expect(style.gridArea).toBe('auto')
         expect(style.cssText).toBe('grid-area: auto;')
 
-        // Implicit values
+        // Missing longhand values
         const values = ['a', 'b', 'c']
         style.gridArea = 'a'
         longhands.forEach(longhand => expect(style[longhand]).toBe('a'))
@@ -2271,7 +2487,7 @@ describe('grid-column, grid-row', () => {
         expect(style.gridColumn).toBe('auto')
         expect(style.cssText).toBe('grid-column: auto;')
 
-        // Implicit values
+        // Missing longhand values
         const values = ['a', 'b']
         style.gridColumn = 'a'
         longhands.forEach(longhand => expect(style[longhand]).toBe('a'))
@@ -2420,7 +2636,7 @@ describe('inset', () => {
         expect(style.inset).toBe('auto')
         expect(style.cssText).toBe('inset: auto;')
 
-        // Implicit values
+        // Missing longhand values
         const values = ['0px', '1px', '2px']
         style.inset = '0px'
         longhands.forEach(longhand => expect(style[longhand]).toBe('0px'))
@@ -2461,10 +2677,10 @@ describe('inset-block, inset-inline', () => {
         expect(style.cssText).toBe('inset-block: auto;')
 
         // Missing longhand values
-        style.insetBlock = initial(longhands[0])
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.insetBlock).toBe('auto')
-        expect(style.cssText).toBe('inset-block: auto;')
+        style.insetBlock = '1px'
+        longhands.forEach(longhand => expect(style[longhand]).toBe('1px'))
+        expect(style.insetBlock).toBe('1px')
+        expect(style.cssText).toBe('inset-block: 1px;')
     })
     it('serializes a shorthand value from the declarations of its longhands', () => {
 
@@ -2492,9 +2708,9 @@ describe('line-clamp', () => {
         expect(style.cssText).toBe('line-clamp: none;')
 
         // Missing longhand values
-        style.lineClamp = '1 none'
+        style.lineClamp = '1 auto'
         expect(style.maxLines).toBe('1')
-        expect(style.blockEllipsis).toBe('none')
+        expect(style.blockEllipsis).toBe('auto')
         expect(style.continue).toBe('discard')
         expect(style.lineClamp).toBe('1')
         expect(style.cssText).toBe('line-clamp: 1;')
@@ -2508,16 +2724,28 @@ describe('line-clamp', () => {
         expect(style.lineClamp).toBe('none')
         expect(style.cssText).toBe('line-clamp: none;')
 
-        // `continue` cannot be represented when it is `auto` and max-lines is not `none`
-        style.maxLines = '1'
+        // All longhands cannot always be represented
+        style.continue = 'discard'
         expect(style.lineClamp).toBe('')
-        expect(style.cssText).toBe('max-lines: 1; block-ellipsis: none; continue: auto;')
-        style.maxLines = initial('max-lines')
-
-        // `block-ellipsis cannot be represented when it is not `none` and `max-lines` is `none`
+        expect(style.cssText).toBe('max-lines: none; block-ellipsis: none; continue: discard;')
         style.blockEllipsis = 'auto'
         expect(style.lineClamp).toBe('')
-        expect(style.cssText).toBe('max-lines: none; block-ellipsis: auto; continue: auto;')
+        expect(style.cssText).toBe('max-lines: none; block-ellipsis: auto; continue: discard;')
+        style.continue = initial('continue')
+        expect(style.lineClamp).toBe('')
+        expect(style.cssText).toBe('-webkit-line-clamp: none;')
+        style.maxLines = '1'
+        expect(style.lineClamp).toBe('')
+        expect(style.cssText).toBe('max-lines: 1; block-ellipsis: auto; continue: auto;')
+        style.continue = 'discard'
+        expect(style.lineClamp).toBe('1')
+        expect(style.cssText).toBe('line-clamp: 1;')
+        style.blockEllipsis = 'none'
+        expect(style.lineClamp).toBe('1 none')
+        expect(style.cssText).toBe('line-clamp: 1 none;')
+        style.blockEllipsis = '"…"'
+        expect(style.lineClamp).toBe('1 "…"')
+        expect(style.cssText).toBe('line-clamp: 1 "…";')
     })
 })
 describe('list-style', () => {
@@ -2571,7 +2799,7 @@ describe('margin', () => {
         expect(style.margin).toBe('0px')
         expect(style.cssText).toBe('margin: 0px;')
 
-        // Implicit values
+        // Missing longhand values
         const values = ['0px', '1px', '2px']
         style.margin = '0px'
         longhands.forEach(longhand => expect(style[longhand]).toBe('0px'))
@@ -2612,10 +2840,10 @@ describe('margin-block, margin-inline', () => {
         expect(style.cssText).toBe('margin-block: 0px;')
 
         // Missing longhand values
-        style.marginBlock = initial(longhands[0])
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.marginBlock).toBe('0px')
-        expect(style.cssText).toBe('margin-block: 0px;')
+        style.marginBlock = '1px'
+        longhands.forEach(longhand => expect(style[longhand]).toBe('1px'))
+        expect(style.marginBlock).toBe('1px')
+        expect(style.cssText).toBe('margin-block: 1px;')
     })
     it('serializes a shorthand value from the declarations of its longhands', () => {
 
@@ -2659,9 +2887,10 @@ describe('mask', () => {
     it('parses longhand declarations from a shorthand value', () => {
 
         const style = createStyleBlock()
+        const mask = 'none 0% 0% / auto repeat border-box border-box add match-source'
 
         // Initial longhand values
-        style.mask = 'none 0% 0% / auto repeat border-box border-box add match-source'
+        style.mask = mask
         expect(style).toHaveLength(longhands.length)
         longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
         expect(style.mask).toBe('none')
@@ -2674,7 +2903,7 @@ describe('mask', () => {
         expect(style.cssText).toBe('mask: none;')
 
         // Repeated longhand values
-        style.mask = 'none, 0% 0%'
+        style.mask = `${mask}, ${mask}`
         longhands.forEach(longhand =>
             expect(style[longhand]).toBe(shorthands.resetOnly.mask.includes(longhand)
                 ? initial(longhand)
@@ -2721,21 +2950,10 @@ describe('mask', () => {
         expect(style.mask).toBe('none')
         expect(style.cssText).toBe('mask: none;')
 
-        // Excess of mask-image values
-        longhands.forEach(longhand =>
-            style[longhand] = longhand === 'mask-image'
-                ? 'url(bg-1.jpg), url(bg-2.jpg)'
-                : initial(longhand))
+        // Different lengths of longhand values
+        style.maskImage = 'none, none'
         expect(style.mask).toBe('')
-        expect(style.cssText).toBe('mask-image: url("bg-1.jpg"), url("bg-2.jpg"); mask-position: 0% 0%; mask-size: auto; mask-repeat: repeat; mask-origin: border-box; mask-clip: border-box; mask-composite: add; mask-mode: match-source; mask-border: none;')
-
-        // Lack of mask-image values
-        longhands.forEach(longhand =>
-            style[longhand] = longhand === 'mask-image'
-                ? 'url(bg-1.jpg)'
-                : `${initial(longhand)}, ${initial(longhand)}`)
-        expect(style.mask).toBe('')
-        expect(style.cssText).toBe('mask-image: url("bg-1.jpg"); mask-position: 0% 0%, 0% 0%; mask-size: auto, auto; mask-repeat: repeat, repeat; mask-origin: border-box, border-box; mask-clip: border-box, border-box; mask-composite: add, add; mask-mode: match-source, match-source; mask-border: none;')
+        expect(style.cssText).toBe('mask-image: none, none; mask-position: 0% 0%; mask-size: auto; mask-repeat: repeat; mask-origin: border-box; mask-clip: border-box; mask-composite: add; mask-mode: match-source; mask-border: none;')
     })
 })
 describe('mask-border', () => {
@@ -2754,7 +2972,7 @@ describe('mask-border', () => {
         expect(style.cssText).toBe('mask-border: none;')
 
         // Missing longhand values
-        style.maskBorder = initial(longhands[0])
+        style.maskBorder = 'none'
         longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
         expect(style.maskBorder).toBe('none')
         expect(style.cssText).toBe('mask-border: none;')
@@ -2840,7 +3058,7 @@ describe('order', () => {
         expect(style.readingOrder).toBe('1')
         expect(style.order).toBe('0 1')
         expect(style.cssText).toBe('order: 0 1;')
-        style.order = 'reading-and-layout 1'
+        style.order = 'layout reading 1'
         expect(style.layoutOrder).toBe('1')
         expect(style.readingOrder).toBe('1')
         expect(style.order).toBe('1 1')
@@ -2872,7 +3090,7 @@ describe('outline', () => {
         expect(style.cssText).toBe('outline: medium;')
 
         // Missing longhand values
-        style.outline = initial(longhands[0])
+        style.outline = 'medium'
         longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
         expect(style.outline).toBe('medium')
         expect(style.cssText).toBe('outline: medium;')
@@ -2903,10 +3121,10 @@ describe('overflow', () => {
         expect(style.cssText).toBe('overflow: visible;')
 
         // Missing longhand values
-        style.overflow = initial(longhands[0])
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.overflow).toBe('visible')
-        expect(style.cssText).toBe('overflow: visible;')
+        style.overflow = 'hidden'
+        longhands.forEach(longhand => expect(style[longhand]).toBe('hidden'))
+        expect(style.overflow).toBe('hidden')
+        expect(style.cssText).toBe('overflow: hidden;')
     })
     it('serializes a shorthand value from the declarations of its longhands', () => {
 
@@ -2984,10 +3202,10 @@ describe('overscroll-behavior', () => {
         expect(style.cssText).toBe('overscroll-behavior: auto;')
 
         // Missing longhand values
-        style.overscrollBehavior = initial(longhands[0])
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.overscrollBehavior).toBe('auto')
-        expect(style.cssText).toBe('overscroll-behavior: auto;')
+        style.overscrollBehavior = 'contain'
+        longhands.forEach(longhand => expect(style[longhand]).toBe('contain'))
+        expect(style.overscrollBehavior).toBe('contain')
+        expect(style.cssText).toBe('overscroll-behavior: contain;')
     })
     it('serializes a shorthand value from the declarations of its longhands', () => {
 
@@ -3014,7 +3232,7 @@ describe('padding', () => {
         expect(style.padding).toBe('0px')
         expect(style.cssText).toBe('padding: 0px;')
 
-        // Implicit values
+        // Missing longhand values
         const values = ['0px', '1px', '2px']
         style.padding = '0px'
         longhands.forEach(longhand => expect(style[longhand]).toBe('0px'))
@@ -3055,10 +3273,10 @@ describe('padding-block, padding-inline', () => {
         expect(style.cssText).toBe('padding-block: 0px;')
 
         // Missing longhand values
-        style.paddingBlock = initial(longhands[0])
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.paddingBlock).toBe('0px')
-        expect(style.cssText).toBe('padding-block: 0px;')
+        style.paddingBlock = '1px'
+        longhands.forEach(longhand => expect(style[longhand]).toBe('1px'))
+        expect(style.paddingBlock).toBe('1px')
+        expect(style.cssText).toBe('padding-block: 1px;')
     })
     it('serializes a shorthand value from the declarations of its longhands', () => {
 
@@ -3086,10 +3304,10 @@ describe('place-content', () => {
         expect(style.cssText).toBe('place-content: normal;')
 
         // Missing longhand values
-        style.placeContent = initial(longhands[0])
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.placeContent).toBe('normal')
-        expect(style.cssText).toBe('place-content: normal;')
+        style.placeContent = 'stretch'
+        longhands.forEach(longhand => expect(style[longhand]).toBe('stretch'))
+        expect(style.placeContent).toBe('stretch')
+        expect(style.cssText).toBe('place-content: stretch;')
 
         // <baseline-position>
         style.placeContent = 'baseline'
@@ -3129,9 +3347,8 @@ describe('place-items', () => {
         expect(style.cssText).toBe('place-items: normal legacy;')
 
         // Missing longhand values
-        const value = initial(longhands[0])
-        style.placeItems = value
-        longhands.forEach(longhand => expect(style[longhand]).toBe(value))
+        style.placeItems = 'normal'
+        longhands.forEach(longhand => expect(style[longhand]).toBe('normal'))
         expect(style.placeItems).toBe('normal')
         expect(style.cssText).toBe('place-items: normal;')
     })
@@ -3161,11 +3378,10 @@ describe('place-self', () => {
         expect(style.cssText).toBe('place-self: auto;')
 
         // Missing longhand values
-        const value = initial(longhands[0])
-        style.placeSelf = value
-        longhands.forEach(longhand => expect(style[longhand]).toBe(value))
-        expect(style.placeSelf).toBe('auto')
-        expect(style.cssText).toBe('place-self: auto;')
+        style.placeSelf = 'normal'
+        longhands.forEach(longhand => expect(style[longhand]).toBe('normal'))
+        expect(style.placeSelf).toBe('normal')
+        expect(style.cssText).toBe('place-self: normal;')
     })
     it('serializes a shorthand value from the declarations of its longhands', () => {
 
@@ -3192,7 +3408,7 @@ describe('scroll-margin', () => {
         expect(style.scrollMargin).toBe('0px')
         expect(style.cssText).toBe('scroll-margin: 0px;')
 
-        // Implicit values
+        // Missing longhand values
         const values = ['0px', '1px', '2px']
         style.scrollMargin = '0px'
         longhands.forEach(longhand => expect(style[longhand]).toBe('0px'))
@@ -3233,10 +3449,10 @@ describe('scroll-margin-block, scroll-margin-inline', () => {
         expect(style.cssText).toBe('scroll-margin-block: 0px;')
 
         // Missing longhand values
-        style.scrollMarginBlock = initial(longhands[0])
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.scrollMarginBlock).toBe('0px')
-        expect(style.cssText).toBe('scroll-margin-block: 0px;')
+        style.scrollMarginBlock = '1px'
+        longhands.forEach(longhand => expect(style[longhand]).toBe('1px'))
+        expect(style.scrollMarginBlock).toBe('1px')
+        expect(style.cssText).toBe('scroll-margin-block: 1px;')
     })
     it('serializes a shorthand value from the declarations of its longhands', () => {
 
@@ -3263,7 +3479,7 @@ describe('scroll-padding', () => {
         expect(style.scrollPadding).toBe('auto')
         expect(style.cssText).toBe('scroll-padding: auto;')
 
-        // Implicit values
+        // Missing longhand values
         const values = ['0px', '1px', '2px']
         style.scrollPadding = '0px'
         longhands.forEach(longhand => expect(style[longhand]).toBe('0px'))
@@ -3304,10 +3520,10 @@ describe('scroll-padding-block, scroll-padding-inline', () => {
         expect(style.cssText).toBe('scroll-padding-block: auto;')
 
         // Missing longhand values
-        style.scrollPaddingBlock = initial(longhands[0])
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.scrollPaddingBlock).toBe('auto')
-        expect(style.cssText).toBe('scroll-padding-block: auto;')
+        style.scrollPaddingBlock = '1px'
+        longhands.forEach(longhand => expect(style[longhand]).toBe('1px'))
+        expect(style.scrollPaddingBlock).toBe('1px')
+        expect(style.cssText).toBe('scroll-padding-block: 1px;')
     })
     it('serializes a shorthand value from the declarations of its longhands', () => {
 
@@ -3335,10 +3551,10 @@ describe('scroll-start', () => {
         expect(style.cssText).toBe('scroll-start: auto;')
 
         // Missing longhand values
-        style.scrollStart = initial(longhands[0])
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.scrollStart).toBe('auto')
-        expect(style.cssText).toBe('scroll-start: auto;')
+        style.scrollStart = 'start'
+        longhands.forEach(longhand => expect(style[longhand]).toBe('start'))
+        expect(style.scrollStart).toBe('start')
+        expect(style.cssText).toBe('scroll-start: start;')
     })
     it('serializes a shorthand value from the declarations of its longhands', () => {
 
@@ -3354,22 +3570,17 @@ describe('scroll-start-target', () => {
     it.todo('parses longhand declarations from a shorthand value')
     it.todo('serializes a shorthand value from the declarations of its longhands')
 })
-describe('scroll-timeline', () => {
+describe('scroll-timeline, view-timeline', () => {
 
     const longhands = shorthands.get('scroll-timeline')
 
     it('parses longhand declarations from a shorthand value', () => {
 
         const style = createStyleBlock()
-
-        // Invalid `none` in repeated longhand values
-        style.scrollTimeline = 'none, 1s'
-        expect(style.scrollTimeline).toBe('')
-        style.scrollTimeline = 'none, none'
-        expect(style.scrollTimeline).toBe('')
+        const timeline = 'none block'
 
         // Initial longhand values
-        style.scrollTimeline = 'none block'
+        style.scrollTimeline = timeline
         expect(style).toHaveLength(longhands.length)
         longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
         expect(style.scrollTimeline).toBe('none')
@@ -3382,14 +3593,10 @@ describe('scroll-timeline', () => {
         expect(style.cssText).toBe('scroll-timeline: none;')
 
         // Repeated longhand values
-        style.scrollTimeline = 'timeline-1, timeline-2 block'
-        longhands.forEach(longhand =>
-            expect(style[longhand])
-                .toBe(longhand === 'scroll-timeline-name'
-                    ? 'timeline-1, timeline-2'
-                    : `${initial(longhand)}, ${initial(longhand)}`))
-        expect(style.scrollTimeline).toBe('timeline-1, timeline-2')
-        expect(style.cssText).toBe('scroll-timeline: timeline-1, timeline-2;')
+        style.scrollTimeline = `${timeline}, ${timeline}`
+        longhands.forEach(longhand => expect(style[longhand]).toBe(`${initial(longhand)}, ${initial(longhand)}`))
+        expect(style.scrollTimeline).toBe('none, none')
+        expect(style.cssText).toBe('scroll-timeline: none, none;')
     })
     it('serializes a shorthand value from the declarations of its longhands', () => {
 
@@ -3400,21 +3607,10 @@ describe('scroll-timeline', () => {
         expect(style.scrollTimeline).toBe('none')
         expect(style.cssText).toBe('scroll-timeline: none;')
 
-        // Excess of scroll timeline names
-        longhands.forEach(longhand =>
-            style[longhand] = longhand === 'scroll-timeline-name'
-                ? 'timeline-1, timeline-2'
-                : initial(longhand))
-        expect(style.background).toBe('')
-        expect(style.cssText).toBe('scroll-timeline-name: timeline-1, timeline-2; scroll-timeline-axis: block;')
-
-        // Lack of scroll timeline names
-        longhands.forEach(longhand =>
-            style[longhand] = longhand === 'scroll-timeline-name'
-                ? 'timeline-1'
-                : `${initial(longhand)}, ${initial(longhand)}`)
-        expect(style.background).toBe('')
-        expect(style.cssText).toBe('scroll-timeline-name: timeline-1; scroll-timeline-axis: block, block;')
+        // Different lengths of longhand values
+        style.scrollTimelineName = 'none, none'
+        expect(style.scrollTimeline).toBe('')
+        expect(style.cssText).toBe('scroll-timeline-name: none, none; scroll-timeline-axis: block;')
     })
 })
 describe('text-align', () => {
@@ -3520,6 +3716,64 @@ describe('text-decoration-skip', () => {
     it.todo('parses longhand declarations from a shorthand value')
     it.todo('serializes a shorthand value from the declarations of its longhands')
 })
+describe('text-spacing', () => {
+
+    const longhands = shorthands.get('text-spacing')
+
+    it('parses longhand declarations from a shorthand value', () => {
+
+        const style = createStyleBlock()
+
+        // Initial longhand values
+        style.textSpacing = 'ideograph-alpha ideograph-numeric space-first'
+        expect(style).toHaveLength(longhands.length)
+        expect(style.textAutospace).toBe('ideograph-alpha ideograph-numeric')
+        expect(style.textSpacingTrim).toBe(initial('text-spacing-trim'))
+        expect(style.textSpacing).toBe('normal')
+        expect(style.cssText).toBe('text-spacing: normal;')
+
+        // Missing longhand values
+        style.textSpacing = 'ideograph-alpha ideograph-numeric'
+        expect(style.textAutospace).toBe('ideograph-alpha ideograph-numeric')
+        expect(style.textSpacingTrim).toBe(initial('text-spacing-trim'))
+        expect(style.textSpacing).toBe('normal')
+        expect(style.cssText).toBe('text-spacing: normal;')
+        style.textSpacing = 'space-first'
+        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
+        expect(style.textSpacing).toBe('normal')
+        expect(style.cssText).toBe('text-spacing: normal;')
+
+        // normal
+        style.textSpacing = 'normal'
+        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
+        expect(style.textSpacing).toBe('normal')
+        expect(style.cssText).toBe('text-spacing: normal;')
+
+        // none
+        style.textSpacing = 'none'
+        expect(style.textAutospace).toBe('no-autospace')
+        expect(style.textSpacingTrim).toBe('space-all')
+        expect(style.textSpacing).toBe('none')
+        expect(style.cssText).toBe('text-spacing: none;')
+
+        // auto
+        style.textSpacing = 'auto'
+        expect(style.textAutospace).toBe('auto')
+        expect(style.textSpacingTrim).toBe('auto')
+        expect(style.textSpacing).toBe('auto')
+        expect(style.cssText).toBe('text-spacing: auto;')
+
+    })
+    it('serializes a shorthand value from the declarations of its longhands', () => {
+
+        const style = createStyleBlock()
+
+        // Initial longhand values
+        longhands.forEach(longhand => style[longhand] = initial(longhand))
+        expect(style.textSpacing).toBe('normal')
+        expect(style.cssText).toBe('text-spacing: normal;')
+    })
+})
 describe('transition', () => {
 
     const longhands = shorthands.get('transition')
@@ -3527,13 +3781,10 @@ describe('transition', () => {
     it('parses longhand declarations from a shorthand value', () => {
 
         const style = createStyleBlock()
-
-        // Invalid `none` in repeated longhand values
-        style.transition = 'none, 1s'
-        expect(style.transition).toBe('')
+        const transition = '0s ease 0s all'
 
         // Initial longhand values
-        style.transition = '0s ease 0s all'
+        style.transition = transition
         expect(style).toHaveLength(longhands.length)
         longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
         expect(style.transition).toBe('0s')
@@ -3546,7 +3797,7 @@ describe('transition', () => {
         expect(style.cssText).toBe('transition: 0s;')
 
         // Repeated longhand values
-        style.transition = '0s, ease'
+        style.transition = `${transition}, ${transition}`
         longhands.forEach(longhand => expect(style[longhand]).toBe(`${initial(longhand)}, ${initial(longhand)}`))
         expect(style.transition).toBe('0s, 0s')
         expect(style.cssText).toBe('transition: 0s, 0s;')
@@ -3560,21 +3811,10 @@ describe('transition', () => {
         expect(style.transition).toBe('0s')
         expect(style.cssText).toBe('transition: 0s;')
 
-        // Excess of transition-property values
-        longhands.forEach(longhand =>
-            style[longhand] = longhand === 'transition-property'
-                ? 'all, color'
-                : initial(longhand))
+        // Different lengths of longhand values
+        style.transitionProperty = 'none, none'
         expect(style.transition).toBe('')
-        expect(style.cssText).toBe('transition-duration: 0s; transition-timing-function: ease; transition-delay: 0s; transition-property: all, color;')
-
-        // Lack of transition-property values
-        longhands.forEach(longhand =>
-            style[longhand] = longhand === 'transition-property'
-                ? initial(longhand)
-                : `${initial(longhand)}, ${initial(longhand)}`)
-        expect(style.transition).toBe('')
-        expect(style.cssText).toBe('transition-duration: 0s, 0s; transition-timing-function: ease, ease; transition-delay: 0s, 0s; transition-property: all;')
+        expect(style.cssText).toBe('transition-duration: 0s; transition-timing-function: ease; transition-delay: 0s; transition-property: none, none;')
     })
 })
 describe('vertical-align', () => {
@@ -3608,42 +3848,35 @@ describe('vertical-align', () => {
         expect(style.cssText).toBe('vertical-align: baseline;')
     })
 })
-describe('view-timeline', () => {
+describe('white-space', () => {
 
-    const longhands = shorthands.get('view-timeline')
+    const longhands = shorthands.get('white-space')
 
     it('parses longhand declarations from a shorthand value', () => {
 
         const style = createStyleBlock()
 
-        // Invalid `none` in repeated longhand values
-        style.viewTimeline = 'none, 1s'
-        expect(style.viewTimeline).toBe('')
-        style.viewTimeline = 'none, none'
-        expect(style.viewTimeline).toBe('')
-
         // Initial longhand values
-        style.viewTimeline = 'none block'
+        style.whiteSpace = 'collapse wrap none'
         expect(style).toHaveLength(longhands.length)
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.viewTimeline).toBe('none')
-        expect(style.cssText).toBe('view-timeline: none;')
+        longhands.forEach((longhand, index) => expect(style[longhand]).toBe(initial(longhand)))
+        expect(style.whiteSpace).toBe('normal')
+        expect(style.cssText).toBe('white-space: normal;')
 
         // Missing longhand values
-        style.viewTimeline = 'none'
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.viewTimeline).toBe('none')
-        expect(style.cssText).toBe('view-timeline: none;')
+        style.whiteSpace = 'collapse'
+        expect(style).toHaveLength(longhands.length)
+        longhands.forEach((longhand, index) => expect(style[longhand]).toBe(initial(longhand)))
+        expect(style.whiteSpace).toBe('normal')
+        expect(style.cssText).toBe('white-space: normal;')
 
-        // Repeated longhand values
-        style.viewTimeline = 'timeline-1, timeline-2 block'
-        longhands.forEach(longhand =>
-            expect(style[longhand])
-                .toBe(longhand === 'view-timeline-name'
-                    ? 'timeline-1, timeline-2'
-                    : `${initial(longhand)}, ${initial(longhand)}`))
-        expect(style.viewTimeline).toBe('timeline-1, timeline-2')
-        expect(style.cssText).toBe('view-timeline: timeline-1, timeline-2;')
+        // normal, nowrap, pre, pre-line, pre-wrap
+        whiteSpace.forEach((mapping, keyword) => {
+            style.whiteSpace = keyword
+            longhands.forEach((longhand, index) => expect(style[longhand]).toBe(mapping[index].value))
+            expect(style.whiteSpace).toBe(keyword)
+            expect(style.cssText).toBe(`white-space: ${keyword};`)
+        })
     })
     it('serializes a shorthand value from the declarations of its longhands', () => {
 
@@ -3651,45 +3884,14 @@ describe('view-timeline', () => {
 
         // Initial longhand values
         longhands.forEach(longhand => style[longhand] = initial(longhand))
-        expect(style.viewTimeline).toBe('none')
-        expect(style.cssText).toBe('view-timeline: none;')
+        expect(style.whiteSpace).toBe('normal')
+        expect(style.cssText).toBe('white-space: normal;')
 
-        // Excess of view timeline names
-        longhands.forEach(longhand =>
-            style[longhand] = longhand === 'view-timeline-name'
-                ? 'timeline-1, timeline-2'
-                : initial(longhand))
-        expect(style.background).toBe('')
-        expect(style.cssText).toBe('view-timeline-name: timeline-1, timeline-2; view-timeline-axis: block;')
-
-        // Lack of view timeline names
-        longhands.forEach(longhand =>
-            style[longhand] = longhand === 'view-timeline-name'
-                ? 'timeline-1'
-                : `${initial(longhand)}, ${initial(longhand)}`)
-        expect(style.background).toBe('')
-        expect(style.cssText).toBe('view-timeline-name: timeline-1; view-timeline-axis: block, block;')
-    })
-})
-describe('white-space', () => {
-
-    const longhands = shorthands.get('white-space')
-
-    it('parses longhand declarations from a shorthand value', () => {
-        const style = createStyleBlock()
-        whiteSpace.forEach((expected, input) => {
-            style.whiteSpace = input
-            longhands.forEach((longhand, index) => expect(style[longhand]).toBe(expected[index].value))
-            expect(style.whiteSpace).toBe(input)
-            expect(style.cssText).toBe(`white-space: ${input};`)
-        })
-    })
-    it('serializes a shorthand value from the declarations of its longhands', () => {
-        const style = createStyleBlock()
-        whiteSpace.forEach((input, expected) => {
-            longhands.forEach((longhand, index) => style[longhand] = input[index].value)
-            expect(style.whiteSpace).toBe(expected)
-            expect(style.cssText).toBe(`white-space: ${expected};`)
+        // normal, nowrap, pre, pre-line, pre-wrap
+        whiteSpace.forEach((mapping, keyword) => {
+            longhands.forEach((longhand, index) => style[longhand] = mapping[index].value)
+            expect(style.whiteSpace).toBe(keyword)
+            expect(style.cssText).toBe(`white-space: ${keyword};`)
         })
     })
 })
