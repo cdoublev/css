@@ -12,13 +12,15 @@
  *   - ./lib/rules/definitions.js
  *   - ./lib/values/pseudos.js
  */
-const { addQuotes, logError, tab } = require('../lib/utils/script.js')
-const { join, resolve } = require('path')
-const { productions: { structures, terminals } } = require('../lib/parse/syntax.js')
-const compatibility = require('../lib/compatibility.js')
+const { addQuotes, tab } = require('../lib/utils/string.js')
+const { join, resolve } = require('node:path')
+const arbitrary = require('../lib/parse/arbitrary.js')
+const blocks = require('../lib/values/blocks.js')
 const colors = require('../lib/values/colors.js')
+const compatibility = require('../lib/compatibility.js')
 const { definitions: dimensions } = require('../lib/values/dimensions.js')
 const font = require('../lib/values/font.js')
+const forgiving = require('../lib/values/forgiving.js')
 const fs = require('node:fs/promises')
 const logical = require('../lib/properties/logical.js')
 const pseudos = require('../lib/values/pseudos.js')
@@ -29,161 +31,146 @@ const webref = require('./webref.js')
 const logicalGroups = Object.keys(logical)
 
 const reportErrors = process.env.NODE_ENV === 'development'
-const outputPaths = {
-    descriptors: resolve(join(__dirname, '..', 'lib', 'descriptors', 'definitions.js')),
-    properties: resolve(join(__dirname, '..', 'lib', 'properties', 'definitions.js')),
-    types: resolve(join(__dirname, '..', 'lib', 'values', 'definitions.js')),
-}
-const header = `\n// Generated from ${__filename}\n\nmodule.exports = {\n`
 
 /* eslint-disable sort-keys */
 const initialTypes = {
-    // TODO: report w3c/csswg-drafts issue "Define `<type>` with a production rule"
-    'absolute-size': 'xx-small | x-small | small | medium | large | x-large | xx-large',
-    'content-level': 'element | content | text | attr(<custom-ident>) | <counter()> | <counters()>',
-    'relative-size': 'larger | smaller',
-    'x': '<number>',
-    'y': '<number>',
-    // https://github.com/w3c/csswg-drafts/issues/7632
-    'font-src': '<url> [format(<font-format>)]? [tech(<font-tech>#)]? | local(<family-name>)',
-    // https://github.com/w3c/csswg-drafts/issues/8091, https://github.com/w3c/csswg-drafts/issues/8384
-    'toggle()': "toggle(<declaration-value>? [';' <declaration-value>?]+)",
+    // Missing definitions
+    '<x>': '<number>',
+    '<y>': '<number>',
+    '<whole-value>': '<declaration-value>?',
+    // https://github.com/w3c/csswg-drafts/issues/9410
+    '<generic-family-name>': font.family.generic.join(' | '),
+    // https://github.com/w3c/csswg-drafts/issues/8835
+    '<urange>': "u '+' <ident-token> '?'* | u <dimension-token> '?'* | u <number-token> '?'* | u <number-token> <dimension-token> | u <number-token> <number-token> | u '+' '?'+",
 }
 const replaced = {
     descriptors: {
-        '@color-profile': {
-            // https://github.com/w3c/webref/issues/707
-            'components': { initial: '' },
-            'src': { initial: '' },
-        },
-        '@counter-style': {
-            // https://github.com/w3c/csswg-drafts/issues/7417
-            'negative': { initial: '"-"' },
-            'prefix': { initial: '""' },
-            'suffix': { initial: '". "' },
-            // https://github.com/w3c/webref/issues/707
-            'additive-symbols': { initial: '' },
-            'symbols': { initial: '' },
-        },
-        '@font-face': {
-            // https://github.com/w3c/csswg-drafts/issues/7418
-            'font-size': { initial: 'auto' },
-            // https://github.com/w3c/csswg-drafts/issues/7632
-            'src': { initial: '', value: '<font-src-list>' },
-            // https://github.com/w3c/webref/issues/707
-            'font-family': { initial: '' },
-        },
-        '@font-palette-values': {
-            // https://github.com/w3c/webref/issues/707
-            'base-palette': { initial: '' },
-            'font-family': { initial: '' },
-            'override-colors': { initial: '' },
-        },
         '@property': {
             // https://github.com/w3c/webref/issues/707
-            'inherits': { initial: '' },
             'initial-value': { initial: '' },
-            'syntax': { initial: '' },
         },
     },
     properties: {
-        // https://github.com/w3c/fxtf-drafts/issues/451
-        'background-blend-mode': { value: "<'mix-blend-mode'>#" },
         // https://github.com/w3c/csswg-drafts/issues/7366
         'border-end-end-radius': { initial: '0' },
         'border-end-start-radius': { initial: '0' },
         'border-start-end-radius': { initial: '0' },
         'border-start-start-radius': { initial: '0' },
-        // https://github.com/w3c/csswg-drafts/issues/7350
-        'clear': { value: 'inline-start | inline-end | block-start | block-end | left | right | top | bottom | both-inline | both-block | both | all | none' },
-        // https://github.com/w3c/csswg-drafts/issues/7219
-        'clip': { value: 'rect(<top>, <right>, <bottom>, <left>) | auto' },
-        // https://github.com/w3c/csswg-drafts/issues/8600
-        'contain': { value: 'none | strict | content | [[size | inline-size] || layout || style || paint]' },
-        // https://github.com/w3c/csswg-drafts/issues/7351
-        'content': { value: 'normal | none | [<content-replacement> | <content-list>] [/ [<string> | <counter>]+]? | <element()>' },
-        'position': { value: 'static | relative | absolute | sticky | fixed | running(<custom-ident>)' },
-        // TODO: report w3c/csswg-drafts issue "invalid quotes to define non-terminal referencing `opacity`"
+        // TODO: fix `value` of `clip`
+        'clip': { value: 'rect([<length> | auto]{4} | [<length> | auto]#{4}) | auto' },
+        // TODO: fix `value` of `copy-into`
+        'copy-into': { value: 'none | [<custom-ident> <content-level>]#' },
+        // TODO: fix `value` of `fill-opacity`, `stroke-opacity`
         'fill-opacity': { value: "<'opacity'>" },
         'stroke-opacity': { value: "<'opacity'>" },
+        // https://github.com/w3c/csswg-drafts/issues/9160
+        'flow-from': { value: 'none | <custom-ident>' },
+        'flow-into': { value: 'none | <custom-ident> [element | content]?' },
+        // TODO: fix `value` of `voice-family`
         // Implementation dependent
         'font-family': { initial: 'monospace' },
-        'glyph-orientation-vertical': { initial: 'auto' },
-        'voice-family': { initial: 'female' },
+        'voice-family': { initial: 'female', value: '[<family-name> | <generic-voice>]# | preserve' },
+        // https://github.com/w3c/csswg-drafts/issues/8032
+        'glyph-orientation-vertical': { value: 'auto | <angle> | <number>' },
         // https://github.com/w3c/csswg-drafts/issues/7700
         'outline': { value: "<'outline-width'> || <'outline-style'> || <'outline-color'>" },
-        // https://github.com/w3c/csswg-drafts/issues/7352
-        'shape-padding': { initial: '0', value: '<length-percentage>' },
-        // https://github.com/w3c/csswg-drafts/issues/8440, https://github.com/w3c/csswg-drafts/issues/8567
-        'scroll-timeline-name': { value: '[none | <custom-ident>]#' },
-        'transition-property': { value: '[none | <single-transition-property>]#' },
-        'view-timeline-name': { value: '[none | <custom-ident>]#' },
         // https://github.com/w3c/svgwg/issues/888
         'stop-color': { initial: 'black', value: "<'color'>" },
         'stop-opacity': { initial: '1', value: "<'opacity'>" },
+        // TODO: fix `value` of `transition-property`
+        'transition-property': { value: '[none | <single-transition-property>]#' },
     },
     types: {
-        // TODO: report w3c/csswg-drafts issue "Define `<type>` with a production rule"
-        'age': 'child | young | old',
-        'basic-shape': '<basic-shape-rect> | <circle()> | <ellipse()> | <polygon()> | <path()>',
-        'bottom': '<length> | auto',
-        'counter-name': '<custom-ident>',
-        'counter-style-name': '<custom-ident>',
-        'custom-highlight-name': '<ident>',
-        'deprecated-color': colors.deprecated.join(' | '),
-        'dimension-unit': `"%" | ${[...dimensions.values()].flatMap(({ units }) => units).join(' | ')}`,
-        'extension-name': '<dashed-ident>',
-        'gender': 'male | female | neutral',
-        'generic-family': font.genericFamilies.join(' | '),
-        'id': '<id-selector>',
-        'lang': '<ident> | <string>',
-        'left': '<length> | auto',
-        'mq-boolean': '<integer [0,1]>',
-        'named-color': colors.named.join(' | '),
-        'outline-line-style': 'none | dotted | dashed | solid | double | groove | ridge | inset | outset | auto',
-        'page-size': 'A5 | A4 | A3 | B5 | B4 | JIS-B5 | JIS-B4 | letter | legal | ledger',
-        'palette-identifier': '<custom-ident>',
-        'quirky-color': '<number-token> | <ident-token> | <dimension-token>',
-        'quirky-length': '<number-token>',
-        'right': '<length> | auto',
-        'scope-end': '<forgiving-selector-list>',
-        'scope-start': '<forgiving-selector-list>',
-        'size-feature': '<media-feature>',
-        'system-color': colors.system.join(' | '),
-        'target-name': '<string>',
-        'timeline-range-name': 'contain | cover | entry | entry-crossing | exit | exit-crossing',
-        'top': '<length> | auto',
-        'transform-function': '<matrix()> | <translate()> | <translateX()> | <translateY()> | <scale()> | <scaleX()> | <scaleY()> | <rotate()> | <skew()> | <skewX()> | <skewY()>',
-        'uri': '<url>',
-        'url-modifier': '<custom-ident> | <function>',
-        'url-set': '<image-set()>',
+        // Extensions
+        '<radial-size>': '<radial-extent>{1,2} | <length-percentage [0,∞]>{1,2}',
+        // Missing production rules
+        '<absolute-size>': 'xx-small | x-small | small | medium | large | x-large | xx-large',
+        '<age>': 'child | young | old',
+        '<angle>': '<dimension>',
+        '<basic-shape>': '<basic-shape-rect> | <circle()> | <ellipse()> | <polygon()> | <path()> | <shape()>',
+        '<counter-name>': '<custom-ident>',
+        '<counter-style-name>': '<custom-ident>',
+        '<custom-highlight-name>': '<ident-token>',
+        '<custom-ident>': '<ident>',
+        '<custom-property-name>': '<dashed-ident>',
+        '<dashed-ident>': '<custom-ident>',
+        '<dashndashdigit-ident>': '<ident-token>',
+        '<decibel>': '<dimension>',
+        '<deprecated-color>': colors.deprecated.join(' | '),
+        '<dimension>': '<dimension-token>',
+        '<dimension-unit>': `"%" | ${[...dimensions.values()].flatMap(dimension => dimension.units).join(' | ')}`,
+        '<extension-name>': '<dashed-ident>',
+        '<flex>': '<dimension>',
+        '<frequency>': '<dimension>',
+        '<gender>': 'male | female | neutral',
+        '<hex-color>': '<hash-token>',
+        '<id>': '<id-selector>',
+        '<ident>': '<ident-token>',
+        '<integer>': '<number-token>',
+        '<intrinsic-size-keyword>': '<custom-ident>',
+        '<length>': '<dimension>',
+        '<mq-boolean>': '<integer [0,1]>',
+        '<n-dimension>': '<dimension-token>',
+        '<named-color>': colors.named.join(' | '),
+        '<ndash-dimension>': '<dimension-token>',
+        '<ndashdigit-dimension>': '<dimension-token>',
+        '<ndashdigit-ident>': '<ident-token>',
+        '<number>': '<number-token>',
+        '<outline-line-style>': 'none | dotted | dashed | solid | double | groove | ridge | inset | outset | auto',
+        '<page-size>': 'A5 | A4 | A3 | B5 | B4 | JIS-B5 | JIS-B4 | letter | legal | ledger',
+        '<palette-identifier>': '<dashed-ident>',
+        '<percentage>': '<percentage-token>',
+        '<quirky-color>': '<number-token> | <ident-token> | <dimension-token>',
+        '<quirky-length>': '<number-token>',
+        '<relative-size>': 'larger | smaller',
+        '<resolution>': '<dimension>',
+        '<scope-end>': '<forgiving-selector-list>',
+        '<scope-start>': '<forgiving-selector-list>',
+        '<semitones>': '<dimension>',
+        '<sibling-count()>': 'sibling-count()',
+        '<sibling-index()>': 'sibling-index()',
+        '<signed-integer>': '<number-token>',
+        '<signless-integer>': '<number-token>',
+        '<size-feature>': '<media-feature>',
+        '<string>': '<string-token>',
+        '<style-feature>': '<declaration> | <ident>',
+        '<system-color>': colors.system.join(' | '),
+        '<target-name>': '<string>',
+        '<time>': '<dimension>',
+        '<timeline-range-name>': 'contain | cover | entry | entry-crossing | exit | exit-crossing',
+        '<transform-function>': '<matrix()> | <translate()> | <translateX()> | <translateY()> | <scale()> | <scaleX()> | <scaleY()> | <rotate()> | <skew()> | <skewX()> | <skewY()>',
+        '<uri>': '<url>',
+        '<url-modifier>': '<custom-ident> | <function>',
+        '<url-set>': '<image-set()>',
+        '<zero>': '<number-token>',
         // https://github.com/w3c/csswg-drafts/issues/8346, https://github.com/w3c/csswg-drafts/pull/8367#issuecomment-1408147460
-        'angular-color-hint': '<angle-percentage> | <zero>',
-        'color-stop-angle': '[<angle-percentage> | <zero>]{1,2}',
-        'conic-gradient()': 'conic-gradient([[[from [<angle> | <zero>]]? [at <position>]?]! || <color-interpolation-method>]?, <angular-color-stop-list>)',
-        'linear-gradient()': 'linear-gradient([[<angle> | <zero> | to <side-or-corner>] || <color-interpolation-method>]?, <color-stop-list>)',
-        'radial-gradient()': 'radial-gradient([[[<rg-ending-shape> || <rg-size>]? [at <position>]?]! || <color-interpolation-method>]?, <color-stop-list>)',
-        // https://github.com/w3c/csswg-drafts/issues/8384
-        'attr()': 'attr(<wq-name> <attr-type>?, <declaration-value>?)',
-        'random()': 'random(<random-caching-options>?, <calc-sum>, <calc-sum>, [by <calc-sum>]?)',
-        'random-item()': "random-item(<random-caching-options> ';' <declaration-value>? [';' <declaration-value>?]*)",
-        // https://github.com/w3c/csswg-drafts/issues/7368
-        'content-list': '[<string> | <content()> | contents | <image> | <counter> | <quote> | <target> | <leader()>]+',
-        // https://github.com/w3c/csswg-drafts/issues/8187
-        'family-name': '<custom-ident>+ | <string>',
+        '<angular-color-hint>': '<angle-percentage> | <zero>',
+        '<color-stop-angle>': '[<angle-percentage> | <zero>]{1,2}',
+        '<conic-gradient-syntax>': '[[[from [<angle> | <zero>]]? [at <position>]?]! || <color-interpolation-method>]? , <angular-color-stop-list>',
+        '<linear-gradient-syntax>': '[[<angle> | <zero> | to <side-or-corner>] || <color-interpolation-method>]? , <color-stop-list>',
+        '<radial-gradient-syntax>': '[[[<radial-shape> || <radial-size>]? [at <position>]?]! || <color-interpolation-method>]? , <color-stop-list>',
+        // TODO: fix `value` of `@container`, `<container-condition>`
+        '<container-condition>': '[<container-name>]? <container-query>#',
         // https://github.com/w3c/csswg-drafts/issues/7016
-        'general-enclosed': '<function> | (<any-value>?)',
-        'pseudo-class-selector': "':' <ident> | ':' <function>",
-        // https://github.com/w3c/csswg-drafts/issues/7900, https://github.com/w3c/csswg-drafts/issues/8346
-        'repeating-conic-gradient()': 'repeating-conic-gradient([[[from [<angle> | <zero>]]? [at <position>]?]! || <color-interpolation-method>]?, <angular-color-stop-list>)',
-        'repeating-linear-gradient()': 'repeating-linear-gradient([[<angle> | <zero> | to <side-or-corner>] || <color-interpolation-method>]?, <color-stop-list>)',
-        'repeating-radial-gradient()': 'repeating-radial-gradient([[[<rg-ending-shape> || <rg-size>]? [at <position>]?]! || <color-interpolation-method>]?, <color-stop-list>)',
-        // https://github.com/w3c/fxtf-drafts/issues/411
-        'path()': "path(<'fill-rule'>?, <string>)",
+        '<general-enclosed>': '<function> | (<any-value>?)',
+        '<pseudo-class-selector>': ': <ident> | : <function>',
+        // https://github.com/w3c/csswg-drafts/issues/9410
+        '<generic-family>': 'generic(<custom-ident>+) | <generic-family-name>',
+        // https://github.com/w3c/fxtf-drafts/issues/532
+        '<mask-reference>': 'none | <image>',
+        // https://github.com/w3c/csswg-drafts/pull/10131
+        '<media-feature>': '<mf-plain> | <mf-boolean> | <mf-range>',
+        '<media-in-parens>': '(<media-condition>) | (<media-feature>) | <general-enclosed>',
+        // TODO: fix `value` of `<mix()>`
+        '<mix()>': 'mix(<progress> ; <whole-value> ; <whole-value>) | mix(<progress> && of <keyframes-name>)',
+        // TODO: fix `value` of `<progress>`
+        '<progress>': "[<percentage> | <number> | <'animation-timeline'>] && [by <easing-function>]?",
+        // TODO: fix `value` of `<pseudo-page>`
+        '<pseudo-page>': ': [left | right | first | blank | nth(<an+b> [of <custom-ident>]?)]',
         // https://github.com/w3c/csswg-drafts/issues/7897
-        'single-transition': '<time> || <easing-function> || <time> || [none | <single-transition-property>]',
-        // https://github.com/w3c/csswg-drafts/issues/8127
-        'style-feature': '<declaration> | <ident>',
+        '<single-transition>': '<time> || <easing-function> || <time> || <transition-behavior-value> || [none | <single-transition-property>]',
+        // TODO: fix `value` of `<step-easing-function>`
+        '<step-easing-function>': 'step-start | step-end | <steps()>',
     },
 }
 const excluded = {
@@ -195,13 +182,20 @@ const excluded = {
     },
     properties: {
         'CSS': [
-            // Superseded by CSS Backgrounds and Borders
+            // Superseded by CSS Backgrounds and CSS Borders
             'background',
             'background-attachment',
             'background-color',
             'background-image',
             'background-position',
             'background-repeat',
+            // Superseded by CSS Basic User Interface
+            'cursor',
+            'outline',
+            'outline-color',
+            'outline-style',
+            'outline-width',
+            // Superseded by CSS Borders
             'border',
             'border-bottom',
             'border-bottom-color',
@@ -222,12 +216,6 @@ const excluded = {
             'border-top-style',
             'border-top-width',
             'border-width',
-            // Superseded by CSS Basic User Interface
-            'cursor',
-            'outline',
-            'outline-color',
-            'outline-style',
-            'outline-width',
             // Superseded by CSS Box Model
             'margin',
             'margin-bottom',
@@ -314,24 +302,37 @@ const excluded = {
             'shape-inside',
             'shape-margin',
         ],
-        'css-backgrounds-4': [
-            // TODO: support new grammars from CSS Background 4
-            'background-clip',
-            'background-position',
-            'border-bottom-color',
-            'border-clip',
-            'border-clip-bottom',
-            'border-clip-left',
-            'border-clip-right',
-            'border-clip-top',
+        'css-backgrounds': [
+            // Superseded by CSS Borders
             'border-color',
+            'border-bottom',
+            'border-bottom-color',
+            'border-bottom-left-radius',
+            'border-bottom-right-radius',
+            'border-bottom-style',
+            'border-bottom-width',
+            'border-left',
             'border-left-color',
+            'border-left-style',
+            'border-left-width',
+            'border-radius',
+            'border-right',
             'border-right-color',
+            'border-right-style',
+            'border-right-width',
+            'border-top',
             'border-top-color',
+            'border-top-left-radius',
+            'border-top-right-radius',
+            'border-top-style',
+            'border-top-width',
+            'box-shadow',
         ],
-        'css-contain-3': [
-            // https://github.com/w3c/csswg-drafts/issues/8600
-            'contain',
+        'css-backgrounds-4': [
+            // https://github.com/w3c/csswg-drafts/issues/9253
+            'background-position',
+            // https://github.com/w3c/csswg-drafts/pull/9084
+            'background-tbd',
         ],
         'css-content': [
             // https://github.com/w3c/csswg-drafts/issues/6435
@@ -344,14 +345,36 @@ const excluded = {
             'align-self',
             'justify-content',
         ],
-        'css-gcpm': [
-            // https://github.com/w3c/csswg-drafts/issues/7351
-            'content',
-            'position',
-        ],
         'css-logical': [
-            // https://github.com/w3c/csswg-drafts/issues/7371
-            'text-align',
+            // Superseded by CSS Borders
+            'border-block',
+            'border-block-color',
+            'border-block-end',
+            'border-block-end-color',
+            'border-block-end-style',
+            'border-block-end-width',
+            'border-block-start',
+            'border-block-start-color',
+            'border-block-start-style',
+            'border-block-start-width',
+            'border-block-style',
+            'border-block-width',
+            'border-end-end-radius',
+            'border-end-start-radius',
+            'border-inline',
+            'border-inline-color',
+            'border-inline-end',
+            'border-inline-end-color',
+            'border-inline-end-style',
+            'border-inline-end-width',
+            'border-inline-start',
+            'border-inline-start-color',
+            'border-inline-start-style',
+            'border-inline-start-width',
+            'border-inline-style',
+            'border-inline-width',
+            'border-start-end-radius',
+            'border-start-start-radius',
             // Superseded by CSS Page Floats
             'clear',
             'float',
@@ -363,18 +386,12 @@ const excluded = {
             'inset-block-start',
             'inset-inline-end',
             'inset-inline-start',
+            // https://github.com/w3c/csswg-drafts/issues/7371
+            'text-align',
         ],
         'css-round-display': [
             // https://github.com/w3c/csswg-drafts/issues/6433
             'shape-inside',
-        ],
-        'css-scroll-snap-2': [
-            // Not defined yet
-            'scroll-start-target',
-            'scroll-start-target-block',
-            'scroll-start-target-inline',
-            'scroll-start-target-x',
-            'scroll-start-target-y',
         ],
         'css-sizing-4': [
             // https://github.com/w3c/csswg-drafts/issues/7370
@@ -404,84 +421,97 @@ const excluded = {
         ],
     },
     specifications: [
-        // TODO: support new grammars from CSS Color 5
-        'css-color-5',
         // Not ready
         'css-color-6',
         'css-color-hdr',
         'css-conditional-values',
-        'css-gcpm-4',
-        'selectors-nonelement',
         'webvtt',
         // Prefer SVG 2
         'fill-stroke',
         'svg-strokes',
+        // Discontinued (preserved by w3c/weberef for cross-reference concerns)
+        'selectors-nonelement',
     ],
     types: {
         '*': [
             // Terminals
-            '(-token',
-            ')-token',
-            '[-token',
-            ']-token',
-            '{-token',
-            '}-token',
-            'CDC-token',
-            'CDO-token',
-            'EOF-token',
-            'at-keyword-token',
-            'bad-string-token',
-            'bad-url-token',
-            'colon-token',
-            'comma-token',
-            'delim-token',
-            'semicolon-token',
-            'whitespace-token',
-            ...Object.keys(structures),
-            ...Object.keys(terminals),
-            // Aliases
-            ...compatibility.values.aliases.keys(),
+            '<(-token>',
+            '<)-token>',
+            '<[-token>',
+            '<]-token>',
+            '<{-token>',
+            '<}-token>',
+            '<CDC-token>',
+            '<CDO-token>',
+            '<EOF-token>',
+            '<at-keyword-token>',
+            '<bad-string-token>',
+            '<bad-url-token>',
+            '<colon-token>',
+            '<comma-token>',
+            '<delim-token>',
+            '<dimension-token>',
+            '<function-token>',
+            '<hash-token>',
+            '<ident-token>',
+            '<number-token>',
+            '<percentage-token>',
+            '<semicolon-token>',
+            '<string-token>',
+            '<url-token>',
+            '<whitespace-token>',
+            ...Object.keys(arbitrary),
+            ...blocks.contents,
+            ...Object.keys(forgiving),
+            // Legacy webkit function name aliases
+            ...[...compatibility.values['*'].values()].flatMap(replacements => replacements.aliases),
         ],
         'CSS': [
             // Obsoleted by CSS Backgrounds
-            'border-style',
-            'border-width',
+            '<border-style>',
+            '<border-width>',
             // Obsoleted by CSS Box Model
-            'margin-width',
-            'padding-width',
+            '<margin-width>',
+            '<padding-width>',
             // Obsoleted by CSS Masking
-            'shape',
+            '<shape>',
             // Superseded by CSS Color
-            'color',
+            '<color>',
             // Superseded by CSS Fonts
-            'family-name',
-            'generic-family',
+            '<family-name>',
+            '<generic-family>',
             // Superseded by CSS Lists and Counters
-            'counter',
-            'counter()',
-            'counters()',
-        ],
-        'css-conditional-5': [
-            // https://github.com/w3c/csswg-drafts/issues/8110
-            'font-format',
-            'font-tech',
+            '<counter>',
+            '<counter()>',
+            '<counters()>',
+            // https://github.com/w3c/fxtf-drafts/pull/468
+            '<bottom>',
+            '<left>',
+            '<right>',
+            '<top>',
         ],
         'css-gcpm': [
             // Prefer CSS Generated Content
-            'content()',
-            'string()',
+            '<content()>',
+            '<content-list>',
         ],
         'css-images-4': [
             // https://github.com/w3c/csswg-drafts/issues/1981
-            'element()',
+            '<element()>',
         ],
         'css-masking': [
             // https://github.com/w3c/fxtf-drafts/pull/468
-            'rect()',
+            '<bottom>',
+            '<left>',
+            '<right>',
+            '<rect()>',
+            '<top>',
+            // https://github.com/w3c/fxtf-drafts/issues/532
+            '<mask-source>',
         ],
         'filter-effects': [
             // Duplicate of CSS Values
-            'url',
+            '<url>',
         ],
     },
 }
@@ -503,20 +533,24 @@ function reportMissingPseudoSelectors(selectors, key) {
             return
         }
         if (name.startsWith('::')) {
-            if (!elements[name.endsWith('()') ? 'functions' : 'identifiers'][name.slice(2)]) {
-                console.log(`There is a new pseudo-element: ${name} [${key}]`)
+            if (name.endsWith('()')) {
+                if (!elements.functions[name.slice(2, -2)]) {
+                    console.log(`[${key}] ${name} is a new pseudo-element`)
+                }
+            } else if (!elements.identifiers[name.slice(2)]) {
+                console.log(`[${key}] ${name} is a new pseudo-element`)
             }
             return
         }
         if (name.endsWith('()')) {
-            if (!classes.functions[name.slice(1)]) {
-                console.log(`There is a new pseudo-class: ${name} [${key}]`)
+            if (!classes.functions[name.slice(1, -2)]) {
+                console.log(`[${key}] ${name} is a new pseudo-class`)
             }
             return
         }
         // Ignore pseudo-elements with legacy syntax and `:lang()` incorrectly named `:lang` in CSS 2
         if (!classes.identifiers.includes(name.slice(1)) && key !== 'CSS') {
-            console.log(`There is a new pseudo-class: ${name} [${key}]`)
+            console.log(`[${key}] ${name} is a new pseudo-class`)
         }
     })
 }
@@ -532,30 +566,25 @@ function isUpdatedRule(name, value, { prelude, value: block }) {
     if (prelude) {
         definition += ` ${prelude}`
     }
-    if (block) {
-        definition += ` { ${block} }`
-    } else {
-        definition += ' ;'
-    }
-    value = normalizeValue(value).replace('};', '}')
-    return value !== definition
+    definition += block ? ` { ${block.name} }` : ' ;'
+    return value.replace('};', '}') !== definition
 }
 
 /**
- * @param {string} name
+ * @param {string} type
  * @param {object[]} [rules]
  * @param {number} [depth]
  * @returns {object|null}
  */
-function findRule(name, rules = [], depth = 1) {
+function findRule(type, rules = [], depth = 1) {
     if (depth < 3) {
         for (const rule of rules) {
-            const { names, rules: children, type, value } = rule
-            if (type === name || type === `${name}-block` || type === `${name}-statement` || names?.includes(name)) {
+            const { name, names, value } = rule
+            if (name === type || name === `${type}-block` || name === `${type}-statement` || names?.includes(type)) {
                 return rule
             }
-            if (value && value !== '<stylesheet>') {
-                const child = findRule(name, children, depth + 1)
+            if (value) {
+                const child = findRule(type, value.rules, depth + 1)
                 if (child) {
                     return child
                 }
@@ -566,59 +595,13 @@ function findRule(name, rules = [], depth = 1) {
 }
 
 /**
- * @param {string} value
- * @returns {string}
- */
-function removeExtraGroup(value) {
-    if (value.startsWith('[') && value.endsWith(']')) {
-        const { length } = value
-        const end = length - 2
-        let depth = 0
-        let index = 0
-        while (++index < end) {
-            const char = value[index]
-            if (char === ']' && depth-- === 0) {
-                return value
-            }
-            if (char === '[') {
-                ++depth
-            }
-        }
-        return removeExtraGroup(value.slice(1, -1))
-    }
-    if (value.endsWith(')')) {
-        const { length } = value
-        for (let index = 0; index < length; ++index) {
-            const left = value[index]
-            if (left === ' ') {
-                break
-            }
-            if (left === '(') {
-                return `${value.slice(0, index)}(${removeExtraGroup(value.slice(index + 1, -1))})`
-            }
-        }
-    }
-    return value
-}
-
-/**
- * @param {string} value
- * @returns {string}
- *
- * It removes extra white spaces and groups (angled brackets).
- */
-function normalizeValue(value) {
-    return removeExtraGroup(value.replace(/[([] | [)\],]/g, match => match.trim()))
-}
-
-/**
  * @param {string[][]} types
  * @returns {string}
  */
 function serializeTypes(types) {
     return types.reduce(
         (string, [type, value]) =>
-            `${string}${tab(1)}${addQuotes(type)}: ${addQuotes(normalizeValue(value))},\n`,
+            `${string}${tab(1)}${addQuotes(type)}: ${addQuotes(serializeValueDefinition(value))},\n`,
         '')
 }
 
@@ -636,7 +619,7 @@ function serializeProperties(properties) {
             if (!shorthands.has(property)) {
                 const group = logicalGroups.find(group => logical[group].some(mapping => mapping.includes(property)))
                 if (logicalPropertyGroup && !group) {
-                    console.log(`${property} is missing in the logical property group "${logicalPropertyGroup}" [${key}]`)
+                    console.log(`[${key}] ${property} is missing in the logical property group "${logicalPropertyGroup}"`)
                 }
                 if (group) {
                     string += `${tab(2)}group: ${addQuotes(group)},\n`
@@ -646,7 +629,7 @@ function serializeProperties(properties) {
             if (key === 'CSS') {
                 value = value.replace(/ \| inherit$/, '')
             }
-            string += `${tab(2)}value: ${addQuotes(normalizeValue(value))},\n${tab(1)}},\n`
+            string += `${tab(2)}value: ${addQuotes(serializeValueDefinition(value))},\n${tab(1)}},\n`
             return string
         },
         '')
@@ -662,12 +645,12 @@ function serializeDescriptors(descriptors) {
             string += `${tab(1)}${addQuotes(rule)}: {\n`
             definitions.sort(sortByName).forEach(([descriptor, { initial, type, value }]) => {
                 string += `${tab(2)}${addQuotes(descriptor)}: {\n`
-                if (initial) {
+                if (initial && !initial.toLowerCase().startsWith('n/a')) {
                     string += `${tab(3)}initial: ${addQuotes(initial)},\n`
                 } else if (type) {
                     string += `${tab(3)}type: '${type}',\n`
                 }
-                string += `${tab(3)}value: ${addQuotes(normalizeValue(value))},\n${tab(2)}},\n`
+                string += `${tab(3)}value: ${addQuotes(serializeValueDefinition(value))},\n${tab(2)}},\n`
             })
             string += `${tab(1)}},\n`
             return string
@@ -695,30 +678,29 @@ function addTypes(definitions = [], key) {
             if (!/^<.+>$/.test(name)) {
                 return
             }
-            // Type only defined with a prose specific to its namespace
-            if (value === name) {
+            // Not a proper production value definition
+            if (name === value) {
                 return
             }
             type = 'type'
+        } else if (type === 'function') {
+            name = `<${name}>`
+            type = 'type'
         }
-        if (type === 'type' || type === 'function') {
-            // `<type>` -> `type`
-            if (type === 'type') {
-                name = name.slice(1, -1)
-            }
+        if (type === 'type') {
             if (replaced.types[name] || skip.includes(name) || skipFromAllSpecs.includes(name)) {
                 addTypes(values, key)
                 return
             }
             if (initialTypes[name]) {
                 if (value && reportErrors) {
-                    console.log(`<${name}> is now extracted from [${key}]`)
+                    console.log(`[${key}] ${name} is now extracted`)
                 }
                 return
             }
             if (!value) {
-                if (reportErrors && !(replaced[name] || structures[name])) {
-                    console.log(`<${name}> is defined in prose in [${key}] and must be replaced with a value definiton`)
+                if (reportErrors && !replaced[name]) {
+                    console.log(`[${key}] ${name} is defined in prose and must be replaced with a value definiton`)
                 }
                 return
             }
@@ -727,7 +709,7 @@ function addTypes(definitions = [], key) {
                 const [base1, v1 = 1] = entry[2].split(/-(\d)$/)
                 const [base2, v2 = 1] = key.split(/-(\d)$/)
                 if (base1 !== base2) {
-                    throw Error(`Unhandled duplicate definitions of <${name}>`)
+                    throw Error(`Unhandled duplicate definitions of ${name}`)
                 }
                 if (v1 < v2) {
                     entry.splice(1, 2, value, key)
@@ -751,14 +733,14 @@ function addProperties(definitions = [], key) {
         if (aliases.has(name) || mappings.has(name) || skip.includes(name) || skipFromAllSpecs.includes(name)) {
             return
         }
-        const { properties: { [name]: replacement } } = replaced
+        const replacement = replaced.properties[name]
         if (replacement) {
             definition = { ...definition, ...replacement }
         }
         const entry = properties.find(([property]) => property === name)
         if (entry) {
             const [, prevDefinition, prevKey] = entry
-            const { newValues: prevNewValues } = prevDefinition
+            const prevNewValues = prevDefinition.newValues
             const { newValues, value } = definition
             const [base1, v1 = 1] = prevKey.split(/-(\d)$/)
             const [base2, v2 = 1] = key.split(/-(\d)$/)
@@ -769,7 +751,9 @@ function addProperties(definitions = [], key) {
             } else if (base1 !== base2) {
                 throw Error(`Unhandled duplicate definitions of the property "${name}"`)
             } else if (v1 < v2) {
-                entry.splice(1, 2, definition, key)
+                entry.splice(1, 2, { ...prevDefinition, ...definition }, key)
+            } else {
+                entry.splice(1, 1, { ...definition, ...prevDefinition })
             }
         } else {
             properties.push([name, definition, key])
@@ -784,9 +768,10 @@ function addProperties(definitions = [], key) {
  * @param {string} key
  */
 function addDescriptors(definitions = [], rule, key) {
+    const { descriptors: { [rule]: { aliases, mappings } = {} } } = compatibility
     const { descriptors: { '*': skipFromAllSpecs = [], [key]: skip = [] } } = excluded
     definitions.forEach(({ initial = '', name, type, value, values }) => {
-        if (skip.includes(name) || skipFromAllSpecs.includes(name)) {
+        if (aliases?.has(name) || mappings?.has(name) || skip.includes(name) || skipFromAllSpecs.includes(name)) {
             return
         }
         const replacement = replaced.descriptors[rule]?.[name]
@@ -796,20 +781,33 @@ function addDescriptors(definitions = [], rule, key) {
         const context = descriptors.find(([key]) => key === rule)
         if (context) {
             const [, entries] = context
-            const entry = entries.find(([key]) => key === name)
-            if (entry) {
-                const [,, prevKey] = entry
+            const index = entries.findIndex(([key]) => key === name)
+            if (-1 < index) {
+                const entry = entries[index]
+                const [, prevDefinition, prevKey] = entry
                 const [base1, v1 = 1] = prevKey.split(/-(\d)$/)
                 const [base2, v2 = 1] = key.split(/-(\d)$/)
                 if (base1 !== base2) {
                     throw Error(`Unhandled duplicate definitions of the descriptor "${name}"`)
                 }
-                if (v2 < v1) {
-                    return
+                if (v1 < v2) {
+                    const definition = {
+                        initial: initial ?? prevDefinition.initial,
+                        type: type ?? prevDefinition.type,
+                        value: value ?? prevDefinition.value,
+                    }
+                    entry.splice(1, 2, definition, key)
+                } else {
+                    const definition = {
+                        initial: prevDefinition.initial ?? initial,
+                        type: prevDefinition.type ?? type,
+                        value: prevDefinition.value ?? value,
+                    }
+                    entry.splice(1, 1, definition)
                 }
-                context.splice(rule.indexOf(entry), 1)
+            } else {
+                entries.push([name, { initial, type, value }, key])
             }
-            entries.push([name, { initial, type, value }, key])
         } else {
             descriptors.push([rule, [[name, { initial, type, value }, key]]])
         }
@@ -823,19 +821,18 @@ function addDescriptors(definitions = [], rule, key) {
  */
 function addRules(definitions = [], key) {
     const { rules: { aliases, mappings } } = compatibility
-    definitions.forEach(({ name, descriptors: definitions, value }) => {
-        const id = name.slice(1)
-        if (aliases.has(id) || mappings.has(id)) {
+    definitions.forEach(({ descriptors: definitions, name, value }) => {
+        if (aliases.has(name) || mappings.has(name)) {
             return
         }
-        const rule = findRule(id, rules)
+        const rule = findRule(name, rules)
         if (rule) {
             if (reportErrors && value && isUpdatedRule(name, value, rule)) {
-                console.log(`${name} has a new definition in [${key}]`)
+                console.log(`[${key}] ${name} has a new definition`)
             }
             addDescriptors(definitions, name, key)
         } else if (reportErrors) {
-            console.log(`There is a new rule: ${name} [${key}]`)
+            console.log(`[${key}] ${name} is a new rule`)
         }
     })
 }
@@ -845,6 +842,8 @@ function addRules(definitions = [], key) {
  * @returns {Promise}
  */
 function build(specifications) {
+
+    const header = `\n// Generated from ${__filename}\n\nmodule.exports = {\n`
 
     Object.entries(specifications).forEach(([key, { atrules, properties, selectors, values }]) => {
         if (excluded.specifications.includes(key)) {
@@ -859,10 +858,22 @@ function build(specifications) {
     })
 
     return Promise.all([
-        fs.writeFile(outputPaths.descriptors, `${header}${serializeDescriptors(descriptors.sort(sortByName))}}\n`),
-        fs.writeFile(outputPaths.properties, `${header}${serializeProperties(properties.sort(sortByName))}}\n`),
-        fs.writeFile(outputPaths.types, `${header}${serializeTypes(types.sort(sortByName))}}\n`),
+        fs.writeFile(
+            resolve(join(__dirname, '..', 'lib', 'descriptors', 'definitions.js')),
+            `${header}${serializeDescriptors(descriptors.sort(sortByName))}}\n`),
+        fs.writeFile(
+            resolve(join(__dirname, '..', 'lib', 'properties', 'definitions.js')),
+            `${header}${serializeProperties(properties.sort(sortByName))}}\n`),
+        fs.writeFile(
+            resolve(join(__dirname, '..', 'lib', 'values', 'definitions.js')),
+            `${header}${serializeTypes(types.sort(sortByName))}}\n`),
     ])
 }
 
-webref.listAll().then(build).catch(logError)
+webref.listAll()
+    .then(build)
+    .catch(error => {
+        console.log(error)
+        console.log('Please report this issue: https://github.com/cdoublev/css/issues/new')
+        throw error
+    })

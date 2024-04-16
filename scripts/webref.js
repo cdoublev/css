@@ -1,6 +1,6 @@
 
-const { basename, dirname, join } = require('path')
-const { promises: { readFile, readdir } } = require('fs')
+const { basename, dirname, join } = require('node:path')
+const { promises: { readFile, readdir } } = require('node:fs')
 
 const inputPath = join(dirname(require.resolve(join('webref/package.json'))), 'ed', 'css')
 

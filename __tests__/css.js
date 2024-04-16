@@ -1,12 +1,16 @@
 
-const css = require('../lib/index.js')
+const { install } = require('../lib/index.js')
+const {
+    INVALID_CUSTOM_PROPERTY_NAME,
+    INVALID_CUSTOM_PROPERTY_OVERRIDE,
+    INVALID_CUSTOM_PROPERTY_SYNTAX,
+    INVALID_INITIAL_CUSTOM_PROPERTY_VALUE,
+    INVALID_INITIAL_CUSTOM_PROPERTY_VALUE_UNIVERSAL,
+    MISSING_INITIAL_CUSTOM_PROPERTY_VALUE,
+} = require('../lib/cssom/CSS-impl.js')
 
-let CSS
-
-beforeAll(() => {
-    css.install()
-    CSS = globalThis.CSS
-})
+install()
+globalThis.document = { _registeredPropertySet: [] }
 
 describe('CSS.escape()', () => {
     it('serializes the given value', () => {
@@ -23,15 +27,67 @@ describe('CSS.escape()', () => {
         values.forEach(([input, expected = input]) => expect(CSS.escape(input)).toBe(expected))
     })
 })
+describe('CSS.registerProperty()', () => {
+    it('throws an error when the given definition is invalid', () => {
+        const invalid = [
+            [{ inherits: true, initialValue: 'any', name: 'custom', syntax: '*' }, INVALID_CUSTOM_PROPERTY_NAME],
+            [{ inherits: true, initialValue: 'any', name: '--registered', syntax: '*' }, INVALID_CUSTOM_PROPERTY_OVERRIDE],
+            [{ inherits: true, name: '--custom', syntax: '<color>' }, MISSING_INITIAL_CUSTOM_PROPERTY_VALUE],
+            [{ inherits: true, initialValue: 'any', name: '--custom', syntax: '<unknown>' }, INVALID_CUSTOM_PROPERTY_SYNTAX],
+            [{ inherits: true, initialValue: ';', name: '--custom', syntax: '*' }, INVALID_INITIAL_CUSTOM_PROPERTY_VALUE_UNIVERSAL],
+            [{ inherits: true, initialValue: '1px', name: '--custom', syntax: '<color>' }, INVALID_INITIAL_CUSTOM_PROPERTY_VALUE],
+            [{ inherits: true, initialValue: '1em', name: '--custom', syntax: '<color>' }, INVALID_INITIAL_CUSTOM_PROPERTY_VALUE],
+        ]
+        document._registeredPropertySet.push({
+            inherits: true,
+            initialValue: 'green',
+            name: '--registered',
+            syntax: '<color>',
+        })
+        invalid.forEach(([definition, error]) => expect(() => CSS.registerProperty(definition)).toThrow(error))
+    })
+    it('registers a valid definition', () => {
+        const valid = [
+            { inherits: true, name: '--custom-1', syntax: '*' },
+            { inherits: true, initialValue: '', name: '--custom-2', syntax: '*' },
+            { inherits: true, initialValue: ' \f\n\r\t', name: '--custom-3', syntax: '*' },
+        ]
+        const { document: { _registeredPropertySet: register } } = globalThis
+        valid.forEach(property => {
+            CSS.registerProperty(property)
+            expect(register.some(definition => definition.name === property.name)).toBeTruthy()
+        })
+    })
+})
 describe('CSS.supports()', () => {
     it('returns whether it supports the given property declaration', () => {
-        expect(CSS.supports(' color', 'red')).toBeFalsy()
-        expect(CSS.supports(' color', 'red !important')).toBeFalsy()
-        expect(CSS.supports('COLOR', 'green')).toBeTruthy()
+        const declarations = [
+            [' color', 'red', false],
+            ['color/**/', 'red', false],
+            ['color', 'red !important', false],
+            ['COLOR', 'green'],
+            ['color', 'initial'],
+            ['color', 'var(--custom)'],
+            ['--custom', '1'],
+            ['grid-gap', '1px'],
+            ['-webkit-box-align', 'center'],
+        ]
+        declarations.forEach(([property, value, expected = true]) =>
+            expect(CSS.supports(property, value)).toBe(expected))
     })
     it('returns whether it supports the given feature condition', () => {
         const conditions = [
+            // <general-enclosed>
+            ['general(enclosed)', false],
             // <supports-decl>
+            ['color: green'],
+            ['color: green !important'],
+            ['color: initial'],
+            ['color: var(--custom)'],
+            ['--custom: 1'],
+            ['grid-gap: 1px'],
+            ['-webkit-box-align: center'],
+            ['(color: green)'],
             ['(unsupported: 1)', false],
             ['(color: unsupported)', false],
             ['(color: green) and (color: green)'],
@@ -45,14 +101,6 @@ describe('CSS.supports()', () => {
             ['not (unsupported: 1)'],
             ['not (color: green)', false],
             ['not (color: unsupported)'],
-            ['(--custom: 1)'],
-            ['(grid-gap: 1px)'],
-            ['(-webkit-box-align: center)'],
-            ['(color: green !important)'],
-            // <general-enclosed>
-            ['general(enclosed)', false],
-            // <supports-decl> not nested in parens
-            ['color: green'],
             // <supports-font-format-fn>
             ['font-format("woff")', false],
             ['font-format(woff)'],

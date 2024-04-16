@@ -47,7 +47,6 @@ describe('consume(item, fallback)', () => {
 describe('reconsume(size)', () => {
     it('pushes the given n items back to the front of the stream', () => {
         stream.moveTo(string.length - 1)
-        expect(stream.current).toBe('o')
         stream.reconsume()
         expect(stream.current).toBe('l')
         stream.reconsume(2)
@@ -80,8 +79,6 @@ describe('consumeRunOf(...items)', () => {
 
 describe('consumeUntil(item)', () => {
     it('throws an error when the given item is not found at the front of the stream', () => {
-        expect(() => stream.consumeUntil('_')).toThrow('"_" was expected')
-        expect(stream.index).toBe(-1)
         stream.moveTo(2)
         expect(() => stream.consumeUntil('_')).toThrow('"_" was expected')
         expect(stream.index).toBe(2)
@@ -140,22 +137,15 @@ describe('prev(size, offset = 0)', () => {
     })
 })
 
-describe('atEnd()', () => {
+describe('atEnd(offset = 0)', () => {
     it('returns false when some items have not been consumed', () => {
         expect(stream.atEnd()).toBeFalsy()
+        expect(stream.atEnd(string.length - 1)).toBeFalsy()
     })
     it('returns true when all items have been consumed', () => {
+        expect(stream.atEnd(string.length)).toBeTruthy()
         stream.consumeUntil()
         expect(stream.atEnd()).toBeTruthy()
-    })
-    it('returns true when all items have been consumed excluding items determined by a given predicate', () => {
-        function predicate(char) {
-            return char === 'l' || char === 'o'
-        }
-        stream.moveTo(1) // he
-        expect(stream.atEnd(predicate)).toBeTruthy()
-        stream.moveTo(3) // hell
-        expect(stream.atEnd('o')).toBeTruthy()
     })
 })
 
@@ -253,7 +243,7 @@ it('works with array', () => {
     expect(stream.consume('!')).toBeNull()
 
     stream.moveTo(2)
-    stream.source.splice(stream.index, 0, 'beautiful', ' ')
+    stream.data.splice(stream.index, 0, 'beautiful', ' ')
     stream.reset()
     expect(stream.consumeUntil('!')).toEqual(['hello', ' ', 'beautiful', ' ', 'world'])
 

@@ -1,11 +1,13 @@
 
+const arbitrary = require('../lib/parse/arbitrary.js')
+const blocks = require('../lib/values/blocks.js')
+const { createContext } = require('../lib/utils/context.js')
 const descriptors = require('../lib/descriptors/definitions.js')
+const forgiving = require('../lib/values/forgiving.js')
+const nonTerminal = require('../lib/values/definitions.js')
 const parseDefinition = require('../lib/parse/definition.js')
-const { productions } = require('../lib/parse/syntax.js')
 const properties = require('../lib/properties/definitions.js')
 const webref = require('./webref.js')
-
-const { nonTerminals, structures, terminals } = productions
 
 const definitions = {
     properties: new Map(),
@@ -23,7 +25,7 @@ function reportDuplicates(definitions) {
 }
 
 function registerDefinition(type, name, value, url) {
-    const { [type]: entries } = definitions
+    const entries = definitions[type]
     if (entries.has(name)) {
         entries.get(name).push([value, url])
     } else {
@@ -38,36 +40,47 @@ function parseDefinitionDeep(parent, { name, type, value }, context) {
         case '||':
         case '|':
             return value.forEach(type => parseDefinitionDeep(parent, type, context))
-        case 'function':
-        case 'simple-block':
-            return tryParseDefinition(parent, value, context)
-        case 'optional':
-        case 'repeat':
-        case 'required':
-            return parseDefinitionDeep(parent, value, context)
+        case 'arbitrary':
+        case 'block-contents':
+        case 'forgiving':
         case 'non-terminal':
         case 'property':
-        case 'structure':
-        case 'terminal':
-            if (structures[name] || terminals[name] || nonTerminals[name] || properties[name]) {
+            if (
+                name === '<keyword>'
+                || arbitrary[name]
+                || forgiving[name]
+                || nonTerminal[name]
+                || properties[name]
+                || blocks.contents.includes(name)
+            ) {
                 return
             }
-            throw Error(`There is no definition of the ${type} production <${name}>`)
-        case 'delimiter':
+            throw RangeError(`There is no definition of the ${type} production ${name}`)
+        case 'function':
+        case 'simple-block':
+            if (value) {
+                return parseDefinitionDeep(parent, value, context)
+            }
+            return
+        case 'optional':
+        case 'repetition':
+        case 'required':
+            return parseDefinitionDeep(parent, value, context)
+        case 'token':
             return
         default:
-            throw Error('Unexpected node type')
+            throw RangeError('Unexpected node type')
     }
 }
 
 function tryParseDefinition(name, definition, context) {
     try {
-        const node = parseDefinition(definition, productions, { useCache: true })
+        const node = parseDefinition(definition, createContext())
         if (!context) {
             parseDefinitionDeep(name, node, context)
         }
-    } catch ({ message }) {
-        console.log(`Error while parsing "${name}": ${message}`)
+    } catch (error) {
+        console.log(`Error while parsing "${name}": ${error.message}`)
         if (context) {
             console.log(context)
         }
@@ -117,7 +130,7 @@ function testParseCuratedDefinitions() {
     Object.entries(descriptors).forEach(([descriptor, definitions]) =>
         Object.values(definitions).forEach(({ value }) => tryParseDefinition(descriptor, value)))
     Object.entries(properties).forEach(([property, { value }]) => tryParseDefinition(property, value))
-    Object.entries(nonTerminals).forEach(([type, definition]) => tryParseDefinition(type, definition))
+    Object.entries(nonTerminal).forEach(([type, definition]) => tryParseDefinition(type, definition))
     console.groupEnd('Errors in curated definitions')
 }
 

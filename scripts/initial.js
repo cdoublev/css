@@ -1,47 +1,41 @@
 /**
- * This script rewrites ./lib/descriptors/definitions.js and
- * ./lib/properties/definitions.js by replacing `initial` field values with an
- * object associating `parsed` to the result from parsing `initial`, and
- * `serialized` to the result from serializing `parsed`.
+ * This script rewrites property and descriptor definition files by replacing
+ * their `initial` value with an object associating:
+ *
+ *   - `parsed` to the result from parsing `initial`
+ *   - `serialized` to the result from serializing `parsed`
  */
-const { addQuotes, logError, tab } = require('../lib/utils/script.js')
-const { Parser } = require('../lib/parse/syntax.js')
+const { addQuotes, logError, tab } = require('../lib/utils/string.js')
+const { createContext } = require('../lib/utils/context.js')
 const descriptors = require('../lib/descriptors/definitions.js')
 const fs = require('node:fs/promises')
-const path = require('path')
+const { isOmitted } = require('../lib/utils/value.js')
+const { parseCSSDeclaration } = require('../lib/parse/parser.js')
+const path = require('node:path')
 const properties = require('../lib/properties/definitions.js')
 const { serializeCSSValue } = require('../lib/serialize.js')
 const shorthands = require('../lib/properties/shorthands.js')
 
-const outputPath = {
-    descriptors: path.resolve(__dirname, '../lib/descriptors/definitions.js'),
-    properties: path.resolve(__dirname, '../lib/properties/definitions.js'),
-}
-const dependency = "const { createList } = require('../values/value.js')"
-const header = `\n// Generated from ${__filename}\n\n${dependency}\n\nmodule.exports = {\n`
-
-const parentStyleSheet = { type: 'text/css' }
-const styleRule = { parentStyleSheet, type: new Set(['style']) }
-const styleRuleParser = new Parser(styleRule)
+const styleRuleContext = createContext({ parentStyleSheet: {}, types: ['@style'] })
 
 /**
- * @param {Set} type
+ * @param {string[]} types
  * @returns {string}
  */
-function serializeTypes(type) {
-    return `new Set([${[...type].map(addQuotes).join(', ')}])`
+function serializeTypes(types) {
+    return `[${types.map(addQuotes).join(', ')}]`
 }
 
 /**
  * @param {string} separator
- * @param {Set} types
+ * @param {string[]} types
  * @param {string} tabs
  * @returns {string}
  */
 function serializeListArguments(separator, types, tabs) {
-    // Remove default `type` argument (empty set)
-    if (types.size === 0) {
-        // Remove default `separator` argument (white space)
+    // Remove default `types` argument (empty set)
+    if (types.length === 0) {
+        // Remove default `separator` argument (whitespace)
         if (separator === ' ') {
             return ''
         }
@@ -58,20 +52,23 @@ function serializeListArguments(separator, types, tabs) {
 function serializeComponentValue(component, depth = 3) {
     const tabs = tab(depth + 1)
     if (Array.isArray(component)) {
-        const { type, separator } = component
+        const { types, separator } = component
         const childTabs = tab(depth + 2)
-        const createListOptionalArguments = serializeListArguments(separator, type, tabs)
+        const listOptionalArguments = serializeListArguments(separator, types, tabs)
         return component
             .reduce(
                 (string, component) =>
                     `${string}${childTabs}${serializeComponentValue(component, depth + 2)},\n`,
-                `createList(\n${tabs}[\n`)
-            .concat(`${tabs}]${createListOptionalArguments},\n${tab(depth)})`)
+                `list(\n${tabs}[\n`)
+            .concat(`${tabs}]${listOptionalArguments},\n${tab(depth)})`)
+    }
+    if (isOmitted(component)) {
+        return 'omitted'
     }
     return Object.keys(component).sort().reduce(
         (string, key) => {
             let { [key]: value } = component
-            if (key === 'type') {
+            if (key === 'types') {
                 value = serializeTypes(value)
             } else if (typeof value === 'string') {
                 value = addQuotes(value)
@@ -90,7 +87,7 @@ function serializeComponentValue(component, depth = 3) {
  * @returns {string[]}
  */
 function getInitialPropertyValue(name, value) {
-    value = styleRuleParser.parseDeclaration({ name, value })
+    value = parseCSSDeclaration({ name, value }, styleRuleContext)
     if (value === null) {
         console.error(`Parse error: cannot parse initial value of property "${name}"`)
         return ''
@@ -134,11 +131,11 @@ function serializePropertyDefinitions(properties) {
  * @returns {string[]}
  */
 function getInitialDescriptorValue(name, value, rule) {
-    rule = rule.slice(1)
-    const parser = new Parser({ name: rule, parentStyleSheet, type: new Set([rule]) })
-    value = parser.parseDeclaration({ name, value }, parser)
+    const declaration = { name, value }
+    const context = createContext({ parentStyleSheet: {}, types: [rule] })
+    value = parseCSSDeclaration(declaration, context)
     if (value === null) {
-        console.error(`Parse error: cannot parse initial value of descriptor "${name}"`)
+        console.error(`Parse error: cannot parse initial value of descriptor "${name}" for the rule "${rule}"`)
         return ''
     }
     ({ value } = value)
@@ -177,9 +174,15 @@ function serializeDescriptorDefinitions(descriptors) {
  * @returns {Promise}
  */
 function serializeDefinitions() {
+    const dependency = "const { list, omitted } = require('../values/value.js')"
+    const header = `\n// Generated from ${__filename}\n\n${dependency}\n\nmodule.exports = {\n`
     return Promise.all([
-        fs.writeFile(outputPath.descriptors, `${header}${serializeDescriptorDefinitions(descriptors)}}\n`),
-        fs.writeFile(outputPath.properties, `${header}${serializePropertyDefinitions(properties)}}\n`),
+        fs.writeFile(
+            path.resolve(__dirname, '../lib/descriptors/definitions.js'),
+            `${header}${serializeDescriptorDefinitions(descriptors)}}\n`),
+        fs.writeFile(
+            path.resolve(__dirname, '../lib/properties/definitions.js'),
+            `${header}${serializePropertyDefinitions(properties)}}\n`),
     ])
 }
 

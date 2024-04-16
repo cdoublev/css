@@ -1,9 +1,9 @@
 
 # Parsing permutations
 
-When matching a value definition represented with a sequence of `||` separated elements, the longest match must be found with backtracking. The value definition represents the first permutation in canonical order. When the parser does not find a match for an element, it must backtrack and reorder or omit some element(s).
+When matching a value definition representing a sequence of `||` separated symbols, the longest match must be found. When the parser does not find a match for a symbol, it must backtrack and reorder or omit symbols.
 
-For example, given the following permutations, the parser must go from 1 to 3 if it does not find a match for `a`, otherwise it must go from 1 to 2 if it gets a match for `a` but not for `b`, then it must backtrack before `a` if it does not find a match for `c`.
+For example, given all permutations of `a || b || c` in lexicographic order, it must move to the third permutation if it does not find a match for `a`, otherwise it must backtrack if it does not find a match for `b` and if it does not find an alternative match for `a`, it must move to the second permutation.
 
   1. `a || b || c`
   2. `a || c || b`
@@ -21,11 +21,7 @@ For example, given the following permutations, the parser must go from 1 to 3 if
   14. `b`
   15. `c`
 
-The parser needs to maintain some state to skip 7, 8, 13, if there was no match for `a` when parsing 1.
-
-Obeying to the canonical order prevents from declaring eg. `background-origin` with the value specified for `background-clip` when matching `background`, defined with  `... || <box> || <box>`.
-
-When backtracking after matching a permutation, the parser must retry parsing its last element when it is associated to a state, which means that a different value may match, for which other permutations might not (always) have a match.
+Following the lexicographic order is required for ambiguous cases. For example, when parsing a declaration value for `background`, which is defined with  `... || <visual-box> || <visual-box>`, it prevents matching a value for `background-origin` with a value specified for `background-clip`.
 
 ## Definitions
 
@@ -41,15 +37,20 @@ A *combination* is a **selection of a subset of elements**. The order does not m
 
 The **Lehmer code** uses the factorial number system (factoradic) to encode/decode permutations, as a solution to get the permutation at a given position, or the position of a given permutation.
 
-On one hand, the number of permutations of a set of `n` elements is `factorial(n)`, represented by `n!`. For example, the number of permutations of 3 elements is `3 * 2 * 1`. On the other hand, factorial values can be combined (following a procedure detailed further below) to represent any decimal value. For example, `5` is the result of `(0! * 0) + (1! * 1) + (2! * 2)` and can be represented as the factoradic representation `[0, 1, 2]`: each number is a factor applied on the decimal value at the corresponding factorial (place) value.
+On one hand, the number of permutations of a set of `n` elements is `factorial(n)`, represented by `n!`. For example, the number of permutations of 3 elements is `3 * 2 * 1`.
 
-| Factorial value | 0 | 1 | 2 |
-| --------------- | - | - | - |
-|   Decimal value | 1 | 1 | 2 |
-|               * | 0 | 1 | 2 |
-|               = | 0 | 1 | 4 |
+On the other hand, factorial values can be combined (following a procedure detailed further below) to represent any decimal value. For example, `5` is the result of `(0! * 0) + (1! * 1) + (2! * 2)` and is represented as `[0, 1, 2]` in a positional factoradic: each number is a factor applied on the (place value) value at the corresponding (zero based) position.
 
-This relation means that permutations can be represented with a factoradic representation (lehmer code, resolved following another procedure detailed further below). For example, `c b a`, which is the 5th permutation of `a b c` can be represented with the lehmer code `[2, 1, 0]`, which is the factoradic representation of `5` in reverse order.
+|       Radix | 1  | 2  | 3  |
+| ----------- | -- | -- | -- |
+|    Position | 0  | 1  | 2  |
+| ----------- | -- | -- | -- |
+| Place value | 0! | 1! | 2! |
+| ----------- | -- | -- | -- |
+|    * factor | 0  | 1  | 2  |
+|           = | 0  | 1  | 4  |
+
+This relation means that permutations have a factoradic representation (lehmer code, resolved following a procedure detailed further below). For example, `c b a`, which is the 5th permutation of `a b c` can be represented with the lehmer code `[2, 1, 0]`, which is the factoradic representation of `5` in reverse order.
 
 ## Implementations
 
@@ -73,22 +74,20 @@ function factorial(n) {
  */
 function factorial(n) {
   let r = 1 < n ? n : 1
-  while (1 < n--) {
+  while (1 < --n) {
     r *= n
   }
   return r
 }
 ```
 
-Note: `n <= 0` does not require to be handled because CSS combined types requires that *one or more* types must occur.
-
 `P(n, k)`: the number of permutations of `k` elements of a set `s` of `n` elements is `n! / (n - k)!`.
 
-Eg. the number of permutations of `2` elements of a set of `4` elements is:
+For example, the number of permutations of `2` elements of a set of `4` elements is:
 
 ```
    n!      4 * 3 * 2 * 1
--------- = ------------- = 4 * 3 = 12
+-------- = ------------- = 12
 (n - k)!       2 * 1
 ```
 
@@ -130,7 +129,7 @@ function getAllPermutationsLength(n) {
 
 `C(n, k)`: the number of combinations of `k` elements from a set `s` of `n` elements is `P(n, k) / k!`, more commonly written `n! / k! * (n - k)!`.
 
-Eg. the number of combinations of `2` elements from a set of `4` elements is:
+For example, the number of combinations of `2` elements from a set of `4` elements is:
 
 ```
 P(n, k)   12       24     4!           n!
@@ -151,11 +150,11 @@ function getCombinationsLength(n, k = n) {
 }
 ```
 
-To get a factoradic `representation` of a decimal value `k`, push `k % n` (remainder of the integer division `k // n`) into a list and starting with `n` equal to `1`, repeat by replacing `k` with `k // n` and incrementing `n` until `k // n` is `0` (included).
+To get a factoradic `representation` of a decimal value `k`, starting with `r` (radix) equal to `1`, push `k % r` (remainder of the integer division `k // r`) into `representation`, repeat by replacing `k` with `k // r` and incrementing `r` until `k` is `0` (excluded).
 
-Eg. for `100`:
+For example, for `100`:
 
-|            `k // n` | `k % n` | `representation` |
+|            `k // r` | `k % r` | `representation` |
 | ------------------- | ------- | ---------------- |
 | Math.floor(100 / 1) | 100 % 1 | [0]              |
 | Math.floor(100 / 2) | 100 % 2 | [0,0]            |
@@ -182,7 +181,7 @@ function getFactoradicRepresentation(decimal) {
 
 To get a decimal value from its factoradic representation, add the products of each `representation` value with the factorial place value at the corresponding index.
 
-Eg. for `[0,0,2,0,4]`: `(0! * 0) + (1! * 0) + (2! * 2) + (3! * 0) + (4! * 4) === 0 + 0 + 4 + 0 + 96`.
+For example, for `[0,0,2,0,4]`: `(0! * 0) + (1! * 0) + (2! * 2) + (3! * 0) + (4! * 4) === 0 + 0 + 4 + 0 + 96`.
 
 ```js
 /**
@@ -196,11 +195,11 @@ function getDecimalFromFactoradicRepresentation(representation) {
 
 Adapted to permutations in lexicographic order:
 
-To get the (0 based) `k`th permutation, shift `k % n` into a list initially defined with `[0]` and starting with `n` equal to `2`, repeat by replacing `k` with `k // n` and incrementing `n` until it is equal to the length of the permutations (included), then remove the corresponding permutation element for each number in the list and push it into a list representing the `k`th permutation.
+To get the (0 based) `k`th permutation, shift `k % r` into a list initially defined with `[0]` and starting with `r` equal to `2`, repeat by replacing `k` with `k // r` and incrementing `r` until it is equal to the length of the permutations (included), then remove the corresponding permutation element for each number in the list and push it into a list representing the `k`th permutation.
 
 For example, to get the 3rd permutation `[b, c, a]` of `[a, b, c]`:
 
-|          `k // n` | `k % n` | lehmer code |
+|          `k // r` | `k % r` | lehmer code |
 | ----------------- | ------- | ----------- |
 | Math.floor(3 / 2) |   3 % 2 |       [1,0] |
 | Math.floor(1 / 3) |   1 % 3 |     [1,1,0] |
@@ -210,30 +209,30 @@ For example, to get the 3rd permutation `[b, c, a]` of `[a, b, c]`:
 
   To get the 5th permutation `[c, b, a]` of `[a, b, c]`:
 
-  |          `k // n` | `k % n` | lehmer code |
+  |          `k // r` | `k % r` | lehmer code |
   | ----------------- | ------- | ----------- |
   | Math.floor(5 / 2) |   5 % 2 |       [1,0] |
   | Math.floor(2 / 3) |   2 % 3 |     [2,1,0] |
 
   To get the 23rd permutation `[d, c, b, a]` of `[a, b, c]`:
 
-  |           `k // n` | `k % n` | lehmer code |
+  |           `k // r` | `k % r` | lehmer code |
   | ------------------ | ------- | ----------- |
   | Math.floor(23 / 2) |  23 % 2 |       [1,0] |
   | Math.floor(11 / 3) |  11 % 3 |     [2,1,0] |
   | Math.floor( 3 / 4) |   3 % 4 |   [3,2,1,0] |
 </details>
 
-There a multiple alternatives to resolve the factoradic representation, which are more or less equivalent.
+There are multiple alternatives to resolve the factoradic representation, which are more or less equivalent.
 
 <details>
   <summary>Alternative 1</summary>
 
-  To get the (0 based) `k`th permutation, get `k % n` starting with `n` equal to `k`, remove the permutation element at the corresponding index and shift it into a list representing the `k`th permutation, repeat by replacing `k` with `k // n` and decrementing `n` until `k // n` is `0` (included).
+  To get the (0 based) `k`th permutation, get `k % r` starting with `r` equal to `k`, remove the permutation element at the corresponding index and shift it into a list representing the `k`th permutation, repeat by replacing `k` with `k // r` and decrementing `r` until `k // r` is `0` (included).
 
-  For example, to get the 3rd permutation `b c a` of `a b c` (ie. `0 || 1 || 2`):
+  For example, to get the 3rd permutation `[b, c, a]` of `[a, b, c]` (ie. `0 || 1 || 2`):
 
-  |          `k // n` | `k % n` | lehmer code | permutation |
+  |          `k // r` | `k % r` | lehmer code | permutation |
   | ----------------- | ------- | ----------- | ----------- |
   | Math.floor(3 / 3) |   3 % 3 |         [0] | [a]         |
   | Math.floor(1 / 2) |   1 % 2 |       [1,0] | [c,a]       |
@@ -241,7 +240,7 @@ There a multiple alternatives to resolve the factoradic representation, which ar
 
   To get the 5th permutation `[c, b, a]` of `[a, b, c]`:
 
-  |          `k // n` | `k % n` | lehmer code | permutation |
+  |          `k // r` | `k % r` | lehmer code | permutation |
   | ----------------- | ------- | ----------- | ----------- |
   | Math.floor(5 / 3) |   5 % 3 |         [2] | [c]         |
   | Math.floor(1 / 2) |   1 % 2 |       [2,1] | [c,b]       |
@@ -249,7 +248,7 @@ There a multiple alternatives to resolve the factoradic representation, which ar
 
   To get the 23rd permutation `[d, c, b, a]` of `[a, b, c]`:
 
-  |           `k // n` | `k % n` | lehmer code | permutation |
+  |           `k // r` | `k % r` | lehmer code | permutation |
   | ------------------ | ------- | ----------- | ----------- |
   | Math.floor(23 / 4) |  23 % 4 |         [3] | [d]         |
   | Math.floor( 5 / 3) |   5 % 3 |       [3,2] | [d,c]       |
@@ -258,7 +257,7 @@ There a multiple alternatives to resolve the factoradic representation, which ar
 
   To get the 23rd permutation `[d, c, b, a]` of `[a, b, c]`:
 
-  |                  `k // n` |       `k % n` | lehmer code | permutation |
+  |                  `k // r` |       `k % r` | lehmer code | permutation |
   | ------------------------- | ------------- | ----------- | ----------- |
   | Math.floor(23 / (4 - 1)!) | 23 % (4 - 1)! |         [3] | [d]         |
   | Math.floor( 5 / (4 - 2)!) |  5 % (4 - 2)! |       [3,2] | [d,c]       |
@@ -269,11 +268,11 @@ There a multiple alternatives to resolve the factoradic representation, which ar
 <details>
   <summary>Alternative 2</summary>
 
-  To get the (0 based) `k`th permutation, get `k // n` starting with `n` equal to `(k - 1)!`, remove the permutation element at the corresponding index and shift it into a list representing the `k`th permutation, repeat by replacing `k` with `k % n` and `n` with (updated) `(k - 1)!` until `k // n` is `0` (included).
+  To get the (0 based) `k`th permutation, get `k // r` starting with `r` equal to `(k - 1)!`, remove the permutation element at the corresponding index and shift it into a list representing the `k`th permutation, repeat by replacing `k` with `k % r` and `r` with (updated) `(k - 1)!` until `k // r` is `0` (included).
 
   For example, to get the 3rd permutation `b c a` of `a b c` (ie. `0 || 1 || 2`):
 
-  |                 `k // n` |      `k % n` | lehmer code | permutation |
+  |                 `k // r` |      `k % r` | lehmer code | permutation |
   | ------------------------ | ------------ | ----------- | ----------- |
   | Math.floor(3 / (3 - 1)!) | 3 % (3 - 1)! |         [1] | [b]         |
   | Math.floor(1 / (3 - 2)!) | 1 % (3 - 2)! |       [1,1] | [d,c]       |
@@ -281,7 +280,7 @@ There a multiple alternatives to resolve the factoradic representation, which ar
 
   To get the 5th permutation `[c, b, a]` of `[a, b, c]`:
 
-  |                 `k // n` |      `k % n` | lehmer code | permutation |
+  |                 `k // r` |      `k % r` | lehmer code | permutation |
   | ------------------------ | ------------ | ----------- | ----------- |
   | Math.floor(5 / (3 - 1)!) | 5 % (3 - 1)! |         [2] | [c]         |
   | Math.floor(1 / (3 - 2)!) | 1 % (3 - 2)! |       [2,1] | [c,b]       |
@@ -289,7 +288,7 @@ There a multiple alternatives to resolve the factoradic representation, which ar
 
   To get the 23rd permutation `[d, c, b, a]` of `[a, b, c]`:
 
-  |                  `k // n` |       `k % n` | lehmer code | permutation |
+  |                  `k // r` |       `k % r` | lehmer code | permutation |
   | ------------------------- | ------------- | ----------- | ----------- |
   | Math.floor(23 / (4 - 1)!) | 23 % (4 - 1)! |         [3] | [d]         |
   | Math.floor( 5 / (4 - 2)!) |  5 % (4 - 2)! |       [3,2] | [d,c]       |

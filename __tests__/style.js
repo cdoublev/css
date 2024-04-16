@@ -1,13 +1,25 @@
 
-const { cssom: { CSSStyleDeclaration }, install } = require('../lib/index.js')
+const {
+    cssom: {
+        CSSFontFaceDescriptors,
+        CSSKeyframeProperties,
+        CSSMarginDescriptors,
+        CSSPageDescriptors,
+        CSSPositionTryDescriptors,
+        CSSStyleProperties,
+        CSSStyleSheet,
+    },
+    install,
+} = require('../lib/index.js')
+// Do not import CSSOM implementations before the above import
 const { UPDATE_COMPUTED_STYLE_DECLARATION_ERROR } = require('../lib/cssom/CSSStyleDeclaration-impl.js')
-const createError = require('../lib/error.js')
-const { cssPropertyToIDLAttribute } = require('../lib/utils/script.js')
-const { keywords: cssWideKeywords } = require('../lib/values/substitutions.js')
+const compatibility = require('../lib/compatibility.js')
+const { cssPropertyToIDLAttribute } = require('../lib/utils/string.js')
 const display = require('../lib/values/display.js')
 const properties = require('../lib/properties/definitions.js')
 const propertyNames = require('../lib/properties/names.js')
 const shorthands = require('../lib/properties/shorthands.js')
+const substitutions = require('../lib/values/substitutions.js')
 const whiteSpace = require('../lib/values/white-space.js')
 
 /**
@@ -15,7 +27,7 @@ const whiteSpace = require('../lib/values/white-space.js')
  * @returns {CSSStyleDeclaration}
  */
 function createStyleBlock(privateData = {}) {
-    return CSSStyleDeclaration.create(globalThis, undefined, privateData)
+    return CSSStyleProperties.create(globalThis, undefined, privateData)
 }
 
 // Helper to get initial property value (with better readability)
@@ -23,9 +35,18 @@ function initial(property) {
     return properties[property].initial.serialized
 }
 
-beforeAll(() => {
-    install()
-})
+install()
+
+const rules = `
+    @font-face {}
+    @keyframes myAnimation { 0% {} }
+    @page { @top-left {} }
+    @position-try --custom {}
+`
+const styleSheet = CSSStyleSheet.createImpl(globalThis, undefined, { rules })
+const { _rules: [fontFaceRule, keyframesRule, pageRule, positionTryRule] } = styleSheet
+const { _rules: [keyframeRule] } = keyframesRule
+const { _rules: [marginRule] } = pageRule
 
 describe('CSSStyleDeclaration', () => {
     it('has all properties and methods', () => {
@@ -73,18 +94,18 @@ describe('CSSStyleDeclaration', () => {
         expect(style.getPropertyValue('--custom')).toBe('')
 
         // Longhand property alias
-        style.layoutOrder = '1'
-        expect(style.layoutOrder).toBe('1')
+        style.order = '1'
+        expect(style.order).toBe('1')
         expect(style['-webkit-order']).toBe('1')
         expect(style.webkitOrder).toBe('1')
         expect(style.WebkitOrder).toBe('1')
         style.webkitOrder = '2'
-        expect(style.layoutOrder).toBe('2')
+        expect(style.order).toBe('2')
         expect(style['-webkit-order']).toBe('2')
         expect(style.webkitOrder).toBe('2')
         expect(style.WebkitOrder).toBe('2')
         style.WebkitOrder = '3'
-        expect(style.layoutOrder).toBe('3')
+        expect(style.order).toBe('3')
         expect(style['-webkit-order']).toBe('3')
         expect(style.webkitOrder).toBe('3')
         expect(style.WebkitOrder).toBe('3')
@@ -115,8 +136,8 @@ describe('CSSStyleDeclaration', () => {
         expect(style['align-items']).toBe('')
 
         // Property indices map to the corresponding declaration name
-        expect(style[0]).toBe('layout-order')
-        expect(style.item(0)).toBe('layout-order')
+        expect(style[0]).toBe('order')
+        expect(style.item(0)).toBe('order')
         expect(style[1]).toBe('row-gap')
         expect(style.item(1)).toBe('row-gap')
         expect(style[2]).toBe('column-gap')
@@ -131,9 +152,9 @@ describe('CSSStyleDeclaration', () => {
         style.borderTopColor = ''
         expect(style.getPropertyValue('border-top-color')).toBe('')
         expect(style).toHaveLength(4)
-        expect(style[0]).toBe('layout-order')
-        expect(style.item(0)).toBe('layout-order')
-        style.setProperty('layout-order', '')
+        expect(style[0]).toBe('order')
+        expect(style.item(0)).toBe('order')
+        style.setProperty('order', '')
         expect(style).toHaveLength(3)
         expect(style[0]).toBe('row-gap')
         expect(style.item(0)).toBe('row-gap')
@@ -164,24 +185,11 @@ describe('CSSStyleDeclaration', () => {
     it('constructs a new instance with declarations resulting from parsing `Element.style`', () => {
         const element = {
             getAttribute() {
-                return 'font-size: 10px;'
+                return 'color: green !important; color: orange;'
             },
         }
         const style = createStyleBlock({ ownerNode: element })
-        expect(style.fontSize).toBe('10px')
-    })
-    it('constructs a new instance with read-only declarations from `getComputedStyle()`', () => {
-
-        const value = { type: new Set(['dimension', 'length']), unit: 'px', value: 10 }
-        const declarations = [{ name: 'font-size', value }]
-        const style = createStyleBlock({ computed: true, declarations, ownerNode: {} })
-        const error = createError(UPDATE_COMPUTED_STYLE_DECLARATION_ERROR)
-
-        expect(style.fontSize).toBe('10px')
-        expect(style.cssText).toBe('')
-        expect(() => style.cssText = 'font-size: 20px').toThrow(error)
-        expect(() => style.setProperty('font-size', '20px')).toThrow(error)
-        expect(() => style.removeProperty('font-size', '20px')).toThrow(error)
+        expect(style.color).toBe('green')
     })
     it('does not throw when failing to parse `cssText`', () => {
         const style = createStyleBlock()
@@ -225,7 +233,7 @@ describe('CSSStyleDeclaration', () => {
     it('throws an error when declaring a value that cannot be converted to string', () => {
         const style = createStyleBlock()
         expect(() => (style.opacity = Symbol('0')))
-            .toThrow("Failed to set the 'opacity' property on 'CSSStyleDeclaration': The provided value is a symbol, which cannot be converted to a string.")
+            .toThrow("Failed to set the 'opacity' property on 'CSSStyleProperties': The provided value is a symbol, which cannot be converted to a string.")
         expect(() => (style.opacity = { toString: () => [0] }))
             .toThrow('Cannot convert object to primitive value')
     })
@@ -294,322 +302,228 @@ describe('CSSStyleDeclaration', () => {
     })
 })
 
-/**
- * @see {@link https://github.com/w3c/csswg-drafts/issues/5649}
- *
- * These tests rely on monkey-patching CSSStyleDeclaration until new interfaces
- * extending it are created for each set of descriptors/properties allowed in a
- * given context.
- *
- * There is currently no support for reading/setting a descriptor not matching a
- * property via `style[descriptor]`.
- */
-describe('CSSCounterStyle.style', () => {})
-describe('CSSFontFaceRule.style', () => {
-
-    const parentRule = {
-        parentStyleSheet: { _rules: [] },
-        type: new Set(['font-face']),
-    }
-
+describe('CSSFontFaceDescriptors', () => {
     it('does not store an invalid declaration', () => {
 
-        const style = createStyleBlock({ parentRule })
+        const style = CSSFontFaceDescriptors.create(globalThis, undefined, { parentRule: fontFaceRule })
 
         // Invalid name
-        style.fontSizeAdjust = 'none'
-        expect(style.fontSizeAdjust).toBe('')
-        style.setProperty('font-size-adjust', '')
+        style.setProperty('font-size-adjust', 'none')
         expect(style.getPropertyValue('font-size-adjust')).toBe('')
-        style.cssText = 'font-size-adjust: none'
-        expect(style.getPropertyValue('font-size-adjust')).toBe('')
+        expect(style.fontSizeAdjust).toBeUndefined()
 
         // Priority
         style.setProperty('font-weight', '400', 'important')
-        expect(style.getPropertyValue('font-weight')).toBe('')
-        style.cssText = 'font-weight: 400 !important'
-        expect(style.getPropertyValue('font-weight')).toBe('')
+        expect(style.fontWeight).toBe('')
 
         // CSS-wide keyword
         style.fontWeight = 'initial'
         expect(style.fontWeight).toBe('')
-        style.setProperty('font-weight', 'inherit')
-        expect(style.getPropertyValue('font-weight')).toBe('')
-        style.cssText = 'font-weight: unset'
-        expect(style.getPropertyValue('font-weight')).toBe('')
 
         // Custom variable
         style.fontWeight = 'var(--custom)'
         expect(style.fontWeight).toBe('')
-        style.setProperty('font-weight', 'var(--custom)')
-        expect(style.getPropertyValue('font-weight')).toBe('')
-        style.cssText = 'font-weight: var(--custom)'
-        expect(style.getPropertyValue('font-weight')).toBe('')
     })
     it('stores a valid declaration', () => {
 
-        const style = createStyleBlock({ parentRule })
+        const style = CSSFontFaceDescriptors.create(globalThis, undefined, { parentRule: fontFaceRule })
 
-        // Descriptor specific value
-        // style.fontDisplay = 'auto' // Not supported yet
-        // expect(style.fontDisplay).toBe('auto') // Not supported yet
-        style.setProperty('font-display', 'block')
-        expect(style.getPropertyValue('font-display')).toBe('block')
-        style.cssText = 'font-display: swap'
-        expect(style.getPropertyValue('font-display')).toBe('swap')
+        // Standalone descriptor
+        style.fontDisplay = 'auto'
+        expect(style.fontDisplay).toBe('auto')
 
-        // Property specific value
+        // Descriptor bearing the same name as a property
         style.fontWeight = '100 200'
         expect(style.fontWeight).toBe('100 200')
-        style.setProperty('font-weight', '300 400')
-        expect(style.getPropertyValue('font-weight')).toBe('300 400')
-        style.cssText = 'font-weight: 500 600'
-        expect(style.getPropertyValue('font-weight')).toBe('500 600')
 
         // Specific serialization rules
-        style.fontStretch = 'normal normal'
-        expect(style.fontStretch).toBe('normal')
-        style.fontStretch = 'normal 100%'
-        expect(style.fontStretch).toBe('100%')
+        style.ascentOverride = '1% 1%'
+        expect(style.ascentOverride).toBe('1%')
+        style.descentOverride = '1% 1%'
+        expect(style.descentOverride).toBe('1%')
+        style.fontSize = '1 1'
+        expect(style.fontSize).toBe('1')
+        style.fontWidth = 'normal normal'
+        expect(style.fontWidth).toBe('normal')
         style.fontStyle = 'oblique 14deg'
         expect(style.fontStyle).toBe('oblique')
-        style.fontStyle = 'oblique 15deg 15deg'
-        expect(style.fontStyle).toBe('oblique 15deg')
+        style.fontStyle = 'oblique 1deg 1deg'
+        expect(style.fontStyle).toBe('oblique 1deg')
         style.fontWeight = 'normal normal'
         expect(style.fontWeight).toBe('normal')
-        style.fontWeight = 'normal 400'
-        expect(style.fontWeight).toBe('400')
+        style.lineGapOverride = '1% 1%'
+        expect(style.lineGapOverride).toBe('1%')
+        style.subscriptPositionOverride = '1% 1%'
+        expect(style.subscriptPositionOverride).toBe('1%')
+        style.subscriptSizeOverride = '1% 1%'
+        expect(style.subscriptSizeOverride).toBe('1%')
+        style.subscriptPositionOverride = '1% 1%'
+        expect(style.subscriptPositionOverride).toBe('1%')
+
+        // Descriptor alias
+        expect(style.fontStretch).toBe(style.fontWidth)
+        style.fontStretch = 'condensed'
+        expect(style.fontStretch).toBe('condensed')
+        expect(style.fontWidth).toBe('condensed')
     })
 })
-describe('CSSKeyframeRule.style', () => {
-
-    const parentStyleSheet = { _rules: [] }
-    const keyframesRule = { parentStyleSheet, type: new Set(['keyframes']) }
-    const parentRule = {
-        parentRule: keyframesRule,
-        parentStyleSheet,
-        type: new Set(['keyframe']),
-    }
-
+describe('CSSKeyframeProperties', () => {
     it('does not store an invalid declaration', () => {
 
-        const style = createStyleBlock({ parentRule })
+        const style = CSSKeyframeProperties.create(globalThis, undefined, { parentRule: keyframeRule })
 
         // Invalid name
-        style.animationDelay = '1s'
-        expect(style.animationDelay).toBe('')
         style.setProperty('animation-delay', '1s')
-        expect(style.animationDelay).toBe('')
-        style.cssText = 'animation-delay: 1s'
-        expect(style.animationDelay).toBe('')
+        expect(style.getPropertyValue('animation-delay')).toBe('')
+        expect(style.animationDelay).toBeUndefined()
 
         // Priority
         style.setProperty('color', 'red', 'important')
         expect(style.color).toBe('')
-        style.cssText = 'color: red !important'
-        expect(style.color).toBe('')
     })
     it('stores a valid declaration', () => {
 
-        const style = createStyleBlock({ parentRule })
+        const style = CSSKeyframeProperties.create(globalThis, undefined, { parentRule: keyframeRule })
 
-        // Property specific value
-        style.color = 'red'
-        expect(style.color).toBe('red')
-        style.setProperty('color', 'orange')
-        expect(style.color).toBe('orange')
-        style.cssText = 'color: green'
+        // Specific property value
+        style.color = 'green'
         expect(style.color).toBe('green')
 
         // CSS-wide keyword
         style.color = 'initial'
         expect(style.color).toBe('initial')
-        style.setProperty('color', 'inherit')
-        expect(style.color).toBe('inherit')
-        style.cssText = 'color: unset'
-        expect(style.color).toBe('unset')
 
         // Custom variable
         style.color = 'var(--red)'
         expect(style.color).toBe('var(--red)')
-        style.setProperty('color', 'var(--orange)')
-        expect(style.color).toBe('var(--orange)')
-        style.cssText = 'color: var(--green)'
-        expect(style.color).toBe('var(--green)')
     })
 })
-describe('CSSMarginRule.style', () => {
-
-    const parentStyleSheet = { _rules: [] }
-    const pageRule = { parentStyleSheet, type: new Set(['page']) }
-    const parentRule = {
-        parentRule: pageRule,
-        parentStyleSheet,
-        type: new Set(['margin']),
-    }
-
+describe('CSSMarginDescriptors', () => {
     it('does not store an invalid declaration', () => {
 
-        const style = createStyleBlock({ parentRule })
+        const style = CSSMarginDescriptors.create(globalThis, undefined, { parentRule: marginRule })
 
         // Invalid name
-        style.top = '1px'
-        expect(style.top).toBe('')
         style.setProperty('top', '1px')
         expect(style.getPropertyValue('top')).toBe('')
-        style.cssText = 'top: 1px'
-        expect(style.getPropertyValue('top')).toBe('')
+        expect(style.top).toBeUndefined()
     })
     it('stores a valid declaration', () => {
 
-        const style = createStyleBlock({ parentRule })
+        const style = CSSMarginDescriptors.create(globalThis, undefined, { parentRule: marginRule })
 
-        // Property specific value
-        style.color = 'red'
-        expect(style.color).toBe('red')
-        style.setProperty('color', 'orange')
-        expect(style.color).toBe('orange')
-        style.cssText = 'color: green'
+        // Descriptor bearing the same name and value definition as a property
+        style.color = 'green'
         expect(style.color).toBe('green')
 
         // Priority
         style.setProperty('color', 'orange', 'important')
         expect(style.color).toBe('orange')
         expect(style.getPropertyPriority('color')).toBe('important')
-        style.cssText = 'color: green !important'
-        expect(style.color).toBe('green')
-        expect(style.getPropertyPriority('color')).toBe('important')
 
         // CSS-wide keyword
         style.color = 'initial'
         expect(style.color).toBe('initial')
-        style.setProperty('color', 'inherit')
-        expect(style.color).toBe('inherit')
-        style.cssText = 'color: unset'
-        expect(style.color).toBe('unset')
 
         // Custom variable
         style.color = 'var(--red)'
         expect(style.color).toBe('var(--red)')
-        style.setProperty('color', 'var(--orange)')
-        expect(style.color).toBe('var(--orange)')
-        style.cssText = 'color: var(--green)'
-        expect(style.color).toBe('var(--green)')
     })
 })
-describe('CSSPageRule.style', () => {
-
-    const parentRule = {
-        parentStyleSheet: { _rules: [] },
-        type: new Set(['page']),
-    }
-
+describe('CSSPageDescriptors', () => {
     it('does not store an invalid declaration', () => {
 
-        const style = createStyleBlock({ parentRule })
+        const style = CSSPageDescriptors.create(globalThis, undefined, { parentRule: pageRule })
 
         // Invalid name
-        style.top = '1px'
-        expect(style.top).toBe('')
         style.setProperty('top', '1px')
         expect(style.getPropertyValue('top')).toBe('')
-        style.cssText = 'top: 1px'
-        expect(style.getPropertyValue('top')).toBe('')
+        expect(style.top).toBeUndefined()
 
         // CSS-wide keyword
-        // style.size = 'initial' // Not supported yet
-        // expect(style.size).toBe('') // Not supported yet
-        style.setProperty('size', 'inherit')
-        expect(style.getPropertyValue('size')).toBe('')
-        style.cssText = 'size: unset'
-        expect(style.getPropertyValue('size')).toBe('')
+        style.size = 'initial'
+        expect(style.size).toBe('')
 
         // Custom variable
-        // style.size = 'var(--custom)' // Not supported yet
-        // expect(style.size).toBe('') // Not supported yet
-        style.setProperty('size', 'var(--custom)')
-        expect(style.getPropertyValue('size')).toBe('')
-        style.cssText = 'size: var(--custom)'
-        expect(style.getPropertyValue('size')).toBe('')
+        style.size = 'var(--custom)'
+        expect(style.size).toBe('')
     })
     it('stores a valid declaration', () => {
 
-        const style = createStyleBlock({ parentRule })
+        const style = CSSPageDescriptors.create(globalThis, undefined, { parentRule: pageRule })
 
-        // Descriptor specific value
-        // style.size = '1px' // Not supported yet
-        // expect(style.size).toBe('1px') // Not supported yet
+        // Standalone descriptor
         style.setProperty('size', '1px')
-        expect(style.getPropertyValue('size')).toBe('1px')
-        style.cssText = 'size: 2px'
-        expect(style.getPropertyValue('size')).toBe('2px')
+        expect(style.size).toBe('1px')
 
-        // Property specific value
-        style.color = 'red'
-        expect(style.color).toBe('red')
-        style.setProperty('color', 'red')
-        expect(style.color).toBe('red')
-        style.cssText = 'color: red'
-        expect(style.color).toBe('red')
+        // Descriptor bearing the same name and value definition as a property
+        style.color = 'green'
+        expect(style.color).toBe('green')
 
         // Priority
         style.setProperty('size', '1px', 'important')
-        expect(style.getPropertyValue('size')).toBe('1px')
+        expect(style.size).toBe('1px')
         expect(style.getPropertyPriority('size')).toBe('important')
-        style.cssText = 'size: 1px !important'
-        expect(style.getPropertyValue('size')).toBe('1px')
-        expect(style.getPropertyPriority('size')).toBe('important')
-        style.setProperty('color', 'orange', 'important')
-        expect(style.color).toBe('orange')
-        expect(style.getPropertyPriority('color')).toBe('important')
-        style.cssText = 'color: green !important'
-        expect(style.color).toBe('green')
-        expect(style.getPropertyPriority('color')).toBe('important')
 
         // CSS-wide keyword
         style.color = 'initial'
         expect(style.color).toBe('initial')
-        style.setProperty('color', 'inherit')
-        expect(style.color).toBe('inherit')
-        style.cssText = 'color: unset'
-        expect(style.color).toBe('unset')
 
         // Custom variable
         style.color = 'var(--red)'
         expect(style.color).toBe('var(--red)')
-        style.setProperty('color', 'var(--orange)')
-        expect(style.color).toBe('var(--orange)')
-        style.cssText = 'color: var(--green)'
-        expect(style.color).toBe('var(--green)')
+
+        // Specific serialization rules
+        style.size = '1px 1px'
+        expect(style.size).toBe('1px')
+    })
+})
+describe('CSSPositionTryDescriptors', () => {
+    it('does not store an invalid declaration', () => {
+
+        const style = CSSPositionTryDescriptors.create(globalThis, undefined, { parentRule: positionTryRule })
+
+        // Invalid name
+        style.setProperty('color', 'red')
+        expect(style.getPropertyValue('color')).toBe('')
+        expect(style.color).toBeUndefined()
+
+        // Priority
+        style.setProperty('top', '1px', 'important')
+        expect(style.top).toBe('')
+    })
+    it('stores a valid declaration', () => {
+
+        const style = CSSPositionTryDescriptors.create(globalThis, undefined, { parentRule: positionTryRule })
+
+        // Specific property value
+        style.top = '1px'
+        expect(style.top).toBe('1px')
+
+        // CSS-wide keyword
+        style.top = 'initial'
+        expect(style.top).toBe('initial')
+
+        // Custom variable
+        style.top = 'var(--custom)'
+        expect(style.top).toBe('var(--custom)')
     })
 })
 
 describe('CSS-wide keyword', () => {
     it('parses and serializes a valid value', () => {
         const style = createStyleBlock()
-        cssWideKeywords.forEach(input => {
+        substitutions.property.keywords.forEach(input => {
             style.opacity = input.toUpperCase()
             expect(style.opacity).toBe(input)
         })
     })
 })
-describe('arbitrary substitution value', () => {
+describe('arbitrary substitution', () => {
     it('fails to parse an invalid value', () => {
         const style = createStyleBlock()
-        const invalid = [
-            'attr(var(--))',
-            'env(var(--))',
-            'random-item(var(--))',
-            'var(var(--))',
-            'attr(title, var(--))',
-            'env(ab-test-color, var(--))',
-            'random-item(key; 0; var(--))',
-            'var(--custom, var(--))',
-        ]
-        invalid.forEach(input => {
-            style.opacity = input
-            expect(style.opacity).toBe('')
-        })
+        style.setProperty('--custom', 'src(var(--))')
+        expect(style.getPropertyValue('--custom')).toBe('')
     })
     it('parses and serializes a valid value', () => {
         const style = createStyleBlock()
@@ -620,7 +534,7 @@ describe('arbitrary substitution value', () => {
             ['fn(attr(title))'],
             ['  /**/  attr(  title, /**/ "title"  )  ', 'attr(title, "title")'],
             ['attr(title string, "")', 'attr(title)'],
-            ['attr(quantity number, "")', 'attr(quantity number, "")'],
+            ['attr(quantity number, "")'],
             // <env()>
             ['env(ab-test-color', 'env(ab-test-color)'],
             ['env(ab-test-color, env(ab-test-2))'],
@@ -645,35 +559,45 @@ describe('arbitrary substitution value', () => {
         })
     })
 })
-describe('top-level substitution values', () => {
+describe('<whole-value>', () => {
     it('fails to parse an invalid value', () => {
         const style = createStyleBlock()
         const invalid = [
-            // Not the only component value
-            ['mix(50%; red; green) url(bg.jpg) var(--custom)', 'background'],
-            ['toggle(red; green) url(bg.jpg) var(--custom)', 'background'],
+            // Not the <whole-value>
+            ['first-valid(0) 1', '--custom'],
+            ['mix(50%; 0; 1) 2', '--custom'],
+            ['mix(50%; 0; first-valid(1) 2)', '--custom'],
+            ['toggle(0; 1) 2', '--custom'],
+            ['toggle(0; first-valid(1) 2)', '--custom'],
             // Invalid value for the property
-            ['mix(50%; 1s; var(--custom))', 'color'],
-            ['toggle(1s; var(--custom))', 'color'],
+            ['mix(50%; red; invalid)', 'color'],
+            ['toggle(red; invalid)', 'color'],
             // Non-animatable property
             ['mix(50%; 1s; 2s)', 'animation-duration'],
+            // Nested <toggle()>
+            ['toggle(mix(50%; toggle(0; 1); 2); 3)', '--custom'],
         ]
-        invalid.forEach(([substitution, property = 'opacity']) => {
-            style[property] = substitution
-            expect(style.opacity).toBe('')
+        invalid.forEach(([substitution, property]) => {
+            style.setProperty(property, substitution)
+            expect(style.getPropertyValue(property)).toBe('')
         })
     })
     it('parses and serializes a valid value', () => {
         const style = createStyleBlock()
         const valid = [
+            ['  /**/  first-valid(  0; /**/ 1e0 /**/)  ', 'first-valid(0; 1)'],
             ['  /**/  mix(  50%; 0; /**/ 1e0 /**/)  ', 'mix(50%; 0; 1)'],
-            ['mix(50%; 0; mix(50%; 0; 2))'],
             ['  /**/  toggle(0; /**/ 1e0 /**/)  ', 'toggle(0; 1)'],
-            ['toggle(0; toggle(1; 2))'],
+            ['first-valid(0; first-valid(1; 2))'],
+            ['mix(50%; 0; mix(50%; 1; 2))'],
+            // Invalid only at computed value time
+            ['first-valid(invalid)'],
+            // Omitted value
+            ['toggle(;)', 'toggle(;)', '--custom'],
         ]
-        valid.forEach(([input, expected = input]) => {
-            style.opacity = input
-            expect(style.opacity).toBe(expected)
+        valid.forEach(([input, expected = input, property = 'opacity']) => {
+            style.setProperty(property, input)
+            expect(style.getPropertyValue(property)).toBe(expected)
         })
     })
 })
@@ -687,16 +611,46 @@ describe('--*', () => {
             // Guaranteed-invalid value (initial)
             ['  /**/  ', ''],
             [''],
-            // Substitution value
+            // Substitutions
             ['initial'],
-            ['var(  --PROPerty, /**/ 1e0 /**/  )  ', 'var(  --PROPerty, /**/ 1e0 /**/  )'],
             ['mix(50;/**/; 1e0 )  ', 'mix(50;/**/; 1e0 )'],
+            ['var(  --PROPerty, /**/ 1e0 /**/  )  ', 'var(  --PROPerty, /**/ 1e0 /**/  )'],
         ]
         valid.forEach(([input, expected = input]) => {
             style.cssText = `--custom: ${input}`
             expect(style.getPropertyValue('--custom')).toBe(expected)
             expect(style.cssText).toBe(`--custom: ${expected};`)
         })
+    })
+})
+describe('animation-range-start, animation-range-end', () => {
+    it('parses and serializes a valid value', () => {
+        const style = createStyleBlock()
+        style.animationRangeStart = 'entry 0%'
+        expect(style.animationRangeStart).toBe('entry')
+    })
+})
+describe('background-position', () => {
+    it('parses and serializes a valid value', () => {
+        const style = createStyleBlock()
+        const valid = [
+            ['left', 'left center'],
+            ['top', 'center top'],
+            ['center', 'center center'],
+            ['0px', '0px center'],
+        ]
+        valid.forEach(([input, expected = input]) => {
+            style.backgroundPosition = input
+            expect(style.backgroundPosition).toBe(expected)
+            expect(style.cssText).toBe(`background-position: ${expected};`)
+        })
+    })
+})
+describe('background-size', () => {
+    it('parses and serializes a valid value', () => {
+        const style = createStyleBlock()
+        style.backgroundSize = '100% auto'
+        expect(style.backgroundSize).toBe('100%')
     })
 })
 describe('border-end-end-radius, border-end-start-radius, border-bottom-left-radius, border-bottom-right-radius, border-start-end-radius, border-start-start-radius, border-top-left-radius, border-top-right-radius', () => {
@@ -711,14 +665,16 @@ describe('border-end-end-radius, border-end-start-radius, border-bottom-left-rad
 describe('border-image-outset, mask-border-outset', () => {
     it('parses and serializes a valid value', () => {
         const style = createStyleBlock()
-        style.borderImageOutset = '0 1 2 2'
-        expect(style.borderImageOutset).toBe('0 1 2 2')
-        style.borderImageOutset = '0 1 2 1'
-        expect(style.borderImageOutset).toBe('0 1 2')
-        style.borderImageOutset = '0 1 0'
-        expect(style.borderImageOutset).toBe('0 1')
-        style.borderImageOutset = '0 0'
-        expect(style.borderImageOutset).toBe('0')
+        const valid = [
+            ['0 1 2 2'],
+            ['0 1 2 1', '0 1 2'],
+            ['0 1 0', '0 1'],
+            ['0 0', '0'],
+        ]
+        valid.forEach(([input, expected = input]) => {
+            style.borderImageOutset = input
+            expect(style.borderImageOutset).toBe(expected)
+        })
     })
 })
 describe('border-image-repeat, mask-border-repeat', () => {
@@ -731,27 +687,38 @@ describe('border-image-repeat, mask-border-repeat', () => {
 describe('border-image-slice, mask-border-slice', () => {
     it('parses and serializes a valid value', () => {
         const style = createStyleBlock()
-        style.borderImageSlice = '0 1 2 2 fill'
-        expect(style.borderImageSlice).toBe('0 1 2 2 fill')
-        style.borderImageSlice = '0 1 2 1'
-        expect(style.borderImageSlice).toBe('0 1 2')
-        style.borderImageSlice = '0 1 0 fill'
-        expect(style.borderImageSlice).toBe('0 1 fill')
-        style.borderImageSlice = '0 0'
-        expect(style.borderImageSlice).toBe('0')
+        const valid = [
+            ['0 1 2 2 fill'],
+            ['0 1 2 1', '0 1 2'],
+            ['0 1 0 fill', '0 1 fill'],
+            ['0 0', '0'],
+        ]
+        valid.forEach(([input, expected = input]) => {
+            style.borderImageSlice = input
+            expect(style.borderImageSlice).toBe(expected)
+        })
     })
 })
 describe('border-image-width, mask-border-width', () => {
     it('parses and serializes a valid value', () => {
         const style = createStyleBlock()
-        style.borderImageWidth = '0 1 2 2'
-        expect(style.borderImageWidth).toBe('0 1 2 2')
-        style.borderImageWidth = '0 1 2 1'
-        expect(style.borderImageWidth).toBe('0 1 2')
-        style.borderImageWidth = '0 1 0'
-        expect(style.borderImageWidth).toBe('0 1')
-        style.borderImageWidth = '0 0'
-        expect(style.borderImageWidth).toBe('0')
+        const valid = [
+            ['0 1 2 2'],
+            ['0 1 2 1', '0 1 2'],
+            ['0 1 0', '0 1'],
+            ['0 0', '0'],
+        ]
+        valid.forEach(([input, expected = input]) => {
+            style.borderImageWidth = input
+            expect(style.borderImageWidth).toBe(expected)
+        })
+    })
+})
+describe('border-spacing', () => {
+    it('parses and serializes a valid value', () => {
+        const style = createStyleBlock()
+        style.borderSpacing = '1px 1px'
+        expect(style.borderSpacing).toBe('1px')
     })
 })
 describe('break-after, break-before, page-break-after, page-break-before', () => {
@@ -831,10 +798,45 @@ describe('break-inside, page-break-inside', () => {
         expect(style.cssText).toBe('break-inside: var(--custom);')
     })
 })
+describe('clip-path', () => {
+    it('parses and serializes a valid value', () => {
+        const style = createStyleBlock()
+        style.clipPath = 'inset(1px) border-box'
+        expect(style.clipPath).toBe('inset(1px)')
+    })
+})
+describe('color-scheme', () => {
+    it('fails to parse an invalid value', () => {
+        const style = createStyleBlock()
+        style.colorScheme = 'NORMAL only'
+        expect(style.colorScheme).toBe('')
+        style.colorScheme = 'only only'
+        expect(style.colorScheme).toBe('')
+    })
+})
+describe('counter-increment, counter-set', () => {
+    it('parses and serializes a valid value', () => {
+        const style = createStyleBlock()
+        style.counterIncrement = 'counter 1'
+        expect(style.counterIncrement).toBe('counter')
+    })
+})
+describe('counter-reset', () => {
+    it('parses and serializes a valid value', () => {
+        const style = createStyleBlock()
+        style.counterReset = 'counter 0'
+        expect(style.counterReset).toBe('counter')
+    })
+})
 describe('container-name', () => {
     it('fails to parse an invalid value', () => {
         const style = createStyleBlock()
-        const invalid = ['and', 'or', 'not', 'name none']
+        const invalid = [
+            'AND',
+            'or',
+            'not',
+            'name none',
+        ]
         invalid.forEach(input => {
             style.containerName = input
             expect(style.containerName).toBe('')
@@ -846,13 +848,30 @@ describe('container-name', () => {
         expect(style.containerName).toBe('none')
     })
 })
+describe('cue-after, cue-before', () => {
+    it('parses and serializes a valid value', () => {
+        const style = createStyleBlock()
+        style.cueAfter = 'url("icon.wav") 0db'
+        expect(style.cueAfter).toBe('url("icon.wav")')
+        // tmp
+        style.cueAfter = 'url("icon.wav") 1db'
+        expect(style.cueAfter).toBe('url("icon.wav") 1db')
+    })
+})
 describe('display', () => {
     it('parses and serializes a valid value', () => {
         const style = createStyleBlock()
+        // Alias value
         display.aliases.forEach((to, from) => {
             style.display = from
             expect(style.display).toBe(to)
         })
+        // Legacy mapped value
+        compatibility.values['display'].forEach(replacement =>
+            replacement.mappings.forEach(mapping => {
+                style.display = mapping
+                expect(style.display).toBe(mapping)
+            }))
     })
 })
 describe('float', () => {
@@ -865,27 +884,60 @@ describe('float', () => {
         expect(style.cssFloat).toBe('right')
     })
 })
-// TODO: fix `value` of `glyph-orientation-vertical`
-describe.skip('glyph-orientation-vertical, text-orientation', () => {
+describe('flow-into', () => {
+    it('fails to parse an invalid value', () => {
+        const style = createStyleBlock()
+        style.flowInto = 'AUTO'
+        expect(style.flowInto).toBe('')
+        style.flowInto = 'none element'
+        expect(style.flowInto).toBe('')
+    })
+})
+describe('font-style', () => {
+    it('parses and serializes a valid value', () => {
+        const style = createStyleBlock()
+        style.fontStyle = 'oblique 14deg'
+        expect(style.fontStyle).toBe('oblique')
+    })
+})
+describe('glyph-orientation-vertical, text-orientation', () => {
+    it('fails to parse an invalid value', () => {
+
+        const style = createStyleBlock()
+        const invalid = [
+            '1',
+            '1deg',
+            '0rad',
+            'calc(0deg)',
+        ]
+
+        invalid.forEach(value => {
+            style.glyphOrientationVertical = value
+            expect(style.textOrientation).toBe('')
+            expect(style.glyphOrientationVertical).toBe('')
+        })
+    })
     it('parses and serializes a valid value', () => {
 
         const style = createStyleBlock()
 
         // Legacy mapped value
         const mapping = [
-            ['auto', 'mixed'],
-            ['0deg', 'upright'],
-            ['90deg', 'sideways'],
+            ['mixed', 'auto'],
+            ['upright', '0', '0deg'],
+            ['upright', '0deg'],
+            ['sideways', '90', '90deg'],
+            ['sideways', '90deg'],
         ]
-        mapping.forEach(([legacy, value]) => {
+        mapping.forEach(([value, legacy, mapped = legacy]) => {
             style.textOrientation = value
             expect(style.textOrientation).toBe(value)
-            expect(style.glyphOrientationVertical).toBe(legacy)
+            expect(style.glyphOrientationVertical).toBe(mapped)
             expect(style.cssText).toBe(`text-orientation: ${value};`)
             style.cssText = ''
             style.glyphOrientationVertical = legacy
             expect(style.textOrientation).toBe(value)
-            expect(style.glyphOrientationVertical).toBe(legacy)
+            expect(style.glyphOrientationVertical).toBe(mapped)
             expect(style.cssText).toBe(`text-orientation: ${value};`)
         })
 
@@ -898,6 +950,13 @@ describe.skip('glyph-orientation-vertical, text-orientation', () => {
         expect(style.textOrientation).toBe('var(--custom)')
         expect(style.glyphOrientationVertical).toBe('var(--custom)')
         expect(style.cssText).toBe('text-orientation: var(--custom);')
+    })
+})
+describe('grid-auto-flow', () => {
+    it('parses and serializes a valid value', () => {
+        const style = createStyleBlock()
+        style.gridAutoFlow = 'row dense'
+        expect(style.gridAutoFlow).toBe('dense')
     })
 })
 describe('grid-template-areas', () => {
@@ -935,16 +994,26 @@ describe('grid-template-areas', () => {
 })
 describe('grid-template-columns, grid-template-rows', () => {
     it('parses and serializes a valid value', () => {
-
         const style = createStyleBlock()
-
-        // Empty line names are omitted except for subgrid axis (browser conformance)
-        style.gridTemplateRows = 'subgrid [] repeat(1, [] [a] [])'
-        expect(style.gridTemplateRows).toBe('subgrid [] repeat(1, [] [a] [])')
-        style.gridTemplateRows = '[] 1px [] repeat(1, [] 1px []) [] repeat(1, [] 1fr [])'
-        expect(style.gridTemplateRows).toBe('1px repeat(1, 1px) repeat(1, 1fr)')
-        style.gridTemplateRows = '[] repeat(auto-fill, [] 1px []) []'
-        expect(style.gridTemplateRows).toBe('repeat(auto-fill, 1px)')
+        const valid = [
+            // Empty line names are omitted except for subgrid axis (browser conformance)
+            ['subgrid [] repeat(1, [] [a] [])'],
+            ['[] 1px [] repeat(1, [] 1px []) [] repeat(1, [] 1fr [])', '1px repeat(1, 1px) repeat(1, 1fr)'],
+            ['[] repeat(auto-fill, [] 1px []) []', 'repeat(auto-fill, 1px)'],
+        ]
+        valid.forEach(([input, expected = input]) => {
+            style.gridTemplateRows = input
+            expect(style.gridTemplateRows).toBe(expected)
+        })
+    })
+})
+describe('hyphenate-limit-chars', () => {
+    it('parses and serializes a valid value', () => {
+        const style = createStyleBlock()
+        style.hyphenateLimitChars = '0 1 1'
+        expect(style.hyphenateLimitChars).toBe('0 1')
+        style.hyphenateLimitChars = '0 auto auto'
+        expect(style.hyphenateLimitChars).toBe('0')
     })
 })
 describe('image-rendering', () => {
@@ -957,11 +1026,174 @@ describe('image-rendering', () => {
         expect(style.imageRendering).toBe('optimizequality')
     })
 })
+describe('image-resolution', () => {
+    it('parses and serializss a valid value', () => {
+        const style = createStyleBlock()
+        style.imageResolution = 'from-image 1dppx'
+        expect(style.imageResolution).toBe('from-image')
+    })
+})
+describe('initial-letter', () => {
+    it('parses and serializes a valid value', () => {
+        const style = createStyleBlock()
+        style.initialLetter = '1 drop'
+        expect(style.initialLetter).toBe('1')
+    })
+})
+describe('masonry-auto-flow', () => {
+    it('parses and serializes a valid value', () => {
+        const style = createStyleBlock()
+        const valid = [
+            ['pack definite-first', 'pack'],
+            ['pack ordered', 'ordered'],
+            ['next definite-first', 'next'],
+        ]
+        valid.forEach(([input, expected = input]) => {
+            style.masonryAutoFlow = input
+            expect(style.masonryAutoFlow).toBe(expected)
+        })
+    })
+})
+describe('object-fit', () => {
+    it('parses and serializes a valid value', () => {
+        const style = createStyleBlock()
+        style.objectFit = 'contain scale-down'
+        expect(style.objectFit).toBe('scale-down')
+    })
+})
 describe('offset-path', () => {
     it('parses and serializes a valid value', () => {
         const style = createStyleBlock()
         style.offsetPath = 'url("path.svg") border-box'
         expect(style.offsetPath).toBe('url("path.svg")')
+        style.offsetPath = 'path(evenodd, "M0 0")'
+        expect(style.offsetPath).toBe('path("M0 0")')
+    })
+})
+describe('offset-rotate', () => {
+    it('parses and serializes a valid value', () => {
+        const style = createStyleBlock()
+        const valid = [
+            ['auto 0deg', 'auto'],
+            ['auto 180deg', 'reverse'],
+            ['auto -180deg', 'reverse'],
+            ['reverse 0deg', 'reverse'],
+            ['reverse 180deg', 'auto'],
+            ['reverse -180deg', 'auto'],
+        ]
+        valid.forEach(([input, expected]) => {
+            style.offsetRotate = input
+            expect(style.offsetRotate).toBe(expected)
+        })
+    })
+})
+describe('overflow-clip-margin-block-end, overflow-clip-margin-block-start, overflow-clip-margin-bottom, overflow-clip-margin-inline-end, overflow-clip-margin-inline-starty, overflow-clip-margin-left, overflow-clip-margin-right, overflow-clip-margin-top', () => {
+    it('parses and serializes a valid value', () => {
+        const style = createStyleBlock()
+        style.overflowClipMarginBlockEnd = 'content-box 0px'
+        expect(style.overflowClipMarginBlockEnd).toBe('content-box')
+    })
+})
+describe('paint-order', () => {
+    it('parses and serializes a valid value', () => {
+        const style = createStyleBlock()
+        const valid = [
+            ['fill', 'normal'],
+            ['fill stroke', 'normal'],
+            ['fill stroke markers', 'normal'],
+            ['fill markers stroke', 'fill markers'],
+            ['stroke fill', 'stroke'],
+            ['stroke fill markers', 'stroke'],
+            ['markers fill', 'markers'],
+            ['markers fill stroke', 'markers'],
+        ]
+        valid.forEach(([input, expected]) => {
+            style.paintOrder = input
+            expect(style.paintOrder).toBe(expected)
+        })
+    })
+})
+describe('scale', () => {
+    it('parses and serializes a valid value', () => {
+        const style = createStyleBlock()
+        style.scale = '100% 100% 1'
+        expect(style.scale).toBe('100%')
+    })
+})
+describe('scroll-snap-align', () => {
+    it('parses and serializes a valid value', () => {
+        const style = createStyleBlock()
+        style.scrollSnapAlign = 'none none'
+        expect(style.scrollSnapAlign).toBe('none')
+    })
+})
+describe('scroll-snap-type', () => {
+    it('parses and serializes a valid value', () => {
+        const style = createStyleBlock()
+        style.scrollSnapType = 'x proximity'
+        expect(style.scrollSnapType).toBe('x')
+    })
+})
+describe('shape-outside', () => {
+    it('parses and serializes a valid value', () => {
+        const style = createStyleBlock()
+        style.shapeOutside = 'inset(1px) margin-box'
+        expect(style.shapeOutside).toBe('inset(1px)')
+    })
+})
+describe('text-emphasis-position', () => {
+    it('parses and serializes a valid value', () => {
+        const style = createStyleBlock()
+        style.textEmphasisPosition = 'over right'
+        expect(style.textEmphasisPosition).toBe('over')
+    })
+})
+describe('text-align-all', () => {
+    it('fails to parse an invalid value', () => {
+        const style = createStyleBlock()
+        style.textAlignAll = '"12"'
+        expect(style.textAlignAll).toBe('')
+    })
+})
+describe('text-justify', () => {
+    it('parses and serializes a valid value', () => {
+        const style = createStyleBlock()
+        // Legacy value alias
+        style.textJustify = 'distribute'
+        expect(style.textJustify).toBe('inter-character')
+    })
+})
+describe('translate', () => {
+    it('parses and serializes a valid value', () => {
+        const style = createStyleBlock()
+        style.translate = '0px 0px 0px'
+        expect(style.translate).toBe('0px')
+    })
+})
+describe('view-transition-name', () => {
+    it('fails to parse an invalid value', () => {
+        const style = createStyleBlock()
+        style.viewTransitionName = 'AUTO'
+        expect(style.viewTransitionName).toBe('')
+    })
+})
+describe('voice-pitch, voice-range', () => {
+    it('parses and serializes a valid value', () => {
+        const style = createStyleBlock()
+        style.voicePitch = 'x-low 100%'
+        expect(style.voicePitch).toBe('x-low')
+        // tmp
+        style.voicePitch = '100%'
+        expect(style.voicePitch).toBe('100%')
+    })
+})
+describe('voice-rate', () => {
+    it('parses and serializes a valid value', () => {
+        const style = createStyleBlock()
+        style.voiceRate = 'normal 100%'
+        expect(style.voiceRate).toBe('normal')
+        style.voiceRate = '100%'
+        expect(style.voiceRate).toBe('100%')
     })
 })
 
@@ -1054,7 +1286,7 @@ describe('all', () => {
 
         const style = createStyleBlock()
 
-        longhands.forEach(longhand => style[longhand] = 'initial')
+        style.all = 'initial'
         expect(style).toHaveLength(longhands.length)
         expect(style[longhands[0]]).toBe('initial')
         expect(style.all).toBe('initial')
@@ -1073,11 +1305,11 @@ describe('all', () => {
 
         // Not all equal longhand values
         const [head, ...tail] = longhands
-        const exclude = ['all', 'border']
+        const excluded = ['all', 'border', 'text-wrap']
         const initial = tail.reduce(
             (properties, property) => {
                 for (const [shorthand, longhands] of shorthands) {
-                    if (longhands.length === 1 || exclude.includes(shorthand)) {
+                    if (longhands.length === 1 || excluded.includes(shorthand)) {
                         continue
                     }
                     if (longhands.includes(property)) {
@@ -1118,7 +1350,10 @@ describe('animation', () => {
         // Repeated longhand values
         const repeated = `${animation}, ${animation}`
         style.animation = repeated
-        longhands.forEach(longhand => expect(style[longhand]).toBe(`${initial(longhand)}, ${initial(longhand)}`))
+        longhands.forEach(longhand =>
+            expect(style[longhand]).toBe(shorthands.resetOnly.animation.includes(longhand)
+                ? initial(longhand)
+                : `${initial(longhand)}, ${initial(longhand)}`))
         expect(style.animation).toBe(repeated)
         expect(style.cssText).toBe(`animation: ${repeated};`)
     })
@@ -1134,7 +1369,70 @@ describe('animation', () => {
         // Different lengths of longhand values
         style.animationName = 'none, none'
         expect(style.animation).toBe('')
-        expect(style.cssText).toBe('animation-duration: auto; animation-timing-function: ease; animation-delay: 0s; animation-iteration-count: 1; animation-direction: normal; animation-fill-mode: none; animation-play-state: running; animation-name: none, none; animation-timeline: auto;')
+        expect(style.cssText).toBe('animation-duration: auto; animation-timing-function: ease; animation-delay: 0s; animation-iteration-count: 1; animation-direction: normal; animation-fill-mode: none; animation-play-state: running; animation-name: none, none; animation-timeline: auto; animation-range: normal;')
+    })
+})
+describe('animation-range', () => {
+
+    const longhands = shorthands.get('animation-range')
+
+    it('parses longhand declarations from a shorthand value', () => {
+
+        const style = createStyleBlock()
+
+        // Initial longhand values
+        style.animationRange = 'normal normal'
+        expect(style).toHaveLength(longhands.length)
+        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
+        expect(style.animationRange).toBe('normal')
+        expect(style.cssText).toBe('animation-range: normal;')
+
+        // Missing longhand values
+        const values = [
+            ['normal'],
+            ['0%', '0%', 'normal'],
+            ['entry'],
+            ['entry 10%', 'entry 10%', 'entry'],
+            ['10% entry', '10%', 'entry'],
+        ]
+        values.forEach(([shorthand, start = shorthand, end = shorthand]) => {
+            style.animationRange = shorthand
+            expect(style.animationRangeStart).toBe(start)
+            expect(style.animationRangeEnd).toBe(end)
+            expect(style.animationRange).toBe(shorthand)
+            expect(style.cssText).toBe(`animation-range: ${shorthand};`)
+        })
+
+        // Repeated longhand values
+        style.animationRange = 'normal, normal'
+        longhands.forEach(longhand => expect(style[longhand]).toBe(`${initial(longhand)}, ${initial(longhand)}`))
+        expect(style.animationRange).toBe('normal, normal')
+        expect(style.cssText).toBe('animation-range: normal, normal;')
+    })
+    it('serializes a shorthand value from the declarations of its longhands', () => {
+
+        const style = createStyleBlock()
+
+        // Initial longhand values
+        longhands.forEach(longhand => style[longhand] = initial(longhand))
+        expect(style.animationRange).toBe('normal')
+        expect(style.cssText).toBe('animation-range: normal;')
+
+        // Different lengths of longhand values
+        style.animationRangeStart = 'normal, normal'
+        expect(style.animationRange).toBe('')
+        expect(style.cssText).toBe('animation-range-start: normal, normal; animation-range-end: normal;')
+
+        // Shared <timeline-range-name>
+        style.animationRangeStart = 'entry'
+        style.animationRangeEnd = 'entry'
+        expect(style.animationRange).toBe('entry')
+        expect(style.cssText).toBe('animation-range: entry;')
+
+        // Ambiguous <length-percentage>
+        style.animationRangeEnd = '100%'
+        expect(style.animationRange).toBe('entry 0% 100%')
+        expect(style.cssText).toBe(`animation-range: entry 0% 100%;`)
     })
 })
 describe('background', () => {
@@ -1175,23 +1473,27 @@ describe('background', () => {
         expect(style.background).toBe('initial')
         expect(style.cssText).toBe('background: initial;')
 
-        // Pending-substitution value
+        // Pending substitution value
         style.background = 'var(--custom)'
         longhands.forEach(longhand => expect(style[longhand]).toBe(''))
         expect(style.background).toBe('var(--custom)')
         expect(style.cssText).toBe('background: var(--custom);')
+        style.background = 'first-valid(value)'
+        longhands.forEach(longhand => expect(style[longhand]).toBe(''))
+        expect(style.background).toBe('first-valid(value)')
+        expect(style.cssText).toBe('background: first-valid(value);')
 
         // Repeated longhand values
         style.background = `${background.replace(' transparent', '')}, ${background}`
         longhands.forEach(longhand =>
-            expect(style[longhand])
-                .toBe(longhand === 'background-color'
+            expect(style[longhand]).toBe(
+                (longhand === 'background-color' || shorthands.resetOnly.background.includes(longhand))
                     ? initial(longhand)
                     : `${initial(longhand)}, ${initial(longhand)}`))
         expect(style.background).toBe('none, none')
         expect(style.cssText).toBe('background: none, none;')
 
-        // Single <box>
+        // Single <visual-box>
         style.background = 'content-box'
         longhands.forEach(longhand =>
             expect(style[longhand])
@@ -1201,7 +1503,7 @@ describe('background', () => {
         expect(style.background).toBe('content-box')
         expect(style.cssText).toBe('background: content-box;')
 
-        // Same <box>
+        // Same <visual-box>
         style.background = 'content-box content-box'
         longhands.forEach(longhand =>
             expect(style[longhand])
@@ -1223,12 +1525,12 @@ describe('background', () => {
         // Different lengths of longhand values
         style.backgroundImage = 'none, none'
         expect(style.background).toBe('')
-        expect(style.cssText).toBe('background-image: none, none; background-position: 0% 0%; background-size: auto; background-repeat: repeat; background-attachment: scroll; background-origin: padding-box; background-clip: border-box; background-color: transparent;')
+        expect(style.cssText).toBe('background-image: none, none; background-position: 0% 0%; background-size: auto; background-repeat: repeat; background-attachment: scroll; background-origin: padding-box; background-clip: border-box; background-color: transparent; background-blend-mode: normal;')
 
         // Missing longhand declaration
         style.backgroundImage = ''
         expect(style.background).toBe('')
-        expect(style.cssText).toBe('background-position: 0% 0%; background-size: auto; background-repeat: repeat; background-attachment: scroll; background-origin: padding-box; background-clip: border-box; background-color: transparent;')
+        expect(style.cssText).toBe('background-position: 0% 0%; background-size: auto; background-repeat: repeat; background-attachment: scroll; background-origin: padding-box; background-clip: border-box; background-color: transparent; background-blend-mode: normal;')
         style.backgroundImage = initial('background-image')
 
         // Important
@@ -1237,7 +1539,7 @@ describe('background', () => {
         expect(style.cssText).toBe('background: none !important;')
         style.backgroundImage = ''
         expect(style.background).toBe('')
-        expect(style.cssText).toBe('background-position: 0% 0% !important; background-size: auto !important; background-repeat: repeat !important; background-attachment: scroll !important; background-origin: padding-box !important; background-clip: border-box !important; background-color: transparent !important;')
+        expect(style.cssText).toBe('background-position: 0% 0% !important; background-size: auto !important; background-repeat: repeat !important; background-attachment: scroll !important; background-origin: padding-box !important; background-clip: border-box !important; background-color: transparent !important; background-blend-mode: normal !important;')
 
         // CSS-wide keyword
         longhands.forEach(longhand => style[longhand] = 'initial')
@@ -1245,50 +1547,16 @@ describe('background', () => {
         expect(style.cssText).toBe('background: initial;')
         style.backgroundImage = ''
         expect(style.background).toBe('')
-        expect(style.cssText).toBe('background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial; background-color: initial;')
+        expect(style.cssText).toBe('background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial; background-color: initial; background-blend-mode: initial;')
 
-        // Substitution value
+        // Pending substitution value
         longhands.forEach(longhand => style[longhand] = 'var(--custom)')
         expect(style.background).toBe('')
-        expect(style.cssText).toBe('background-position: var(--custom); background-size: var(--custom); background-repeat: var(--custom); background-attachment: var(--custom); background-origin: var(--custom); background-clip: var(--custom); background-color: var(--custom); background-image: var(--custom);')
+        expect(style.cssText).toBe('background-position: var(--custom); background-size: var(--custom); background-repeat: var(--custom); background-attachment: var(--custom); background-origin: var(--custom); background-clip: var(--custom); background-color: var(--custom); background-blend-mode: var(--custom); background-image: var(--custom);')
         style.background = 'var(--custom)'
         style.backgroundImage = 'var(--custom)'
         expect(style.background).toBe('')
-        expect(style.cssText).toBe('background-position: ; background-size: ; background-repeat: ; background-attachment: ; background-origin: ; background-clip: ; background-color: ; background-image: var(--custom);')
-    })
-})
-describe('background-position', () => {
-    it('parses and serializes a valid value', () => {
-
-        const style = createStyleBlock()
-
-        /**
-         * https://github.com/w3c/csswg-drafts/issues/2274
-         *
-         * - serialize to 2 or 4 values
-         * - serialize specified keywords (except `center`) in 3 values form
-         * - serialize with `left`, `top`, or a percentage, when missing in 3
-         * values form
-         */
-        const valid = [
-            ['left', 'left center'],
-            ['top', 'center top'],
-            ['center', 'center center'],
-            ['0px', '0px center'],
-            ['center center'],
-            ['left 0px top', 'left 0px top 0%'],
-            ['left 0px center', 'left 0px top 50%'],
-            ['left 0px bottom', 'left 0px bottom 0%'],
-            ['left 0px bottom 100%', 'left 0px bottom 100%'],
-            ['center top 0px', 'left 50% top 0px'],
-            ['right top 0px', 'right 0% top 0px'],
-            ['left 50% top 50%'],
-        ]
-        valid.forEach(([input, expected = input]) => {
-            style.backgroundPosition = input
-            expect(style.backgroundPosition).toBe(expected)
-            expect(style.cssText).toBe(`background-position: ${expected};`)
-        })
+        expect(style.cssText).toBe('background-position: ; background-size: ; background-repeat: ; background-attachment: ; background-origin: ; background-clip: ; background-color: ; background-blend-mode: ; background-image: var(--custom);')
     })
 })
 describe('block-step', () => {
@@ -1584,8 +1852,33 @@ describe('border-bottom, border-left, border-right, border-top', () => {
     })
 })
 describe('border-clip', () => {
-    it.todo('parses longhand declarations from a shorthand value')
-    it.todo('serializes a shorthand value from the declarations of its longhands')
+
+    const longhands = shorthands.get('border-clip')
+
+    it('parses longhand declarations from a shorthand value', () => {
+
+        const style = createStyleBlock()
+
+        style.borderClip = 'normal'
+        expect(style).toHaveLength(longhands.length)
+        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
+        expect(style.borderClip).toBe('normal')
+        expect(style.cssText).toBe('border-clip: normal;')
+    })
+    it('serializes a shorthand value from the declarations of its longhands', () => {
+
+        const style = createStyleBlock()
+
+        // All equal longhand values
+        longhands.forEach(longhand => style[longhand] = initial(longhand))
+        expect(style.borderClip).toBe('normal')
+        expect(style.cssText).toBe('border-clip: normal;')
+
+        // Not all equal longhand values
+        style.borderClipTop = '1px'
+        expect(style.borderClip).toBe('')
+        expect(style.cssText).toBe('border-clip-top: 1px; border-clip-right: normal; border-clip-bottom: normal; border-clip-left: normal;')
+    })
 })
 describe('border-color', () => {
 
@@ -1795,6 +2088,7 @@ describe('border-width', () => {
 describe('box-shadow', () => {
 
     const longhands = shorthands.get('box-shadow')
+    const shadow = 'currentcolor none 0px 0px outset'
 
     it('parses longhand declarations from a shorthand value', () => {
 
@@ -1804,27 +2098,32 @@ describe('box-shadow', () => {
         style.boxShadow = 'currentColor none 0 0 outset'
         expect(style).toHaveLength(longhands.length)
         longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.boxShadow).toBe('0px 0px')
-        expect(style.cssText).toBe('box-shadow: 0px 0px;')
+        expect(style.boxShadow).toBe('currentcolor none')
+        expect(style.cssText).toBe('box-shadow: currentcolor none;')
 
         // Missing longhand values
-        style.boxShadow = 'currentColor'
+        style.boxShadow = 'none'
         expect(style).toHaveLength(longhands.length)
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
+        longhands.forEach(longhand => expect(style[longhand])
+            .toBe(longhand === 'box-shadow-color'
+                ? 'transparent'
+                : initial(longhand)))
+        expect(style.boxShadow).toBe('none')
+        expect(style.cssText).toBe('box-shadow: none;')
+        style.boxShadow = '0px 0px'
+        expect(style).toHaveLength(longhands.length)
+        longhands.forEach(longhand => expect(style[longhand])
+            .toBe(longhand === 'box-shadow-offset'
+                ? '0px 0px'
+                : initial(longhand)))
         expect(style.boxShadow).toBe('0px 0px')
         expect(style.cssText).toBe('box-shadow: 0px 0px;')
 
         // Repeated longhand values
-        style.boxShadow = 'currentcolor 0px 0px 0px 0px outset, currentcolor 0px 0px 0px 0px outset'
+        style.boxShadow = `${shadow}, ${shadow}`
         longhands.forEach(longhand => expect(style[longhand]).toBe(`${initial(longhand)}, ${initial(longhand)}`))
-        expect(style.boxShadow).toBe('0px 0px, 0px 0px')
-        expect(style.cssText).toBe('box-shadow: 0px 0px, 0px 0px;')
-
-        // none
-        style.boxShadow = 'none'
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.boxShadow).toBe('0px 0px')
-        expect(style.cssText).toBe('box-shadow: 0px 0px;')
+        expect(style.boxShadow).toBe('currentcolor none, currentcolor none')
+        expect(style.cssText).toBe('box-shadow: currentcolor none, currentcolor none;')
     })
     it('serializes a shorthand value from the declarations of its longhands', () => {
 
@@ -1832,18 +2131,13 @@ describe('box-shadow', () => {
 
         // Initial longhand values
         longhands.forEach(longhand => style[longhand] = initial(longhand))
-        expect(style.boxShadow).toBe('0px 0px')
-        expect(style.cssText).toBe('box-shadow: 0px 0px;')
+        expect(style.boxShadow).toBe('currentcolor none')
+        expect(style.cssText).toBe('box-shadow: currentcolor none;')
 
         // Different lengths of longhand values
         style.boxShadowOffset = '0px 0px, 0px 0px'
         expect(style.boxShadow).toBe('')
         expect(style.cssText).toBe('box-shadow-color: currentcolor; box-shadow-offset: 0px 0px, 0px 0px; box-shadow-blur: 0px; box-shadow-spread: 0px; box-shadow-position: outset;')
-
-        // Explicit box-shadow-offset
-        style.boxShadowOffset = '1px'
-        expect(style.boxShadow).toBe('1px 1px')
-        expect(style.cssText).toBe('box-shadow: 1px 1px;')
     })
 })
 describe('caret', () => {
@@ -1855,7 +2149,7 @@ describe('caret', () => {
         const style = createStyleBlock()
 
         // Initial longhand values
-        style.caret = 'auto auto'
+        style.caret = 'auto auto auto'
         expect(style).toHaveLength(longhands.length)
         longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
         expect(style.caret).toBe('auto')
@@ -2020,13 +2314,17 @@ describe('corners', () => {
         style.corners = 'angle'
         longhands.forEach(longhand =>
             expect(style[longhand])
-                .toBe(longhand === 'corner-shape' ? 'angle' : initial(longhand)))
+                .toBe(longhand === 'corner-shape'
+                    ? 'angle'
+                    : initial(longhand)))
         expect(style.corners).toBe('angle')
         expect(style.cssText).toBe('corners: angle;')
         style.corners = '1px'
         longhands.forEach(longhand =>
             expect(style[longhand])
-                .toBe(longhand === 'corner-shape' ? initial(longhand) : '1px'))
+                .toBe(longhand === 'corner-shape'
+                    ? initial(longhand)
+                    : '1px'))
         expect(style.corners).toBe('1px')
         expect(style.cssText).toBe('corners: 1px;')
     })
@@ -2182,11 +2480,14 @@ describe('font', () => {
         style.font = 'caption'
         longhands.forEach(longhand =>
             expect(style[longhand])
-                .toBe(longhand === 'font-family'
-                    ? ''
-                    : initial(longhand)))
+                .toBe(shorthands.resetOnly.font.includes(longhand)
+                    ? initial(longhand)
+                    : ''))
         expect(style.font).toBe('caption')
         expect(style.cssText).toBe('font: caption;')
+        style.fontStyle = 'italic'
+        expect(style.font).toBe('')
+        expect(style.cssText).toBe('font-style: italic; font-variant-ligatures: ; font-variant-caps: ; font-variant-alternates: ; font-variant-numeric: ; font-variant-east-asian: ; font-variant-position: ; font-variant-emoji: ; font-weight: ; font-width: ; font-size: ; line-height: ; font-family: ; font-feature-settings: normal; font-kerning: auto; font-language-override: normal; font-optical-sizing: auto; font-size-adjust: none; font-variation-settings: normal;')
     })
     it('serializes a shorthand value from the declarations of its longhands', () => {
 
@@ -2200,13 +2501,13 @@ describe('font', () => {
         // Non CSS2 font-variant property
         style.fontVariantCaps = 'all-petite-caps'
         expect(style.font).toBe('')
-        expect(style.cssText).toBe('font-style: normal; font-variant: all-petite-caps; font-weight: normal; font-stretch: normal; font-size: medium; line-height: normal; font-family: monospace; font-feature-settings: normal; font-kerning: auto; font-language-override: normal; font-optical-sizing: auto; font-size-adjust: none; font-variation-settings: normal;')
+        expect(style.cssText).toBe('font-style: normal; font-variant: all-petite-caps; font-weight: normal; font-width: normal; font-size: medium; line-height: normal; font-family: monospace; font-feature-settings: normal; font-kerning: auto; font-language-override: normal; font-optical-sizing: auto; font-size-adjust: none; font-variation-settings: normal;')
         style.fontVariantCaps = initial('font-variant-caps')
 
-        // Non CSS3 font-stretch property
-        style.fontStretch = '110%'
+        // Non CSS3 font-width property
+        style.fontWidth = '110%'
         expect(style.font).toBe('')
-        expect(style.cssText).toBe('font-style: normal; font-variant: normal; font-weight: normal; font-stretch: 110%; font-size: medium; line-height: normal; font-family: monospace; font-feature-settings: normal; font-kerning: auto; font-language-override: normal; font-optical-sizing: auto; font-size-adjust: none; font-variation-settings: normal;')
+        expect(style.cssText).toBe('font-style: normal; font-variant: normal; font-weight: normal; font-width: 110%; font-size: medium; line-height: normal; font-family: monospace; font-feature-settings: normal; font-kerning: auto; font-language-override: normal; font-optical-sizing: auto; font-size-adjust: none; font-variation-settings: normal;')
     })
 })
 describe('font-variant', () => {
@@ -2259,21 +2560,28 @@ describe('font-synthesis', () => {
         const style = createStyleBlock()
 
         // Initial longhand values
-        style.fontSynthesis = 'weight style small-caps'
+        style.fontSynthesis = 'weight style small-caps position'
         expect(style).toHaveLength(longhands.length)
         longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.fontSynthesis).toBe('weight style small-caps')
-        expect(style.cssText).toBe('font-synthesis: weight style small-caps;')
+        expect(style.fontSynthesis).toBe('weight style small-caps position')
+        expect(style.cssText).toBe('font-synthesis: weight style small-caps position;')
 
         // Missing longhand values
         const values = [
-            ['none', ['none', 'none', 'none']],
-            ['weight', ['auto', 'none', 'none']],
-            ['style', ['none', 'auto', 'none']],
-            ['small-caps', ['none', 'none', 'auto']],
-            ['weight style', ['auto', 'auto', 'none']],
-            ['weight small-caps', ['auto', 'none', 'auto']],
-            ['style small-caps', ['none', 'auto', 'auto']],
+            ['none', ['none', 'none', 'none', 'none']],
+            ['weight', ['auto', 'none', 'none', 'none']],
+            ['style', ['none', 'auto', 'none', 'none']],
+            ['small-caps', ['none', 'none', 'auto', 'none']],
+            ['position', ['none', 'none', 'none', 'auto']],
+            ['weight style', ['auto', 'auto', 'none', 'none']],
+            ['weight small-caps', ['auto', 'none', 'auto', 'none']],
+            ['weight position', ['auto', 'none', 'none', 'auto']],
+            ['style small-caps', ['none', 'auto', 'auto', 'none']],
+            ['style position', ['none', 'auto', 'none', 'auto']],
+            ['weight style small-caps', ['auto', 'auto', 'auto', 'none']],
+            ['weight style position', ['auto', 'auto', 'none', 'auto']],
+            ['weight small-caps position', ['auto', 'none', 'auto', 'auto']],
+            ['style small-caps position', ['none', 'auto', 'auto', 'auto']],
         ]
         values.forEach(([input, expected]) => {
             style.fontSynthesis = input
@@ -2294,8 +2602,8 @@ describe('font-synthesis', () => {
 
         // Initial longhand values
         longhands.forEach(longhand => style[longhand] = initial(longhand))
-        expect(style.fontSynthesis).toBe('weight style small-caps')
-        expect(style.cssText).toBe('font-synthesis: weight style small-caps;')
+        expect(style.fontSynthesis).toBe('weight style small-caps position')
+        expect(style.cssText).toBe('font-synthesis: weight style small-caps position;')
     })
 })
 describe('gap', () => {
@@ -2409,7 +2717,7 @@ describe('grid', () => {
         style.gridAutoRows = initial('grid-auto-rows')
         style.gridAutoFlow = 'row dense'
         expect(style.grid).toBe('')
-        expect(style.cssText).toBe('grid-template: 1px / none; grid-auto-flow: row dense; grid-auto-rows: auto; grid-auto-columns: auto;')
+        expect(style.cssText).toBe('grid-template: 1px / none; grid-auto-flow: dense; grid-auto-rows: auto; grid-auto-columns: auto;')
         style.gridAutoFlow = initial('grid-auto-flow')
         style.gridTemplateRows = initial('grid-template-rows')
 
@@ -2708,12 +3016,18 @@ describe('line-clamp', () => {
         expect(style.cssText).toBe('line-clamp: none;')
 
         // Missing longhand values
-        style.lineClamp = '1 auto'
+        style.lineClamp = '1'
         expect(style.maxLines).toBe('1')
         expect(style.blockEllipsis).toBe('auto')
         expect(style.continue).toBe('discard')
         expect(style.lineClamp).toBe('1')
         expect(style.cssText).toBe('line-clamp: 1;')
+        style.lineClamp = 'auto'
+        expect(style.maxLines).toBe('none')
+        expect(style.blockEllipsis).toBe('auto')
+        expect(style.continue).toBe('discard')
+        expect(style.lineClamp).toBe('auto')
+        expect(style.cssText).toBe('line-clamp: auto;')
     })
     it('serializes a shorthand value from the declarations of its longhands', () => {
 
@@ -2725,27 +3039,19 @@ describe('line-clamp', () => {
         expect(style.cssText).toBe('line-clamp: none;')
 
         // All longhands cannot always be represented
+        style.maxLines = '1'
+        expect(style.lineClamp).toBe('')
+        expect(style.cssText).toBe('max-lines: 1; block-ellipsis: none; continue: auto;')
+        style.blockEllipsis = 'auto'
+        expect(style.lineClamp).toBe('')
+        expect(style.cssText).toBe('max-lines: 1; block-ellipsis: auto; continue: auto;')
+        style.maxLines = initial('max-lines')
+        expect(style.lineClamp).toBe('')
+        expect(style.cssText).toBe('-webkit-line-clamp: none;')
+        style.blockEllipsis = initial('block-ellipsis')
         style.continue = 'discard'
         expect(style.lineClamp).toBe('')
         expect(style.cssText).toBe('max-lines: none; block-ellipsis: none; continue: discard;')
-        style.blockEllipsis = 'auto'
-        expect(style.lineClamp).toBe('')
-        expect(style.cssText).toBe('max-lines: none; block-ellipsis: auto; continue: discard;')
-        style.continue = initial('continue')
-        expect(style.lineClamp).toBe('')
-        expect(style.cssText).toBe('-webkit-line-clamp: none;')
-        style.maxLines = '1'
-        expect(style.lineClamp).toBe('')
-        expect(style.cssText).toBe('max-lines: 1; block-ellipsis: auto; continue: auto;')
-        style.continue = 'discard'
-        expect(style.lineClamp).toBe('1')
-        expect(style.cssText).toBe('line-clamp: 1;')
-        style.blockEllipsis = 'none'
-        expect(style.lineClamp).toBe('1 none')
-        expect(style.cssText).toBe('line-clamp: 1 none;')
-        style.blockEllipsis = '"…"'
-        expect(style.lineClamp).toBe('1 "…"')
-        expect(style.cssText).toBe('line-clamp: 1 "…";')
     })
 })
 describe('list-style', () => {
@@ -2769,10 +3075,25 @@ describe('list-style', () => {
         expect(style.listStyle).toBe('outside')
         expect(style.cssText).toBe('list-style: outside;')
 
-        // none
+        // Ambiguous values
         style.listStyle = 'none'
+        expect(style.listStylePosition).toBe('outside')
         expect(style.listStyleImage).toBe('none')
         expect(style.listStyleType).toBe('none')
+        expect(style.listStyle).toBe('none')
+        expect(style.cssText).toBe('list-style: none;')
+        style.listStyle = 'outside inside'
+        expect(style.listStylePosition).toBe('outside')
+        expect(style.listStyleImage).toBe('none')
+        expect(style.listStyleType).toBe('inside')
+        expect(style.listStyle).toBe('outside inside')
+        expect(style.cssText).toBe('list-style: outside inside;')
+        style.listStyle = 'outside outside'
+        expect(style.listStylePosition).toBe('outside')
+        expect(style.listStyleImage).toBe('none')
+        expect(style.listStyleType).toBe('outside')
+        expect(style.listStyle).toBe('outside outside')
+        expect(style.cssText).toBe('list-style: outside outside;')
     })
     it('serializes a shorthand value from the declarations of its longhands', () => {
 
@@ -2863,7 +3184,6 @@ describe('marker', () => {
 
         const style = createStyleBlock()
 
-        // Initial longhand values (not all longhands can be explicitly declared)
         style.marker = 'none'
         expect(style).toHaveLength(longhands.length)
         longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
@@ -2874,10 +3194,15 @@ describe('marker', () => {
 
         const style = createStyleBlock()
 
-        // Initial longhand values
+        // All equal longhand values
         longhands.forEach(longhand => style[longhand] = initial(longhand))
         expect(style.marker).toBe('none')
         expect(style.cssText).toBe('marker: none;')
+
+        // Not all equal longhand values
+        style.markerStart = 'url("#start")'
+        expect(style.marker).toBe('')
+        expect(style.cssText).toBe('marker-start: url("#start"); marker-mid: none; marker-end: none;')
     })
 })
 describe('mask', () => {
@@ -2996,24 +3321,24 @@ describe('offset', () => {
         const style = createStyleBlock()
 
         // Initial longhand values
-        style.offset = 'auto none 0 auto / auto'
+        style.offset = 'normal none 0 auto / auto'
         expect(style).toHaveLength(longhands.length)
         longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.offset).toBe('auto')
-        expect(style.cssText).toBe('offset: auto;')
+        expect(style.offset).toBe('normal')
+        expect(style.cssText).toBe('offset: normal;')
 
         // Missing longhand values
-        style.offset = 'auto'
+        style.offset = 'normal'
         longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.offset).toBe('auto')
-        expect(style.cssText).toBe('offset: auto;')
-        style.offset = 'auto / left'
+        expect(style.offset).toBe('normal')
+        expect(style.cssText).toBe('offset: normal;')
+        style.offset = 'normal / left'
         longhands.forEach(longhand =>
             style[longhand] = longhand === 'offset-anchor'
                 ? 'left center'
                 : initial(longhand))
-        expect(style.offset).toBe('auto / left center')
-        expect(style.cssText).toBe('offset: auto / left center;')
+        expect(style.offset).toBe('normal / left center')
+        expect(style.cssText).toBe('offset: normal / left center;')
     })
     it('serializes a shorthand value from the declarations of its longhands', () => {
 
@@ -3021,57 +3346,8 @@ describe('offset', () => {
 
         // Initial longhand values
         longhands.forEach(longhand => style[longhand] = initial(longhand))
-        expect(style.offset).toBe('auto')
-        expect(style.cssText).toBe('offset: auto;')
-    })
-})
-describe('order', () => {
-
-    const longhands = shorthands.get('order')
-
-    it('parses longhand declarations from a shorthand value', () => {
-
-        const style = createStyleBlock()
-
-        // Initial longhand values
-        style.order = '0 0'
-        expect(style).toHaveLength(longhands.length)
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.order).toBe('0')
-        expect(style.cssText).toBe('order: 0;')
-
-        // Missing longhand values
-        style.order = '0'
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.order).toBe('0')
-        expect(style.cssText).toBe('order: 0;')
-        style.order = '0'
-
-        // Order prefix
-        style.order = 'layout 1'
-        expect(style.layoutOrder).toBe('1')
-        expect(style.readingOrder).toBe('0')
-        expect(style.order).toBe('1')
-        expect(style.cssText).toBe('order: 1;')
-        style.order = 'reading 1'
-        expect(style.layoutOrder).toBe('0')
-        expect(style.readingOrder).toBe('1')
-        expect(style.order).toBe('0 1')
-        expect(style.cssText).toBe('order: 0 1;')
-        style.order = 'layout reading 1'
-        expect(style.layoutOrder).toBe('1')
-        expect(style.readingOrder).toBe('1')
-        expect(style.order).toBe('1 1')
-        expect(style.cssText).toBe('order: 1 1;')
-    })
-    it('serializes a shorthand value from the declarations of its longhands', () => {
-
-        const style = createStyleBlock()
-
-        // Initial longhand values
-        longhands.forEach(longhand => style[longhand] = initial(longhand))
-        expect(style.order).toBe('0')
-        expect(style.cssText).toBe('order: 0;')
+        expect(style.offset).toBe('normal')
+        expect(style.cssText).toBe('offset: normal;')
     })
 })
 describe('outline', () => {
@@ -3083,7 +3359,7 @@ describe('outline', () => {
         const style = createStyleBlock()
 
         // Initial longhand values
-        style.outline = 'medium none invert'
+        style.outline = 'medium none auto'
         expect(style).toHaveLength(longhands.length)
         longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
         expect(style.outline).toBe('medium')
@@ -3094,6 +3370,17 @@ describe('outline', () => {
         longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
         expect(style.outline).toBe('medium')
         expect(style.cssText).toBe('outline: medium;')
+
+        // Lone `auto` sets both `outline-style` and `outline-color`
+        style.outline = 'auto'
+        longhands.forEach(longhand =>
+            expect(style[longhand])
+                .toBe(
+                    longhand === 'outline-width'
+                        ? initial(longhand)
+                        : 'auto'))
+        expect(style.outline).toBe('auto')
+        expect(style.cssText).toBe('outline: auto;')
     })
     it('serializes a shorthand value from the declarations of its longhands', () => {
 
@@ -3125,6 +3412,12 @@ describe('overflow', () => {
         longhands.forEach(longhand => expect(style[longhand]).toBe('hidden'))
         expect(style.overflow).toBe('hidden')
         expect(style.cssText).toBe('overflow: hidden;')
+
+        // Legacy value alias
+        style.overflow = 'overlay'
+        longhands.forEach(longhand => expect(style[longhand]).toBe('auto'))
+        expect(style.overflow).toBe('auto')
+        expect(style.cssText).toBe('overflow: auto;')
     })
     it('serializes a shorthand value from the declarations of its longhands', () => {
 
@@ -3136,7 +3429,7 @@ describe('overflow', () => {
         expect(style.cssText).toBe('overflow: visible;')
     })
 })
-describe('overflow-clip-margin', () => {
+describe('overflow-clip-margin, overflow-clip-margin-block, overflow-clip-margin-inline', () => {
 
     const longhands = shorthands.get('overflow-clip-margin')
 
@@ -3150,15 +3443,26 @@ describe('overflow-clip-margin', () => {
         longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
         expect(style.overflowClipMargin).toBe('0px')
         expect(style.cssText).toBe('overflow-clip-margin: 0px;')
+
+        // Optional <length>
+        style.overflowClipMargin = 'content-box 0px'
+        longhands.forEach(longhand => expect(style[longhand]).toBe('content-box'))
+        expect(style.overflowClipMargin).toBe('content-box')
+        expect(style.cssText).toBe('overflow-clip-margin: content-box;')
     })
     it('serializes a shorthand value from the declarations of its longhands', () => {
 
         const style = createStyleBlock()
 
-        // Initial longhand values
+        // All equal longhand values
         longhands.forEach(longhand => style[longhand] = initial(longhand))
         expect(style.overflowClipMargin).toBe('0px')
         expect(style.cssText).toBe('overflow-clip-margin: 0px;')
+
+        // Not all equal longhand values
+        style.overflowClipMarginTop = '1px'
+        expect(style.marker).toBe('')
+        expect(style.cssText).toBe('overflow-clip-margin-top: 1px; overflow-clip-margin-right: 0px; overflow-clip-margin-bottom: 0px; overflow-clip-margin-left: 0px;')
     })
 })
 describe('overflow-clip-margin-block, overflow-clip-margin-inline', () => {
@@ -3393,6 +3697,37 @@ describe('place-self', () => {
         expect(style.cssText).toBe('place-self: auto;')
     })
 })
+describe('position-try', () => {
+
+    const longhands = shorthands.get('position-try')
+
+    it('parses longhand declarations from a shorthand value', () => {
+
+        const style = createStyleBlock()
+
+        // Initial longhand values
+        style.positionTry = 'normal none'
+        expect(style).toHaveLength(longhands.length)
+        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
+        expect(style.positionTry).toBe('none')
+        expect(style.cssText).toBe('position-try: none;')
+
+        // Missing longhand values
+        style.positionTry = 'none'
+        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
+        expect(style.positionTry).toBe('none')
+        expect(style.cssText).toBe('position-try: none;')
+    })
+    it('serializes a shorthand value from the declarations of its longhands', () => {
+
+        const style = createStyleBlock()
+
+        // Initial longhand values
+        longhands.forEach(longhand => style[longhand] = initial(longhand))
+        expect(style.positionTry).toBe('none')
+        expect(style.cssText).toBe('position-try: none;')
+    })
+})
 describe('scroll-margin', () => {
 
     const longhands = shorthands.get('scroll-margin')
@@ -3551,10 +3886,10 @@ describe('scroll-start', () => {
         expect(style.cssText).toBe('scroll-start: auto;')
 
         // Missing longhand values
-        style.scrollStart = 'start'
-        longhands.forEach(longhand => expect(style[longhand]).toBe('start'))
-        expect(style.scrollStart).toBe('start')
-        expect(style.cssText).toBe('scroll-start: start;')
+        style.scrollStart = 'auto'
+        longhands.forEach(longhand => expect(style[longhand]).toBe('auto'))
+        expect(style.scrollStart).toBe('auto')
+        expect(style.cssText).toBe('scroll-start: auto;')
     })
     it('serializes a shorthand value from the declarations of its longhands', () => {
 
@@ -3567,10 +3902,37 @@ describe('scroll-start', () => {
     })
 })
 describe('scroll-start-target', () => {
-    it.todo('parses longhand declarations from a shorthand value')
-    it.todo('serializes a shorthand value from the declarations of its longhands')
+
+    const longhands = shorthands.get('scroll-start-target')
+
+    it('parses longhand declarations from a shorthand value', () => {
+
+        const style = createStyleBlock()
+
+        // Initial longhand values
+        style.scrollStartTarget = 'none none'
+        expect(style).toHaveLength(longhands.length)
+        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
+        expect(style.scrollStartTarget).toBe('none')
+        expect(style.cssText).toBe('scroll-start-target: none;')
+
+        // Missing longhand values
+        style.scrollStartTarget = 'none'
+        longhands.forEach(longhand => expect(style[longhand]).toBe('none'))
+        expect(style.scrollStartTarget).toBe('none')
+        expect(style.cssText).toBe('scroll-start-target: none;')
+    })
+    it('serializes a shorthand value from the declarations of its longhands', () => {
+
+        const style = createStyleBlock()
+
+        // Initial longhand values
+        longhands.forEach(longhand => style[longhand] = initial(longhand))
+        expect(style.scrollStartTarget).toBe('none')
+        expect(style.cssText).toBe('scroll-start-target: none;')
+    })
 })
-describe('scroll-timeline, view-timeline', () => {
+describe('scroll-timeline', () => {
 
     const longhands = shorthands.get('scroll-timeline')
 
@@ -3639,6 +4001,15 @@ describe('text-align', () => {
         longhands.forEach(longhand => expect(style[longhand]).toBe('justify'))
         expect(style.textAlign).toBe('justify-all')
         expect(style.cssText).toBe('text-align: justify-all;')
+
+        // <string>
+        style.textAlign = '"1"'
+        expect(style.textAlignAll).toBe('"1"')
+        expect(style.textAlignLast).toBe('auto')
+        expect(style.textAlign).toBe('"1"')
+        expect(style.cssText).toBe('text-align: "1";')
+        style.textAlign = '"12"'
+        expect(style.textAlign).toBe('"1"')
     })
     it('serializes a shorthand value from the declarations of its longhands', () => {
 
@@ -3724,27 +4095,9 @@ describe('text-spacing', () => {
 
         const style = createStyleBlock()
 
-        // Initial longhand values
-        style.textSpacing = 'ideograph-alpha ideograph-numeric space-first'
-        expect(style).toHaveLength(longhands.length)
-        expect(style.textAutospace).toBe('ideograph-alpha ideograph-numeric')
-        expect(style.textSpacingTrim).toBe(initial('text-spacing-trim'))
-        expect(style.textSpacing).toBe('normal')
-        expect(style.cssText).toBe('text-spacing: normal;')
-
-        // Missing longhand values
-        style.textSpacing = 'ideograph-alpha ideograph-numeric'
-        expect(style.textAutospace).toBe('ideograph-alpha ideograph-numeric')
-        expect(style.textSpacingTrim).toBe(initial('text-spacing-trim'))
-        expect(style.textSpacing).toBe('normal')
-        expect(style.cssText).toBe('text-spacing: normal;')
-        style.textSpacing = 'space-first'
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.textSpacing).toBe('normal')
-        expect(style.cssText).toBe('text-spacing: normal;')
-
-        // normal
+        // Initial longhand values (not all longhands can be explicitly declared)
         style.textSpacing = 'normal'
+        expect(style).toHaveLength(longhands.length)
         longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
         expect(style.textSpacing).toBe('normal')
         expect(style.cssText).toBe('text-spacing: normal;')
@@ -3762,7 +4115,6 @@ describe('text-spacing', () => {
         expect(style.textSpacingTrim).toBe('auto')
         expect(style.textSpacing).toBe('auto')
         expect(style.cssText).toBe('text-spacing: auto;')
-
     })
     it('serializes a shorthand value from the declarations of its longhands', () => {
 
@@ -3772,6 +4124,37 @@ describe('text-spacing', () => {
         longhands.forEach(longhand => style[longhand] = initial(longhand))
         expect(style.textSpacing).toBe('normal')
         expect(style.cssText).toBe('text-spacing: normal;')
+    })
+})
+describe('text-wrap', () => {
+
+    const longhands = shorthands.get('text-wrap')
+
+    it('parses longhand declarations from a shorthand value', () => {
+
+        const style = createStyleBlock()
+
+        // Initial longhand values
+        style.textWrap = 'wrap auto'
+        expect(style).toHaveLength(longhands.length)
+        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
+        expect(style.textWrap).toBe('wrap')
+        expect(style.cssText).toBe('text-wrap: wrap;')
+
+        // Missing longhand values
+        style.textWrap = 'wrap'
+        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
+        expect(style.textWrap).toBe('wrap')
+        expect(style.cssText).toBe('text-wrap: wrap;')
+    })
+    it('serializes a shorthand value from the declarations of its longhands', () => {
+
+        const style = createStyleBlock()
+
+        // Initial longhand values
+        longhands.forEach(longhand => style[longhand] = initial(longhand))
+        expect(style.textWrap).toBe('wrap')
+        expect(style.cssText).toBe('text-wrap: wrap;')
     })
 })
 describe('transition', () => {
@@ -3814,7 +4197,7 @@ describe('transition', () => {
         // Different lengths of longhand values
         style.transitionProperty = 'none, none'
         expect(style.transition).toBe('')
-        expect(style.cssText).toBe('transition-duration: 0s; transition-timing-function: ease; transition-delay: 0s; transition-property: none, none;')
+        expect(style.cssText).toBe('transition-duration: 0s; transition-timing-function: ease; transition-delay: 0s; transition-behavior: normal; transition-property: none, none;')
     })
 })
 describe('vertical-align', () => {
@@ -3848,6 +4231,49 @@ describe('vertical-align', () => {
         expect(style.cssText).toBe('vertical-align: baseline;')
     })
 })
+describe('view-timeline', () => {
+
+    const longhands = shorthands.get('view-timeline')
+
+    it('parses longhand declarations from a shorthand value', () => {
+
+        const style = createStyleBlock()
+        const timeline = 'none block auto'
+
+        // Initial longhand values
+        style.viewTimeline = timeline
+        expect(style).toHaveLength(longhands.length)
+        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
+        expect(style.viewTimeline).toBe('none')
+        expect(style.cssText).toBe('view-timeline: none;')
+
+        // Missing longhand values
+        style.viewTimeline = 'none'
+        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
+        expect(style.viewTimeline).toBe('none')
+        expect(style.cssText).toBe('view-timeline: none;')
+
+        // Repeated longhand values
+        style.viewTimeline = `${timeline}, ${timeline}`
+        longhands.forEach(longhand => expect(style[longhand]).toBe(`${initial(longhand)}, ${initial(longhand)}`))
+        expect(style.viewTimeline).toBe('none, none')
+        expect(style.cssText).toBe('view-timeline: none, none;')
+    })
+    it('serializes a shorthand value from the declarations of its longhands', () => {
+
+        const style = createStyleBlock()
+
+        // Initial longhand values
+        longhands.forEach(longhand => style[longhand] = initial(longhand))
+        expect(style.viewTimeline).toBe('none')
+        expect(style.cssText).toBe('view-timeline: none;')
+
+        // Different lengths of longhand values
+        style.viewTimelineName = 'none, none'
+        expect(style.viewTimeline).toBe('')
+        expect(style.cssText).toBe('view-timeline-name: none, none; view-timeline-axis: block; view-timeline-inset: auto;')
+    })
+})
 describe('white-space', () => {
 
     const longhands = shorthands.get('white-space')
@@ -3859,18 +4285,18 @@ describe('white-space', () => {
         // Initial longhand values
         style.whiteSpace = 'collapse wrap none'
         expect(style).toHaveLength(longhands.length)
-        longhands.forEach((longhand, index) => expect(style[longhand]).toBe(initial(longhand)))
+        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
         expect(style.whiteSpace).toBe('normal')
         expect(style.cssText).toBe('white-space: normal;')
 
         // Missing longhand values
         style.whiteSpace = 'collapse'
         expect(style).toHaveLength(longhands.length)
-        longhands.forEach((longhand, index) => expect(style[longhand]).toBe(initial(longhand)))
+        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
         expect(style.whiteSpace).toBe('normal')
         expect(style.cssText).toBe('white-space: normal;')
 
-        // normal, nowrap, pre, pre-line, pre-wrap
+        // normal, pre, pre-line, pre-wrap
         whiteSpace.forEach((mapping, keyword) => {
             style.whiteSpace = keyword
             longhands.forEach((longhand, index) => expect(style[longhand]).toBe(mapping[index].value))
@@ -3886,12 +4312,5 @@ describe('white-space', () => {
         longhands.forEach(longhand => style[longhand] = initial(longhand))
         expect(style.whiteSpace).toBe('normal')
         expect(style.cssText).toBe('white-space: normal;')
-
-        // normal, nowrap, pre, pre-line, pre-wrap
-        whiteSpace.forEach((mapping, keyword) => {
-            longhands.forEach((longhand, index) => style[longhand] = mapping[index].value)
-            expect(style.whiteSpace).toBe(keyword)
-            expect(style.cssText).toBe(`white-space: ${keyword};`)
-        })
     })
 })
