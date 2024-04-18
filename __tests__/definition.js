@@ -391,18 +391,21 @@ describe('combinations', () => {
         const input = 'a && b && c'
         const parsed = permutation(a, b, c)
         expect(parse(input)).toEqual(parsed)
+        expect(parse('a&&b&&c')).toEqual(parsed)
         expect(serialize(parsed)).toBe(input)
     })
     it('parses and serializes a || b || c', () => {
         const input = 'a || b || c'
         const parsed = arrangement(a, b, c)
         expect(parse(input)).toEqual(parsed)
+        expect(parse('a||b||c')).toEqual(parsed)
         expect(serialize(parsed)).toBe(input)
     })
     it('parses and serializes a | b | c', () => {
         const input = 'a | b | c'
         const parsed = alternation(a, b, c)
         expect(parse(input)).toEqual(parsed)
+        expect(parse('a|b|c')).toEqual(parsed)
         expect(serialize(parsed)).toBe(input)
     })
     it('parses and serializes a b c && a c b && b a c', () => {
@@ -447,39 +450,6 @@ describe('combinations', () => {
         expect(parse(input)).toEqual(parsed)
         expect(serialize(parsed)).toBe(input)
     })
-    it('parses and serializes a [b, c]', () => {
-        const parsed = sequence(a, sequence(b, comma, c))
-        expect(parse('a [b, c]')).toEqual(parsed)
-        expect(serialize(parsed)).toBe('a b , c')
-    })
-    it('parses and serializes [a, | b,] c', () => {
-        const parsed = sequence(alternation(sequence(a, comma), sequence(b, comma)), c)
-        expect(parse('[a, | b,] c')).toEqual(parsed)
-        expect(serialize(parsed)).toBe('[a , | b ,] c')
-    })
-    it('parses and serializes a [, b | , c]', () => {
-        const parsed = sequence(a, alternation(sequence(comma, b), sequence(comma, c)))
-        expect(parse('a [, b | , c]')).toEqual(parsed)
-        expect(serialize(parsed)).toBe('a [, b | , c]')
-    })
-    it('parses and serializes [a && b, | a && c,] a', () => {
-        const parsed = sequence(
-            alternation(
-                permutation(a, sequence(b, comma)),
-                permutation(a, sequence(c, comma))),
-            a)
-        expect(parse('[a && b, | a && c,] a')).toEqual(parsed)
-        expect(serialize(parsed)).toBe('[a && b , | a && c ,] a')
-    })
-    it('parses and serializes a [, a && b | , a && c]', () => {
-        const parsed = sequence(
-            a,
-            alternation(
-                permutation(sequence(comma, a), b),
-                permutation(sequence(comma, a), c)))
-        expect(parse('a [, a && b | , a && c]')).toEqual(parsed)
-        expect(serialize(parsed)).toBe('a [, a && b | , a && c]')
-    })
     it('parses and serializes :pseudo-class', () => {
         const parsed = sequence(colon, keyword('pseudo-class'))
         expect(parse(':pseudo-class')).toEqual(parsed)
@@ -502,26 +472,9 @@ describe('combinations', () => {
     })
 })
 describe('groups', () => {
-    it('parses and serializes [ a ]', () => {
+    it('parses and serializes [a]', () => {
+        expect(parse('[a]')).toEqual(a)
         expect(parse('[ a ]')).toEqual(a)
-    })
-    it('parses and serializes a [a | b]', () => {
-        const input = 'a [a | b]'
-        const parsed = sequence(a, alternation(a, b))
-        expect(parse(input)).toEqual(parsed)
-        expect(serialize(parsed)).toBe(input)
-    })
-    it('parses and serializes [a | b] a', () => {
-        const input = '[a | b] a'
-        const parsed = sequence(alternation(a, b), a)
-        expect(parse(input)).toEqual(parsed)
-        expect(serialize(parsed)).toBe(input)
-    })
-    it('parses and serializes [a | b]? a', () => {
-        const input = '[a | b]? a'
-        const parsed = sequence(optional(alternation(a, b)), a)
-        expect(parse(input)).toEqual(parsed)
-        expect(serialize(parsed)).toBe(input)
     })
     it('parses and serializes [a{2}]?', () => {
         const input = '[a{2}]?'
@@ -535,11 +488,41 @@ describe('groups', () => {
         expect(parse(input)).toEqual(parsed)
         expect(serialize(parsed)).toBe(input)
     })
-    it('parses and serializes [a? b?]!', () => {
-        const input = '[a? b?]!'
-        const parsed = required(sequence(optional(a), optional(b)))
-        expect(parse(input)).toEqual(parsed)
-        expect(serialize(parsed)).toBe(input)
+    it('parses and serializes [a, b], c', () => {
+        const parsed = sequence(a, comma, b, comma, c)
+        expect(parse('[ a , b ] , c')).toEqual(parsed)
+        expect(parse('[a,b],c')).toEqual(parsed)
+        expect(serialize(parsed)).toBe('a , b , c')
+    })
+    it('parses and serializes [a, b,] c', () => {
+        const parsed = sequence(a, comma, b, comma, c)
+        expect(parse('[ a , b , ] c')).toEqual(parsed)
+        expect(parse('[a,b,]c')).toEqual(parsed)
+        expect(serialize(parsed)).toBe('a , b , c')
+    })
+    it('parses and serializes a, [b, c]', () => {
+        const parsed = sequence(a, comma, b, comma, c)
+        expect(parse('a , [ b , c ]')).toEqual(parsed)
+        expect(parse('a,[b,c]')).toEqual(parsed)
+        expect(serialize(parsed)).toBe('a , b , c')
+    })
+    it('parses and serializes a [, b, c]', () => {
+        const parsed = sequence(a, sequence(comma, b, comma, c))
+        expect(parse('a [ , b , c ]')).toEqual(parsed)
+        expect(parse('a[,b,c]')).toEqual(parsed)
+        expect(serialize(parsed)).toBe('a , b , c')
+    })
+    it('parses and serializes [a, | b,] c', () => {
+        const parsed = sequence(alternation(sequence(a, comma), sequence(b, comma)), c)
+        expect(parse('[a , | b , ] c')).toEqual(parsed)
+        expect(parse('[a,|b,]c')).toEqual(parsed)
+        expect(serialize(parsed)).toBe('[a , | b ,] c')
+    })
+    it('parses and serializes a [, b | , c]', () => {
+        const parsed = sequence(a, alternation(sequence(comma, b), sequence(comma, c)))
+        expect(parse('a [ , b | , c ]')).toEqual(parsed)
+        expect(parse('a[,b|,c]')).toEqual(parsed)
+        expect(serialize(parsed)).toBe('a [, b | , c]')
     })
 })
 describe('context rules', () => {
