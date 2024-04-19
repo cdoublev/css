@@ -23,8 +23,10 @@ const font = require('../lib/values/font.js')
 const forgiving = require('../lib/values/forgiving.js')
 const fs = require('node:fs/promises')
 const logical = require('../lib/properties/logical.js')
+const parseDefinition = require('../lib/parse/definition.js')
 const pseudos = require('../lib/values/pseudos.js')
 const { rules } = require('../lib/rules/definitions.js')
+const { serializeDefinition } = require('../lib/serialize.js')
 const shorthands = require('../lib/properties/shorthands.js')
 const webref = require('./webref.js')
 
@@ -592,6 +594,14 @@ function findRule(type, rules = [], depth = 1) {
         }
     }
     return null
+}
+
+/**
+ * @param {string} value
+ * @returns {string}
+ */
+function serializeValueDefinition(value) {
+    return serializeDefinition(parseDefinition(value))
 }
 
 /**
