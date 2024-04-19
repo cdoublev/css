@@ -637,7 +637,10 @@ describe('CSS grammar', () => {
         expect(rule.cssRules).toBeUndefined()
         expect(rule.style).toBeUndefined()
         expect(rule.fontFamily).toBe('family')
-        rules.forEach(rule => expect(CSSFontFeatureValuesMap.is(rule[[cssPropertyToIDLAttribute(rule.name.slice(1))]])))
+        rules.forEach(definition => {
+            const child = rule[cssPropertyToIDLAttribute(definition.name.slice(1))]
+            expect(CSSFontFeatureValuesMap.is(child)).toBeTruthy()
+        })
     })
     it('ignores invalid contents in @font-palette-values', () => {
 
