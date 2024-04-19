@@ -1,5 +1,4 @@
 
-const { createContext } = require('../lib/utils/context.js')
 const nonTerminal = require('../lib/values/definitions.js')
 const parseDefinition = require('../lib/parse/definition.js')
 const properties = require('../lib/properties/definitions.js')
@@ -93,13 +92,12 @@ function type(name) {
 
 /**
  * @param {string} definition
- * @param {object} [parent]
+ * @param {object} [production]
  */
-function parse(definition, parent = null) {
-    return parseDefinition(definition, context, parent)
+function parse(definition, production = null) {
+    return parseDefinition(definition, production)
 }
 
-const context = createContext()
 const a = keyword('a')
 const b = keyword('b')
 const c = keyword('c')
@@ -121,7 +119,7 @@ describe('symbols', () => {
     })
     it('parses and serializes <number-token>', () => {
         const input = '<number-token>'
-        const parsed = { name: input,  type: 'token' }
+        const parsed = { name: input, type: 'token' }
         expect(parse(input)).toEqual(parsed)
         expect(serialize(parsed)).toBe(input)
     })
@@ -215,7 +213,7 @@ describe('symbols', () => {
         expect(parse('fn( fn( a ) )')).toEqual(parsed)
         expect(serialize(parsed)).toBe('fn(fn(a))')
     })
-    it("parses and serializes (a)", () => {
+    it('parses and serializes (a)', () => {
         const parsed = {
             associatedToken: '(',
             type: 'simple-block',
@@ -371,7 +369,7 @@ describe('multipliers', () => {
     it("parses and serializes ','?'", () => {
         const parsed = optional(comma)
         expect(parse("','?")).toEqual(parsed)
-        expect(serialize(parsed)).toBe(",?")
+        expect(serialize(parsed)).toBe(',?')
     })
     it('parses and serializes <number>?', () => {
         const input = '<number>?'
@@ -527,13 +525,17 @@ describe('groups', () => {
 })
 describe('context rules', () => {
     it("represents <number># produced by <'property'>", () => {
-        const root = { definition: { name: 'property', type: 'property', value: "<'color'>" } }
-        const parent = { definition: parse("<'color'>", undefined, root), parent: root }
-        expect(parse('<number>#', parent)).toEqual(number)
+        // property = <'property'> = <production> = <number>#
+        const root = { definition: { type: 'property' } }
+        const range = { definition: { type: 'property' }, parent: root }
+        const production = { definition: { type: 'non-terminal', value: '<number>#' }, parent: range }
+        expect(parse('<number>#', production)).toEqual(number)
+        // property = <number>#
+        expect(parse('<number>#', root)).toEqual(repeat(number, 1, 20, ','))
     })
     it("represents [['+' | '-'] <calc-product>]* produced by <calc-sum>", () => {
-        const parent = { definition: parse('<calc-sum>') }
-        expect(parse("[['+' | '-'] <calc-product>]*", parent)).toEqual(
+        const production = { definition: parse('<calc-sum>') }
+        expect(parse("[['+' | '-'] <calc-product>]*", production)).toEqual(
             repeat(
                 sequence(
                     alternation(token('+'), token('-')),
@@ -541,8 +543,8 @@ describe('context rules', () => {
                 0,
                 31))
     })
-    it('represents <calc-sum># in min(<calc-sum>#)', () => {
-        const parent = { definition: type('<min()>') }
-        expect(parse('<calc-sum>#', parent)).toEqual(repeat(type('<calc-sum>'), 1, 32, ','))
+    it('represents <calc-sum># produced by <hypoth()>, <max()>, <min()>', () => {
+        const production = { definition: type('<hypoth()>') }
+        expect(parse('<calc-sum>#', production)).toEqual(repeat(type('<calc-sum>'), 1, 32, ','))
     })
 })

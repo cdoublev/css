@@ -2181,7 +2181,7 @@ describe('<clamp()>', () => {
             // none
             ['<number>', 'clamp(0, 1, none)'],
             ['<number>', 'clamp(none, 1, 2)'],
-            ['<number>', 'clamp(none, 1, none)','calc(1)'],
+            ['<number>', 'clamp(none, 1, none)', 'calc(1)'],
         ]
         valid.forEach(([definition, input, expected = input]) => expect(parse(definition, input)).toBe(expected))
     })
@@ -3248,7 +3248,7 @@ describe('<font-format>', () => {
         expect(parse('<font-format>', '"embedded-opentype"', false)).toBeNull()
     })
     it('parses a valid value', () => {
-        expect(parse('<font-format>', 'woff2', false)).toMatchObject( keyword('woff2', ['<font-format>']))
+        expect(parse('<font-format>', 'woff2', false)).toMatchObject(keyword('woff2', ['<font-format>']))
     })
     it('parses and serializes a valid value', () => {
         const valid = [

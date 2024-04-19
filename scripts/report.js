@@ -1,7 +1,6 @@
 
 const arbitrary = require('../lib/parse/arbitrary.js')
 const blocks = require('../lib/values/blocks.js')
-const { createContext } = require('../lib/utils/context.js')
 const descriptors = require('../lib/descriptors/definitions.js')
 const forgiving = require('../lib/values/forgiving.js')
 const nonTerminal = require('../lib/values/definitions.js')
@@ -75,7 +74,7 @@ function parseDefinitionDeep(parent, { name, type, value }, context) {
 
 function tryParseDefinition(name, definition, context) {
     try {
-        const node = parseDefinition(definition, createContext())
+        const node = parseDefinition(definition)
         if (!context) {
             parseDefinitionDeep(name, node, context)
         }
