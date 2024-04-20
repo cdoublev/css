@@ -53,6 +53,8 @@ const replaced = {
         },
     },
     properties: {
+        // https://github.com/w3c/fxtf-drafts/issues/547
+        'background-blend-mode': { value: "<'mix-blend-mode'>#" },
         // https://github.com/w3c/csswg-drafts/issues/7366
         'border-end-end-radius': { initial: '0' },
         'border-end-start-radius': { initial: '0' },
@@ -467,6 +469,9 @@ const excluded = {
             ...Object.keys(forgiving),
             // Legacy webkit function name aliases
             ...[...compatibility.values['*'].values()].flatMap(replacements => replacements.aliases),
+            // TODO: remove `value` of `fit-content()`, `minmax()`
+            '<fit-content()>',
+            '<minmax()>',
         ],
         'CSS': [
             // Obsoleted by CSS Backgrounds
@@ -781,6 +786,11 @@ function addDescriptors(definitions = [], rule, key) {
     const { descriptors: { [rule]: { aliases, mappings } = {} } } = compatibility
     const { descriptors: { '*': skipFromAllSpecs = [], [key]: skip = [] } } = excluded
     definitions.forEach(({ initial = '', name, type, value, values }) => {
+        // https://github.com/w3c/reffy/issues/1390
+        if (type === 'at-rule') {
+            addRules([{ descriptors: [], name, value }], key)
+            return
+        }
         if (aliases?.has(name) || mappings?.has(name) || skip.includes(name) || skipFromAllSpecs.includes(name)) {
             return
         }

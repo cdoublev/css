@@ -7,15 +7,17 @@ JavaScript implementation of CSS.
 
 ```js
 const { cssom, install } = require('@cdoublev/css')
-const myGlobalObject = {} // Array, Object, Number, String, TypeError, are required
 
-install(myGlobalObject)
+/**
+ * install() expects a window-like global object (default: globalThis) with
+ * document, Array, Object, Number, String, TypeError.
+ */
+install(/*myGlobalObject*/)
 
-// Usage:
-const { CSSStyleSheet } = myGlobalObject
-const styleSheet = new CSSStyleSheet()
+// Create a CSSStyleSheet
+const styleSheet = new /*myGlobalObject.*/CSSStyleSheet()
 
-// Or via `webidl2js` wrappers:
+// Create a CSSStyleSheet or CSSStyleDeclaration wrapper
 const stylesheet = cssom.CSSStyleSheet.create(myGlobalObject, undefined, privateProperties)
 const style = cssom.CSSStyleDeclaration.create(myGlobalObject, undefined, privateProperties)
 ```
@@ -26,7 +28,7 @@ The `webidl2js` wrappers are intended to implement:
 - (get) [the `style` attribute of an `HTMLElement`](https://html.spec.whatwg.org/multipage/dom.html#the-style-attribute)
 - *return a live CSS declaration block* from [`Window.getComputedStyle()`](https://drafts.csswg.org/cssom-1/#extensions-to-the-window-interface)
 
-To sum up, they mostly exist to create `CSSStyleSheet` and `CSSStyleDeclaration` (block). Below is a map between the properties as defined in the corresponding specification and `privateProperties`:
+To sum up, they mostly exist to create `CSSStyleSheet` and `CSSStyleDeclaration`. Below are the properties defined in the CSSOM specification and their associated property read in `privateProperties`:
 
 **`CSSStyleSheet`**
 
