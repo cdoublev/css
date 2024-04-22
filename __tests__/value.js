@@ -1177,6 +1177,7 @@ describe('<url>', () => {
             ['url(\n', 'url("")'],
             ['url(\t', 'url("")'],
             ['url(\\', 'url("�")'],
+            ['url(valid.jpg ', 'url("valid.jpg")'],
             // Single whitespace
             ['url( )', 'url("")'],
             ['url(\n)', 'url("")'],
