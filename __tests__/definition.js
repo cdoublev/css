@@ -104,13 +104,13 @@ const c = keyword('c')
 const colon = token(':')
 const comma = token(',')
 const number = type('<number>')
+const plus = token('+')
 
 describe('symbols', () => {
     it("parses and serializes '+' (delimiter)", () => {
         const input = "'+'"
-        const parsed = token('+')
-        expect(parse("'+'")).toEqual(parsed)
-        expect(serialize(parsed)).toBe(input)
+        expect(parse("'+'")).toEqual(plus)
+        expect(serialize(plus)).toBe(input)
     })
     it('parses and serializes a (keyword)', () => {
         const input = 'a'
@@ -366,10 +366,17 @@ describe('multipliers', () => {
         expect(parse(input)).toEqual(parsed)
         expect(serialize(parsed)).toBe(input)
     })
-    it("parses and serializes ','?'", () => {
+    it("parses and serializes ,?", () => {
+        const input = ',?'
         const parsed = optional(comma)
+        expect(parse(input)).toEqual(parsed)
         expect(parse("','?")).toEqual(parsed)
-        expect(serialize(parsed)).toBe(',?')
+        expect(serialize(parsed)).toBe(input)
+    })
+    it("parses and serializes '+'?'", () => {
+        const parsed = optional(plus)
+        expect(parse("'+'?")).toEqual(parsed)
+        expect(serialize(parsed)).toBe("'+'?")
     })
     it('parses and serializes <number>?', () => {
         const input = '<number>?'
@@ -538,7 +545,7 @@ describe('context rules', () => {
         expect(parse("[['+' | '-'] <calc-product>]*", production)).toEqual(
             repeat(
                 sequence(
-                    alternation(token('+'), token('-')),
+                    alternation(plus, token('-')),
                     type('<calc-product>')),
                 0,
                 31))
