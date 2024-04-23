@@ -532,13 +532,16 @@ describe('groups', () => {
 })
 describe('context rules', () => {
     it("represents <number># produced by <'property'>", () => {
-        // property = <'property'> = <production> = <number>#
+        // property = <'property'> = <number>#
         const root = { definition: { type: 'property' } }
         const range = { definition: { type: 'property' }, parent: root }
-        const production = { definition: { type: 'non-terminal', value: '<number>#' }, parent: range }
-        expect(parse('<number>#', production)).toEqual(number)
+        expect(parse('<number>#', range)).toEqual(number)
+        const numbers = repeat(number, 1, 20, ',')
         // property = <number>#
-        expect(parse('<number>#', root)).toEqual(repeat(number, 1, 20, ','))
+        expect(parse('<number>#', root)).toEqual(numbers)
+        // property = <'property'> = <production> = <number>#
+        const production = { definition: { type: 'non-terminal', value: '<number>#' }, parent: range }
+        expect(parse('<number>#', production)).toEqual(numbers)
     })
     it("represents [['+' | '-'] <calc-product>]* produced by <calc-sum>", () => {
         const production = { definition: parse('<calc-sum>') }
