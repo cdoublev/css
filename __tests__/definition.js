@@ -531,17 +531,26 @@ describe('groups', () => {
     })
 })
 describe('context rules', () => {
-    it("represents <number># produced by <'property'>", () => {
-        // property = <'property'> = <number>#
+    it("represents a# produced by <'property'>", () => {
+
         const root = { definition: { type: 'property' } }
+
+        // property = <'property'> = a#
         const range = { definition: { type: 'property' }, parent: root }
+        expect(parse('a#', range)).toEqual(a)
+        expect(parse('[a b]#', range)).toEqual(sequence(a, b))
         expect(parse('<number>#', range)).toEqual(number)
-        const numbers = repeat(number, 1, 20, ',')
-        // property = <number>#
-        expect(parse('<number>#', root)).toEqual(numbers)
-        // property = <'property'> = <production> = <number>#
-        const production = { definition: { type: 'non-terminal', value: '<number>#' }, parent: range }
-        expect(parse('<number>#', production)).toEqual(numbers)
+
+        const as = repeat(a, 1, 20, ',')
+        // property = a#
+        expect(parse('a#', root)).toEqual(as)
+        // property = <'property'> = a# b
+        expect(parse('a# b', range)).toEqual(sequence(as, b))
+        // property = <'property'> = fn(a#)
+        expect(parse('fn(a#)', range)).toEqual({ type: 'function', name: 'fn', value: as })
+        // property = <'property'> = <production> = a#
+        const production = { definition: { type: 'non-terminal' }, parent: range }
+        expect(parse('a#', production)).toEqual(as)
     })
     it("represents [['+' | '-'] <calc-product>]* produced by <calc-sum>", () => {
         const production = { definition: parse('<calc-sum>') }
@@ -554,7 +563,7 @@ describe('context rules', () => {
                 31))
     })
     it('represents <calc-sum># produced by <hypoth()>, <max()>, <min()>', () => {
-        const production = { definition: type('<hypoth()>') }
+        const production = { definition: { name: '<hypoth()>' } }
         expect(parse('<calc-sum>#', production)).toEqual(repeat(type('<calc-sum>'), 1, 32, ','))
     })
 })
