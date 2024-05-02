@@ -630,6 +630,15 @@ describe('backtracking', () => {
         expect(parse('<angle-percentage>? <length-percentage>', 'calc(1%)')).toBe('calc(1%)')
     })
 })
+describe('optional whitespace', () => {
+    it('parses and serializes a value with an omitted whitespace', () => {
+        expect(parse('a a', 'a/**/a')).toBe('a a')
+    })
+    it('parses and serializes a value including leading and trailing whitespaces', () => {
+        expect(parse('fn(a)', '  fn(  a  )  ')).toBe('fn(a)')
+        expect(parse('(a)', '  (  a  )  ')).toBe('(a)')
+    })
+})
 describe('comma-separated values', () => {
     // Comma-elision rules apply
     it('parses and serializes a value matched against a?, a?, a', () => {
@@ -805,15 +814,6 @@ describe('comma-separated values', () => {
 
         expect(parse(definition, 'a, a')).toBe('a, a')
         expect(parse(definition, 'a a, a')).toBe('a a, a')
-    })
-})
-describe('optional whitespace', () => {
-    it('parses and serializes a value with an omitted whitespace', () => {
-        expect(parse('a a', 'a/**/a')).toBe('a a')
-    })
-    it('parses and serializes a value including leading and trailing whitespaces', () => {
-        expect(parse('fn(a)', '  fn(  a  )  ')).toBe('fn(a)')
-        expect(parse('(a)', '  (  a  )  ')).toBe('(a)')
     })
 })
 describe('case-insensitive function names', () => {
