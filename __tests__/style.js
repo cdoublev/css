@@ -90,8 +90,12 @@ describe('CSSStyleDeclaration', () => {
         expect(style.getPropertyValue('--custom')).toBe('red')
         style.cssText = '--custom: green'
         expect(style.getPropertyValue('--custom')).toBe('green')
+        const { length } = style
+        style.setProperty('--custom', '')
+        expect(style).toHaveLength(length)
         style.removeProperty('--custom')
         expect(style.getPropertyValue('--custom')).toBe('')
+        expect(style).toHaveLength(length - 1)
 
         // Longhand property alias
         style.order = '1'
