@@ -574,7 +574,10 @@ function isUpdatedRule(name, value, { prelude, value: block }) {
         definition += ` ${prelude}`
     }
     definition += block ? ` { ${block.name} }` : ' ;'
-    return value.replace('};', '}') !== definition
+    value = value
+        .replace(/[([] | [)\],]/g, match => match.trim())
+        .replace('};', '}')
+    return value !== definition
 }
 
 /**
