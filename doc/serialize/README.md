@@ -12,7 +12,7 @@ Rule preludes are serialized as defined in the procedure to [*serialize a CSS ru
 
 General serialization principles are defined in step 2 of the procedure to [*serialize a CSS value*](https://drafts.csswg.org/cssom-1/#serialize-a-css-value), and can be summarized as follows:
 
-  1. round trip from parsing to serializing must not change the meaning of the value
+  1. round-trip from parsing to serializing must not change the meaning of the value
   2. find the simplest way to re-specify the input in the most backward compatible way
 
 The first principle means that the representation resulting from parsing an input must be the same as the representation resulting from parsing its serialization. It does not apply to shorthands, which must output an empty string when they cannot represent all their longhands.

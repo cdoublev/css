@@ -490,6 +490,7 @@ describe('CSS grammar', () => {
                 @charset "utf-8";
                 @import "./global.css";
                 @namespace svg "http://www.w3.org/2000/svg";
+                @annotation {}
                 @top-left {}
                 0% {}
                 color: red;
@@ -608,6 +609,7 @@ describe('CSS grammar', () => {
                 @charset "utf-8";
                 @import "./global.css";
                 @namespace svg "http://www.w3.org/2000/svg";
+                @annotation {}
                 @color-profile --profile {}
                 @container (1px < width) {}
                 @counter-style counter {}
@@ -899,17 +901,16 @@ describe('CSS grammar', () => {
                 style {}
                 color: red;
                 bottom: invalid;
+                --custom: value;
                 top: {} var(--custom) !important;
 
                 /* valid */
-                --custom: {} var(--custom);
                 TOP: { var(--custom) }; */
             }
         `)
 
         expect(rule.cssRules).toBeUndefined()
-        expect(rule.style).toHaveLength(2)
-        expect(rule.style.getPropertyValue('--custom')).toBe('{} var(--custom)')
+        expect(rule.style).toHaveLength(1)
         expect(rule.style.top).toBe('{var(--custom)}')
     })
     it('ignores invalid contents in @property', () => {
@@ -968,6 +969,7 @@ describe('CSS grammar', () => {
                 @layer reset;
                 @media {}
                 @page {}
+                @position-try --position {}
                 @property --custom { syntax: "*"; inherits: false }
                 @scope {}
                 @starting-style {}
@@ -988,6 +990,7 @@ describe('CSS grammar', () => {
             CSSLayerStatementRule,
             CSSMediaRule,
             CSSPageRule,
+            CSSPositionTryRule,
             CSSPropertyRule,
             CSSScopeRule,
             CSSStartingStyleRule,
@@ -1031,6 +1034,7 @@ describe('CSS grammar', () => {
                 @layer reset;
                 @media {}
                 @page {}
+                @position-try --position {}
                 @property --custom { syntax: "*"; inherits: false }
                 @scope {}
                 @supports (color: green) {}
@@ -1050,6 +1054,7 @@ describe('CSS grammar', () => {
             CSSLayerStatementRule,
             CSSMediaRule,
             CSSPageRule,
+            CSSPositionTryRule,
             CSSPropertyRule,
             CSSScopeRule,
             CSSSupportsRule,
@@ -1091,6 +1096,7 @@ describe('CSS grammar', () => {
                 @layer reset;
                 @media {}
                 @page {}
+                @position-try --position {}
                 @property --custom { syntax: "*"; inherits: false }
                 @scope {}
                 @starting-style {}
@@ -1111,6 +1117,7 @@ describe('CSS grammar', () => {
             CSSLayerStatementRule,
             CSSMediaRule,
             CSSPageRule,
+            CSSPositionTryRule,
             CSSPropertyRule,
             CSSScopeRule,
             CSSStartingStyleRule,
@@ -1283,6 +1290,7 @@ describe('CSS grammar', () => {
                     @keyframes animation {}
                     @layer reset;
                     @page {}
+                    @position-try --position {}
                     @property --custom { syntax: "*"; inherits: false }
                     @top-left {}
                     @view-transition {}
@@ -1348,6 +1356,7 @@ describe('CSS grammar', () => {
                     @keyframes animation {}
                     @layer reset;
                     @page {}
+                    @position-try --position {}
                     @property --custom { syntax: "*"; inherits: false }
                     @top-left {}
                     @view-transition {}
@@ -1410,6 +1419,7 @@ describe('CSS grammar', () => {
                 @keyframes animation {}
                 @layer reset;
                 @page {}
+                @position-try --position {}
                 @property --custom { syntax: "*"; inherits: false }
                 @top-left {}
                 @view-transition {}
@@ -1462,7 +1472,7 @@ describe('CSS grammar', () => {
             [''],
             ['initial'],
             ['initial', '*'],
-            ['var(--other-custom)'],
+            ['var(--custom)'],
             ['1'],
             // Computationally dependent
             ['1em'],

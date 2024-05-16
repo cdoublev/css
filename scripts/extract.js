@@ -35,15 +35,22 @@ const logicalGroups = Object.keys(logical)
 const reportErrors = process.env.NODE_ENV === 'development'
 
 /* eslint-disable sort-keys */
-const initialTypes = {
-    // Missing definitions
-    '<x>': '<number>',
-    '<y>': '<number>',
-    '<whole-value>': '<declaration-value>?',
-    // https://github.com/w3c/csswg-drafts/issues/9410
-    '<generic-family-name>': font.family.generic.join(' | '),
-    // https://github.com/w3c/csswg-drafts/issues/8835
-    '<urange>': "u '+' <ident-token> '?'* | u <dimension-token> '?'* | u <number-token> '?'* | u <number-token> <dimension-token> | u <number-token> <number-token> | u '+' '?'+",
+const initial = {
+    descriptors: {},
+    properties: {
+        // https://github.com/w3c/reffy/issues/1567
+        '--*': { initial: null, value: '<declaration-value>?' },
+    },
+    types: {
+        // Missing definitions
+        '<x>': '<number>',
+        '<y>': '<number>',
+        '<whole-value>': '<declaration-value>?',
+        // https://github.com/w3c/csswg-drafts/issues/9410
+        '<generic-family-name>': font.family.generic.join(' | '),
+        // https://github.com/w3c/csswg-drafts/issues/8835
+        '<urange>': "u '+' <ident-token> '?'* | u <dimension-token> '?'* | u <number-token> '?'* | u <number-token> <dimension-token> | u <number-token> <number-token> | u '+' '?'+",
+    },
 }
 const replaced = {
     descriptors: {
@@ -524,9 +531,9 @@ const excluded = {
 }
 /* eslint-enable sort-keys */
 
-const descriptors = []
-const properties = []
-const types = [...Object.entries(initialTypes), ...Object.entries(replaced.types)]
+const descriptors = [...Object.keys(initial.descriptors).map(rule => [rule, Object.entries(initial.descriptors[rule])])]
+const properties = [...Object.entries(initial.properties)]
+const types = [...Object.entries(initial.types), ...Object.entries(replaced.types)]
 
 /**
  * @param {object[]} selectors
@@ -642,7 +649,7 @@ function serializeProperties(properties) {
                 if (group) {
                     string += `${tab(2)}group: ${addQuotes(group)},\n`
                 }
-                string += `${tab(2)}initial: ${addQuotes(initial)},\n`
+                string += `${tab(2)}initial: ${initial ? addQuotes(initial) : null},\n`
             }
             if (key === 'CSS') {
                 value = value.replace(/ \| inherit$/, '')
@@ -710,7 +717,7 @@ function addTypes(definitions = [], key) {
                 addTypes(values, key)
                 return
             }
-            if (initialTypes[name]) {
+            if (initial.types[name]) {
                 if (value && reportErrors) {
                     console.log(`[${key}] ${name} is now extracted`)
                 }
@@ -751,6 +758,12 @@ function addProperties(definitions = [], key) {
         if (aliases.has(name) || mappings.has(name) || skip.includes(name) || skipFromAllSpecs.includes(name)) {
             return
         }
+        if (initial.properties[name]) {
+            if (reportErrors) {
+                console.log(`[${key}] ${name} (property) is now extracted`)
+            }
+            return
+        }
         const replacement = replaced.properties[name]
         if (replacement) {
             definition = { ...definition, ...replacement }
@@ -787,6 +800,7 @@ function addProperties(definitions = [], key) {
  */
 function addDescriptors(definitions = [], rule, key) {
     const { descriptors: { [rule]: { aliases, mappings } = {} } } = compatibility
+    const { descriptors: { [rule]: initialDescriptors } } = initial
     const { descriptors: { '*': skipFromAllSpecs = [], [key]: skip = [] } } = excluded
     definitions.forEach(({ initial = '', name, type, value, values }) => {
         // https://github.com/w3c/reffy/issues/1390
@@ -795,6 +809,12 @@ function addDescriptors(definitions = [], rule, key) {
             return
         }
         if (aliases?.has(name) || mappings?.has(name) || skip.includes(name) || skipFromAllSpecs.includes(name)) {
+            return
+        }
+        if (initialDescriptors?.[name]) {
+            if (reportErrors) {
+                console.log(`[${key}] ${name} (descriptor for ${rule}) is now extracted`)
+            }
             return
         }
         const replacement = replaced.descriptors[rule]?.[name]

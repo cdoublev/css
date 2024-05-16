@@ -151,8 +151,8 @@ The initial context must be initialized with the existing CSSOM tree, which is a
 A CSS rule definition must define:
 
   - the CSS rules allowed or excluded in its block value
-  - the property/descriptor names that can or cannot be declared in its block value
-  - how property/descriptor declarations participate to the cascade
+  - the properties/descriptors that can or cannot be declared in its block value
+  - whether declarations cascade
 
 Reading the semantic context may require traversing the tree from bottom to top. Such requirement is related to the well-known time and space trade off: storing a reference of a parent node in child nodes takes space but traversing a linear tree takes time. Other trade-offs exist between a static path, coupled with the grammar and exposed to the slightest change, and a functional search, which is slightly more complex to run.
 

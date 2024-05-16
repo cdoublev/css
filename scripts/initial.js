@@ -46,10 +46,10 @@ function serializeListArguments(separator, types, tabs) {
 
 /**
  * @param {object|object[]} component
- * @param {number} [depth]
+ * @param {number} depth
  * @returns {string}
  */
-function serializeComponentValue(component, depth = 3) {
+function serializeComponentValue(component, depth) {
     const tabs = tab(depth + 1)
     if (Array.isArray(component)) {
         const { types, separator } = component
@@ -82,18 +82,22 @@ function serializeComponentValue(component, depth = 3) {
 }
 
 /**
- * @param {string} property
+ * @param {string} name
  * @param {string} value
+ * @param {object} context
  * @returns {string[]}
  */
-function getInitialPropertyValue(name, value) {
-    value = parseCSSDeclaration({ name, value }, styleRuleContext)
+function getInitialValue(name, value, context, depth) {
     if (value === null) {
-        console.error(`Parse error: cannot parse initial value of property "${name}"`)
+        return [null, '']
+    }
+    value = parseCSSDeclaration({ name, value }, context)
+    if (value === null) {
+        console.error(`Parse error: cannot parse initial value of "${name}"`)
         return ''
     }
     ({ value } = value)
-    return [serializeCSSValue({ name, value }), serializeComponentValue(value)]
+    return [serializeComponentValue(value, depth), serializeCSSValue({ name, value })]
 }
 
 /**
@@ -110,8 +114,8 @@ function serializePropertyDefinitions(properties) {
             if (group) {
                 string += `${tab(2)}group: ${addQuotes(group)},\n`
             }
-            if (initial) {
-                const [serialized, parsed] = getInitialPropertyValue(property, initial)
+            if (initial !== undefined) {
+                const [parsed, serialized] = getInitialValue(property, initial, styleRuleContext, 3)
                 string += `${tab(2)}initial: {\n`
                 string += `${tab(3)}parsed: ${parsed},\n`
                 string += `${tab(3)}serialized: ${addQuotes(serialized)},\n`
@@ -125,35 +129,18 @@ function serializePropertyDefinitions(properties) {
 }
 
 /**
- * @param {string} descriptor
- * @param {string} value
- * @param {string} rule
- * @returns {string[]}
- */
-function getInitialDescriptorValue(name, value, rule) {
-    const declaration = { name, value }
-    const context = createContext({ parentStyleSheet: {}, types: [rule] })
-    value = parseCSSDeclaration(declaration, context)
-    if (value === null) {
-        console.error(`Parse error: cannot parse initial value of descriptor "${name}" for the rule "${rule}"`)
-        return ''
-    }
-    ({ value } = value)
-    return [serializeCSSValue({ name, value }), serializeComponentValue(value, 4)]
-}
-
-/**
  * @param {object} descriptors
  * @returns {string}
  */
 function serializeDescriptorDefinitions(descriptors) {
     return Object.entries(descriptors).reduce(
         (string, [rule, definitions]) => {
+            const context = createContext({ parentStyleSheet: {}, types: [rule] })
             string += `${tab(1)}${addQuotes(rule)}: {\n`
             Object.entries(definitions).forEach(([descriptor, { initial, type, value }]) => {
                 string += `${tab(2)}${addQuotes(descriptor)}: {\n`
-                if (initial) {
-                    const [serialized, parsed] = getInitialDescriptorValue(descriptor, initial, rule)
+                if (initial !== undefined) {
+                    const [parsed, serialized] = getInitialValue(descriptor, initial, context, 4)
                     string += `${tab(3)}initial: {\n`
                     string += `${tab(4)}parsed: ${parsed},\n`
                     string += `${tab(4)}serialized: ${addQuotes(serialized)},\n`

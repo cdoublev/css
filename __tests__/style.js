@@ -17,7 +17,6 @@ const compatibility = require('../lib/compatibility.js')
 const { cssPropertyToIDLAttribute } = require('../lib/utils/string.js')
 const display = require('../lib/values/display.js')
 const properties = require('../lib/properties/definitions.js')
-const propertyNames = require('../lib/properties/names.js')
 const shorthands = require('../lib/properties/shorthands.js')
 const substitutions = require('../lib/values/substitutions.js')
 const whiteSpace = require('../lib/values/white-space.js')
@@ -53,9 +52,15 @@ describe('CSSStyleDeclaration', () => {
 
         const style = createStyleBlock()
         const prototype = Object.getPrototypeOf(style)
+        const { properties: { aliases, mappings } } = compatibility
+        const names = [...aliases.keys(), ...mappings.keys(), ...Object.keys(properties)]
 
         // Camel/kebab/pascal cased attributes
-        propertyNames.forEach(property => {
+        names.forEach(property => {
+
+            if (property === '--*') {
+                return
+            }
 
             const prefixed = property.startsWith('-webkit-')
             const attribute = cssPropertyToIDLAttribute(property, prefixed)
@@ -305,11 +310,14 @@ describe('CSSStyleDeclaration', () => {
         expect(style.cssText).toBe('border-top-color: green; border-block-start-color: green;')
     })
 })
-
 describe('CSSFontFaceDescriptors', () => {
     it('does not store an invalid declaration', () => {
 
         const style = CSSFontFaceDescriptors.create(globalThis, undefined, { parentRule: fontFaceRule })
+
+        // Custom property
+        style.setProperty('--custom', 'red')
+        expect(style.getPropertyValue('--custom')).toBe('')
 
         // Invalid name
         style.setProperty('font-size-adjust', 'none')
@@ -317,28 +325,48 @@ describe('CSSFontFaceDescriptors', () => {
         expect(style.fontSizeAdjust).toBeUndefined()
 
         // Priority
-        style.setProperty('font-weight', '400', 'important')
+        style.setProperty('font-weight', '1', 'important')
         expect(style.fontWeight).toBe('')
 
-        // CSS-wide keyword
-        style.fontWeight = 'initial'
-        expect(style.fontWeight).toBe('')
-
-        // Custom variable
-        style.fontWeight = 'var(--custom)'
-        expect(style.fontWeight).toBe('')
+        const invalid = [
+            // Substitution accepted in element-dependent context
+            ['attr(name)'],
+            ['env(name, attr(name))'],
+            ['mix(50%; 1; 1)', 'mix(50%; 1%; 1%)'],
+            ['progress(1 from 1 to 1)', 'progress(1% from 1% to 1%)'],
+            ['random-item(--key; 1)', 'random-item(--key; 1%)'],
+            ['sibling-count()', 'calc(1% * sibling-count())'],
+            ['toggle(1; 1)', 'toggle(1%; 1%)'],
+            // Substitution accepted in cascade-dependent context
+            ['var(--custom)'],
+            ['initial'],
+        ]
+        invalid.forEach(([fontWeight, sizeAdjust = fontWeight]) => {
+            style.fontWeight = fontWeight
+            style.sizeAdjust = sizeAdjust
+            expect(style.fontWeight).toBe('')
+            expect(style.sizeAdjust).toBe('')
+        })
     })
     it('stores a valid declaration', () => {
 
         const style = CSSFontFaceDescriptors.create(globalThis, undefined, { parentRule: fontFaceRule })
 
-        // Standalone descriptor
-        style.fontDisplay = 'auto'
-        expect(style.fontDisplay).toBe('auto')
+        // Alias
+        expect(style.fontStretch).toBe(style.fontWidth)
+        style.fontStretch = 'condensed'
+        expect(style.fontStretch).toBe('condensed')
+        expect(style.fontWidth).toBe('condensed')
 
-        // Descriptor bearing the same name as a property
-        style.fontWeight = '100 200'
-        expect(style.fontWeight).toBe('100 200')
+        // Substitution accepted in any context
+        style.fontWeight = 'env(name)'
+        style.sizeAdjust = 'env(name)'
+        expect(style.fontWeight).toBe('env(name)')
+        expect(style.sizeAdjust).toBe('env(name)')
+        style.fontWeight = 'first-valid(1)'
+        style.sizeAdjust = 'first-valid(1%)'
+        expect(style.fontWeight).toBe('first-valid(1)')
+        expect(style.sizeAdjust).toBe('first-valid(1%)')
 
         // Specific serialization rules
         style.ascentOverride = '1% 1%'
@@ -363,12 +391,6 @@ describe('CSSFontFaceDescriptors', () => {
         expect(style.subscriptSizeOverride).toBe('1%')
         style.subscriptPositionOverride = '1% 1%'
         expect(style.subscriptPositionOverride).toBe('1%')
-
-        // Descriptor alias
-        expect(style.fontStretch).toBe(style.fontWidth)
-        style.fontStretch = 'condensed'
-        expect(style.fontStretch).toBe('condensed')
-        expect(style.fontWidth).toBe('condensed')
     })
 })
 describe('CSSKeyframeProperties', () => {
@@ -382,24 +404,40 @@ describe('CSSKeyframeProperties', () => {
         expect(style.animationDelay).toBeUndefined()
 
         // Priority
-        style.setProperty('color', 'red', 'important')
-        expect(style.color).toBe('')
+        style.setProperty('font-weight', '1', 'important')
+        expect(style.fontWeight).toBe('')
     })
     it('stores a valid declaration', () => {
 
         const style = CSSKeyframeProperties.create(globalThis, undefined, { parentRule: keyframeRule })
 
-        // Specific property value
-        style.color = 'green'
-        expect(style.color).toBe('green')
+        // Custom property
+        style.setProperty('--custom', 'green')
+        expect(style.getPropertyValue('--custom')).toBe('green')
 
-        // CSS-wide keyword
-        style.color = 'initial'
-        expect(style.color).toBe('initial')
+        // Substitution accepted in any context
+        style.fontWeight = 'env(name)'
+        expect(style.fontWeight).toBe('env(name)')
+        style.fontWeight = 'first-valid(1)'
+        expect(style.fontWeight).toBe('first-valid(1)')
 
-        // Custom variable
-        style.color = 'var(--red)'
-        expect(style.color).toBe('var(--red)')
+        // Substitution accepted in element-dependent context
+        style.fontWeight = 'attr(name)'
+        expect(style.fontWeight).toBe('attr(name)')
+        style.fontWeight = 'mix(50%; 1; 1)'
+        expect(style.fontWeight).toBe('mix(50%; 1; 1)')
+        style.fontWeight = 'random-item(--key; 1)'
+        expect(style.fontWeight).toBe('random-item(--key; 1)')
+        style.fontWeight = 'sibling-count()'
+        expect(style.fontWeight).toBe('sibling-count()')
+        style.fontWeight = 'toggle(1; 1)'
+        expect(style.fontWeight).toBe('toggle(1; 1)')
+
+        // Substitution accepted in cascade-dependent context
+        style.fontWeight = 'var(--custom)'
+        expect(style.fontWeight).toBe('var(--custom)')
+        style.fontWeight = 'initial'
+        expect(style.fontWeight).toBe('initial')
     })
 })
 describe('CSSMarginDescriptors', () => {
@@ -411,27 +449,46 @@ describe('CSSMarginDescriptors', () => {
         style.setProperty('top', '1px')
         expect(style.getPropertyValue('top')).toBe('')
         expect(style.top).toBeUndefined()
+
+        const invalid = [
+            // Substitution accepted in element-dependent context
+            'attr(name)',
+            'env(attr(name))',
+            'mix(50%; 1; 1)',
+            'progress(1 from 1 to 1)',
+            'random-item(--key; 1)',
+            'sibling-count()',
+            'toggle(1; 1)',
+        ]
+        invalid.forEach(input => {
+            style.fontWeight = input
+            expect(style.fontWeight).toBe('')
+        })
     })
     it('stores a valid declaration', () => {
 
         const style = CSSMarginDescriptors.create(globalThis, undefined, { parentRule: marginRule })
 
-        // Descriptor bearing the same name and value definition as a property
-        style.color = 'green'
-        expect(style.color).toBe('green')
+        // Custom property
+        style.setProperty('--custom', 'green')
+        expect(style.getPropertyValue('--custom')).toBe('green')
 
         // Priority
-        style.setProperty('color', 'orange', 'important')
-        expect(style.color).toBe('orange')
-        expect(style.getPropertyPriority('color')).toBe('important')
+        style.setProperty('font-weight', '1', 'important')
+        expect(style.fontWeight).toBe('1')
+        expect(style.getPropertyPriority('font-weight')).toBe('important')
 
-        // CSS-wide keyword
-        style.color = 'initial'
-        expect(style.color).toBe('initial')
+        // Substitution accepted in any context
+        style.fontWeight = 'env(name)'
+        expect(style.fontWeight).toBe('env(name)')
+        style.fontWeight = 'first-valid(1)'
+        expect(style.fontWeight).toBe('first-valid(1)')
 
-        // Custom variable
-        style.color = 'var(--red)'
-        expect(style.color).toBe('var(--red)')
+        // Substitution accepted in cascade-dependent context
+        style.fontWeight = 'var(--custom)'
+        expect(style.fontWeight).toBe('var(--custom)')
+        style.fontWeight = 'initial'
+        expect(style.fontWeight).toBe('initial')
     })
 })
 describe('CSSPageDescriptors', () => {
@@ -444,38 +501,54 @@ describe('CSSPageDescriptors', () => {
         expect(style.getPropertyValue('top')).toBe('')
         expect(style.top).toBeUndefined()
 
-        // CSS-wide keyword
-        style.size = 'initial'
-        expect(style.size).toBe('')
-
-        // Custom variable
-        style.size = 'var(--custom)'
-        expect(style.size).toBe('')
+        const invalid = [
+            // Substitution accepted in element-dependent context
+            ['attr(name)', 'attr(name)'],
+            ['mix(50%; 1; 1)', 'mix(50%; 1px; 1px)'],
+            ['progress(1 from 1 to 1)', 'progress(1px from 1px to 1px)'],
+            ['random-item(--key; 1)', 'random-item(--key; 1px)'],
+            ['sibling-count()', 'calc(1px * sibling-count())'],
+            ['toggle(1; 1)', 'toggle(1px; 1px)'],
+        ]
+        invalid.forEach(([fontWeight, size]) => {
+            style.fontWeight = fontWeight
+            style.size = size
+            expect(style.fontWeight).toBe('')
+            expect(style.size).toBe('')
+        })
     })
     it('stores a valid declaration', () => {
 
         const style = CSSPageDescriptors.create(globalThis, undefined, { parentRule: pageRule })
 
-        // Standalone descriptor
-        style.setProperty('size', '1px')
-        expect(style.size).toBe('1px')
-
-        // Descriptor bearing the same name and value definition as a property
-        style.color = 'green'
-        expect(style.color).toBe('green')
+        // Custom property
+        style.setProperty('--custom', 'green')
+        expect(style.getPropertyValue('--custom')).toBe('green')
 
         // Priority
         style.setProperty('size', '1px', 'important')
         expect(style.size).toBe('1px')
         expect(style.getPropertyPriority('size')).toBe('important')
 
-        // CSS-wide keyword
-        style.color = 'initial'
-        expect(style.color).toBe('initial')
+        // Substitution accepted in any context
+        style.fontWeight = 'env(name)'
+        style.size = 'env(name)'
+        expect(style.fontWeight).toBe('env(name)')
+        expect(style.size).toBe('env(name)')
+        style.fontWeight = 'first-valid(1)'
+        style.size = 'first-valid(1px)'
+        expect(style.fontWeight).toBe('first-valid(1)')
+        expect(style.size).toBe('first-valid(1px)')
 
-        // Custom variable
-        style.color = 'var(--red)'
-        expect(style.color).toBe('var(--red)')
+        // Substitution accepted in cascade-dependent context
+        style.fontWeight = 'var(--custom)'
+        style.size = 'var(--custom)'
+        expect(style.fontWeight).toBe('var(--custom)')
+        expect(style.size).toBe('var(--custom)')
+        style.fontWeight = 'initial'
+        style.size = 'initial'
+        expect(style.fontWeight).toBe('initial')
+        expect(style.size).toBe('initial')
 
         // Specific serialization rules
         style.size = '1px 1px'
@@ -487,10 +560,14 @@ describe('CSSPositionTryDescriptors', () => {
 
         const style = CSSPositionTryDescriptors.create(globalThis, undefined, { parentRule: positionTryRule })
 
+        // Custom property
+        style.setProperty('--custom', 'red')
+        expect(style.getPropertyValue('--custom')).toBe('')
+
         // Invalid name
-        style.setProperty('color', 'red')
-        expect(style.getPropertyValue('color')).toBe('')
-        expect(style.color).toBeUndefined()
+        style.setProperty('font-weight', '1')
+        expect(style.getPropertyValue('font-weight')).toBe('')
+        expect(style.fontWeight).toBeUndefined()
 
         // Priority
         style.setProperty('top', '1px', 'important')
@@ -500,24 +577,36 @@ describe('CSSPositionTryDescriptors', () => {
 
         const style = CSSPositionTryDescriptors.create(globalThis, undefined, { parentRule: positionTryRule })
 
-        // Specific property value
-        style.top = '1px'
-        expect(style.top).toBe('1px')
+        // Substitution accepted in any context
+        style.top = 'env(name)'
+        expect(style.top).toBe('env(name)')
+        style.top = 'first-valid(1px)'
+        expect(style.top).toBe('first-valid(1px)')
 
-        // CSS-wide keyword
-        style.top = 'initial'
-        expect(style.top).toBe('initial')
+        // Substitution accepted in element-dependent context
+        style.top = 'attr(name)'
+        expect(style.top).toBe('attr(name)')
+        style.top = 'mix(50%; 1px; 1px)'
+        expect(style.top).toBe('mix(50%; 1px; 1px)')
+        style.top = 'random-item(--key; 1px)'
+        expect(style.top).toBe('random-item(--key; 1px)')
+        style.top = 'calc(1px * sibling-count())'
+        expect(style.top).toBe('calc(1px * sibling-count())')
+        style.top = 'toggle(1px; 1px)'
+        expect(style.top).toBe('toggle(1px; 1px)')
 
-        // Custom variable
+        // Substitution accepted in cascade-dependent context
         style.top = 'var(--custom)'
         expect(style.top).toBe('var(--custom)')
+        style.top = 'initial'
+        expect(style.top).toBe('initial')
     })
 })
 
 describe('CSS-wide keyword', () => {
     it('parses and serializes a valid value', () => {
         const style = createStyleBlock()
-        substitutions.property.keywords.forEach(input => {
+        substitutions.keywords.forEach(input => {
             style.opacity = input.toUpperCase()
             expect(style.opacity).toBe(input)
         })
@@ -553,7 +642,7 @@ describe('arbitrary substitution', () => {
             ['var(--custom', 'var(--custom)'],
             ['var(--custom, var(--fallback))'],
             ['fn(var(--custom))'],
-            ['  /**/  var(  --PROPerty, /**/ 1e0 /**/)  ', 'var(--PROPerty, 1)'],
+            ['  /**/  var(  --CUSTom, /**/ 1e0 /**/)  ', 'var(--CUSTom, 1)'],
             ['var(--custom,)', 'var(--custom,)'],
             ['var(--custom, )', 'var(--custom,)'],
         ]
@@ -569,12 +658,16 @@ describe('<whole-value>', () => {
         const invalid = [
             // Not the <whole-value>
             ['first-valid(0) 1', '--custom'],
+            ['first-valid(first-valid(0) 1)', '--custom'],
             ['mix(50%; 0; 1) 2', '--custom'],
             ['mix(50%; 0; first-valid(1) 2)', '--custom'],
             ['toggle(0; 1) 2', '--custom'],
             ['toggle(0; first-valid(1) 2)', '--custom'],
             // Invalid value for the property
+            ['first-valid(invalid)', 'color'],
+            ['first-valid(first-valid(invalid))', 'color'],
             ['mix(50%; red; invalid)', 'color'],
+            ['mix(50%; red; mix(50%; invalid; red))', 'color'],
             ['toggle(red; invalid)', 'color'],
             // Non-animatable property
             ['mix(50%; 1s; 2s)', 'animation-duration'],
@@ -589,13 +682,12 @@ describe('<whole-value>', () => {
     it('parses and serializes a valid value', () => {
         const style = createStyleBlock()
         const valid = [
+            // Serialize the list of tokens
             ['  /**/  first-valid(  0; /**/ 1e0 /**/)  ', 'first-valid(0; 1)'],
             ['  /**/  mix(  50%; 0; /**/ 1e0 /**/)  ', 'mix(50%; 0; 1)'],
             ['  /**/  toggle(0; /**/ 1e0 /**/)  ', 'toggle(0; 1)'],
             ['first-valid(0; first-valid(1; 2))'],
             ['mix(50%; 0; mix(50%; 1; 2))'],
-            // Invalid only at computed value time
-            ['first-valid(invalid)'],
             // Omitted value
             ['toggle(;)', 'toggle(;)', '--custom'],
         ]
@@ -616,9 +708,9 @@ describe('--*', () => {
             ['  /**/  ', ''],
             [''],
             // Substitutions
-            ['initial'],
-            ['mix(50;/**/; 1e0 )  ', 'mix(50;/**/; 1e0 )'],
             ['var(  --PROPerty, /**/ 1e0 /**/  )  ', 'var(  --PROPerty, /**/ 1e0 /**/  )'],
+            ['mix(50;/**/; 1e0 )  ', 'mix(50;/**/; 1e0 )'],
+            ['initial'],
         ]
         valid.forEach(([input, expected = input]) => {
             style.cssText = `--custom: ${input}`
@@ -1477,15 +1569,15 @@ describe('background', () => {
         expect(style.background).toBe('initial')
         expect(style.cssText).toBe('background: initial;')
 
-        // Pending substitution value
+        // Pending-substitution value
         style.background = 'var(--custom)'
         longhands.forEach(longhand => expect(style[longhand]).toBe(''))
         expect(style.background).toBe('var(--custom)')
         expect(style.cssText).toBe('background: var(--custom);')
-        style.background = 'first-valid(value)'
+        style.background = 'first-valid(none)'
         longhands.forEach(longhand => expect(style[longhand]).toBe(''))
-        expect(style.background).toBe('first-valid(value)')
-        expect(style.cssText).toBe('background: first-valid(value);')
+        expect(style.background).toBe('first-valid(none)')
+        expect(style.cssText).toBe('background: first-valid(none);')
 
         // Repeated longhand values
         style.background = `${background.replace(' transparent', '')}, ${background}`
@@ -1553,7 +1645,7 @@ describe('background', () => {
         expect(style.background).toBe('')
         expect(style.cssText).toBe('background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial; background-color: initial; background-blend-mode: initial;')
 
-        // Pending substitution value
+        // Pending-substitution value
         longhands.forEach(longhand => style[longhand] = 'var(--custom)')
         expect(style.background).toBe('')
         expect(style.cssText).toBe('background-position: var(--custom); background-size: var(--custom); background-repeat: var(--custom); background-attachment: var(--custom); background-origin: var(--custom); background-clip: var(--custom); background-color: var(--custom); background-blend-mode: var(--custom); background-image: var(--custom);')
@@ -1561,6 +1653,11 @@ describe('background', () => {
         style.backgroundImage = 'var(--custom)'
         expect(style.background).toBe('')
         expect(style.cssText).toBe('background-position: ; background-size: ; background-repeat: ; background-attachment: ; background-origin: ; background-clip: ; background-color: ; background-blend-mode: ; background-image: var(--custom);')
+        longhands.forEach(longhand => style[longhand] = 'first-valid(initial)')
+        expect(style.background).toBe('')
+        expect(style.cssText).toBe('background-position: first-valid(initial); background-size: first-valid(initial); background-repeat: first-valid(initial); background-attachment: first-valid(initial); background-origin: first-valid(initial); background-clip: first-valid(initial); background-color: first-valid(initial); background-blend-mode: first-valid(initial); background-image: first-valid(initial);')
+        style.background = 'first-valid(initial)'
+        style.backgroundImage = 'first-valid(initial)'
     })
 })
 describe('block-step', () => {
