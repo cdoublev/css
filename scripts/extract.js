@@ -638,7 +638,7 @@ function serializeProperties(properties) {
     return properties.reduce(
         (string, [property, { animatable, animationType, initial, logicalPropertyGroup, value }, key]) => {
             string += `${tab(1)}${addQuotes(property)}: {\n`
-            if (animatable === 'no' || animationType === 'not animatable') {
+            if (animationType === 'not animatable') {
                 string += `${tab(2)}animate: false,\n`
             }
             if (!shorthands.has(property)) {
