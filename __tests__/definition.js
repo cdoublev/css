@@ -107,104 +107,104 @@ const number = type('<number>')
 const plus = token('+')
 
 describe('symbols', () => {
-    it("parses and serializes '+' (delimiter)", () => {
+    test('+ (delimiter)', () => {
         const input = "'+'"
         expect(parse("'+'")).toEqual(plus)
         expect(serialize(plus)).toBe(input)
     })
-    it('parses and serializes a (keyword)', () => {
+    test('a (keyword)', () => {
         const input = 'a'
         expect(parse(input)).toEqual(a)
         expect(serialize(a)).toBe(input)
     })
-    it('parses and serializes <number-token>', () => {
+    test('<number-token>', () => {
         const input = '<number-token>'
         const parsed = { name: input, type: 'token' }
         expect(parse(input)).toEqual(parsed)
         expect(serialize(parsed)).toBe(input)
     })
-    it('parses and serializes <number>', () => {
+    test('<number>', () => {
         const input = '<number>'
         expect(parse(input)).toEqual(number)
         expect(serialize(number)).toBe(input)
     })
-    it('parses and serializes <number [-2,-1]>', () => {
+    test('<number [-2,-1]>', () => {
         const input = '<number [-2,-1]>'
         const parsed = { ...type('<number>'), max: -1, min: -2 }
         expect(parse('<number [-2,-1]>')).toEqual(parsed)
         expect(serialize(parsed)).toBe(input)
     })
-    it('parses and serializes <number [0,∞]>', () => {
+    test('<number [0,∞]>', () => {
         const input = '<number [0,∞]>'
         const parsed = { ...type('<number>'), max: Infinity, min: 0 }
         expect(parse(input)).toEqual(parsed)
         expect(serialize(parsed)).toBe(input)
     })
-    it('parses and serializes <number [-∞,1]>', () => {
+    test('<number [-∞,1]>', () => {
         const input = '<number [-∞,1]>'
         const parsed = { ...type('<number>'), max: 1, min: -Infinity }
         expect(parse(input)).toEqual(parsed)
         expect(serialize(parsed)).toBe(input)
     })
-    it('parses and serializes <angle [0,∞]>', () => {
+    test('<angle [0,∞]>', () => {
         const input = '<angle [0,∞]>'
         const parsed = { ...type('<angle>'), max: Infinity, min: 0 }
         expect(parse(input)).toEqual(parsed)
         expect(parse('<angle [0px,∞]>')).toEqual(parsed)
         expect(serialize(parsed)).toBe(input)
     })
-    it('parses and serializes <angle [-∞,1turn]>', () => {
+    test('<angle [-∞,1turn]>', () => {
         const parsed = { ...type('<angle>'), max: 360, min: -Infinity }
         expect(parse('<angle [-∞,1turn]>')).toEqual(parsed)
         expect(serialize(parsed)).toBe('<angle [-∞,360deg]>')
     })
-    it('parses and serializes <flex [0,∞]>', () => {
+    test('<flex [0,∞]>', () => {
         const input = '<flex [0,∞]>'
         const parsed = { ...type('<flex>'), max: Infinity, min: 0 }
         expect(parse(input)).toEqual(parsed)
         expect(parse('<flex [0fr,∞]>')).toEqual(parsed)
         expect(serialize(parsed)).toEqual(input)
     })
-    it('parses and serializes <flex [-∞,1]>', () => {
+    test('<flex [-∞,1]>', () => {
         const input = '<flex [-∞,1]>'
         const parsed = { ...type('<flex>'), max: 1, min: -Infinity }
         expect(parse(input)).toEqual(parsed)
         expect(parse('<flex [-∞,1fr]>')).toEqual(parsed)
         expect(serialize(parsed)).toEqual(input)
     })
-    it('parses and serializes <length [0,∞]>', () => {
+    test('<length [0,∞]>', () => {
         const input = '<length [0,∞]>'
         const parsed = { ...type('<length>'), max: Infinity, min: 0 }
         expect(parse(input)).toEqual(parsed)
         expect(parse('<length [0px,∞]>')).toEqual(parsed)
         expect(serialize(parsed)).toEqual(input)
     })
-    it('parses and serializes <length [-∞,1px]>', () => {
+    test('<length [-∞,1px]>', () => {
         const input = '<length [-∞,1px]>'
         const parsed = { ...type('<length>'), max: 1, min: -Infinity }
         expect(parse(input)).toEqual(parsed)
         expect(serialize(parsed)).toEqual(input)
     })
-    it('parses and serializes <percentage [0,∞]>', () => {
+    test('<percentage [0,∞]>', () => {
         const input = '<percentage [0,∞]>'
         const parsed = { ...type('<percentage>'), max: Infinity, min: 0 }
         expect(parse(input)).toEqual(parsed)
         expect(parse('<percentage [0%,∞]>')).toEqual(parsed)
         expect(serialize(parsed)).toEqual(input)
     })
-    it('parses and serializes <percentage [-∞,1]>', () => {
+    test('<percentage [-∞,1]>', () => {
         const input = '<percentage [-∞,1]>'
         const parsed = { ...type('<percentage>'), max: 1, min: -Infinity }
         expect(parse(input)).toEqual(parsed)
         expect(parse('<percentage [-∞,1%]>')).toEqual(parsed)
         expect(serialize(parsed)).toEqual(input)
     })
-    it('parses and serializes fn()', () => {
+    test('fn()', () => {
         const parsed = { name: 'fn', type: 'function' }
         expect(parse('fn()')).toEqual(parsed)
         expect(serialize(parsed)).toBe('fn()')
     })
-    it('parses and serializes fn(a)', () => {
+    test('fn(a)', () => {
         const parsed = {
             name: 'fn',
             type: 'function',
@@ -213,7 +213,7 @@ describe('symbols', () => {
         expect(parse('fn( fn( a ) )')).toEqual(parsed)
         expect(serialize(parsed)).toBe('fn(fn(a))')
     })
-    it('parses and serializes (a)', () => {
+    test('(a)', () => {
         const parsed = {
             associatedToken: '(',
             type: 'simple-block',
@@ -222,7 +222,7 @@ describe('symbols', () => {
         expect(parse('( ( a ) )')).toEqual(parsed)
         expect(serialize(parsed)).toBe('((a))')
     })
-    it("parses and serializes '['a']'", () => {
+    test("'['a']'", () => {
         const parsed = {
             associatedToken: '[',
             type: 'simple-block',
@@ -231,44 +231,44 @@ describe('symbols', () => {
         expect(parse("'[' '[' a ']' ']'")).toEqual(parsed)
         expect(serialize(parsed)).toBe("'[''['a']'']'")
     })
-    it('parses and serializes <length-percentage>', () => {
+    test('<length-percentage>', () => {
         const input = '<length-percentage>'
         const parsed = type('<length-percentage>')
         expect(parse(input)).toEqual(parsed)
         expect(serialize(parsed)).toBe(input)
     })
-    it('parses and serializes <length-percentage [0,∞]>', () => {
+    test('<length-percentage [0,∞]>', () => {
         const input = '<length-percentage [0,∞]>'
         const parsed = { ...type('<length-percentage>'), max: Infinity, min: 0 }
         expect(parse(input)).toEqual(parsed)
         expect(parse('<length>', { definition: parsed })).toEqual({ ...type('<length>'), max: Infinity, min: 0 })
         expect(serialize(parsed)).toBe(input)
     })
-    it('parses and serializes <rotate()>', () => {
+    test('<rotate()>', () => {
         const input = '<rotate()>'
         const parsed = type('<rotate()>')
         expect(parse(input)).toEqual(parsed)
         expect(serialize(parsed)).toBe(input)
     })
-    it('parses and serializes <declaration>', () => {
+    test('<declaration>', () => {
         const input = '<declaration>'
         const parsed = { name: '<declaration>', type: 'arbitrary' }
         expect(parse(input)).toEqual(parsed)
         expect(serialize(parsed)).toBe(input)
     })
-    it('parses and serializes <declaration-list>', () => {
+    test('<declaration-list>', () => {
         const input = '<declaration-list>'
         const parsed = { name: '<declaration-list>', type: 'block-contents' }
         expect(parse(input)).toEqual(parsed)
         expect(serialize(parsed)).toBe(input)
     })
-    it('parses and serializes <forgiving-selector-list>', () => {
+    test('<forgiving-selector-list>', () => {
         const input = '<forgiving-selector-list>'
         const parsed = { name: '<forgiving-selector-list>', type: 'forgiving' }
         expect(parse(input)).toEqual(parsed)
         expect(serialize(parsed)).toBe(input)
     })
-    it("parses and serializes <'background-color'>", () => {
+    test("<'background-color'>", () => {
         const input = "<'background-color'>"
         const parsed = {
             name: 'background-color',
@@ -280,105 +280,105 @@ describe('symbols', () => {
     })
 })
 describe('multipliers', () => {
-    it('parses and serializes a{1,2}', () => {
+    test('a{1,2}', () => {
         const input = 'a{1,2}'
         const parsed = repeat(a, 1, 2)
         expect(parse(input)).toEqual(parsed)
         expect(serialize(parsed)).toBe(input)
     })
-    it('parses and serializes a{2}', () => {
+    test('a{2}', () => {
         const input = 'a{2}'
         const parsed = repeat(a, 2, 2)
         expect(parse(input)).toEqual(parsed)
         expect(serialize(parsed)).toBe(input)
     })
-    it('parses and serializes a{2,∞}', () => {
+    test('a{2,∞}', () => {
         const input = 'a{2,∞}'
         const parsed = repeat(a, 2, 20)
         expect(parse(input)).toEqual(parsed)
         expect(serialize(parsed)).toBe(input)
     })
-    it('parses and serializes a{2,}', () => {
+    test('a{2,}', () => {
         const parsed = repeat(a, 2, 20)
         expect(parse('a{2,}')).toEqual(parsed)
         expect(serialize(parsed)).toBe('a{2,∞}')
     })
-    it('parses and serializes a?', () => {
+    test('a?', () => {
         const input = 'a?'
         const parsed = optional(a)
         expect(parse(input)).toEqual(parsed)
         expect(serialize(parsed)).toBe(input)
     })
-    it('parses and serializes a*', () => {
+    test('a*', () => {
         const input = 'a*'
         const parsed = repeat(a, 0, 20)
         expect(parse(input)).toEqual(parsed)
         expect(parse('a{0,∞}')).toEqual(parsed)
         expect(serialize(parsed)).toBe(input)
     })
-    it('parses and serializes a+', () => {
+    test('a+', () => {
         const input = 'a+'
         const parsed = repeat(a, 1, 20)
         expect(parse(input)).toEqual(parsed)
         expect(parse('a{1,∞}')).toEqual(parsed)
         expect(serialize(parsed)).toBe(input)
     })
-    it('parses and serializes a#', () => {
+    test('a#', () => {
         const input = 'a#'
         const parsed = repeat(a, 1, 20, ',')
         expect(parse(input)).toEqual(parsed)
         expect(parse('a#{1,∞}')).toEqual(parsed)
         expect(serialize(parsed)).toBe(input)
     })
-    it('parses and serializes a#{1,2}', () => {
+    test('a#{1,2}', () => {
         const input = 'a#{1,2}'
         const parsed = repeat(a, 1, 2, ',')
         expect(parse(input)).toEqual(parsed)
         expect(serialize(parsed)).toBe(input)
     })
-    it('parses and serializes a#{2}', () => {
+    test('a#{2}', () => {
         const input = 'a#{2}'
         const parsed = repeat(a, 2, 2, ',')
         expect(parse(input)).toEqual(parsed)
         expect(serialize(parsed)).toBe(input)
     })
-    it('parses and serializes a#{2,∞}', () => {
+    test('a#{2,∞}', () => {
         const input = 'a#{2,∞}'
         const parsed = repeat(a, 2, 20, ',')
         expect(parse(input)).toEqual(parsed)
         expect(serialize(parsed)).toBe(input)
     })
-    it('parses and serializes a#?', () => {
+    test('a#?', () => {
         const input = 'a#?'
         const parsed = optional(repeat(a, 1, 20, ','))
         expect(parse(input)).toEqual(parsed)
         expect(serialize(parsed)).toBe(input)
     })
-    it('parses and serializes a+#', () => {
+    test('a+#', () => {
         const input = 'a+#'
         const parsed = repeat(repeat(a, 1, 20), 1, 20, ',')
         expect(parse(input)).toEqual(parsed)
         expect(serialize(parsed)).toBe(input)
     })
-    it('parses and serializes a+#?', () => {
+    test('a+#?', () => {
         const input = 'a+#?'
         const parsed = optional(repeat(repeat(a, 1, 20), 1, 20, ','))
         expect(parse(input)).toEqual(parsed)
         expect(serialize(parsed)).toBe(input)
     })
-    it("parses and serializes ,?", () => {
+    test(",?", () => {
         const input = ',?'
         const parsed = optional(comma)
         expect(parse(input)).toEqual(parsed)
         expect(parse("','?")).toEqual(parsed)
         expect(serialize(parsed)).toBe(input)
     })
-    it("parses and serializes '+'?'", () => {
+    test("'+'?'", () => {
         const parsed = optional(plus)
         expect(parse("'+'?")).toEqual(parsed)
         expect(serialize(parsed)).toBe("'+'?")
     })
-    it('parses and serializes <number>?', () => {
+    test('<number>?', () => {
         const input = '<number>?'
         const parsed = optional(number)
         expect(parse(input)).toEqual(parsed)
@@ -386,144 +386,144 @@ describe('multipliers', () => {
     })
 })
 describe('combinations', () => {
-    it('parses and serializes a b c', () => {
+    test('a b c', () => {
         const input = 'a b c'
         const parsed = sequence(a, b, c)
         expect(parse(input)).toEqual(parsed)
         expect(serialize(parsed)).toBe(input)
     })
-    it('parses and serializes a && b && c', () => {
+    test('a && b && c', () => {
         const input = 'a && b && c'
         const parsed = permutation(a, b, c)
         expect(parse(input)).toEqual(parsed)
         expect(parse('a&&b&&c')).toEqual(parsed)
         expect(serialize(parsed)).toBe(input)
     })
-    it('parses and serializes a || b || c', () => {
+    test('a || b || c', () => {
         const input = 'a || b || c'
         const parsed = arrangement(a, b, c)
         expect(parse(input)).toEqual(parsed)
         expect(parse('a||b||c')).toEqual(parsed)
         expect(serialize(parsed)).toBe(input)
     })
-    it('parses and serializes a | b | c', () => {
+    test('a | b | c', () => {
         const input = 'a | b | c'
         const parsed = alternation(a, b, c)
         expect(parse(input)).toEqual(parsed)
         expect(parse('a|b|c')).toEqual(parsed)
         expect(serialize(parsed)).toBe(input)
     })
-    it('parses and serializes a b c && a c b && b a c', () => {
+    test('a b c && a c b && b a c', () => {
         const input = 'a b c && a c b && b a c'
         const parsed = permutation(sequence(a, b, c), sequence(a, c, b), sequence(b, a, c))
         expect(parse(input)).toEqual(parsed)
         expect(serialize(parsed)).toBe(input)
     })
-    it('parses and serializes a b c && a c b || a', () => {
+    test('a b c && a c b || a', () => {
         const input = 'a b c && a c b || a'
         const parsed = arrangement(permutation(sequence(a, b, c), sequence(a, c, b)), a)
         expect(parse(input)).toEqual(parsed)
         expect(serialize(parsed)).toBe(input)
     })
-    it('parses and serializes a b c || a c b && b a c', () => {
+    test('a b c || a c b && b a c', () => {
         const input = 'a b c || a c b && b a c'
         const parsed = arrangement(sequence(a, b, c), permutation(sequence(a, c, b), sequence(b, a, c)))
         expect(parse(input)).toEqual(parsed)
         expect(serialize(parsed)).toBe(input)
     })
-    it('parses and serializes a b c || a c b || b a c', () => {
+    test('a b c || a c b || b a c', () => {
         const input = 'a b c || a c b || b a c'
         const parsed = arrangement(sequence(a, b, c), sequence(a, c, b), sequence(b, a, c))
         expect(parse(input)).toEqual(parsed)
         expect(serialize(parsed)).toBe(input)
     })
-    it('parses and serializes a b c || a c b | b a c', () => {
+    test('a b c || a c b | b a c', () => {
         const input = 'a b c || a c b | b a c'
         const parsed = alternation(arrangement(sequence(a, b, c), sequence(a, c, b)), sequence(b, a, c))
         expect(parse(input)).toEqual(parsed)
         expect(serialize(parsed)).toBe(input)
     })
-    it('parses and serializes a b c | a c b | b a c', () => {
+    test('a b c | a c b | b a c', () => {
         const input = 'a b c | a c b | b a c'
         const parsed = alternation(sequence(a, b, c), sequence(a, c, b), sequence(b, a, c))
         expect(parse(input)).toEqual(parsed)
         expect(serialize(parsed)).toBe(input)
     })
-    it('parses and serializes a b c | a c b || b a c', () => {
+    test('a b c | a c b || b a c', () => {
         const input = 'a b c | a c b || b a c'
         const parsed = alternation(sequence(a, b, c), arrangement(sequence(a, c, b), sequence(b, a, c)))
         expect(parse(input)).toEqual(parsed)
         expect(serialize(parsed)).toBe(input)
     })
-    it('parses and serializes :pseudo-class', () => {
+    test(':pseudo-class', () => {
         const parsed = sequence(colon, keyword('pseudo-class'))
         expect(parse(':pseudo-class')).toEqual(parsed)
         expect(serialize(parsed)).toBe(': pseudo-class')
     })
-    it('parses and serializes ::pseudo-element', () => {
+    test('::pseudo-element', () => {
         const parsed = sequence(colon, colon, keyword('pseudo-element'))
         expect(parse('::pseudo-element')).toEqual(parsed)
         expect(serialize(parsed)).toBe(': : pseudo-element')
     })
-    it('parses and serializes :pseudo-class(a)', () => {
+    test(':pseudo-class(a)', () => {
         const parsed = sequence(colon, { name: 'pseudo-class', type: 'function', value: a })
         expect(parse(':pseudo-class(a)')).toEqual(parsed)
         expect(serialize(parsed)).toBe(': pseudo-class(a)')
     })
-    it('parses and serializes ::pseudo-element(a)', () => {
+    test('::pseudo-element(a)', () => {
         const parsed = sequence(colon, colon, { name: 'pseudo-element', type: 'function', value: a })
         expect(parse('::pseudo-element(a)')).toEqual(parsed)
         expect(serialize(parsed)).toBe(': : pseudo-element(a)')
     })
 })
 describe('groups', () => {
-    it('parses and serializes [a]', () => {
+    test('[a]', () => {
         expect(parse('[a]')).toEqual(a)
         expect(parse('[ a ]')).toEqual(a)
     })
-    it('parses and serializes [a{2}]?', () => {
+    test('[a{2}]?', () => {
         const input = '[a{2}]?'
         const parsed = optional(repeat(a, 2, 2))
         expect(parse(input)).toEqual(parsed)
         expect(serialize(parsed)).toBe(input)
     })
-    it('parses and serializes [a?]!', () => {
+    test('[a?]!', () => {
         const input = '[a?]!'
         const parsed = required(optional(a))
         expect(parse(input)).toEqual(parsed)
         expect(serialize(parsed)).toBe(input)
     })
-    it('parses and serializes [a, b], c', () => {
+    test('[a, b], c', () => {
         const parsed = sequence(a, comma, b, comma, c)
         expect(parse('[ a , b ] , c')).toEqual(parsed)
         expect(parse('[a,b],c')).toEqual(parsed)
         expect(serialize(parsed)).toBe('a , b , c')
     })
-    it('parses and serializes [a, b,] c', () => {
+    test('[a, b,] c', () => {
         const parsed = sequence(a, comma, b, comma, c)
         expect(parse('[ a , b , ] c')).toEqual(parsed)
         expect(parse('[a,b,]c')).toEqual(parsed)
         expect(serialize(parsed)).toBe('a , b , c')
     })
-    it('parses and serializes a, [b, c]', () => {
+    test('a, [b, c]', () => {
         const parsed = sequence(a, comma, b, comma, c)
         expect(parse('a , [ b , c ]')).toEqual(parsed)
         expect(parse('a,[b,c]')).toEqual(parsed)
         expect(serialize(parsed)).toBe('a , b , c')
     })
-    it('parses and serializes a [, b, c]', () => {
+    test('a [, b, c]', () => {
         const parsed = sequence(a, sequence(comma, b, comma, c))
         expect(parse('a [ , b , c ]')).toEqual(parsed)
         expect(parse('a[,b,c]')).toEqual(parsed)
         expect(serialize(parsed)).toBe('a , b , c')
     })
-    it('parses and serializes [a, | b,] c', () => {
+    test('[a, | b,] c', () => {
         const parsed = sequence(alternation(sequence(a, comma), sequence(b, comma)), c)
         expect(parse('[a , | b , ] c')).toEqual(parsed)
         expect(parse('[a,|b,]c')).toEqual(parsed)
         expect(serialize(parsed)).toBe('[a , | b ,] c')
     })
-    it('parses and serializes a [, b | , c]', () => {
+    test('a [, b | , c]', () => {
         const parsed = sequence(a, alternation(sequence(comma, b), sequence(comma, c)))
         expect(parse('a [ , b | , c ]')).toEqual(parsed)
         expect(parse('a[,b|,c]')).toEqual(parsed)
@@ -531,7 +531,7 @@ describe('groups', () => {
     })
 })
 describe('context rules', () => {
-    it("represents a# produced by <'property'>", () => {
+    test("a# produced by <'property'>", () => {
 
         const root = { definition: { type: 'property' } }
 
@@ -552,7 +552,7 @@ describe('context rules', () => {
         const production = { definition: { type: 'non-terminal' }, parent: range }
         expect(parse('a#', production)).toEqual(as)
     })
-    it("represents [['+' | '-'] <calc-product>]* produced by <calc-sum>", () => {
+    test("[['+' | '-'] <calc-product>]* produced by <calc-sum>", () => {
         const production = { definition: parse('<calc-sum>') }
         expect(parse("[['+' | '-'] <calc-product>]*", production)).toEqual(
             repeat(

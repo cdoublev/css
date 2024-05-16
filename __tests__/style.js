@@ -310,8 +310,9 @@ describe('CSSStyleDeclaration', () => {
         expect(style.cssText).toBe('border-top-color: green; border-block-start-color: green;')
     })
 })
+
 describe('CSSFontFaceDescriptors', () => {
-    it('does not store an invalid declaration', () => {
+    test('invalid', () => {
 
         const style = CSSFontFaceDescriptors.create(globalThis, undefined, { parentRule: fontFaceRule })
 
@@ -348,7 +349,7 @@ describe('CSSFontFaceDescriptors', () => {
             expect(style.sizeAdjust).toBe('')
         })
     })
-    it('stores a valid declaration', () => {
+    test('valid', () => {
 
         const style = CSSFontFaceDescriptors.create(globalThis, undefined, { parentRule: fontFaceRule })
 
@@ -394,7 +395,7 @@ describe('CSSFontFaceDescriptors', () => {
     })
 })
 describe('CSSKeyframeProperties', () => {
-    it('does not store an invalid declaration', () => {
+    test('invalid', () => {
 
         const style = CSSKeyframeProperties.create(globalThis, undefined, { parentRule: keyframeRule })
 
@@ -407,7 +408,7 @@ describe('CSSKeyframeProperties', () => {
         style.setProperty('font-weight', '1', 'important')
         expect(style.fontWeight).toBe('')
     })
-    it('stores a valid declaration', () => {
+    test('valid', () => {
 
         const style = CSSKeyframeProperties.create(globalThis, undefined, { parentRule: keyframeRule })
 
@@ -441,7 +442,7 @@ describe('CSSKeyframeProperties', () => {
     })
 })
 describe('CSSMarginDescriptors', () => {
-    it('does not store an invalid declaration', () => {
+    test('invalid', () => {
 
         const style = CSSMarginDescriptors.create(globalThis, undefined, { parentRule: marginRule })
 
@@ -465,7 +466,7 @@ describe('CSSMarginDescriptors', () => {
             expect(style.fontWeight).toBe('')
         })
     })
-    it('stores a valid declaration', () => {
+    test('valid', () => {
 
         const style = CSSMarginDescriptors.create(globalThis, undefined, { parentRule: marginRule })
 
@@ -492,7 +493,7 @@ describe('CSSMarginDescriptors', () => {
     })
 })
 describe('CSSPageDescriptors', () => {
-    it('does not store an invalid declaration', () => {
+    test('invalid', () => {
 
         const style = CSSPageDescriptors.create(globalThis, undefined, { parentRule: pageRule })
 
@@ -517,7 +518,7 @@ describe('CSSPageDescriptors', () => {
             expect(style.size).toBe('')
         })
     })
-    it('stores a valid declaration', () => {
+    test('valid', () => {
 
         const style = CSSPageDescriptors.create(globalThis, undefined, { parentRule: pageRule })
 
@@ -556,7 +557,7 @@ describe('CSSPageDescriptors', () => {
     })
 })
 describe('CSSPositionTryDescriptors', () => {
-    it('does not store an invalid declaration', () => {
+    test('invalid', () => {
 
         const style = CSSPositionTryDescriptors.create(globalThis, undefined, { parentRule: positionTryRule })
 
@@ -573,7 +574,7 @@ describe('CSSPositionTryDescriptors', () => {
         style.setProperty('top', '1px', 'important')
         expect(style.top).toBe('')
     })
-    it('stores a valid declaration', () => {
+    test('valid', () => {
 
         const style = CSSPositionTryDescriptors.create(globalThis, undefined, { parentRule: positionTryRule })
 
@@ -604,7 +605,7 @@ describe('CSSPositionTryDescriptors', () => {
 })
 
 describe('CSS-wide keyword', () => {
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
         const style = createStyleBlock()
         substitutions.keywords.forEach(input => {
             style.opacity = input.toUpperCase()
@@ -613,12 +614,12 @@ describe('CSS-wide keyword', () => {
     })
 })
 describe('arbitrary substitution', () => {
-    it('fails to parse an invalid value', () => {
+    test('invalid', () => {
         const style = createStyleBlock()
         style.setProperty('--custom', 'src(var(--))')
         expect(style.getPropertyValue('--custom')).toBe('')
     })
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
         const style = createStyleBlock()
         const valid = [
             // <attr()>
@@ -653,7 +654,7 @@ describe('arbitrary substitution', () => {
     })
 })
 describe('<whole-value>', () => {
-    it('fails to parse an invalid value', () => {
+    test('invalid', () => {
         const style = createStyleBlock()
         const invalid = [
             // Not the <whole-value>
@@ -679,7 +680,7 @@ describe('<whole-value>', () => {
             expect(style.getPropertyValue(property)).toBe('')
         })
     })
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
         const style = createStyleBlock()
         const valid = [
             // Serialize the list of tokens
@@ -699,7 +700,7 @@ describe('<whole-value>', () => {
 })
 
 describe('--*', () => {
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
         const style = createStyleBlock()
         const valid = [
             // Whitespaces and comments
@@ -720,14 +721,14 @@ describe('--*', () => {
     })
 })
 describe('animation-range-start, animation-range-end', () => {
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
         const style = createStyleBlock()
         style.animationRangeStart = 'entry 0%'
         expect(style.animationRangeStart).toBe('entry')
     })
 })
 describe('background-position', () => {
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
         const style = createStyleBlock()
         const valid = [
             ['left', 'left center'],
@@ -743,14 +744,14 @@ describe('background-position', () => {
     })
 })
 describe('background-size', () => {
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
         const style = createStyleBlock()
         style.backgroundSize = '100% auto'
         expect(style.backgroundSize).toBe('100%')
     })
 })
 describe('border-end-end-radius, border-end-start-radius, border-bottom-left-radius, border-bottom-right-radius, border-start-end-radius, border-start-start-radius, border-top-left-radius, border-top-right-radius', () => {
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
         const style = createStyleBlock()
         style.borderBottomLeftRadius = '1px 1px'
         expect(style.borderBottomLeftRadius).toBe('1px')
@@ -759,7 +760,7 @@ describe('border-end-end-radius, border-end-start-radius, border-bottom-left-rad
     })
 })
 describe('border-image-outset, mask-border-outset', () => {
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
         const style = createStyleBlock()
         const valid = [
             ['0 1 2 2'],
@@ -774,14 +775,14 @@ describe('border-image-outset, mask-border-outset', () => {
     })
 })
 describe('border-image-repeat, mask-border-repeat', () => {
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
         const style = createStyleBlock()
         style.borderImageRepeat = 'stretch stretch'
         expect(style.borderImageRepeat).toBe('stretch')
     })
 })
 describe('border-image-slice, mask-border-slice', () => {
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
         const style = createStyleBlock()
         const valid = [
             ['0 1 2 2 fill'],
@@ -796,7 +797,7 @@ describe('border-image-slice, mask-border-slice', () => {
     })
 })
 describe('border-image-width, mask-border-width', () => {
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
         const style = createStyleBlock()
         const valid = [
             ['0 1 2 2'],
@@ -811,14 +812,14 @@ describe('border-image-width, mask-border-width', () => {
     })
 })
 describe('border-spacing', () => {
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
         const style = createStyleBlock()
         style.borderSpacing = '1px 1px'
         expect(style.borderSpacing).toBe('1px')
     })
 })
 describe('break-after, break-before, page-break-after, page-break-before', () => {
-    it('fails to parse an invalid value', () => {
+    test('invalid', () => {
 
         const style = createStyleBlock()
 
@@ -828,7 +829,7 @@ describe('break-after, break-before, page-break-after, page-break-before', () =>
         expect(style.pageBreakAfter).toBe('')
         expect(style.cssText).toBe('')
     })
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
 
         const style = createStyleBlock()
 
@@ -862,7 +863,7 @@ describe('break-after, break-before, page-break-after, page-break-before', () =>
     })
 })
 describe('break-inside, page-break-inside', () => {
-    it('fails to parse an invalid value', () => {
+    test('invalid', () => {
 
         const style = createStyleBlock()
 
@@ -872,7 +873,7 @@ describe('break-inside, page-break-inside', () => {
         expect(style.pageBreakInside).toBe('')
         expect(style.cssText).toBe('')
     })
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
 
         const style = createStyleBlock()
 
@@ -895,14 +896,14 @@ describe('break-inside, page-break-inside', () => {
     })
 })
 describe('clip-path', () => {
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
         const style = createStyleBlock()
         style.clipPath = 'inset(1px) border-box'
         expect(style.clipPath).toBe('inset(1px)')
     })
 })
 describe('color-scheme', () => {
-    it('fails to parse an invalid value', () => {
+    test('invalid', () => {
         const style = createStyleBlock()
         style.colorScheme = 'NORMAL only'
         expect(style.colorScheme).toBe('')
@@ -911,21 +912,21 @@ describe('color-scheme', () => {
     })
 })
 describe('counter-increment, counter-set', () => {
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
         const style = createStyleBlock()
         style.counterIncrement = 'counter 1'
         expect(style.counterIncrement).toBe('counter')
     })
 })
 describe('counter-reset', () => {
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
         const style = createStyleBlock()
         style.counterReset = 'counter 0'
         expect(style.counterReset).toBe('counter')
     })
 })
 describe('container-name', () => {
-    it('fails to parse an invalid value', () => {
+    test('invalid', () => {
         const style = createStyleBlock()
         const invalid = [
             'AND',
@@ -938,14 +939,14 @@ describe('container-name', () => {
             expect(style.containerName).toBe('')
         })
     })
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
         const style = createStyleBlock()
         style.containerName = 'none'
         expect(style.containerName).toBe('none')
     })
 })
 describe('cue-after, cue-before', () => {
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
         const style = createStyleBlock()
         style.cueAfter = 'url("icon.wav") 0db'
         expect(style.cueAfter).toBe('url("icon.wav")')
@@ -955,7 +956,7 @@ describe('cue-after, cue-before', () => {
     })
 })
 describe('display', () => {
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
         const style = createStyleBlock()
         // Alias value
         display.aliases.forEach((to, from) => {
@@ -981,7 +982,7 @@ describe('float', () => {
     })
 })
 describe('flow-into', () => {
-    it('fails to parse an invalid value', () => {
+    test('invalid', () => {
         const style = createStyleBlock()
         style.flowInto = 'AUTO'
         expect(style.flowInto).toBe('')
@@ -990,14 +991,14 @@ describe('flow-into', () => {
     })
 })
 describe('font-style', () => {
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
         const style = createStyleBlock()
         style.fontStyle = 'oblique 14deg'
         expect(style.fontStyle).toBe('oblique')
     })
 })
 describe('glyph-orientation-vertical, text-orientation', () => {
-    it('fails to parse an invalid value', () => {
+    test('invalid', () => {
 
         const style = createStyleBlock()
         const invalid = [
@@ -1013,7 +1014,7 @@ describe('glyph-orientation-vertical, text-orientation', () => {
             expect(style.glyphOrientationVertical).toBe('')
         })
     })
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
 
         const style = createStyleBlock()
 
@@ -1049,14 +1050,14 @@ describe('glyph-orientation-vertical, text-orientation', () => {
     })
 })
 describe('grid-auto-flow', () => {
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
         const style = createStyleBlock()
         style.gridAutoFlow = 'row dense'
         expect(style.gridAutoFlow).toBe('dense')
     })
 })
 describe('grid-template-areas', () => {
-    it('fails to parse an invalid value', () => {
+    test('invalid', () => {
         const style = createStyleBlock()
         const invalid = [
             // Trash token
@@ -1082,14 +1083,14 @@ describe('grid-template-areas', () => {
             expect(style.gridTemplateAreas).toBe('')
         })
     })
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
         const style = createStyleBlock()
         style.gridTemplateAreas = '"  a  .b.  c  " "a . . . c'
         expect(style.gridTemplateAreas).toBe('"a . b . c" "a . . . c"')
     })
 })
 describe('grid-template-columns, grid-template-rows', () => {
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
         const style = createStyleBlock()
         const valid = [
             // Empty line names are omitted except for subgrid axis (browser conformance)
@@ -1104,7 +1105,7 @@ describe('grid-template-columns, grid-template-rows', () => {
     })
 })
 describe('hyphenate-limit-chars', () => {
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
         const style = createStyleBlock()
         style.hyphenateLimitChars = '0 1 1'
         expect(style.hyphenateLimitChars).toBe('0 1')
@@ -1113,7 +1114,7 @@ describe('hyphenate-limit-chars', () => {
     })
 })
 describe('image-rendering', () => {
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
         const style = createStyleBlock()
         // Legacy mapped value
         style.imageRendering = 'optimizeSpeed'
@@ -1130,14 +1131,14 @@ describe('image-resolution', () => {
     })
 })
 describe('initial-letter', () => {
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
         const style = createStyleBlock()
         style.initialLetter = '1 drop'
         expect(style.initialLetter).toBe('1')
     })
 })
 describe('masonry-auto-flow', () => {
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
         const style = createStyleBlock()
         const valid = [
             ['pack definite-first', 'pack'],
@@ -1151,14 +1152,14 @@ describe('masonry-auto-flow', () => {
     })
 })
 describe('object-fit', () => {
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
         const style = createStyleBlock()
         style.objectFit = 'contain scale-down'
         expect(style.objectFit).toBe('scale-down')
     })
 })
 describe('offset-path', () => {
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
         const style = createStyleBlock()
         style.offsetPath = 'url("path.svg") border-box'
         expect(style.offsetPath).toBe('url("path.svg")')
@@ -1167,7 +1168,7 @@ describe('offset-path', () => {
     })
 })
 describe('offset-rotate', () => {
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
         const style = createStyleBlock()
         const valid = [
             ['auto 0deg', 'auto'],
@@ -1184,14 +1185,14 @@ describe('offset-rotate', () => {
     })
 })
 describe('overflow-clip-margin-block-end, overflow-clip-margin-block-start, overflow-clip-margin-bottom, overflow-clip-margin-inline-end, overflow-clip-margin-inline-starty, overflow-clip-margin-left, overflow-clip-margin-right, overflow-clip-margin-top', () => {
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
         const style = createStyleBlock()
         style.overflowClipMarginBlockEnd = 'content-box 0px'
         expect(style.overflowClipMarginBlockEnd).toBe('content-box')
     })
 })
 describe('paint-order', () => {
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
         const style = createStyleBlock()
         const valid = [
             ['fill', 'normal'],
@@ -1210,49 +1211,49 @@ describe('paint-order', () => {
     })
 })
 describe('scale', () => {
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
         const style = createStyleBlock()
         style.scale = '100% 100% 1'
         expect(style.scale).toBe('100%')
     })
 })
 describe('scroll-snap-align', () => {
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
         const style = createStyleBlock()
         style.scrollSnapAlign = 'none none'
         expect(style.scrollSnapAlign).toBe('none')
     })
 })
 describe('scroll-snap-type', () => {
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
         const style = createStyleBlock()
         style.scrollSnapType = 'x proximity'
         expect(style.scrollSnapType).toBe('x')
     })
 })
 describe('shape-outside', () => {
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
         const style = createStyleBlock()
         style.shapeOutside = 'inset(1px) margin-box'
         expect(style.shapeOutside).toBe('inset(1px)')
     })
 })
 describe('text-emphasis-position', () => {
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
         const style = createStyleBlock()
         style.textEmphasisPosition = 'over right'
         expect(style.textEmphasisPosition).toBe('over')
     })
 })
 describe('text-align-all', () => {
-    it('fails to parse an invalid value', () => {
+    test('invalid', () => {
         const style = createStyleBlock()
         style.textAlignAll = '"12"'
         expect(style.textAlignAll).toBe('')
     })
 })
 describe('text-justify', () => {
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
         const style = createStyleBlock()
         // Legacy value alias
         style.textJustify = 'distribute'
@@ -1260,21 +1261,21 @@ describe('text-justify', () => {
     })
 })
 describe('translate', () => {
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
         const style = createStyleBlock()
         style.translate = '0px 0px 0px'
         expect(style.translate).toBe('0px')
     })
 })
 describe('view-transition-name', () => {
-    it('fails to parse an invalid value', () => {
+    test('invalid', () => {
         const style = createStyleBlock()
         style.viewTransitionName = 'AUTO'
         expect(style.viewTransitionName).toBe('')
     })
 })
 describe('voice-pitch, voice-range', () => {
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
         const style = createStyleBlock()
         style.voicePitch = 'x-low 100%'
         expect(style.voicePitch).toBe('x-low')
@@ -1284,7 +1285,7 @@ describe('voice-pitch, voice-range', () => {
     })
 })
 describe('voice-rate', () => {
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
         const style = createStyleBlock()
         style.voiceRate = 'normal 100%'
         expect(style.voiceRate).toBe('normal')
@@ -1297,7 +1298,7 @@ describe('-webkit-line-clamp', () => {
 
     const longhands = shorthands.get('-webkit-line-clamp')
 
-    it('parses longhand declarations from a shorthand value', () => {
+    test('shorthand expansion', () => {
 
         const style = createStyleBlock()
 
@@ -1318,7 +1319,7 @@ describe('-webkit-line-clamp', () => {
         expect(style.webkitLineClamp).toBe('1')
         expect(style.cssText).toBe('-webkit-line-clamp: 1;')
     })
-    it('serializes a shorthand value from the declarations of its longhands', () => {
+    test('shorthand reification', () => {
 
         const style = createStyleBlock()
 
@@ -1347,7 +1348,7 @@ describe('-webkit-text-stroke', () => {
 
     const longhands = shorthands.get('-webkit-text-stroke')
 
-    it('parses longhand declarations from a shorthand value', () => {
+    test('shorthand expansion', () => {
 
         const style = createStyleBlock()
 
@@ -1364,7 +1365,7 @@ describe('-webkit-text-stroke', () => {
         expect(style.webkitTextStroke).toBe('0px')
         expect(style.cssText).toBe('-webkit-text-stroke: 0px;')
     })
-    it('serializes a shorthand value from the declarations of its longhands', () => {
+    test('shorthand reification', () => {
 
         const style = createStyleBlock()
 
@@ -1378,7 +1379,7 @@ describe('all', () => {
 
     const longhands = shorthands.get('all')
 
-    it('parses longhand declarations from a shorthand value', () => {
+    test('shorthand expansion', () => {
 
         const style = createStyleBlock()
 
@@ -1390,7 +1391,7 @@ describe('all', () => {
         expect(style.direction).toBe('')
         expect(style.unicodeBidi).toBe('')
     })
-    it('serializes a shorthand value from the declarations of its longhands', () => {
+    test('shorthand reification', () => {
 
         const style = createStyleBlock()
 
@@ -1426,7 +1427,7 @@ describe('animation', () => {
     const longhands = shorthands.get('animation')
     const animation = 'auto ease 0s 1 normal none running none auto'
 
-    it('parses longhand declarations from a shorthand value', () => {
+    test('shorthand expansion', () => {
 
         const style = createStyleBlock()
 
@@ -1453,7 +1454,7 @@ describe('animation', () => {
         expect(style.animation).toBe(repeated)
         expect(style.cssText).toBe(`animation: ${repeated};`)
     })
-    it('serializes a shorthand value from the declarations of its longhands', () => {
+    test('shorthand reification', () => {
 
         const style = createStyleBlock()
 
@@ -1472,7 +1473,7 @@ describe('animation-range', () => {
 
     const longhands = shorthands.get('animation-range')
 
-    it('parses longhand declarations from a shorthand value', () => {
+    test('shorthand expansion', () => {
 
         const style = createStyleBlock()
 
@@ -1505,7 +1506,7 @@ describe('animation-range', () => {
         expect(style.animationRange).toBe('normal, normal')
         expect(style.cssText).toBe('animation-range: normal, normal;')
     })
-    it('serializes a shorthand value from the declarations of its longhands', () => {
+    test('shorthand reification', () => {
 
         const style = createStyleBlock()
 
@@ -1535,7 +1536,7 @@ describe('background', () => {
 
     const longhands = shorthands.get('background')
 
-    it('parses longhand declarations from a shorthand value', () => {
+    test('shorthand expansion', () => {
 
         const style = createStyleBlock()
         const background = 'none 0% 0% / auto repeat scroll padding-box border-box transparent'
@@ -1609,7 +1610,7 @@ describe('background', () => {
         expect(style.background).toBe('content-box')
         expect(style.cssText).toBe('background: content-box;')
     })
-    it('serializes a shorthand value from the declarations of its longhands', () => {
+    test('shorthand reification', () => {
 
         const style = createStyleBlock()
 
@@ -1664,7 +1665,7 @@ describe('block-step', () => {
 
     const longhands = shorthands.get('block-step')
 
-    it('parses longhand declarations from a shorthand value', () => {
+    test('shorthand expansion', () => {
 
         const style = createStyleBlock()
 
@@ -1681,7 +1682,7 @@ describe('block-step', () => {
         expect(style.blockStep).toBe('none')
         expect(style.cssText).toBe('block-step: none;')
     })
-    it('serializes a shorthand value from the declarations of its longhands', () => {
+    test('shorthand reification', () => {
 
         const style = createStyleBlock()
 
@@ -1695,7 +1696,7 @@ describe('border', () => {
 
     const longhands = shorthands.get('border')
 
-    it('parses longhand declarations from a shorthand value', () => {
+    test('shorthand expansion', () => {
 
         const style = createStyleBlock()
 
@@ -1712,7 +1713,7 @@ describe('border', () => {
         expect(style.border).toBe('medium')
         expect(style.cssText).toBe('border: medium;')
     })
-    it('serializes a shorthand value from the declarations of its longhands', () => {
+    test('shorthand reification', () => {
 
         const style = createStyleBlock()
 
@@ -1744,7 +1745,7 @@ describe('border-block, border-inline', () => {
 
     const longhands = shorthands.get('border-block')
 
-    it('parses longhand declarations from a shorthand value', () => {
+    test('shorthand expansion', () => {
 
         const style = createStyleBlock()
 
@@ -1761,7 +1762,7 @@ describe('border-block, border-inline', () => {
         expect(style.borderBlock).toBe('medium')
         expect(style.cssText).toBe('border-block: medium;')
     })
-    it('serializes a shorthand value from the declarations of its longhands', () => {
+    test('shorthand reification', () => {
 
         const style = createStyleBlock()
 
@@ -1788,7 +1789,7 @@ describe('border-block-color, border-inline-color', () => {
 
     const longhands = shorthands.get('border-block-color')
 
-    it('parses longhand declarations from a shorthand value', () => {
+    test('shorthand expansion', () => {
 
         const style = createStyleBlock()
 
@@ -1805,7 +1806,7 @@ describe('border-block-color, border-inline-color', () => {
         expect(style.borderBlockColor).toBe('green')
         expect(style.cssText).toBe('border-block-color: green;')
     })
-    it('serializes a shorthand value from the declarations of its longhands', () => {
+    test('shorthand reification', () => {
 
         const style = createStyleBlock()
 
@@ -1819,7 +1820,7 @@ describe('border-block-end-radius, border-block-start-radius, border-bottom-radi
 
     const longhands = shorthands.get('border-block-end-radius')
 
-    it('parses longhand declarations from a shorthand value', () => {
+    test('shorthand expansion', () => {
 
         const style = createStyleBlock()
 
@@ -1849,7 +1850,7 @@ describe('border-block-end-radius, border-block-start-radius, border-bottom-radi
         expect(style.borderBlockEndRadius).toBe('1px 2px / 1px')
         expect(style.cssText).toBe('border-block-end-radius: 1px 2px / 1px;')
     })
-    it('serializes a shorthand value from the declarations of its longhands', () => {
+    test('shorthand reification', () => {
 
         const style = createStyleBlock()
 
@@ -1863,7 +1864,7 @@ describe('border-block-style, border-inline-style', () => {
 
     const longhands = shorthands.get('border-block-style')
 
-    it('parses longhand declarations from a shorthand value', () => {
+    test('shorthand expansion', () => {
 
         const style = createStyleBlock()
 
@@ -1880,7 +1881,7 @@ describe('border-block-style, border-inline-style', () => {
         expect(style.borderBlockStyle).toBe('solid')
         expect(style.cssText).toBe('border-block-style: solid;')
     })
-    it('serializes a shorthand value from the declarations of its longhands', () => {
+    test('shorthand reification', () => {
 
         const style = createStyleBlock()
 
@@ -1894,7 +1895,7 @@ describe('border-block-width, border-inline-width', () => {
 
     const longhands = shorthands.get('border-block-width')
 
-    it('parses longhand declarations from a shorthand value', () => {
+    test('shorthand expansion', () => {
 
         const style = createStyleBlock()
 
@@ -1911,7 +1912,7 @@ describe('border-block-width, border-inline-width', () => {
         expect(style.borderBlockWidth).toBe('1px')
         expect(style.cssText).toBe('border-block-width: 1px;')
     })
-    it('serializes a shorthand value from the declarations of its longhands', () => {
+    test('shorthand reification', () => {
 
         const style = createStyleBlock()
 
@@ -1925,7 +1926,7 @@ describe('border-bottom, border-left, border-right, border-top', () => {
 
     const longhands = shorthands.get('border-top')
 
-    it('parses longhand declarations from a shorthand value', () => {
+    test('shorthand expansion', () => {
 
         const style = createStyleBlock()
 
@@ -1942,7 +1943,7 @@ describe('border-bottom, border-left, border-right, border-top', () => {
         expect(style.borderTop).toBe('medium')
         expect(style.cssText).toBe('border-top: medium;')
     })
-    it('serializes a shorthand value from the declarations of its longhands', () => {
+    test('shorthand reification', () => {
 
         const style = createStyleBlock()
 
@@ -1956,7 +1957,7 @@ describe('border-clip', () => {
 
     const longhands = shorthands.get('border-clip')
 
-    it('parses longhand declarations from a shorthand value', () => {
+    test('shorthand expansion', () => {
 
         const style = createStyleBlock()
 
@@ -1966,7 +1967,7 @@ describe('border-clip', () => {
         expect(style.borderClip).toBe('normal')
         expect(style.cssText).toBe('border-clip: normal;')
     })
-    it('serializes a shorthand value from the declarations of its longhands', () => {
+    test('shorthand reification', () => {
 
         const style = createStyleBlock()
 
@@ -1985,7 +1986,7 @@ describe('border-color', () => {
 
     const longhands = shorthands.get('border-color')
 
-    it('parses longhand declarations from a shorthand value', () => {
+    test('shorthand expansion', () => {
 
         const style = createStyleBlock()
 
@@ -2011,7 +2012,7 @@ describe('border-color', () => {
         expect(style.borderColor).toBe('red orange green')
         expect(style.cssText).toBe('border-color: red orange green;')
     })
-    it('serializes a shorthand value from the declarations of its longhands', () => {
+    test('shorthand reification', () => {
 
         const style = createStyleBlock()
 
@@ -2033,7 +2034,7 @@ describe('border-image', () => {
 
     const longhands = shorthands.get('border-image')
 
-    it('parses longhand declarations from a shorthand value', () => {
+    test('shorthand expansion', () => {
 
         const style = createStyleBlock()
 
@@ -2050,7 +2051,7 @@ describe('border-image', () => {
         expect(style.borderImage).toBe('none')
         expect(style.cssText).toBe('border-image: none;')
     })
-    it('serializes a shorthand value from the declarations of its longhands', () => {
+    test('shorthand reification', () => {
 
         const style = createStyleBlock()
 
@@ -2064,7 +2065,7 @@ describe('border-radius', () => {
 
     const longhands = shorthands.get('border-radius')
 
-    it('parses longhand declarations from a shorthand value', () => {
+    test('shorthand expansion', () => {
 
         const style = createStyleBlock()
 
@@ -2096,7 +2097,7 @@ describe('border-radius', () => {
         expect(style.borderRadius).toBe('1px 2px 3px 4px / 1px 2px')
         expect(style.cssText).toBe('border-radius: 1px 2px 3px 4px / 1px 2px;')
     })
-    it('serializes a shorthand value from the declarations of its longhands', () => {
+    test('shorthand reification', () => {
 
         const style = createStyleBlock()
 
@@ -2110,7 +2111,7 @@ describe('border-style', () => {
 
     const longhands = shorthands.get('border-style')
 
-    it('parses longhand declarations from a shorthand value', () => {
+    test('shorthand expansion', () => {
 
         const style = createStyleBlock()
 
@@ -2136,7 +2137,7 @@ describe('border-style', () => {
         expect(style.borderStyle).toBe('dotted dashed solid')
         expect(style.cssText).toBe('border-style: dotted dashed solid;')
     })
-    it('serializes a shorthand value from the declarations of its longhands', () => {
+    test('shorthand reification', () => {
 
         const style = createStyleBlock()
 
@@ -2150,7 +2151,7 @@ describe('border-width', () => {
 
     const longhands = shorthands.get('border-width')
 
-    it('parses longhand declarations from a shorthand value', () => {
+    test('shorthand expansion', () => {
 
         const style = createStyleBlock()
 
@@ -2176,7 +2177,7 @@ describe('border-width', () => {
         expect(style.borderWidth).toBe('0px 1px 2px')
         expect(style.cssText).toBe('border-width: 0px 1px 2px;')
     })
-    it('serializes a shorthand value from the declarations of its longhands', () => {
+    test('shorthand reification', () => {
 
         const style = createStyleBlock()
 
@@ -2191,7 +2192,7 @@ describe('box-shadow', () => {
     const longhands = shorthands.get('box-shadow')
     const shadow = 'currentcolor none 0px 0px outset'
 
-    it('parses longhand declarations from a shorthand value', () => {
+    test('shorthand expansion', () => {
 
         const style = createStyleBlock()
 
@@ -2226,7 +2227,7 @@ describe('box-shadow', () => {
         expect(style.boxShadow).toBe('currentcolor none, currentcolor none')
         expect(style.cssText).toBe('box-shadow: currentcolor none, currentcolor none;')
     })
-    it('serializes a shorthand value from the declarations of its longhands', () => {
+    test('shorthand reification', () => {
 
         const style = createStyleBlock()
 
@@ -2245,7 +2246,7 @@ describe('caret', () => {
 
     const longhands = shorthands.get('caret')
 
-    it('parses longhand declarations from a shorthand value', () => {
+    test('shorthand expansion', () => {
 
         const style = createStyleBlock()
 
@@ -2262,7 +2263,7 @@ describe('caret', () => {
         expect(style.caret).toBe('auto')
         expect(style.cssText).toBe('caret: auto;')
     })
-    it('serializes a shorthand value from the declarations of its longhands', () => {
+    test('shorthand reification', () => {
 
         const style = createStyleBlock()
 
@@ -2276,7 +2277,7 @@ describe('column-rule', () => {
 
     const longhands = shorthands.get('column-rule')
 
-    it('parses longhand declarations from a shorthand value', () => {
+    test('shorthand expansion', () => {
 
         const style = createStyleBlock()
 
@@ -2293,7 +2294,7 @@ describe('column-rule', () => {
         expect(style.columnRule).toBe('medium')
         expect(style.cssText).toBe('column-rule: medium;')
     })
-    it('serializes a shorthand value from the declarations of its longhands', () => {
+    test('shorthand reification', () => {
 
         const style = createStyleBlock()
 
@@ -2307,7 +2308,7 @@ describe('columns', () => {
 
     const longhands = shorthands.get('columns')
 
-    it('parses longhand declarations from a shorthand value', () => {
+    test('shorthand expansion', () => {
 
         const style = createStyleBlock()
 
@@ -2324,7 +2325,7 @@ describe('columns', () => {
         expect(style.columns).toBe('auto')
         expect(style.cssText).toBe('columns: auto;')
     })
-    it('serializes a shorthand value from the declarations of its longhands', () => {
+    test('shorthand reification', () => {
 
         const style = createStyleBlock()
 
@@ -2338,7 +2339,7 @@ describe('contain-intrinsic-size', () => {
 
     const longhands = shorthands.get('contain-intrinsic-size')
 
-    it('parses longhand declarations from a shorthand value', () => {
+    test('shorthand expansion', () => {
 
         const style = createStyleBlock()
 
@@ -2355,7 +2356,7 @@ describe('contain-intrinsic-size', () => {
         expect(style.containIntrinsicSize).toBe('1px')
         expect(style.cssText).toBe('contain-intrinsic-size: 1px;')
     })
-    it('serializes a shorthand value from the declarations of its longhands', () => {
+    test('shorthand reification', () => {
 
         const style = createStyleBlock()
 
@@ -2369,7 +2370,7 @@ describe('container', () => {
 
     const longhands = shorthands.get('container')
 
-    it('parses longhand declarations from a shorthand value', () => {
+    test('shorthand expansion', () => {
 
         const style = createStyleBlock()
 
@@ -2386,7 +2387,7 @@ describe('container', () => {
         expect(style.container).toBe('none')
         expect(style.cssText).toBe('container: none;')
     })
-    it('serializes a shorthand value from the declarations of its longhands', () => {
+    test('shorthand reification', () => {
 
         const style = createStyleBlock()
 
@@ -2400,7 +2401,7 @@ describe('corners', () => {
 
     const longhands = shorthands.get('corners')
 
-    it('parses longhand declarations from a shorthand value', () => {
+    test('shorthand expansion', () => {
 
         const style = createStyleBlock()
 
@@ -2429,7 +2430,7 @@ describe('corners', () => {
         expect(style.corners).toBe('1px')
         expect(style.cssText).toBe('corners: 1px;')
     })
-    it('serializes a shorthand value from the declarations of its longhands', () => {
+    test('shorthand reification', () => {
 
         const style = createStyleBlock()
 
@@ -2443,7 +2444,7 @@ describe('cue, pause, rest', () => {
 
     const longhands = shorthands.get('cue')
 
-    it('parses longhand declarations from a shorthand value', () => {
+    test('shorthand expansion', () => {
 
         const style = createStyleBlock()
 
@@ -2460,7 +2461,7 @@ describe('cue, pause, rest', () => {
         expect(style.cue).toBe('url("icon.wav")')
         expect(style.cssText).toBe('cue: url("icon.wav");')
     })
-    it('serializes a shorthand value from the declarations of its longhands', () => {
+    test('shorthand reification', () => {
 
         const style = createStyleBlock()
 
@@ -2474,7 +2475,7 @@ describe('flex', () => {
 
     const longhands = shorthands.get('flex')
 
-    it('parses longhand declarations from a shorthand value', () => {
+    test('shorthand expansion', () => {
 
         const style = createStyleBlock()
 
@@ -2515,7 +2516,7 @@ describe('flex', () => {
         expect(style.flex).toBe('none')
         expect(style.cssText).toBe('flex: none;')
     })
-    it('serializes a shorthand value from the declarations of its longhands', () => {
+    test('shorthand reification', () => {
 
         const style = createStyleBlock()
 
@@ -2529,7 +2530,7 @@ describe('flex-flow', () => {
 
     const longhands = shorthands.get('flex-flow')
 
-    it('parses longhand declarations from a shorthand value', () => {
+    test('shorthand expansion', () => {
 
         const style = createStyleBlock()
 
@@ -2546,7 +2547,7 @@ describe('flex-flow', () => {
         expect(style.flexFlow).toBe('row')
         expect(style.cssText).toBe('flex-flow: row;')
     })
-    it('serializes a shorthand value from the declarations of its longhands', () => {
+    test('shorthand reification', () => {
 
         const style = createStyleBlock()
 
@@ -2560,7 +2561,7 @@ describe('font', () => {
 
     const longhands = shorthands.get('font')
 
-    it('parses longhand declarations from a shorthand value', () => {
+    test('shorthand expansion', () => {
 
         const style = createStyleBlock()
 
@@ -2590,7 +2591,7 @@ describe('font', () => {
         expect(style.font).toBe('')
         expect(style.cssText).toBe('font-style: italic; font-variant-ligatures: ; font-variant-caps: ; font-variant-alternates: ; font-variant-numeric: ; font-variant-east-asian: ; font-variant-position: ; font-variant-emoji: ; font-weight: ; font-width: ; font-size: ; line-height: ; font-family: ; font-feature-settings: normal; font-kerning: auto; font-language-override: normal; font-optical-sizing: auto; font-size-adjust: none; font-variation-settings: normal;')
     })
-    it('serializes a shorthand value from the declarations of its longhands', () => {
+    test('shorthand reification', () => {
 
         const style = createStyleBlock()
 
@@ -2615,7 +2616,7 @@ describe('font-variant', () => {
 
     const longhands = shorthands.get('font-variant')
 
-    it('parses longhand declarations from a shorthand value', () => {
+    test('shorthand expansion', () => {
 
         const style = createStyleBlock()
 
@@ -2642,7 +2643,7 @@ describe('font-variant', () => {
         expect(style.fontVariant).toBe('none')
         expect(style.cssText).toBe('font-variant: none;')
     })
-    it('serializes a shorthand value from the declarations of its longhands', () => {
+    test('shorthand reification', () => {
 
         const style = createStyleBlock()
 
@@ -2656,7 +2657,7 @@ describe('font-synthesis', () => {
 
     const longhands = shorthands.get('font-synthesis')
 
-    it('parses longhand declarations from a shorthand value', () => {
+    test('shorthand expansion', () => {
 
         const style = createStyleBlock()
 
@@ -2697,7 +2698,7 @@ describe('font-synthesis', () => {
         expect(style.fontSynthesis).toBe('none')
         expect(style.cssText).toBe('font-synthesis: none;')
     })
-    it('serializes a shorthand value from the declarations of its longhands', () => {
+    test('shorthand reification', () => {
 
         const style = createStyleBlock()
 
@@ -2711,7 +2712,7 @@ describe('gap', () => {
 
     const longhands = shorthands.get('gap')
 
-    it('parses longhand declarations from a shorthand value', () => {
+    test('shorthand expansion', () => {
 
         const style = createStyleBlock()
 
@@ -2728,7 +2729,7 @@ describe('gap', () => {
         expect(style.gap).toBe('1px')
         expect(style.cssText).toBe('gap: 1px;')
     })
-    it('serializes a shorthand value from the declarations of its longhands', () => {
+    test('shorthand reification', () => {
 
         const style = createStyleBlock()
 
@@ -2742,7 +2743,7 @@ describe('grid', () => {
 
     const longhands = shorthands.get('grid')
 
-    it('parses longhand declarations from a shorthand value', () => {
+    test('shorthand expansion', () => {
 
         const style = createStyleBlock()
 
@@ -2783,7 +2784,7 @@ describe('grid', () => {
         expect(style.grid).toBe('none / auto-flow')
         expect(style.cssText).toBe('grid: none / auto-flow;')
     })
-    it('serializes a shorthand value from the declarations of its longhands', () => {
+    test('shorthand reification', () => {
 
         const style = createStyleBlock()
 
@@ -2839,7 +2840,7 @@ describe('grid-area', () => {
 
     const longhands = shorthands.get('grid-area')
 
-    it('parses longhand declarations from a shorthand value', () => {
+    test('shorthand expansion', () => {
 
         const style = createStyleBlock()
 
@@ -2871,7 +2872,7 @@ describe('grid-area', () => {
         expect(style.gridArea).toBe('1 / 1 / 1 / 1')
         expect(style.cssText).toBe('grid-area: 1 / 1 / 1 / 1;')
     })
-    it('serializes a shorthand value from the declarations of its longhands', () => {
+    test('shorthand reification', () => {
 
         const style = createStyleBlock()
 
@@ -2885,7 +2886,7 @@ describe('grid-column, grid-row', () => {
 
     const longhands = shorthands.get('grid-column')
 
-    it('parses longhand declarations from a shorthand value', () => {
+    test('shorthand expansion', () => {
 
         const style = createStyleBlock()
 
@@ -2913,7 +2914,7 @@ describe('grid-column, grid-row', () => {
         expect(style.gridColumn).toBe('1 / 1')
         expect(style.cssText).toBe('grid-column: 1 / 1;')
     })
-    it('serializes a shorthand value from the declarations of its longhands', () => {
+    test('shorthand reification', () => {
 
         const style = createStyleBlock()
 
@@ -2927,7 +2928,7 @@ describe('grid-template', () => {
 
     const longhands = shorthands.get('grid-template')
 
-    it('parses longhand declarations from a shorthand value', () => {
+    test('shorthand expansion', () => {
 
         const style = createStyleBlock()
 
@@ -2961,7 +2962,7 @@ describe('grid-template', () => {
         expect(style.gridTemplateRows).toBe('auto [a] auto')
         expect(style.gridTemplateColumns).toBe('1px')
     })
-    it('serializes a shorthand value from the declarations of its longhands', () => {
+    test('shorthand reification', () => {
 
         const style = createStyleBlock()
 
@@ -3034,7 +3035,7 @@ describe('inset', () => {
 
     const longhands = shorthands.get('inset')
 
-    it('parses longhand declarations from a shorthand value', () => {
+    test('shorthand expansion', () => {
 
         const style = createStyleBlock()
 
@@ -3060,7 +3061,7 @@ describe('inset', () => {
         expect(style.inset).toBe('0px 1px 2px')
         expect(style.cssText).toBe('inset: 0px 1px 2px;')
     })
-    it('serializes a shorthand value from the declarations of its longhands', () => {
+    test('shorthand reification', () => {
 
         const style = createStyleBlock()
 
@@ -3074,7 +3075,7 @@ describe('inset-block, inset-inline', () => {
 
     const longhands = shorthands.get('inset-block')
 
-    it('parses longhand declarations from a shorthand value', () => {
+    test('shorthand expansion', () => {
 
         const style = createStyleBlock()
 
@@ -3091,7 +3092,7 @@ describe('inset-block, inset-inline', () => {
         expect(style.insetBlock).toBe('1px')
         expect(style.cssText).toBe('inset-block: 1px;')
     })
-    it('serializes a shorthand value from the declarations of its longhands', () => {
+    test('shorthand reification', () => {
 
         const style = createStyleBlock()
 
@@ -3105,7 +3106,7 @@ describe('line-clamp', () => {
 
     const longhands = shorthands.get('line-clamp')
 
-    it('parses longhand declarations from a shorthand value', () => {
+    test('shorthand expansion', () => {
 
         const style = createStyleBlock()
 
@@ -3130,7 +3131,7 @@ describe('line-clamp', () => {
         expect(style.lineClamp).toBe('auto')
         expect(style.cssText).toBe('line-clamp: auto;')
     })
-    it('serializes a shorthand value from the declarations of its longhands', () => {
+    test('shorthand reification', () => {
 
         const style = createStyleBlock()
 
@@ -3159,7 +3160,7 @@ describe('list-style', () => {
 
     const longhands = shorthands.get('list-style')
 
-    it('parses longhand declarations from a shorthand value', () => {
+    test('shorthand expansion', () => {
 
         const style = createStyleBlock()
 
@@ -3196,7 +3197,7 @@ describe('list-style', () => {
         expect(style.listStyle).toBe('outside outside')
         expect(style.cssText).toBe('list-style: outside outside;')
     })
-    it('serializes a shorthand value from the declarations of its longhands', () => {
+    test('shorthand reification', () => {
 
         const style = createStyleBlock()
 
@@ -3210,7 +3211,7 @@ describe('margin', () => {
 
     const longhands = shorthands.get('margin')
 
-    it('parses longhand declarations from a shorthand value', () => {
+    test('shorthand expansion', () => {
 
         const style = createStyleBlock()
 
@@ -3236,7 +3237,7 @@ describe('margin', () => {
         expect(style.margin).toBe('0px 1px 2px')
         expect(style.cssText).toBe('margin: 0px 1px 2px;')
     })
-    it('serializes a shorthand value from the declarations of its longhands', () => {
+    test('shorthand reification', () => {
 
         const style = createStyleBlock()
 
@@ -3250,7 +3251,7 @@ describe('margin-block, margin-inline', () => {
 
     const longhands = shorthands.get('margin-block')
 
-    it('parses longhand declarations from a shorthand value', () => {
+    test('shorthand expansion', () => {
 
         const style = createStyleBlock()
 
@@ -3267,7 +3268,7 @@ describe('margin-block, margin-inline', () => {
         expect(style.marginBlock).toBe('1px')
         expect(style.cssText).toBe('margin-block: 1px;')
     })
-    it('serializes a shorthand value from the declarations of its longhands', () => {
+    test('shorthand reification', () => {
 
         const style = createStyleBlock()
 
@@ -3281,7 +3282,7 @@ describe('marker', () => {
 
     const longhands = shorthands.get('marker')
 
-    it('parses longhand declarations from a shorthand value', () => {
+    test('shorthand expansion', () => {
 
         const style = createStyleBlock()
 
@@ -3291,7 +3292,7 @@ describe('marker', () => {
         expect(style.marker).toBe('none')
         expect(style.cssText).toBe('marker: none;')
     })
-    it('serializes a shorthand value from the declarations of its longhands', () => {
+    test('shorthand reification', () => {
 
         const style = createStyleBlock()
 
@@ -3310,7 +3311,7 @@ describe('mask', () => {
 
     const longhands = shorthands.get('mask')
 
-    it('parses longhand declarations from a shorthand value', () => {
+    test('shorthand expansion', () => {
 
         const style = createStyleBlock()
         const mask = 'none 0% 0% / auto repeat border-box border-box add match-source'
@@ -3367,7 +3368,7 @@ describe('mask', () => {
         expect(style.mask).toBe('fill-box')
         expect(style.cssText).toBe('mask: fill-box;')
     })
-    it('serializes a shorthand value from the declarations of its longhands', () => {
+    test('shorthand reification', () => {
 
         const style = createStyleBlock()
 
@@ -3386,7 +3387,7 @@ describe('mask-border', () => {
 
     const longhands = shorthands.get('mask-border')
 
-    it('parses longhand declarations from a shorthand value', () => {
+    test('shorthand expansion', () => {
 
         const style = createStyleBlock()
 
@@ -3403,7 +3404,7 @@ describe('mask-border', () => {
         expect(style.maskBorder).toBe('none')
         expect(style.cssText).toBe('mask-border: none;')
     })
-    it('serializes a shorthand value from the declarations of its longhands', () => {
+    test('shorthand reification', () => {
 
         const style = createStyleBlock()
 
@@ -3417,7 +3418,7 @@ describe('offset', () => {
 
     const longhands = shorthands.get('offset')
 
-    it('parses longhand declarations from a shorthand value', () => {
+    test('shorthand expansion', () => {
 
         const style = createStyleBlock()
 
@@ -3441,7 +3442,7 @@ describe('offset', () => {
         expect(style.offset).toBe('normal / left center')
         expect(style.cssText).toBe('offset: normal / left center;')
     })
-    it('serializes a shorthand value from the declarations of its longhands', () => {
+    test('shorthand reification', () => {
 
         const style = createStyleBlock()
 
@@ -3455,7 +3456,7 @@ describe('outline', () => {
 
     const longhands = shorthands.get('outline')
 
-    it('parses longhand declarations from a shorthand value', () => {
+    test('shorthand expansion', () => {
 
         const style = createStyleBlock()
 
@@ -3483,7 +3484,7 @@ describe('outline', () => {
         expect(style.outline).toBe('auto')
         expect(style.cssText).toBe('outline: auto;')
     })
-    it('serializes a shorthand value from the declarations of its longhands', () => {
+    test('shorthand reification', () => {
 
         const style = createStyleBlock()
 
@@ -3497,7 +3498,7 @@ describe('overflow', () => {
 
     const longhands = shorthands.get('overflow')
 
-    it('parses longhand declarations from a shorthand value', () => {
+    test('shorthand expansion', () => {
 
         const style = createStyleBlock()
 
@@ -3520,7 +3521,7 @@ describe('overflow', () => {
         expect(style.overflow).toBe('auto')
         expect(style.cssText).toBe('overflow: auto;')
     })
-    it('serializes a shorthand value from the declarations of its longhands', () => {
+    test('shorthand reification', () => {
 
         const style = createStyleBlock()
 
@@ -3534,7 +3535,7 @@ describe('overflow-clip-margin, overflow-clip-margin-block, overflow-clip-margin
 
     const longhands = shorthands.get('overflow-clip-margin')
 
-    it('parses longhand declarations from a shorthand value', () => {
+    test('shorthand expansion', () => {
 
         const style = createStyleBlock()
 
@@ -3551,7 +3552,7 @@ describe('overflow-clip-margin, overflow-clip-margin-block, overflow-clip-margin
         expect(style.overflowClipMargin).toBe('content-box')
         expect(style.cssText).toBe('overflow-clip-margin: content-box;')
     })
-    it('serializes a shorthand value from the declarations of its longhands', () => {
+    test('shorthand reification', () => {
 
         const style = createStyleBlock()
 
@@ -3570,7 +3571,7 @@ describe('overflow-clip-margin-block, overflow-clip-margin-inline', () => {
 
     const longhands = shorthands.get('overflow-clip-margin-block')
 
-    it('parses longhand declarations from a shorthand value', () => {
+    test('shorthand expansion', () => {
 
         const style = createStyleBlock()
 
@@ -3581,7 +3582,7 @@ describe('overflow-clip-margin-block, overflow-clip-margin-inline', () => {
         expect(style.overflowClipMarginBlock).toBe('0px')
         expect(style.cssText).toBe('overflow-clip-margin-block: 0px;')
     })
-    it('serializes a shorthand value from the declarations of its longhands', () => {
+    test('shorthand reification', () => {
 
         const style = createStyleBlock()
 
@@ -3595,7 +3596,7 @@ describe('overscroll-behavior', () => {
 
     const longhands = shorthands.get('overscroll-behavior')
 
-    it('parses longhand declarations from a shorthand value', () => {
+    test('shorthand expansion', () => {
 
         const style = createStyleBlock()
 
@@ -3612,7 +3613,7 @@ describe('overscroll-behavior', () => {
         expect(style.overscrollBehavior).toBe('contain')
         expect(style.cssText).toBe('overscroll-behavior: contain;')
     })
-    it('serializes a shorthand value from the declarations of its longhands', () => {
+    test('shorthand reification', () => {
 
         const style = createStyleBlock()
 
@@ -3626,7 +3627,7 @@ describe('padding', () => {
 
     const longhands = shorthands.get('padding')
 
-    it('parses longhand declarations from a shorthand value', () => {
+    test('shorthand expansion', () => {
 
         const style = createStyleBlock()
 
@@ -3652,7 +3653,7 @@ describe('padding', () => {
         expect(style.padding).toBe('0px 1px 2px')
         expect(style.cssText).toBe('padding: 0px 1px 2px;')
     })
-    it('serializes a shorthand value from the declarations of its longhands', () => {
+    test('shorthand reification', () => {
 
         const style = createStyleBlock()
 
@@ -3666,7 +3667,7 @@ describe('padding-block, padding-inline', () => {
 
     const longhands = shorthands.get('padding-block')
 
-    it('parses longhand declarations from a shorthand value', () => {
+    test('shorthand expansion', () => {
 
         const style = createStyleBlock()
 
@@ -3683,7 +3684,7 @@ describe('padding-block, padding-inline', () => {
         expect(style.paddingBlock).toBe('1px')
         expect(style.cssText).toBe('padding-block: 1px;')
     })
-    it('serializes a shorthand value from the declarations of its longhands', () => {
+    test('shorthand reification', () => {
 
         const style = createStyleBlock()
 
@@ -3697,7 +3698,7 @@ describe('place-content', () => {
 
     const longhands = shorthands.get('place-content')
 
-    it('parses longhand declarations from a shorthand value', () => {
+    test('shorthand expansion', () => {
 
         const style = createStyleBlock()
 
@@ -3726,7 +3727,7 @@ describe('place-content', () => {
         expect(style.placeContent).toBe('baseline')
         expect(style.cssText).toBe('place-content: baseline;')
     })
-    it('serializes a shorthand value from the declarations of its longhands', () => {
+    test('shorthand reification', () => {
 
         const style = createStyleBlock()
 
@@ -3740,7 +3741,7 @@ describe('place-items', () => {
 
     const longhands = shorthands.get('place-items')
 
-    it('parses longhand declarations from a shorthand value', () => {
+    test('shorthand expansion', () => {
 
         const style = createStyleBlock()
 
@@ -3757,7 +3758,7 @@ describe('place-items', () => {
         expect(style.placeItems).toBe('normal')
         expect(style.cssText).toBe('place-items: normal;')
     })
-    it('serializes a shorthand value from the declarations of its longhands', () => {
+    test('shorthand reification', () => {
 
         const style = createStyleBlock()
 
@@ -3771,7 +3772,7 @@ describe('place-self', () => {
 
     const longhands = shorthands.get('place-self')
 
-    it('parses longhand declarations from a shorthand value', () => {
+    test('shorthand expansion', () => {
 
         const style = createStyleBlock()
 
@@ -3788,7 +3789,7 @@ describe('place-self', () => {
         expect(style.placeSelf).toBe('normal')
         expect(style.cssText).toBe('place-self: normal;')
     })
-    it('serializes a shorthand value from the declarations of its longhands', () => {
+    test('shorthand reification', () => {
 
         const style = createStyleBlock()
 
@@ -3802,7 +3803,7 @@ describe('position-try', () => {
 
     const longhands = shorthands.get('position-try')
 
-    it('parses longhand declarations from a shorthand value', () => {
+    test('shorthand expansion', () => {
 
         const style = createStyleBlock()
 
@@ -3819,7 +3820,7 @@ describe('position-try', () => {
         expect(style.positionTry).toBe('none')
         expect(style.cssText).toBe('position-try: none;')
     })
-    it('serializes a shorthand value from the declarations of its longhands', () => {
+    test('shorthand reification', () => {
 
         const style = createStyleBlock()
 
@@ -3833,7 +3834,7 @@ describe('scroll-margin', () => {
 
     const longhands = shorthands.get('scroll-margin')
 
-    it('parses longhand declarations from a shorthand value', () => {
+    test('shorthand expansion', () => {
 
         const style = createStyleBlock()
 
@@ -3859,7 +3860,7 @@ describe('scroll-margin', () => {
         expect(style.scrollMargin).toBe('0px 1px 2px')
         expect(style.cssText).toBe('scroll-margin: 0px 1px 2px;')
     })
-    it('serializes a shorthand value from the declarations of its longhands', () => {
+    test('shorthand reification', () => {
 
         const style = createStyleBlock()
 
@@ -3873,7 +3874,7 @@ describe('scroll-margin-block, scroll-margin-inline', () => {
 
     const longhands = shorthands.get('scroll-margin-block')
 
-    it('parses longhand declarations from a shorthand value', () => {
+    test('shorthand expansion', () => {
 
         const style = createStyleBlock()
 
@@ -3890,7 +3891,7 @@ describe('scroll-margin-block, scroll-margin-inline', () => {
         expect(style.scrollMarginBlock).toBe('1px')
         expect(style.cssText).toBe('scroll-margin-block: 1px;')
     })
-    it('serializes a shorthand value from the declarations of its longhands', () => {
+    test('shorthand reification', () => {
 
         const style = createStyleBlock()
 
@@ -3904,7 +3905,7 @@ describe('scroll-padding', () => {
 
     const longhands = shorthands.get('scroll-padding')
 
-    it('parses longhand declarations from a shorthand value', () => {
+    test('shorthand expansion', () => {
 
         const style = createStyleBlock()
 
@@ -3930,7 +3931,7 @@ describe('scroll-padding', () => {
         expect(style.scrollPadding).toBe('0px 1px 2px')
         expect(style.cssText).toBe('scroll-padding: 0px 1px 2px;')
     })
-    it('serializes a shorthand value from the declarations of its longhands', () => {
+    test('shorthand reification', () => {
 
         const style = createStyleBlock()
 
@@ -3944,7 +3945,7 @@ describe('scroll-padding-block, scroll-padding-inline', () => {
 
     const longhands = shorthands.get('scroll-padding-block')
 
-    it('parses longhand declarations from a shorthand value', () => {
+    test('shorthand expansion', () => {
 
         const style = createStyleBlock()
 
@@ -3961,7 +3962,7 @@ describe('scroll-padding-block, scroll-padding-inline', () => {
         expect(style.scrollPaddingBlock).toBe('1px')
         expect(style.cssText).toBe('scroll-padding-block: 1px;')
     })
-    it('serializes a shorthand value from the declarations of its longhands', () => {
+    test('shorthand reification', () => {
 
         const style = createStyleBlock()
 
@@ -3975,7 +3976,7 @@ describe('scroll-start', () => {
 
     const longhands = shorthands.get('scroll-start')
 
-    it('parses longhand declarations from a shorthand value', () => {
+    test('shorthand expansion', () => {
 
         const style = createStyleBlock()
 
@@ -3992,7 +3993,7 @@ describe('scroll-start', () => {
         expect(style.scrollStart).toBe('auto')
         expect(style.cssText).toBe('scroll-start: auto;')
     })
-    it('serializes a shorthand value from the declarations of its longhands', () => {
+    test('shorthand reification', () => {
 
         const style = createStyleBlock()
 
@@ -4006,7 +4007,7 @@ describe('scroll-start-target', () => {
 
     const longhands = shorthands.get('scroll-start-target')
 
-    it('parses longhand declarations from a shorthand value', () => {
+    test('shorthand expansion', () => {
 
         const style = createStyleBlock()
 
@@ -4023,7 +4024,7 @@ describe('scroll-start-target', () => {
         expect(style.scrollStartTarget).toBe('none')
         expect(style.cssText).toBe('scroll-start-target: none;')
     })
-    it('serializes a shorthand value from the declarations of its longhands', () => {
+    test('shorthand reification', () => {
 
         const style = createStyleBlock()
 
@@ -4037,7 +4038,7 @@ describe('scroll-timeline', () => {
 
     const longhands = shorthands.get('scroll-timeline')
 
-    it('parses longhand declarations from a shorthand value', () => {
+    test('shorthand expansion', () => {
 
         const style = createStyleBlock()
         const timeline = 'none block'
@@ -4061,7 +4062,7 @@ describe('scroll-timeline', () => {
         expect(style.scrollTimeline).toBe('none, none')
         expect(style.cssText).toBe('scroll-timeline: none, none;')
     })
-    it('serializes a shorthand value from the declarations of its longhands', () => {
+    test('shorthand reification', () => {
 
         const style = createStyleBlock()
 
@@ -4080,7 +4081,7 @@ describe('text-align', () => {
 
     const longhands = shorthands.get('text-align')
 
-    it('parses longhand declarations from a shorthand value', () => {
+    test('shorthand expansion', () => {
 
         const style = createStyleBlock()
 
@@ -4112,7 +4113,7 @@ describe('text-align', () => {
         style.textAlign = '"12"'
         expect(style.textAlign).toBe('"1"')
     })
-    it('serializes a shorthand value from the declarations of its longhands', () => {
+    test('shorthand reification', () => {
 
         const style = createStyleBlock()
 
@@ -4126,7 +4127,7 @@ describe('text-emphasis', () => {
 
     const longhands = shorthands.get('text-emphasis')
 
-    it('parses longhand declarations from a shorthand value', () => {
+    test('shorthand expansion', () => {
 
         const style = createStyleBlock()
 
@@ -4143,7 +4144,7 @@ describe('text-emphasis', () => {
         expect(style.textEmphasis).toBe('none')
         expect(style.cssText).toBe('text-emphasis: none;')
     })
-    it('serializes a shorthand value from the declarations of its longhands', () => {
+    test('shorthand reification', () => {
 
         const style = createStyleBlock()
 
@@ -4157,7 +4158,7 @@ describe('text-decoration', () => {
 
     const longhands = shorthands.get('text-decoration')
 
-    it('parses longhand declarations from a shorthand value', () => {
+    test('shorthand expansion', () => {
 
         const style = createStyleBlock()
 
@@ -4174,7 +4175,7 @@ describe('text-decoration', () => {
         expect(style.textDecoration).toBe('none')
         expect(style.cssText).toBe('text-decoration: none;')
     })
-    it('serializes a shorthand value from the declarations of its longhands', () => {
+    test('shorthand reification', () => {
 
         const style = createStyleBlock()
 
@@ -4192,7 +4193,7 @@ describe('text-spacing', () => {
 
     const longhands = shorthands.get('text-spacing')
 
-    it('parses longhand declarations from a shorthand value', () => {
+    test('shorthand expansion', () => {
 
         const style = createStyleBlock()
 
@@ -4217,7 +4218,7 @@ describe('text-spacing', () => {
         expect(style.textSpacing).toBe('auto')
         expect(style.cssText).toBe('text-spacing: auto;')
     })
-    it('serializes a shorthand value from the declarations of its longhands', () => {
+    test('shorthand reification', () => {
 
         const style = createStyleBlock()
 
@@ -4231,7 +4232,7 @@ describe('text-wrap', () => {
 
     const longhands = shorthands.get('text-wrap')
 
-    it('parses longhand declarations from a shorthand value', () => {
+    test('shorthand expansion', () => {
 
         const style = createStyleBlock()
 
@@ -4248,7 +4249,7 @@ describe('text-wrap', () => {
         expect(style.textWrap).toBe('wrap')
         expect(style.cssText).toBe('text-wrap: wrap;')
     })
-    it('serializes a shorthand value from the declarations of its longhands', () => {
+    test('shorthand reification', () => {
 
         const style = createStyleBlock()
 
@@ -4262,7 +4263,7 @@ describe('transition', () => {
 
     const longhands = shorthands.get('transition')
 
-    it('parses longhand declarations from a shorthand value', () => {
+    test('shorthand expansion', () => {
 
         const style = createStyleBlock()
         const transition = '0s ease 0s all'
@@ -4286,7 +4287,7 @@ describe('transition', () => {
         expect(style.transition).toBe('0s, 0s')
         expect(style.cssText).toBe('transition: 0s, 0s;')
     })
-    it('serializes a shorthand value from the declarations of its longhands', () => {
+    test('shorthand reification', () => {
 
         const style = createStyleBlock()
 
@@ -4305,7 +4306,7 @@ describe('vertical-align', () => {
 
     const longhands = shorthands.get('vertical-align')
 
-    it('parses longhand declarations from a shorthand value', () => {
+    test('shorthand expansion', () => {
 
         const style = createStyleBlock()
 
@@ -4322,7 +4323,7 @@ describe('vertical-align', () => {
         expect(style.verticalAlign).toBe('baseline')
         expect(style.cssText).toBe('vertical-align: baseline;')
     })
-    it('serializes a shorthand value from the declarations of its longhands', () => {
+    test('shorthand reification', () => {
 
         const style = createStyleBlock()
 
@@ -4336,7 +4337,7 @@ describe('view-timeline', () => {
 
     const longhands = shorthands.get('view-timeline')
 
-    it('parses longhand declarations from a shorthand value', () => {
+    test('shorthand expansion', () => {
 
         const style = createStyleBlock()
         const timeline = 'none block auto'
@@ -4360,7 +4361,7 @@ describe('view-timeline', () => {
         expect(style.viewTimeline).toBe('none, none')
         expect(style.cssText).toBe('view-timeline: none, none;')
     })
-    it('serializes a shorthand value from the declarations of its longhands', () => {
+    test('shorthand reification', () => {
 
         const style = createStyleBlock()
 
@@ -4379,7 +4380,7 @@ describe('white-space', () => {
 
     const longhands = shorthands.get('white-space')
 
-    it('parses longhand declarations from a shorthand value', () => {
+    test('shorthand expansion', () => {
 
         const style = createStyleBlock()
 
@@ -4405,7 +4406,7 @@ describe('white-space', () => {
             expect(style.cssText).toBe(`white-space: ${keyword};`)
         })
     })
-    it('serializes a shorthand value from the declarations of its longhands', () => {
+    test('shorthand reification', () => {
 
         const style = createStyleBlock()
 

@@ -823,7 +823,7 @@ describe('case-insensitive function names', () => {
 })
 
 describe('<any-value>', () => {
-    it('fails to parse an invalid value', () => {
+    test('invalid', () => {
         const invalid = [
             // One or more tokens
             '',
@@ -836,16 +836,16 @@ describe('<any-value>', () => {
         ]
         invalid.forEach(input => expect(parse('<any-value>', input, false)).toBeNull())
     })
-    it('parses a valid value', () => {
+    test('representation', () => {
         expect(parse('<any-value>', 'any value', false))
             .toMatchObject(list([identToken('any'), identToken('value')], ' ', ['<any-value>']))
     })
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
         expect(parse('<any-value>', '  /**/  !1e0;  /**/  ')).toBe('! 1;')
     })
 })
 describe('<declaration-value>', () => {
-    it('fails to parse an invalid value', () => {
+    test('invalid', () => {
         const invalid = [
             // One or more tokens
             '',
@@ -860,20 +860,20 @@ describe('<declaration-value>', () => {
         ]
         invalid.forEach(input => expect(parse('<declaration-value>', input, false)).toBeNull())
     })
-    it('parses a valid value', () => {
+    test('representation', () => {
         expect(parse('<declaration-value>', 'declaration value', false))
             .toMatchObject(list([identToken('declaration'), identToken('value')], ' ', ['<declaration-value>']))
     })
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
         expect(parse('<declaration-value>', '  /**/  1e0  /**/  ')).toBe('1')
     })
 })
 describe('<declaration>', () => {
-    it('fails to parse an invalid value', () => {
+    test('invalid', () => {
         expect(parse('<declaration>', 'color red', false)).toBeNull()
         expect(parse('<declaration>', 'color: red;', false)).toBeNull()
     })
-    it('parses a valid value', () => {
+    test('representation', () => {
         expect(parse('<declaration>', 'color: green !important', false)).toMatchObject({
             important: true,
             name: 'color',
@@ -881,7 +881,7 @@ describe('<declaration>', () => {
             value: list([identToken('green')]),
         })
     })
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
         const valid = [
             ['  /**/  opacity :1e0 !important  /**/  ', 'opacity: 1 !important'],
             ['--custom:  /**/  1e0 !important  /**/  ', '--custom: 1e0 !important'],
@@ -892,7 +892,7 @@ describe('<declaration>', () => {
 })
 
 describe('<ident>', () => {
-    it('fails to parse an invalid value', () => {
+    test('invalid', () => {
         const invalid = [
             // Invalid identifier (start) code point
             '1identifier',
@@ -905,10 +905,10 @@ describe('<ident>', () => {
         ]
         invalid.forEach(input => expect(parse('<ident>', input, false)).toBeNull())
     })
-    it('parses a valid value', () => {
+    test('representation', () => {
         expect(parse('<ident>', 'identifier', false)).toMatchObject(ident('identifier'))
     })
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
         const valid = [
             // Starts with identifier start code point
             ['identifier'],
@@ -946,15 +946,15 @@ describe('<ident>', () => {
     })
 })
 describe('keyword', () => {
-    it('parses a valid value', () => {
+    test('representation', () => {
         expect(parse('solid', 'solid', false)).toMatchObject(keyword('solid'))
     })
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
         expect(parse('solid', 'SOLId')).toBe('solid')
     })
 })
 describe('<custom-ident>', () => {
-    it('fails to parse an invalid value', () => {
+    test('invalid', () => {
         const invalid = [
             // Invalid identifier (start) code point
             '1identifier',
@@ -972,10 +972,10 @@ describe('<custom-ident>', () => {
         ]
         invalid.forEach(input => expect(parse('<custom-ident>', input, false)).toBeNull())
     })
-    it('parses a valid value', () => {
+    test('representation', () => {
         expect(parse('<custom-ident>', 'customIdentifier', false)).toMatchObject(customIdent('customIdentifier'))
     })
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
         const valid = [
             // Starts with identifier start code point
             ['identifier'],
@@ -1015,7 +1015,7 @@ describe('<custom-ident>', () => {
     })
 })
 describe('<dashed-ident>', () => {
-    it('fails to parse an invalid value', () => {
+    test('invalid', () => {
         const invalid = [
             // Does not start with --
             'identifier',
@@ -1026,10 +1026,10 @@ describe('<dashed-ident>', () => {
         ]
         invalid.forEach(input => expect(parse('<dashed-ident>', input, false)).toBeNull())
     })
-    it('parses a valid value', () => {
+    test('representation', () => {
         expect(parse('<dashed-ident>', '--dashed-ident', false)).toMatchObject(dashedIdent('--dashed-ident'))
     })
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
         const valid = [
             // Contains identifier code points or escape sequences
             ['--'],
@@ -1057,16 +1057,16 @@ describe('<dashed-ident>', () => {
     })
 })
 describe('<custom-property-name>', () => {
-    it('fails to parse an invalid value', () => {
+    test('invalid', () => {
         expect(parse('<custom-property-name>', '--', false)).toBeNull()
     })
-    it('parses a valid value', () => {
+    test('representation', () => {
         expect(parse('<custom-property-name>', '--custom', false))
             .toMatchObject(dashedIdent('--custom', ['<custom-property-name>']))
     })
 })
 describe('<ndashdigit-ident>', () => {
-    it('fails to parse an invalid value', () => {
+    test('invalid', () => {
         const invalid = [
             '-n-1',
             'n--1',
@@ -1074,7 +1074,7 @@ describe('<ndashdigit-ident>', () => {
         ]
         invalid.forEach(input => expect(parse('<ndashdigit-ident>', input, false)).toBeNull())
     })
-    it('parses a valid value', () => {
+    test('representation', () => {
         const valid = [
             ['n-1', identToken('n-1', ['<ndashdigit-ident>'])],
             ['N-1', identToken('n-1', ['<ndashdigit-ident>'], 'N-1')],
@@ -1084,7 +1084,7 @@ describe('<ndashdigit-ident>', () => {
     })
 })
 describe('<dashndashdigit-ident>', () => {
-    it('fails to parse an invalid value', () => {
+    test('invalid', () => {
         const invalid = [
             '--n-1',
             '-n--1',
@@ -1092,7 +1092,7 @@ describe('<dashndashdigit-ident>', () => {
         ]
         invalid.forEach(input => expect(parse('<dashndashdigit-ident>', input, false)).toBeNull())
     })
-    it('parses a valid value', () => {
+    test('representation', () => {
         const valid = [
             ['-n-1', identToken('-n-1', ['<dashndashdigit-ident>'])],
             ['-N-1', identToken('-n-1', ['<dashndashdigit-ident>'], '-N-1')],
@@ -1102,14 +1102,14 @@ describe('<dashndashdigit-ident>', () => {
     })
 })
 describe('<string>', () => {
-    it('fails to parse an invalid value', () => {
+    test('invalid', () => {
         expect(parse('<string>', '"\n"', false)).toBeNull()
     })
-    it('parses a valid value', () => {
+    test('representation', () => {
         expect(parse('<string>', '"css"', false)).toMatchObject(string('css'))
         expect(parse('<string>', '"css', false)).toMatchObject(string('css', [], '"css'))
     })
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
         const valid = [
             // Unclosed (parse error)
             ['"', '""'],
@@ -1137,7 +1137,7 @@ describe('<string>', () => {
     })
 })
 describe('<url>', () => {
-    it('fails to parse an invalid value', () => {
+    test('invalid', () => {
         const invalid = [
             'url(inval id.url)',
             'url(inval\nid.url)',
@@ -1150,7 +1150,7 @@ describe('<url>', () => {
         ]
         invalid.forEach(input => expect(parse('<url>', input, false)).toBeNull())
     })
-    it('parses a valid value', () => {
+    test('representation', () => {
         const valid = [
             ['url(img.jpg)', {
                 types: ['<url-token>', '<url()>', '<url>'],
@@ -1169,7 +1169,7 @@ describe('<url>', () => {
         ]
         valid.forEach(([input, expected]) => expect(parse('<url>', input, false)).toMatchObject(expected))
     })
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
         const valid = [
             // Unclosed (parse error)
             ['url(', 'url("")'],
@@ -1205,7 +1205,7 @@ describe('<url>', () => {
 })
 
 describe('<number>', () => {
-    it('fails to parse an invalid value', () => {
+    test('invalid', () => {
         const invalid = [
             '-1',
             '1px',
@@ -1213,10 +1213,10 @@ describe('<number>', () => {
         ]
         invalid.forEach(input => expect(parse('<number [0,∞]>', input, false)).toBeNull())
     })
-    it('parses a valid value', () => {
+    test('representation', () => {
         expect(parse('<number>', '1', false)).toMatchObject(number(1))
     })
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
         const valid = [
             // Scientific notation
             ['1e1', '10'],
@@ -1246,7 +1246,7 @@ describe('<number>', () => {
     })
 })
 describe('<zero>', () => {
-    it('fails to parse an invalid value', () => {
+    test('invalid', () => {
         const invalid = [
             '1',
             '0px',
@@ -1254,10 +1254,10 @@ describe('<zero>', () => {
         ]
         invalid.forEach(input => expect(parse('<zero>', input, false)).toBeNull())
     })
-    it('parses a valid value', () => {
+    test('representation', () => {
         expect(parse('<zero>', '0', false)).toMatchObject(numberToken(0, ['<zero>']))
     })
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
         const valid = [
             '0.0',
             '+0',
@@ -1267,7 +1267,7 @@ describe('<zero>', () => {
     })
 })
 describe('<integer>', () => {
-    it('fails to parse an invalid value', () => {
+    test('invalid', () => {
         const invalid = [
             '-1',
             '1.1',
@@ -1277,10 +1277,10 @@ describe('<integer>', () => {
         ]
         invalid.forEach(input => expect(parse('<integer [0,∞]>', input, false)).toBeNull())
     })
-    it('parses a valid value', () => {
+    test('representation', () => {
         expect(parse('<integer>', '1', false)).toMatchObject(numberToken(1, ['<integer>']))
     })
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
         const valid = [
             // Scientific notation (https://github.com/w3c/csswg-drafts/issues/7289)
             ['1.0', '1'],
@@ -1303,7 +1303,7 @@ describe('<integer>', () => {
     })
 })
 describe('<signless-integer>', () => {
-    it('fails to parse an invalid value', () => {
+    test('invalid', () => {
         const invalid = [
             '/**/-1',
             '+1',
@@ -1314,12 +1314,12 @@ describe('<signless-integer>', () => {
         ]
         invalid.forEach(input => expect(parse('<signless-integer>', input, false)).toBeNull())
     })
-    it('parses a valid value', () => {
+    test('representation', () => {
         expect(parse('<signless-integer>', '1', false)).toMatchObject(numberToken(1, ['<signless-integer>']))
     })
 })
 describe('<signed-integer>', () => {
-    it('fails to parse an invalid value', () => {
+    test('invalid', () => {
         const invalid = [
             '1',
             '+1.1',
@@ -1329,13 +1329,13 @@ describe('<signed-integer>', () => {
         ]
         invalid.forEach(input => expect(parse('<signed-integer>', input, false)).toBeNull())
     })
-    it('parses a valid value', () => {
+    test('representation', () => {
         expect(parse('<signed-integer>', '/**/+1', false)).toMatchObject(numberToken(1, ['<signed-integer>'], '+1'))
         expect(parse('<signed-integer>', '-1', false)).toMatchObject(numberToken(-1, ['<signed-integer>']))
     })
 })
 describe('<dimension>', () => {
-    it('fails to parse an invalid value', () => {
+    test('invalid', () => {
         const invalid = [
             // Invalid identifier (start) code point
             '1!identifier',
@@ -1347,10 +1347,10 @@ describe('<dimension>', () => {
         ]
         invalid.forEach(input => expect(parse('<dimension>', input, false)).toBeNull())
     })
-    it('parses a valid value', () => {
+    test('representation', () => {
         expect(parse('<dimension>', '1identifier', false)).toMatchObject(dimension(1, 'identifier'))
     })
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
         const valid = [
             // Starts with identifier start code point
             ['1identifier'],
@@ -1388,7 +1388,7 @@ describe('<dimension>', () => {
     })
 })
 describe('<angle>', () => {
-    it('fails to parse an invalid value', () => {
+    test('invalid', () => {
         const invalid = [
             '-1deg',
             '1turn',
@@ -1398,7 +1398,7 @@ describe('<angle>', () => {
         ]
         invalid.forEach(input => expect(parse('<angle [0,1deg]>', input, false)).toBeNull())
     })
-    it('parses a valid value', () => {
+    test('representation', () => {
         const valid = [
             ['<angle> | <zero>', '0', {
                 types: ['<dimension-token>', '<dimension>', '<angle>'],
@@ -1414,7 +1414,7 @@ describe('<angle>', () => {
         ]
         valid.forEach(([definition, input, expected]) => expect(parse(definition, input, false)).toMatchObject(expected))
     })
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
         const valid = [
             // Scientific notation
             ['1e1deg', '10deg'],
@@ -1431,7 +1431,7 @@ describe('<angle>', () => {
     })
 })
 describe('<decibel>', () => {
-    it('fails to parse an invalid value', () => {
+    test('invalid', () => {
         const invalid = [
             '-1db',
             '1',
@@ -1440,10 +1440,10 @@ describe('<decibel>', () => {
         ]
         invalid.forEach(input => expect(parse('<decibel [0,1db]>', input, false)).toBeNull())
     })
-    it('parses a valid value', () => {
+    test('representation', () => {
         expect(parse('<decibel>', '1db', false)).toMatchObject(decibel(1))
     })
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
         const valid = [
             // Scientific notation
             ['1e1db', '10db'],
@@ -1460,7 +1460,7 @@ describe('<decibel>', () => {
     })
 })
 describe('<flex>', () => {
-    it('fails to parse an invalid value', () => {
+    test('invalid', () => {
         const invalid = [
             ['-1fr', '<flex>'],
             ['1'],
@@ -1469,10 +1469,10 @@ describe('<flex>', () => {
         ]
         invalid.forEach(([input, definition = '<flex [0,1fr]>']) => expect(parse(definition, input, false)).toBeNull())
     })
-    it('parses a valid value', () => {
+    test('representation', () => {
         expect(parse('<flex>', '1fr', false)).toMatchObject(flex(1))
     })
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
         const valid = [
             // Scientific notation
             ['1e1fr', '10fr'],
@@ -1489,7 +1489,7 @@ describe('<flex>', () => {
     })
 })
 describe('<frequency>', () => {
-    it('fails to parse an invalid value', () => {
+    test('invalid', () => {
         const invalid = [
             '-1hz',
             '1khz',
@@ -1499,10 +1499,10 @@ describe('<frequency>', () => {
         ]
         invalid.forEach(input => expect(parse('<frequency [0,1hz]>', input, false)).toBeNull())
     })
-    it('parses a valid value', () => {
+    test('representation', () => {
         expect(parse('<frequency>', '1hz', false)).toMatchObject(frequency(1, 'hz'))
     })
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
         const valid = [
             // Scientific notation
             ['1e1hz', '10hz'],
@@ -1519,7 +1519,7 @@ describe('<frequency>', () => {
     })
 })
 describe('<length>', () => {
-    it('fails to parse an invalid value', () => {
+    test('invalid', () => {
         const invalid = [
             '-1px',
             '1',
@@ -1528,7 +1528,7 @@ describe('<length>', () => {
         ]
         invalid.forEach(input => expect(parse('<length [0,∞]>', input, false)).toBeNull())
     })
-    it('parses a valid value', () => {
+    test('representation', () => {
         expect(parse('<length>', '0', false)).toMatchObject({
             types: ['<dimension-token>', '<dimension>', '<length>'],
             unit: 'px',
@@ -1536,7 +1536,7 @@ describe('<length>', () => {
         })
         expect(parse('<length>', '1px', false)).toMatchObject(length(1, 'px'))
     })
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
         const valid = [
             // Scientific notation
             ['1e1px', '10px'],
@@ -1554,7 +1554,7 @@ describe('<length>', () => {
     })
 })
 describe('<percentage>', () => {
-    it('fails to parse an invalid value', () => {
+    test('invalid', () => {
         const invalid = [
             '-1%',
             '0',
@@ -1563,10 +1563,10 @@ describe('<percentage>', () => {
         ]
         invalid.forEach(input => expect(parse('<percentage [0,∞]>', input, false)).toBeNull())
     })
-    it('parses a valid value', () => {
+    test('representation', () => {
         expect(parse('<percentage>', '1%', false)).toMatchObject(percentage(1))
     })
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
         const valid = [
             // Scientific notation
             ['1e1%', '10%'],
@@ -1581,7 +1581,7 @@ describe('<percentage>', () => {
     })
 })
 describe('<length-percentage>', () => {
-    it('fails to parse an invalid value', () => {
+    test('invalid', () => {
         const invalid = [
             '-1px',
             '-1%',
@@ -1589,16 +1589,16 @@ describe('<length-percentage>', () => {
         ]
         invalid.forEach(input => expect(parse('<length-percentage [0,∞]>', input, false)).toBeNull())
     })
-    it('parses a valid value', () => {
+    test('representation', () => {
         expect(parse('<length-percentage>', '1px', false)).toMatchObject(length(1, 'px', ['<length-percentage>']))
     })
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
         expect(parse('<length-percentage>', '1px')).toBe('1px')
         expect(parse('<length-percentage>', '1%')).toBe('1%')
     })
 })
 describe('<semitones>', () => {
-    it('fails to parse an invalid value', () => {
+    test('invalid', () => {
         const invalid = [
             '-1st',
             '1',
@@ -1607,10 +1607,10 @@ describe('<semitones>', () => {
         ]
         invalid.forEach(input => expect(parse('<semitones [0,1st]>', input, false)).toBeNull())
     })
-    it('parses a valid value', () => {
+    test('representation', () => {
         expect(parse('<semitones>', '1st', false)).toMatchObject(semitones(1))
     })
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
         const valid = [
             // Scientific notation
             ['1e1st', '10st'],
@@ -1627,7 +1627,7 @@ describe('<semitones>', () => {
     })
 })
 describe('<resolution>', () => {
-    it('fails to parse an invalid value', () => {
+    test('invalid', () => {
         const invalid = [
             ['-1dppx', '<resolution>'],
             ['1dpi'],
@@ -1638,10 +1638,10 @@ describe('<resolution>', () => {
         invalid.forEach(([input, definition = '<resolution [0,1dppx]>']) =>
             expect(parse(definition, input, false)).toBeNull())
     })
-    it('parses a valid value', () => {
+    test('representation', () => {
         expect(parse('<resolution>', '1dppx', false)).toMatchObject(resolution(1, 'dppx'))
     })
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
         const valid = [
             // Scientific notation
             ['1e1dppx', '10dppx'],
@@ -1658,7 +1658,7 @@ describe('<resolution>', () => {
     })
 })
 describe('<time>', () => {
-    it('fails to parse an invalid value', () => {
+    test('invalid', () => {
         const invalid = [
             '1s',
             '1',
@@ -1667,10 +1667,10 @@ describe('<time>', () => {
         ]
         invalid.forEach(input => expect(parse('<time [0,1ms]>', input, false)).toBeNull())
     })
-    it('parses a valid value', () => {
+    test('representation', () => {
         expect(parse('<time>', '1s', false)).toMatchObject(time(1, 's'))
     })
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
         const valid = [
             // Scientific notation
             ['1e1s', '10s'],
@@ -1687,7 +1687,7 @@ describe('<time>', () => {
     })
 })
 describe('<n-dimension>', () => {
-    it('fails to parse an invalid value', () => {
+    test('invalid', () => {
         const invalid = [
             '1n-',
             '1.1n',
@@ -1695,13 +1695,13 @@ describe('<n-dimension>', () => {
         ]
         invalid.forEach(input => expect(parse('<n-dimension>', input, false)).toBeNull())
     })
-    it('parses a valid value', () => {
+    test('representation', () => {
         expect(parse('<n-dimension>', '1n', false)).toMatchObject(dimensionToken(1, 'n', ['<n-dimension>']))
         expect(parse('<n-dimension>', '1N', false)).toMatchObject(dimensionToken(1, 'n', ['<n-dimension>'], '1N'))
     })
 })
 describe('<ndash-dimension>', () => {
-    it('fails to parse an invalid value', () => {
+    test('invalid', () => {
         const invalid = [
             '1n',
             '1.1n-',
@@ -1709,13 +1709,13 @@ describe('<ndash-dimension>', () => {
         ]
         invalid.forEach(input => expect(parse('<ndash-dimension>', input, false)).toBeNull())
     })
-    it('parses a valid value', () => {
+    test('representation', () => {
         expect(parse('<ndash-dimension>', '1n-', false)).toMatchObject(dimensionToken(1, 'n-', ['<ndash-dimension>']))
         expect(parse('<ndash-dimension>', '1N-', false)).toMatchObject(dimensionToken(1, 'n-', ['<ndash-dimension>'], '1N-'))
     })
 })
 describe('<ndashdigit-dimension>', () => {
-    it('fails to parse an invalid value', () => {
+    test('invalid', () => {
         const invalid = [
             '1n-',
             '1.1n-1',
@@ -1723,7 +1723,7 @@ describe('<ndashdigit-dimension>', () => {
         ]
         invalid.forEach(input => expect(parse('<ndashdigit-dimension>', input, false)).toBeNull())
     })
-    it('parses a valid value', () => {
+    test('representation', () => {
         const valid = [
             ['1n-1', dimensionToken(1, 'n-1', ['<ndashdigit-dimension>'])],
             ['1N-1', dimensionToken(1, 'n-1', ['<ndashdigit-dimension>'], '1N-1')],
@@ -1733,7 +1733,7 @@ describe('<ndashdigit-dimension>', () => {
     })
 })
 describe('<urange>', () => {
-    it('fails to parse an invalid value', () => {
+    test('invalid', () => {
         const invalid = [
             // Invalid whitespaces
             'U +0-1',
@@ -1768,10 +1768,10 @@ describe('<urange>', () => {
         ]
         invalid.forEach(input => expect(parse('<urange>', input, false)).toBeNull())
     })
-    it('parses a valid value', () => {
+    test('representation', () => {
         expect(parse('<urange>', 'U+0-f', false)).toMatchObject({ from: 0, to: 15, types: ['<urange>'] })
     })
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
         const valid = [
             ['U+0', 'U+0'],
             ['u+0a-1a', 'U+A-1A'],
@@ -1782,7 +1782,7 @@ describe('<urange>', () => {
     })
 })
 describe('<an+b>', () => {
-    it('fails to parse an invalid value', () => {
+    test('invalid', () => {
         const invalid = [
             '+ n-1',
             '+ n- 1',
@@ -1791,11 +1791,11 @@ describe('<an+b>', () => {
         ]
         invalid.forEach(input => expect(parse('<an+b>', input, false)).toBeNull())
     })
-    it('parses a valid value', () => {
+    test('representation', () => {
         expect(parse('<an+b>', 'even', false)).toMatchObject({ types: ['<an+b>'], value: { a: 2, b: 0 } })
         expect(parse('<an+b>', '1n+1', false)).toMatchObject({ types: ['<an+b>'], value: { a: 1, b: 1 } })
     })
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
         const valid = [
             ['even', '2n'],
             ['odd', '2n+1'],
@@ -1831,7 +1831,7 @@ describe('<an+b>', () => {
 })
 
 describe('<calc()>', () => {
-    it('fails to parse an invalid value', () => {
+    test('invalid', () => {
         const invalid = [
             // Whitespaces are required on both sides of `+` and `-`
             ['<number>', 'calc(1+ 1)'],
@@ -1887,7 +1887,7 @@ describe('<calc()>', () => {
         ]
         invalid.forEach(([definition, input]) => expect(parse(definition, input, false)).toBeNull())
     })
-    it('parses a valid value', () => {
+    test('representation', () => {
 
         const one = number(1, ['<calc-value>'])
         const two = number(2, ['<calc-value>'])
@@ -1952,7 +1952,7 @@ describe('<calc()>', () => {
         ]
         valid.forEach(([definition, input, expected]) => expect(parse(definition, input, false)).toMatchObject(expected))
     })
-    it('parses and serializes calc() with a single operand', () => {
+    test('valid single operand', () => {
         const valid = [
             // <number>, <dimension>, <percentage>
             ['<number>', 'calc(1)'],
@@ -1981,7 +1981,7 @@ describe('<calc()>', () => {
         ]
         valid.forEach(([definition, input, expected = input]) => expect(parse(definition, input)).toBe(expected))
     })
-    it('parses and serializes calc() with operands of identical units', () => {
+    test('valid operands of identical units', () => {
         const valid = [
             // Unitless
             ['<number>', 'calc(1 + 1 + 1 + 1)', 'calc(4)'],
@@ -2019,7 +2019,7 @@ describe('<calc()>', () => {
         ]
         valid.forEach(([definition, input, expected]) => expect(parse(definition, input)).toBe(expected))
     })
-    it('parses and serializes calc() with operands of different units', () => {
+    test('valid operands of different units', () => {
         const valid = [
             // Absolute unit
             ['<angle>', 'calc(1deg + 200grad)', 'calc(181deg)'],
@@ -2051,7 +2051,7 @@ describe('<calc()>', () => {
         ]
         valid.forEach(([definition, input, expected]) => expect(parse(definition, input)).toBe(expected))
     })
-    it('parses and serializes calc() with operands of different types', () => {
+    test('valid operands of different types', () => {
         const valid = [
             // Addition and substraction
             ['<length-percentage>', 'calc(1px + (1% + 1px) + 1%)', 'calc(2% + 2px)'],
@@ -2111,7 +2111,7 @@ describe('<calc()>', () => {
     })
 })
 describe('<min()>, <max()>', () => {
-    it('fails to parse an invalid value', () => {
+    test('invalid', () => {
         const invalid = [
             // Arguments should resolve to consistent types
             ['<number> | <length>', 'min(1, 1px)'],
@@ -2124,14 +2124,14 @@ describe('<min()>, <max()>', () => {
         ]
         invalid.forEach(([definition, input]) => expect(parse(definition, input, false)).toBeNull())
     })
-    it('parses a valid value', () => {
+    test('representation', () => {
         expect(parse('<min()>', 'min(1)', false)).toMatchObject({
             name: 'min',
             types: ['<function>', '<min()>'],
             value: list([number(1, ['<calc-value>'])], ','),
         })
     })
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
         const valid = [
             // Single argument
             ['<number>', 'min(1)', 'calc(1)'],
@@ -2156,7 +2156,7 @@ describe('<min()>, <max()>', () => {
     })
 })
 describe('<clamp()>', () => {
-    it('fails to parse an invalid value', () => {
+    test('invalid', () => {
         const invalid = [
             // Arguments should resolve to consistent types
             ['<number>', 'clamp(1, 1px, 1)'],
@@ -2165,7 +2165,7 @@ describe('<clamp()>', () => {
         ]
         invalid.forEach(([definition, input]) => expect(parse(definition, input, false)).toBeNull())
     })
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
         const valid = [
             // Identical units
             ['<number>', 'clamp(0, 1, 2)', 'calc(1)'],
@@ -2188,7 +2188,7 @@ describe('<clamp()>', () => {
     })
 })
 describe('<round()>', () => {
-    it('fails to parse an invalid value', () => {
+    test('invalid', () => {
         const invalid = [
             // Arguments should resolve to consistent types
             ['<number>', 'round(1px, 1)'],
@@ -2198,7 +2198,7 @@ describe('<round()>', () => {
         ]
         invalid.forEach(([definition, input]) => expect(parse(definition, input, false)).toBeNull())
     })
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
         const valid = [
             // Identical units
             ['<number>', 'round(1.1, 1)', 'calc(1)'],
@@ -2217,7 +2217,7 @@ describe('<round()>', () => {
         ]
         valid.forEach(([definition, input, expected = input]) => expect(parse(definition, input)).toBe(expected))
     })
-    it('parses and serializes round() resulting to 0⁻, 0⁺, NaN, or Infinity', () => {
+    test('valid resulting to 0⁻, 0⁺, NaN, or Infinity', () => {
         const valid = [
             // Rounding 0⁻ or 0⁺ is preserved as is (it is a multiple of every number)
             ['calc(1 / round(-0, 1))', 'calc(infinity)'],
@@ -2271,7 +2271,7 @@ describe('<round()>', () => {
     })
 })
 describe('<mod()>', () => {
-    it('fails to parse an invalid value', () => {
+    test('invalid', () => {
         const invalid = [
             // Arguments should resolve to consistent types
             ['<number>', 'mod(1px, 1)'],
@@ -2280,7 +2280,7 @@ describe('<mod()>', () => {
         ]
         invalid.forEach(([definition, input]) => expect(parse(definition, input, false)).toBeNull())
     })
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
         const valid = [
             // Identical units
             ['<number>', 'mod(3, 2)', 'calc(1)'],
@@ -2296,7 +2296,7 @@ describe('<mod()>', () => {
         ]
         valid.forEach(([definition, input, expected = input]) => expect(parse(definition, input)).toBe(expected))
     })
-    it('parses and serializes mod() resulting to NaN or Infinity', () => {
+    test('valid resulting to NaN or Infinity', () => {
         const valid = [
             // 0 as modulus value results to NaN
             ['mod(1, 0)', 'calc(NaN)'],
@@ -2313,7 +2313,7 @@ describe('<mod()>', () => {
     })
 })
 describe('<rem()>', () => {
-    it('fails to parse an invalid value', () => {
+    test('invalid', () => {
         const invalid = [
             // Arguments should resolve to consistent types
             ['<number>', 'rem(1px, 1)'],
@@ -2322,7 +2322,7 @@ describe('<rem()>', () => {
         ]
         invalid.forEach(([definition, input]) => expect(parse(definition, input, false)).toBeNull())
     })
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
         const valid = [
             // Identical units
             ['<number>', 'rem(3, 2)', 'calc(1)'],
@@ -2338,7 +2338,7 @@ describe('<rem()>', () => {
         ]
         valid.forEach(([definition, input, expected = input]) => expect(parse(definition, input)).toBe(expected))
     })
-    it('parses and serializes rem() resulting to NaN or Infinity', () => {
+    test('valid resulting to NaN or Infinity', () => {
         const valid = [
             // 0 as divisor value results to NaN
             ['rem(1, 0)', 'calc(NaN)'],
@@ -2354,43 +2354,43 @@ describe('<rem()>', () => {
     })
 })
 describe('<sin()>', () => {
-    it('fails to parse an invalid value', () => {
+    test('invalid', () => {
         // Argument should resolve to <number> or <angle>
         expect(parse('<number>', 'sin(1px)')).toBe('')
         expect(parse('<number> | <percentage>', 'sin(1%)')).toBe('')
     })
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
         expect(parse('<number>', 'sin(45)')).toBe(`calc(${+Math.sin(45).toFixed(6)})`)
         expect(parse('<number>', 'sin(45deg)')).toBe(`calc(${+Math.sin(toRadians(45)).toFixed(6)})`)
     })
-    it('parses and serializes sin() resulting to 0⁻', () => {
+    test('valid resulting to 0⁻', () => {
         // 0⁻ as input value results as is
         expect(parse('<number>', 'calc(1 / sin(-0))')).toBe('calc(infinity)')
         expect(parse('<number>', 'calc(1 / sin(0 * -1))')).toBe('calc(-infinity)')
     })
 })
 describe('<cos()>', () => {
-    it('fails to parse an invalid value', () => {
+    test('invalid', () => {
         // Argument should resolve to <number> or <angle>
         expect(parse('<number>', 'cos(1px)')).toBe('')
         expect(parse('<number> | <percentage>', 'cos(1%)')).toBe('')
     })
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
         expect(parse('<number>', 'cos(45)')).toBe(`calc(${+Math.cos(45).toFixed(6)})`)
         expect(parse('<number>', 'cos(45deg)')).toBe(`calc(${+Math.cos(toRadians(45)).toFixed(6)})`)
     })
 })
 describe('<tan()>', () => {
-    it('fails to parse an invalid value', () => {
+    test('invalid', () => {
         // Argument should resolve to <number> or <angle>
         expect(parse('<number>', 'tan(1px)')).toBe('')
         expect(parse('<number> | <percentage>', 'tan(1%)')).toBe('')
     })
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
         expect(parse('<number>', 'tan(45)')).toBe(`calc(${+Math.tan(45).toFixed(6)})`)
         expect(parse('<number>', 'tan(45deg)')).toBe('calc(1)')
     })
-    it('parses and serializes tan() resulting to 0⁻, Infinity, or -Infinity', () => {
+    test('valid resulting to 0⁻, Infinity, or -Infinity', () => {
         const valid = [
             // 0⁻ as input value results as is
             ['calc(1 / tan(-0))', 'calc(infinity)'],
@@ -2407,7 +2407,7 @@ describe('<tan()>', () => {
     })
 })
 describe('<asin()>', () => {
-    it('fails to parse an invalid value', () => {
+    test('invalid', () => {
         const invalid = [
             // Argument should resolve to <number>
             ['<angle>', 'asin(1deg)'],
@@ -2416,12 +2416,12 @@ describe('<asin()>', () => {
         ]
         invalid.forEach(([definition, input]) => expect(parse(definition, input, false)).toBeNull())
     })
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
         expect(parse('<angle>', 'asin(0.5)')).toBe('calc(30deg)')
     })
 })
 describe('<acos()>', () => {
-    it('fails to parse an invalid value', () => {
+    test('invalid', () => {
         const invalid = [
             // Argument should resolve to <number>
             ['<angle>', 'acos(1deg)'],
@@ -2430,12 +2430,12 @@ describe('<acos()>', () => {
         ]
         invalid.forEach(([definition, input]) => expect(parse(definition, input, false)).toBeNull())
     })
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
         expect(parse('<angle>', 'acos(0.5)')).toBe('calc(60deg)')
     })
 })
 describe('<atan()>', () => {
-    it('fails to parse an invalid value', () => {
+    test('invalid', () => {
         const invalid = [
             // Argument should resolve to <number>
             ['<angle>', 'atan(1deg)'],
@@ -2444,12 +2444,12 @@ describe('<atan()>', () => {
         ]
         invalid.forEach(([definition, input]) => expect(parse(definition, input, false)).toBeNull())
     })
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
         expect(parse('<angle>', 'atan(0.5)')).toBe(`calc(${+toDegrees(Math.atan(0.5)).toFixed(6)}deg)`)
     })
 })
 describe('<atan2()>', () => {
-    it('fails to parse an invalid value', () => {
+    test('invalid', () => {
         const invalid = [
             // Arguments should resolve to consistent types
             'atan2(1, 1%)',
@@ -2461,7 +2461,7 @@ describe('<atan2()>', () => {
         ]
         invalid.forEach(input => expect(parse('<angle>', input, false)).toBeNull())
     })
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
         const valid = [
             ['<angle>', 'atan2(1, 1)', `calc(${+toDegrees(Math.atan2(1, 1)).toFixed(6)}deg)`],
             ['<angle>', 'atan2(1px, 1px)', `calc(${+toDegrees(Math.atan2(1, 1)).toFixed(6)}deg)`],
@@ -2473,7 +2473,7 @@ describe('<atan2()>', () => {
     })
 })
 describe('<pow()>', () => {
-    it('fails to parse an invalid value', () => {
+    test('invalid', () => {
         const invalid = [
             // Argument should resolve to <number>
             ['<number>', 'pow(1px, 1px)'],
@@ -2483,22 +2483,22 @@ describe('<pow()>', () => {
         ]
         invalid.forEach(([definition, input]) => expect(parse(definition, input, false)).toBeNull())
     })
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
         expect(parse('<number>', 'pow(4, 2)')).toBe('calc(16)')
     })
 })
 describe('<sqrt()>', () => {
-    it('fails to parse an invalid value', () => {
+    test('invalid', () => {
         // Argument should resolve to <number>
         expect(parse('<number>', 'sqrt(1px)')).toBe('')
         expect(parse('<number> | <percentage>', 'sqrt(1%)')).toBe('')
     })
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
         expect(parse('<number>', 'sqrt(4)')).toBe('calc(2)')
     })
 })
 describe('<hypot()>', () => {
-    it('fails to parse an invalid value', () => {
+    test('invalid', () => {
         const invalid = [
             // Arguments should resolve to consistent types
             ['<number>', 'hypot(1px, 1)'],
@@ -2507,7 +2507,7 @@ describe('<hypot()>', () => {
         ]
         invalid.forEach(([definition, input]) => expect(parse(definition, input, false)).toBeNull())
     })
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
         const valid = [
             // Identical units
             ['<number>', 'hypot(3, 4)', 'calc(5)'],
@@ -2523,7 +2523,7 @@ describe('<hypot()>', () => {
     })
 })
 describe('<log()>', () => {
-    it('fails to parse an invalid value', () => {
+    test('invalid', () => {
         const invalid = [
             // Argument should resolve to <number>
             ['<number>', 'log(1px, 1px)'],
@@ -2533,23 +2533,23 @@ describe('<log()>', () => {
         ]
         invalid.forEach(([definition, input]) => expect(parse(definition, input, false)).toBeNull())
     })
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
         expect(parse('<number>', 'log(e)')).toBe('calc(1)')
         expect(parse('<number>', 'log(8, 2)')).toBe('calc(3)')
     })
 })
 describe('<exp()>', () => {
-    it('fails to parse an invalid value', () => {
+    test('invalid', () => {
         // Argument should resolve to <number>
         expect(parse('<number>', 'exp(1px)')).toBe('')
         expect(parse('<number> | <percentage>', 'exp(1%)')).toBe('')
     })
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
         expect(parse('<number>', 'exp(1)')).toBe(`calc(${Math.E.toFixed(6)})`)
     })
 })
 describe('<abs()>', () => {
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
         const valid = [
             ['<number>', 'abs(-1)', 'calc(1)'],
             ['<number>', 'abs(-infinity)', 'calc(infinity)'],
@@ -2561,7 +2561,7 @@ describe('<abs()>', () => {
     })
 })
 describe('<sign()>', () => {
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
         const valid = [
             ['<number>', 'sign(-2)', 'calc(-1)'],
             ['<number>', 'sign(-infinity)', 'calc(-1)'],
@@ -2573,7 +2573,7 @@ describe('<sign()>', () => {
     })
 })
 describe('<calc-mix()>', () => {
-    it('fails to parse an invalid value', () => {
+    test('invalid', () => {
         const invalid = [
             // Arguments should resolve to consistent types
             ['<number>', 'calc-mix(50%, 1px, 2)'],
@@ -2582,7 +2582,7 @@ describe('<calc-mix()>', () => {
         ]
         invalid.forEach(([definition, input]) => expect(parse(definition, input, false)).toBeNull())
     })
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
         const valid = [
             // Identical unit
             ['<number>', 'calc-mix(50%, 0, 2)'],
@@ -2597,7 +2597,7 @@ describe('<calc-mix()>', () => {
     })
 })
 describe('<random()>', () => {
-    it('fails to parse an invalid value', () => {
+    test('invalid', () => {
         const invalid = [
             // Arguments should resolve to consistent types
             ['<number>', 'random(50%, 1px, by 2)'],
@@ -2606,7 +2606,7 @@ describe('<random()>', () => {
         ]
         invalid.forEach(([definition, input]) => expect(parse(definition, input, false)).toBeNull())
     })
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
         const valid = [
             // Identical unit
             ['<number>', 'random(per-element, 1, 1)'],
@@ -2622,18 +2622,18 @@ describe('<random()>', () => {
 })
 
 describe('<sibling-count()>, <sibling-index()>', () => {
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
         expect(parse('<integer>', 'sibling-index()')).toBe('sibling-index()')
         expect(parse('<length>', 'calc(sibling-index() * 1px)')).toBe('calc(1px * sibling-index())')
     })
 })
 
 describe('<alpha-value>', () => {
-    it('parses a valid value', () => {
+    test('representation', () => {
         expect(parse('<alpha-value>', '1', false)).toMatchObject(number(1, ['<alpha-value>']))
         expect(parse('<alpha-value>', '1%', false)).toMatchObject(percentage(1, ['<alpha-value>']))
     })
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
         const valid = [
             // To number
             ['50%', '0.5'],
@@ -2645,7 +2645,7 @@ describe('<alpha-value>', () => {
     })
 })
 describe('<animateable-feature>', () => {
-    it('fails to parse an invalid value', () => {
+    test('invalid', () => {
         const invalid = [
             'ALL',
             'auto',
@@ -2654,12 +2654,12 @@ describe('<animateable-feature>', () => {
         ]
         invalid.forEach(input => expect(parse('<animateable-feature>', input, false)).toBeNull())
     })
-    it('parses a valid value', () => {
+    test('representation', () => {
         expect(parse('<animateable-feature>', 'contents', false)).toMatchObject(keyword('contents', ['<animateable-feature>']))
     })
 })
 describe('<arc-command>', () => {
-    it('parses a valid value', () => {
+    test('representation', () => {
 
         const arc = keyword('arc')
         const by = keyword('by', ['<by-to>'])
@@ -2671,40 +2671,40 @@ describe('<arc-command>', () => {
 
         expect(parse('<arc-command>', 'arc by 0px 0px of 0px', false)).toMatchObject(command)
     })
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
         expect(parse('<arc-command>', 'arc by 0px 0px of 0px 0px ccw small rotate 0deg')).toBe('arc by 0px 0px of 0px')
     })
 })
 describe('<attr-matcher>', () => {
-    it('fails to parse an invalid value', () => {
+    test('invalid', () => {
         expect(parse('<attr-matcher>', '~ =', false)).toBeNull()
     })
-    it('parses a valid value', () => {
+    test('representation', () => {
         const matcher = list([omitted, delimiter('=')], '', ['<attr-matcher>'])
         expect(parse('<attr-matcher>', '=', false)).toMatchObject(matcher)
     })
 })
 describe('<attr-name>', () => {
-    it('fails to parse an invalid value', () => {
+    test('invalid', () => {
         expect(parse('<attr-name>', 'prefix |name', false)).toBeNull()
         expect(parse('<attr-name>', 'prefix| name', false)).toBeNull()
     })
-    it('parses a valid value', () => {
+    test('representation', () => {
         const name = list([omitted, identToken('name')], '', ['<attr-name>'])
         expect(parse('<attr-name>', 'name', false)).toMatchObject(name)
     })
 })
 describe('<baseline-position>', () => {
-    it('parses a valid value', () => {
+    test('representation', () => {
         expect(parse('<baseline-position>', 'baseline', false))
             .toMatchObject(list([omitted, keyword('baseline')], ' ', ['<baseline-position>']))
     })
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
         expect(parse('<baseline-position>', 'first baseline')).toBe('baseline')
     })
 })
 describe('<basic-shape>', () => {
-    it('parses a valid value', () => {
+    test('representation', () => {
         const px = length(1, 'px', ['<length-percentage>'])
         const valid = [
             ['circle()', {
@@ -2745,7 +2745,7 @@ describe('<basic-shape>', () => {
         ]
         valid.forEach(([input, expected]) => expect(parse('<basic-shape>', input, false)).toMatchObject(expected))
     })
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
         const valid = [
             ['circle()', 'circle()'],
             ['circle(at center)', 'circle(at center center)'],
@@ -2769,32 +2769,32 @@ describe('<basic-shape>', () => {
     })
 })
 describe('<blur()>', () => {
-    it('parses a valid value', () => {
+    test('representation', () => {
         expect(parse('<blur()>', 'blur()', false)).toMatchObject({
             name: 'blur',
             types: ['<function>', '<blur()>'],
             value: omitted,
         })
     })
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
         expect(parse('<blur()>', 'blur(0)')).toBe('blur()')
         expect(parse('<blur()>', 'blur(0px)')).toBe('blur()')
     })
 })
 describe('<brightness()>, <contrast()>, <grayscale()>, <invert()>, <opacity()>, <saturate()>, <sepia()>', () => {
-    it('parses a valid value', () => {
+    test('representation', () => {
         expect(parse('<brightness()>', 'brightness()', false)).toMatchObject({
             name: 'brightness',
             types: ['<function>', '<brightness()>'],
             value: omitted,
         })
     })
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
         expect(parse('<brightness()>', 'brightness(1)')).toBe('brightness()')
     })
 })
 describe('<color>', () => {
-    it('fails to parse an invalid value', () => {
+    test('invalid', () => {
         const invalid = [
             // Invalid <hex-color>
             '#ffz',
@@ -2814,7 +2814,7 @@ describe('<color>', () => {
         ]
         invalid.forEach(input => expect(parse('<color>', input, false)).toBeNull())
     })
-    it('parses a valid value', () => {
+    test('representation', () => {
         const zero = number(0)
         const rgb = list([list([zero, zero, zero], ','), omitted, omitted])
         const valid = [
@@ -2833,7 +2833,7 @@ describe('<color>', () => {
         ]
         valid.forEach(([input, expected]) => expect(parse('<color>', input, false)).toMatchObject(expected))
     })
-    it('parses and serializes <hex-color>', () => {
+    test('valid <hex-color>', () => {
         const valid = [
             ['#F00', 'rgb(255, 0, 0)'],
             ['#0f0f', 'rgb(0, 255, 0)'],
@@ -2844,7 +2844,7 @@ describe('<color>', () => {
         ]
         valid.forEach(([input, expected]) => expect(parse('<color>', input)).toBe(expected))
     })
-    it('parses and serializes <rgb()> or <rgba()>', () => {
+    test('valid <rgb()> or <rgba()>', () => {
         const valid = [
             // To legacy <rgb()> or <rgba()> depending on <alpha-value>
             ['rgb(0 0 0)', 'rgb(0, 0, 0)'],
@@ -2886,7 +2886,7 @@ describe('<color>', () => {
         ]
         valid.forEach(([input, expected = input]) => expect(parse('<color>', input)).toBe(expected))
     })
-    it('parses and serializes <hsl()> or <hsla()>', () => {
+    test('valid <hsl()> or <hsla()>', () => {
         const valid = [
             // To legacy <rgb()> or <rgba()> depending on <alpha-value>
             ['hsl(0 0 0)', 'rgb(0, 0, 0)'],
@@ -2932,7 +2932,7 @@ describe('<color>', () => {
         ]
         valid.forEach(([input, expected = input]) => expect(parse('<color>', input)).toBe(expected))
     })
-    it('parses and serializes <hwb()>', () => {
+    test('valid <hwb()>', () => {
         const valid = [
             // To legacy <rgb()> or <rgba()> depending on <alpha-value>
             ['hwb(0 0 0)', 'rgb(255, 0, 0)'],
@@ -2973,7 +2973,7 @@ describe('<color>', () => {
         ]
         valid.forEach(([input, expected = input]) => expect(parse('<color>', input)).toBe(expected))
     })
-    it('parses and serializes <lab()>', () => {
+    test('valid <lab()>', () => {
         const valid = [
             // Out of range arguments
             ['lab(-1 -126 0 / -1)', 'lab(0 -126 0 / 0)'],
@@ -2994,7 +2994,7 @@ describe('<color>', () => {
         ]
         valid.forEach(([input, expected = input]) => expect(parse('<color>', input)).toBe(expected))
     })
-    it('parses and serializes <lch()>', () => {
+    test('valid <lch()>', () => {
         const valid = [
             // Out of range arguments
             ['lch(-1 -1 -540 / -1)', 'lch(0 0 180 / 0)'],
@@ -3015,7 +3015,7 @@ describe('<color>', () => {
         ]
         valid.forEach(([input, expected = input]) => expect(parse('<color>', input)).toBe(expected))
     })
-    it('parses and serializes <oklab()>', () => {
+    test('valid <oklab()>', () => {
         const valid = [
             // Out of range arguments
             ['oklab(-1 -0.41 0 / -1)', 'oklab(0 -0.41 0 / 0)'],
@@ -3036,7 +3036,7 @@ describe('<color>', () => {
         ]
         valid.forEach(([input, expected = input]) => expect(parse('<color>', input)).toBe(expected))
     })
-    it('parses and serializes <oklch()>', () => {
+    test('valid <oklch()>', () => {
         const valid = [
             // Out of range arguments
             ['oklch(-1 -1 -540 / -1)', 'oklch(0 0 180 / 0)'],
@@ -3057,7 +3057,7 @@ describe('<color>', () => {
         ]
         valid.forEach(([input, expected = input]) => expect(parse('<color>', input)).toBe(expected))
     })
-    it('parses and serializes <color()>', () => {
+    test('valid <color()>', () => {
         const valid = [
             // Explicit `xyz` color space
             ['color(xyz 0 0 0)', 'color(xyz-d65 0 0 0)'],
@@ -3082,7 +3082,7 @@ describe('<color>', () => {
         ]
         valid.forEach(([input, expected = input]) => expect(parse('<color>', input)).toBe(expected))
     })
-    it('parses and serializes <device-cmyk()>', () => {
+    test('valid <device-cmyk()>', () => {
         const valid = [
             // From legacy color syntax
             ['device-cmyk(0, 0, 0, 0)', 'device-cmyk(0 0 0 0)'],
@@ -3102,7 +3102,7 @@ describe('<color>', () => {
         ]
         valid.forEach(([input, expected = input]) => expect(parse('<color>', input)).toBe(expected))
     })
-    it('parses and serializes <color-mix()>', () => {
+    test('valid <color-mix()>', () => {
         const valid = [
             ['color-mix(in srgb, red 50%, green 50%)', 'color-mix(in srgb, red, green)'],
             ['color-mix(in srgb, red 51%, green 49%)', 'color-mix(in srgb, red 51%, green)'],
@@ -3113,17 +3113,17 @@ describe('<color>', () => {
     })
 })
 describe('<combinator>', () => {
-    it('fails to parse an invalid value', () => {
+    test('invalid', () => {
         expect(parse('<combinator>', '| |', false)).toBeNull()
     })
-    it('parses a valid value', () => {
+    test('representation', () => {
         const pipe = delimiter('|')
         const combinator = list([pipe, pipe], '', ['<combinator>'])
         expect(parse('<combinator>', '||', false)).toMatchObject(combinator)
     })
 })
 describe('<container-name>', () => {
-    it('fails to parse an invalid value', () => {
+    test('invalid', () => {
         const invalid = [
             'AND',
             'none',
@@ -3132,24 +3132,24 @@ describe('<container-name>', () => {
         ]
         invalid.forEach(input => expect(parse('<container-name>', input, false)).toBeNull())
     })
-    it('parses a valid value', () => {
+    test('representation', () => {
         expect(parse('<container-name>', 'name', false)).toMatchObject(customIdent('name', ['<container-name>']))
     })
 })
 describe('<content()>', () => {
-    it('parses a valid value', () => {
+    test('representation', () => {
         expect(parse('<content()>', 'content()', false)).toMatchObject({
             name: 'content',
             types: ['<function>', '<content()>'],
             value: omitted,
         })
     })
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
         expect(parse('<content()>', 'content(text)')).toBe('content()')
     })
 })
 describe('<counter>', () => {
-    it('parses a valid value', () => {
+    test('representation', () => {
         const name = customIdent('chapters', ['<counter-name>'])
         expect(parse('<counter>', 'counter(chapters)', false)).toMatchObject({
             name: 'counter',
@@ -3162,50 +3162,50 @@ describe('<counter>', () => {
             value: list([name, comma, string('-'), omitted, omitted]),
         })
     })
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
         const context = { ...createContext(styleRule), declaration: { definition: { name: 'any-property' } } }
         expect(parse('<counter>', 'counter(chapters, decimal)', true, context)).toBe('counter(chapters)')
         expect(parse('<counter>', 'counters(chapters, "-", decimal)', true, context)).toBe('counters(chapters, "-")')
     })
 })
 describe('<counter-name>', () => {
-    it('fails to parse an invalid value', () => {
+    test('invalid', () => {
         // Reserved keyword
         expect(parse('<counter-name>', 'NONE', false)).toBeNull()
     })
-    it('parses a valid value', () => {
+    test('representation', () => {
         expect(parse('<counter-name>', 'chapters', false)).toMatchObject(customIdent('chapters', ['<counter-name>']))
     })
 })
 describe('<counter-style-name>', () => {
-    it('fails to parse an invalid value', () => {
+    test('invalid', () => {
         expect(parse('<counter-style-name>', 'NONE', false)).toBeNull()
         expect(parse('<counter-style-name>', 'DECIMAL', false)).toBeNull()
     })
-    it('parses a valid value', () => {
+    test('representation', () => {
         expect(parse('<counter-style-name>', 'custom', false))
             .toMatchObject(customIdent('custom', ['<counter-style-name>']))
     })
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
         const context = { ...createContext(styleRule), declaration: { definition: { name: 'any-property' } } }
         expect(parse('<counter-style-name>', 'DECIMAL', true, context)).toBe('decimal')
         expect(parse('<counter-style-name>', 'NAME')).toBe('NAME')
     })
 })
 describe('<drop-shadow()>', () => {
-    it('parses a valid value', () => {
+    test('representation', () => {
         expect(parse('<drop-shadow()>', 'drop-shadow(1px 1px)', false)).toMatchObject({
             name: 'drop-shadow',
             types: ['<function>', '<drop-shadow()>'],
             value: list([omitted, list([length(1, 'px'), length(1, 'px')])]),
         })
     })
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
         expect(parse('<drop-shadow()>', 'drop-shadow(currentcolor 1px 1px 0px)')).toBe('drop-shadow(1px 1px)')
     })
 })
 describe('<family-name>', () => {
-    it('fails to parse an invalid value', () => {
+    test('invalid', () => {
         const invalid = [
             [
                 [
@@ -3228,7 +3228,7 @@ describe('<family-name>', () => {
                 inputs.forEach(input => expect(parse('<family-name>', input, false, context)).toBeNull())
             }))
     })
-    it('parses a valid value', () => {
+    test('representation', () => {
         expect(parse('<family-name>', '"serif"', false))
             .toMatchObject(string('serif', ['<family-name>']))
         expect(parse('<family-name>', 'the serif', false))
@@ -3236,22 +3236,22 @@ describe('<family-name>', () => {
     })
 })
 describe('<feature-tag-value>', () => {
-    it('parses a valid value', () => {
+    test('representation', () => {
         expect(parse('<feature-tag-value>', '"aaaa"', false))
             .toMatchObject(list([string('aaaa', ['<opentype-tag>']), omitted], ' ', ['<feature-tag-value>']))
     })
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
         expect(parse('<feature-tag-value>', '"aaaa" 1')).toBe('"aaaa"')
     })
 })
 describe('<font-format>', () => {
-    it('fails to parse an invalid value', () => {
+    test('invalid', () => {
         expect(parse('<font-format>', '"embedded-opentype"', false)).toBeNull()
     })
-    it('parses a valid value', () => {
+    test('representation', () => {
         expect(parse('<font-format>', 'woff2', false)).toMatchObject(keyword('woff2', ['<font-format>']))
     })
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
         const valid = [
             '"collection"',
             '"opentype"',
@@ -3267,11 +3267,11 @@ describe('<font-format>', () => {
     })
 })
 describe('<gradient>', () => {
-    it('fails to parse and invalid value', () => {
+    test('invalid', () => {
         expect(parse('<gradient>', 'radial-gradient(circle 1px 1px)', false)).toBeNull()
         expect(parse('<gradient>', 'radial-gradient(circle closest-corner closest-corner)', false)).toBeNull()
     })
-    it('parses a valid value', () => {
+    test('representation', () => {
 
         const red = keyword('red', ['<named-color>', '<color-base>', '<color>'])
         const cyan = keyword('cyan', ['<named-color>', '<color-base>', '<color>'])
@@ -3348,7 +3348,7 @@ describe('<gradient>', () => {
                 ['<radial-gradient-syntax>']),
         })
     })
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
         const valid = [
             ['conic-gradient(red, cyan)', 'conic-gradient(red, cyan)'],
             ['linear-gradient(red, cyan)', 'linear-gradient(red, cyan)'],
@@ -3398,7 +3398,7 @@ describe('<gradient>', () => {
     })
 })
 describe('<grid-line>', () => {
-    it('fails to parse an invalid value', () => {
+    test('invalid', () => {
         const invalid = [
             'SPAN',
             '-1 SPAN',
@@ -3407,28 +3407,28 @@ describe('<grid-line>', () => {
         ]
         invalid.forEach(input => expect(parse('<grid-line>', input, false)).toBeNull())
     })
-    it('parses a valid value', () => {
+    test('representation', () => {
         expect(parse('<grid-line>', 'auto', false)).toMatchObject(keyword('auto', ['<grid-line>']))
     })
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
         expect(parse('<grid-line>', 'span 1')).toBe('span 1')
     })
 })
 describe('<hue-rotate()>', () => {
-    it('parses a valid value', () => {
+    test('representation', () => {
         expect(parse('<hue-rotate()>', 'hue-rotate()', false)).toMatchObject({
             name: 'hue-rotate',
             types: ['<function>', '<hue-rotate()>'],
             value: omitted,
         })
     })
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
         expect(parse('<hue-rotate()>', 'hue-rotate(0)')).toBe('hue-rotate()')
         expect(parse('<hue-rotate()>', 'hue-rotate(0deg)')).toBe('hue-rotate()')
     })
 })
 describe('<id-selector>', () => {
-    it('fails to parse an invalid value', () => {
+    test('invalid', () => {
         const invalid = [
             // Invalid identifier (start) code point
             '#1identifier',
@@ -3441,14 +3441,14 @@ describe('<id-selector>', () => {
         ]
         invalid.forEach(input => expect(parse('<id-selector>', input, false)).toBeNull())
     })
-    it('parses a valid value', () => {
+    test('representation', () => {
         expect(parse('<id-selector>', '#identifier', false)).toMatchObject({
             type: 'id',
             types: ['<hash-token>', '<id-selector>'],
             value: 'identifier',
         })
     })
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
         const valid = [
             // Starts with identifier start code point
             ['#identifier'],
@@ -3486,11 +3486,11 @@ describe('<id-selector>', () => {
     })
 })
 describe('<image-set()>', () => {
-    it('fails to parse an invalid value', () => {
+    test('invalid', () => {
         expect(parse('<image-set()>', 'image-set(image-set("image.jpg"))', false)).toBeNull()
         expect(parse('<image-set()>', 'image-set(cross-fade(image-set("image.jpg")))', false)).toBeNull()
     })
-    it('parses a valid value', () => {
+    test('representation', () => {
 
         const url = string('image.jpg')
         const option = list([url, omitted], ' ', ['<image-set-option>'])
@@ -3501,30 +3501,30 @@ describe('<image-set()>', () => {
             value: list([option], ','),
         })
     })
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
         expect(parse('<image-set()>', 'image-set("image.jpg" 1x)')).toBe('image-set("image.jpg")')
         expect(parse('<image-set()>', '-webkit-image-set("image.jpg" 1x)')).toBe('image-set("image.jpg")')
     })
 })
 describe('<keyframe-selector>', () => {
-    it('parses a valid value', () => {
+    test('representation', () => {
         expect(parse('<keyframe-selector>', '0%', false)).toMatchObject(percentage(0, ['<keyframe-selector>']))
     })
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
         expect(parse('<keyframe-selector>', 'from')).toBe('0%')
         expect(parse('<keyframe-selector>', 'to')).toBe('100%')
     })
 })
 describe('<keyframes-name>', () => {
-    it('fails to parse an invalid value', () => {
+    test('invalid', () => {
         expect(parse('<keyframes-name>', 'NONE', false)).toBeNull()
     })
-    it('parses a valid value', () => {
+    test('representation', () => {
         expect(parse('<keyframes-name>', 'animation', false)).toMatchObject(customIdent('animation', ['<keyframes-name>']))
     })
 })
 describe('<layer-name>', () => {
-    it('fails to parse an invalid value', () => {
+    test('invalid', () => {
         const invalid = [
             // Invalid whitespace
             'prefix .name',
@@ -3534,17 +3534,17 @@ describe('<layer-name>', () => {
         ]
         invalid.forEach(input => expect(parse('<layer-name>', input, false)).toBeNull())
     })
-    it('parses a valid value', () => {
+    test('representation', () => {
         const name = list([ident('reset'), list([], '')], '', ['<layer-name>'])
         expect(parse('<layer-name>', 'reset', false)).toMatchObject(name)
     })
 })
 describe('<line-names>', () => {
-    it('fails to parse an invalid value', () => {
+    test('invalid', () => {
         expect(parse('<line-names>', '[AUTO]', false)).toBeNull()
         expect(parse('<line-names>', '[span]', false)).toBeNull()
     })
-    it('parses a valid value', () => {
+    test('representation', () => {
         expect(parse('<line-names>', '[name]', false)).toMatchObject({
             associatedToken: '[',
             types: ['<simple-block>', '<line-names>'],
@@ -3553,7 +3553,7 @@ describe('<line-names>', () => {
     })
 })
 describe('<media-type>', () => {
-    it('fails to parse an invalid value', () => {
+    test('invalid', () => {
         const invalid = [
             'AND',
             'not',
@@ -3563,38 +3563,38 @@ describe('<media-type>', () => {
         ]
         invalid.forEach(input => expect(parse('<media-type>', input, false)).toBeNull())
     })
-    it('parses a valid value', () => {
+    test('representation', () => {
         expect(parse('<media-type>', 'all', false)).toMatchObject(ident('all', ['<media-type>']))
     })
 })
 describe('<mf-comparison>', () => {
-    it('fails to parse an invalid value', () => {
+    test('invalid', () => {
         expect(parse('<mf-comparison>', '< =', false)).toBeNull()
         expect(parse('<mf-comparison>', '> =', false)).toBeNull()
     })
-    it('parses a valid value', () => {
+    test('representation', () => {
         expect(parse('<mf-comparison>', '<=', false))
             .toMatchObject(list([lt, equal], '', ['<mf-lt>', '<mf-comparison>']))
     })
 })
 describe('<mf-boolean>', () => {
-    it('fails to parse an invalid value', () => {
+    test('invalid', () => {
         expect(parse('<mf-boolean>', 'min-orientation', false, mediaQueryContext)).toBeNull()
     })
-    it('parses a valid value', () => {
+    test('representation', () => {
         expect(parse('<mf-boolean>', 'width', false, mediaQueryContext))
             .toMatchObject(ident('width', ['<mf-name>', '<mf-boolean>']))
     })
 })
 describe('<mf-name>', () => {
-    it('fails to parse an invalid value', () => {
+    test('invalid', () => {
         expect(parse('<mf-name>', 'color', false, containerContext)).toBeNull()
         expect(parse('<mf-name>', 'inline-size', false, mediaQueryContext)).toBeNull()
     })
-    it('parses a valid value', () => {
+    test('representation', () => {
         expect(parse('<mf-name>', 'width', false, mediaQueryContext)).toMatchObject(ident('width', ['<mf-name>']))
     })
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
         const valid = [
             ['color', 'color', mediaQueryContext],
             ['inline-size', 'inline-size', containerContext],
@@ -3606,10 +3606,10 @@ describe('<mf-name>', () => {
     })
 })
 describe('<mf-plain>', () => {
-    it('fails to parse an invalid value', () => {
+    test('invalid', () => {
         expect(parse('<mf-plain>', 'width: 1', false, mediaQueryContext)).toBeNull()
     })
-    it('parses a valid value', () => {
+    test('representation', () => {
         const name = ident('width', ['<mf-name>'])
         const value = dimension(1, 'px', ['<mf-value>'])
         expect(parse('<mf-plain>', 'width: 1px', false, mediaQueryContext))
@@ -3617,7 +3617,7 @@ describe('<mf-plain>', () => {
     })
 })
 describe('<mf-range>', () => {
-    it('fails to parse an invalid value', () => {
+    test('invalid', () => {
         const invalid = [
             // Prefixed <mf-name>
             '(min-width = 1px)',
@@ -3632,7 +3632,7 @@ describe('<mf-range>', () => {
         ]
         invalid.forEach(input => expect(parse('<mf-range>', input, false, mediaQueryContext)).toBeNull())
     })
-    it('parses a valid value', () => {
+    test('representation', () => {
         const name = ident('width', ['<mf-name>'])
         const comparator = delimiter('=', ['<mf-eq>', '<mf-comparison>'])
         const value = dimension(1, 'px', ['<mf-value>'])
@@ -3641,7 +3641,7 @@ describe('<mf-range>', () => {
     })
 })
 describe('<opentype-tag>', () => {
-    it('fails to parse an invalid value', () => {
+    test('invalid', () => {
         const invalid = [
             // Less or more than 4 characters
             '"aaa"',
@@ -3651,17 +3651,17 @@ describe('<opentype-tag>', () => {
         ]
         invalid.forEach(input => expect(parse('<opentype-tag>', input, false)).toBeNull())
     })
-    it('parses a valid value', () => {
+    test('representation', () => {
         expect(parse('<opentype-tag>', '"aaaa"', false)).toMatchObject(string('aaaa', ['<opentype-tag>']))
     })
 })
 describe('<page-selector-list>', () => {
-    it('fails to parse an invalid value', () => {
+    test('invalid', () => {
         // Invalid whitespace
         expect(parse('<page-selector-list>', 'toc :left', false)).toBeNull()
         expect(parse('<page-selector-list>', 'toc: left', false)).toBeNull()
     })
-    it('parses a valid value', () => {
+    test('representation', () => {
 
         const toc = identToken('toc')
         const pseudoSelector = list([colon, keyword('right')], '', ['<pseudo-page>'])
@@ -3673,10 +3673,10 @@ describe('<page-selector-list>', () => {
     })
 })
 describe('<position>', () => {
-    it('parses a valid value', () => {
+    test('representation', () => {
         expect(parse('<position>', 'left', false)).toMatchObject(keyword('left', ['<position>']))
     })
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
         const valid = [
             ['center', 'center center'],
             ['left', 'left center'],
@@ -3688,51 +3688,51 @@ describe('<position>', () => {
     })
 })
 describe('<progress>', () => {
-    it('fails to parse an invalid value', () => {
+    test('invalid', () => {
         expect(parse('<progress>', 'auto', false)).toBeNull()
         expect(parse('<progress>', 'none', false)).toBeNull()
     })
-    it('parses a valid value', () => {
+    test('representation', () => {
         expect(parse('<progress>', '50%', false)).toMatchObject(list([percentage(50), omitted], ' ', ['<progress>']))
     })
 })
 describe('<pt-name-and-class-selector>', () => {
-    it('fails to parse an invalid value', () => {
+    test('invalid', () => {
         expect(parse('<pt-name-and-class-selector>', 'name .class', false)).toBeNull()
         expect(parse('<pt-name-and-class-selector>', '.class .class', false)).toBeNull()
     })
-    it('parses a valid value', () => {
+    test('representation', () => {
         const name = customIdent('name', ['<pt-name-selector>'])
         expect(parse('<pt-name-and-class-selector>', 'name', false))
             .toMatchObject(list([name, omitted], '', ['<pt-name-and-class-selector>']))
     })
 })
 describe('<ray()>', () => {
-    it('parses a valid value', () => {
+    test('representation', () => {
         expect(parse('<ray()>', 'ray(1deg)', false)).toMatchObject({
             name: 'ray',
             types: ['<function>', '<ray()>'],
             value: list([angle(1, 'deg'), omitted, omitted, omitted]),
         })
     })
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
         expect(parse('<ray()>', 'ray(1deg closest-side)')).toBe('ray(1deg)')
     })
 })
 describe('<ratio>', () => {
-    it('parses a valid value', () => {
+    test('representation', () => {
         expect(parse('<ratio>', '1', false)).toMatchObject(list([number(1), omitted], ' ', ['<ratio>']))
     })
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
         expect(parse('<ratio>', '1')).toBe('1 / 1')
         expect(parse('<ratio>', '1 / 1')).toBe('1 / 1')
     })
 })
 describe('<repeat-style>', () => {
-    it('parses a valid value', () => {
+    test('representation', () => {
         expect(parse('<repeat-style>', 'repeat-x', false)).toMatchObject(keyword('repeat-x', ['<repeat-style>']))
     })
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
         const valid = [
             ['repeat no-repeat', 'repeat-x'],
             ['no-repeat repeat', 'repeat-y'],
@@ -3744,26 +3744,26 @@ describe('<repeat-style>', () => {
     })
 })
 describe('<scale()>', () => {
-    it('parses a valid value', () => {
+    test('representation', () => {
         expect(parse('<scale()>', 'scale(1)', false)).toMatchObject({
             name: 'scale',
             types: ['<function>', '<scale()>'],
             value: list([number(1)], ','),
         })
     })
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
         expect(parse('<scale()>', 'scale(1, 1)')).toBe('scale(1)')
     })
 })
 describe('<scroll()>', () => {
-    it('parses a valid value', () => {
+    test('representation', () => {
         expect(parse('<scroll()>', 'scroll()', false)).toMatchObject({
             name: 'scroll',
             types: ['<function>', '<scroll()>'],
             value: omitted,
         })
     })
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
         const valid = [
             ['scroll(nearest block)', 'scroll()'],
             ['scroll(root block)', 'scroll(root)'],
@@ -3773,7 +3773,7 @@ describe('<scroll()>', () => {
     })
 })
 describe('<shadow>', () => {
-    it('parses a valid value', () => {
+    test('representation', () => {
         expect(parse('<shadow>', '1px 1px', false)).toMatchObject(list(
             [
                 omitted,
@@ -3787,12 +3787,12 @@ describe('<shadow>', () => {
             ' ',
             ['<shadow>']))
     })
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
         expect(parse('<shadow>', 'currentColor 1px 1px 0px 0px')).toBe('1px 1px')
     })
 })
 describe('<shape()>', () => {
-    it('parses a valid value', () => {
+    test('representation', () => {
 
         const from = keyword('from')
         const zero = length(0, 'px', ['<length-percentage>'])
@@ -3808,71 +3808,71 @@ describe('<shape()>', () => {
             value,
         })
     })
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
         expect(parse('<shape()>', 'shape(nonzero from 0px 0px, move by 0px 0px)'))
             .toBe('shape(from 0px 0px, move by 0px 0px)')
     })
 })
 describe('<skew()>', () => {
-    it('parses a valid value', () => {
+    test('representation', () => {
         expect(parse('<skew()>', 'skew(1deg)', false)).toMatchObject({
             name: 'skew',
             types: ['<function>', '<skew()>'],
             value: list([angle(1, 'deg'), omitted, omitted]),
         })
     })
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
         expect(parse('<skew()>', 'skew(0deg, 0)')).toBe('skew(0deg)')
         expect(parse('<skew()>', 'skew(0deg, 0deg)')).toBe('skew(0deg)')
     })
 })
 describe('<snap-block()>, <snap-inline()>', () => {
-    it('parses a valid value', () => {
+    test('representation', () => {
         expect(parse('<snap-block()>', 'snap-block(1px)', false)).toMatchObject({
             name: 'snap-block',
             types: ['<function>', '<snap-block()>'],
             value: list([length(1, 'px'), omitted, omitted]),
         })
     })
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
         expect(parse('<snap-block()>', 'snap-block(1px, near)')).toBe('snap-block(1px)')
     })
 })
 describe('<steps()>', () => {
-    it('fails to parse an invalid value', () => {
+    test('invalid', () => {
         expect(parse('<steps()>', 'steps(0)', false)).toBeNull()
         expect(parse('<steps()>', 'steps(1, jump-none)', false)).toBeNull()
     })
-    it('parses a valid value', () => {
+    test('representation', () => {
         expect(parse('<steps()>', 'steps(1)', false)).toMatchObject({
             name: 'steps',
             types: ['<function>', '<steps()>'],
             value: list([numberToken(1, ['<integer>']), omitted, omitted]),
         })
     })
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
         expect(parse('<steps()>', 'steps(1, end)')).toBe('steps(1)')
         expect(parse('<steps()>', 'steps(1, jump-end)')).toBe('steps(1)')
     })
 })
 describe('<string()>', () => {
-    it('parses a valid value', () => {
+    test('representation', () => {
         expect(parse('<string()>', 'string(name)', false)).toMatchObject({
             name: 'string',
             types: ['<function>', '<string()>'],
             value: list([ident('name', ['<custom-ident>']), omitted, omitted]),
         })
     })
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
         expect(parse('<string()>', 'string(name, first)')).toBe('string(name)')
     })
 })
 describe('<style-feature>', () => {
-    it('fails to parse an invalid value', () => {
+    test('invalid', () => {
         expect(parse('<style-feature>', 'width: revert', false)).toBeNull()
         expect(parse('<style-feature>', 'width: revert-layer', false)).toBeNull()
     })
-    it('parses a valid value', () => {
+    test('representation', () => {
         expect(parse('<style-feature>', 'color: green !important', false)).toMatchObject({
             important: true,
             name: 'color',
@@ -3882,16 +3882,16 @@ describe('<style-feature>', () => {
     })
 })
 describe('<supports-decl>', () => {
-    it('fails to parse an invalid value', () => {
+    test('invalid', () => {
         expect(parse('<supports-decl>', '(unknown: initial)', false)).toBeNull()
         expect(parse('<supports-decl>', '(color: invalid)', false)).toBeNull()
     })
-    it('parses a valid value', () => {
+    test('representation', () => {
         expect(parse('<supports-decl>', '(color: green)')).toBe('(color: green)')
     })
 })
 describe('<supports-feature>', () => {
-    it('fails to parse an invalid value', () => {
+    test('invalid', () => {
         const invalid = [
             'selector(undeclared|type)',
             'selector(:is(:not))',
@@ -3899,7 +3899,7 @@ describe('<supports-feature>', () => {
         ]
         invalid.forEach(input => expect(parse('<supports-feature>', input, false)).toBeNull())
     })
-    it('parses a valid value', () => {
+    test('representation', () => {
         expect(parse('<supports-feature>', '(color: green)', false, supportsContext)).toMatchObject({
             associatedToken: '(',
             types: ['<simple-block>', '<supports-decl>', '<supports-feature>'],
@@ -3913,35 +3913,35 @@ describe('<supports-feature>', () => {
     })
 })
 describe('<symbols()>', () => {
-    it('fails to parse an invalid value', () => {
+    test('invalid', () => {
         expect(parse('<symbols()>', 'symbols(alphabetic "a")', false)).toBeNull()
         expect(parse('<symbols()>', 'symbols(numeric "a")', false)).toBeNull()
     })
-    it('parses a valid value', () => {
+    test('representation', () => {
         expect(parse('<symbols()>', 'symbols("a")', false)).toMatchObject({
             name: 'symbols',
             types: ['<function>', '<symbols()>'],
             value: list([omitted, list([string('a')])]),
         })
     })
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
         expect(parse('<symbols()>', 'symbols(symbolic "a")')).toBe('symbols("a")')
     })
 })
 describe('<translate()>', () => {
-    it('parses a valid value', () => {
+    test('representation', () => {
         expect(parse('<translate()>', 'translate(1px)', false)).toMatchObject({
             name: 'translate',
             types: ['<function>', '<translate()>'],
             value: list([length(1, 'px', ['<length-percentage>']), omitted, omitted]),
         })
     })
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
         expect(parse('<translate()>', 'translate(1px, 0px)')).toBe('translate(1px)')
     })
 })
 describe('<url-set>', () => {
-    it('fails to parse an invalid value', () => {
+    test('invalid', () => {
         const invalid = [
             'image-set(image(black))',
             'image-set(image-set(black))',
@@ -3951,7 +3951,7 @@ describe('<url-set>', () => {
         ]
         invalid.forEach(input => expect(parse('<url-set>', input, false)).toBeNull())
     })
-    it('parses a valid value', () => {
+    test('representation', () => {
 
         const url = string('image.jpg')
         const src = {
@@ -3973,14 +3973,14 @@ describe('<url-set>', () => {
     })
 })
 describe('<view()>', () => {
-    it('parses a valid value', () => {
+    test('representation', () => {
         expect(parse('<view()>', 'view()', false)).toMatchObject({
             name: 'view',
             types: ['<function>', '<view()>'],
             value: omitted,
         })
     })
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
         const valid = [
             ['view(block auto)', 'view()'],
             ['view(block 1px)', 'view(1px)'],
@@ -3990,18 +3990,18 @@ describe('<view()>', () => {
     })
 })
 describe('<wq-name>', () => {
-    it('fails to parse an invalid value', () => {
+    test('invalid', () => {
         expect(parse('<wq-name>', 'prefix |name', false)).toBeNull()
         expect(parse('<wq-name>', 'prefix| name', false)).toBeNull()
     })
-    it('parses a valid value', () => {
+    test('representation', () => {
         const name = list([omitted, identToken('name')], '', ['<wq-name>'])
         expect(parse('<wq-name>', 'name', false)).toMatchObject(name)
     })
 })
 
 describe('<font-src-list>', () => {
-    it('parses a valid value', () => {
+    test('representation', () => {
 
         const url = {
             types: ['<url-token>', '<url()>', '<url>'],
@@ -4016,13 +4016,13 @@ describe('<font-src-list>', () => {
         expect(parse('<font-src-list>', 'url(font.woff2) format(woff2)', false))
             .toMatchObject(list([list([url, format, omitted], ' ', ['<font-src>'])], ',', ['<font-src-list>']))
     })
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
         expect(parse('<font-src-list>', 'url("font.woff2") format(woff2), url("font.eotf") format("embedded-opentype")'))
             .toBe('url("font.woff2") format(woff2)')
     })
 })
 describe('<selector-list>', () => {
-    it('fails to parse an invalid value', () => {
+    test('invalid', () => {
         const invalid = [
             // Invalid whitespace
             'svg| *',
@@ -4069,7 +4069,7 @@ describe('<selector-list>', () => {
         ]
         invalid.forEach(input => expect(parse('<selector-list>', input, false)).toBeNull())
     })
-    it('parses a valid value', () => {
+    test('representation', () => {
 
         const subclass = list([delimiter('.'), identToken('class')], '', ['<class-selector>', '<subclass-selector>'])
         const subclasses = list([subclass], '')
@@ -4080,7 +4080,7 @@ describe('<selector-list>', () => {
 
         expect(parse('<selector-list>', '.class', false)).toMatchObject(selectors)
     })
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
         const valid = [
             // No invalid whitespace
             ['#id.class[ *|attr ^= value ]:hover > [attr=value]::before', '#id.class[*|attr ^= value]:hover > [attr = value]::before'],
@@ -4138,7 +4138,7 @@ describe('<selector-list>', () => {
     })
 })
 describe('<media-query-list>', () => {
-    it('parses a valid value', () => {
+    test('representation', () => {
 
         const mediaType = ident('all', ['<media-type>'])
         const mediaQuery = list([omitted, mediaType, omitted], ' ', ['<media-query>'])
@@ -4146,7 +4146,7 @@ describe('<media-query-list>', () => {
 
         expect(parse('<media-query-list>', 'all', false)).toMatchObject(mediaQueryList)
     })
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
         expect(parse('<media-query-list>', ';, 1, (condition)', true, mediaQueryContext))
             .toBe('not all, not all, (condition)')
         expect(parse('<media-query-list>', 'all and (condition)', true, mediaQueryContext))
@@ -4155,13 +4155,13 @@ describe('<media-query-list>', () => {
 })
 
 describe("<'border-radius'>", () => {
-    it('parses a valid value', () => {
+    test('representation', () => {
         const radius = length(1, 'px', ['<length-percentage>'])
         const side = list([radius, radius, radius, radius])
         const radii = list([side, side], '/', ['border-radius'])
         expect(parse("<'border-radius'>", '1px', false)).toMatchObject(radii)
     })
-    it('parses and serializes a valid value', () => {
+    test('valid', () => {
         const valid = [
             // Non-omitted component values
             ['1px 2px'],
