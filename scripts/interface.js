@@ -4,6 +4,7 @@
  * the corresponding rule.
  */
 const Transformer = require('webidl2js')
+const compatibility = require('../lib/compatibility.js')
 const { cssPropertyToIDLAttribute } = require('../lib/utils/string.js')
 const fs = require('node:fs')
 const path = require('node:path')
@@ -83,6 +84,38 @@ function createStyleDeclarationChildInterface(name, attributes, extensions = [])
     })
 }
 
+/**
+ * @param {object} attributes
+ * @param {Map} [map]
+ * @returns {string[]}
+ */
+function getCompatibilityNames(attributes, map) {
+    return map ? [...map.keys()].filter(name => attributes[map.get(name)]) : []
+}
+
+/**
+ * @param {object} rule
+ * @returns {string[]}
+ */
+function getRuleAttributes({ name, value: { descriptors, properties }}) {
+    const attributes = []
+    if (descriptors) {
+        const replacements = compatibility.descriptors[name]
+        attributes.push(
+            ...Object.keys(descriptors).filter(name => !name.includes('*')),
+            ...getCompatibilityNames(descriptors, replacements?.aliases),
+            ...getCompatibilityNames(descriptors, replacements?.mappings))
+    }
+    if (properties) {
+        const { properties: { aliases, mappings } } = compatibility
+        attributes.push(
+            ...Object.keys(properties).filter(name => !name.includes('*')),
+            ...getCompatibilityNames(properties, aliases),
+            ...getCompatibilityNames(properties, mappings))
+    }
+    return attributes
+}
+
 const fontFaceRule = rules.find(rule => rule.name === '@font-face')
 const keyframeRule = rules.find(rule => rule.name === '@keyframes').value.rules.find(rule => rule.name === '@keyframe')
 const pageRule = rules.find(rule => rule.name === '@page')
@@ -90,12 +123,9 @@ const marginRule = pageRule.value.rules.find(rule => rule.name === '@margin')
 const styleRule = rules.find(rule => rule.name === '@style')
 const positionTryRule = rules.find(rule => rule.name === '@position-try')
 
-const fontFaceDescriptors = [...Object.keys(fontFaceRule.value.descriptors), 'font-stretch']
-const pageDescriptors = [...Object.keys(pageRule.value.descriptors), ...pageRule.value.properties]
-
-createStyleDeclarationChildInterface('CSSFontFaceDescriptors', fontFaceDescriptors)
-createStyleDeclarationChildInterface('CSSKeyframeProperties', keyframeRule.value.properties)
-createStyleDeclarationChildInterface('CSSMarginDescriptors', marginRule.value.properties)
-createStyleDeclarationChildInterface('CSSPageDescriptors', pageDescriptors)
-createStyleDeclarationChildInterface('CSSPositionTryDescriptors', positionTryRule.value.properties)
-createStyleDeclarationChildInterface('CSSStyleProperties', styleRule.value.properties, ['CEReactions'])
+createStyleDeclarationChildInterface('CSSFontFaceDescriptors', getRuleAttributes(fontFaceRule))
+createStyleDeclarationChildInterface('CSSKeyframeProperties', getRuleAttributes(keyframeRule))
+createStyleDeclarationChildInterface('CSSMarginDescriptors', getRuleAttributes(marginRule))
+createStyleDeclarationChildInterface('CSSPageDescriptors', getRuleAttributes(pageRule))
+createStyleDeclarationChildInterface('CSSPositionTryDescriptors', getRuleAttributes(positionTryRule))
+createStyleDeclarationChildInterface('CSSStyleProperties', getRuleAttributes(styleRule), ['CEReactions'])

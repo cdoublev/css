@@ -3,7 +3,7 @@
 
 This document focuses on serializing CSS property values, which vary depending on the interface:
 
-  - `Element.style`, `CSSRule.style`, `CSSRule.cssText`: the specified value
+  - `Element.style`, `CSSRule.style`, `CSSRule.cssText`: the declared value
   - `getComputedStyle()` or the `Computed` tab of browser development tools: the resolved value
 
 Rule preludes are serialized as defined in the procedure to [*serialize a CSS rule*](https://drafts.csswg.org/cssom-1/#serialize-a-css-rule) (CSSOM), and the serialization of descriptor values is not specified but is assumed to be the same as for specified property values.
@@ -32,9 +32,9 @@ The second principle means sorting component values in the canonical order defin
   - [used value](https://drafts.csswg.org/css-cascade-5/#used): *the result of taking the computed value and completing any remaining calculations to make it the absolute theoretical value*
   - [actual value](https://drafts.csswg.org/css-cascade-5/#actual): *the used value after any such [user agent dependent] adjustments have been made*
 
-The specified value may serialize to a slightly different value than the authored value, according to the general serialization principles, and because the lexical parser does not keep minor details like trailing decimal 0, letter case, etc.
+The declared value may serialize to a slightly different value than the authored value, according to the general serialization principles, and because the lexical parser does not keep minor details like trailing decimal 0, letter case, etc.
 
-The computed and later value may serialize to the same value than the specified value, or a value closer to its absolute equivalent, computed using data that may not be available when parsing the specified value, like property values of another `Element` or the viewport size.
+The computed and later value may serialize to the same value than the declared value, or a value closer to its absolute equivalent, computed using data that may not be available when parsing the declared value, like property values of another `Element` or the viewport size.
 
 ## Model
 

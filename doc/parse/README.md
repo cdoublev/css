@@ -1,7 +1,7 @@
 
 # Parsing CSS
 
-This document provides an overview of parsing an input against a CSS grammar. Implementation details are purposely left undefined as much as possible.
+This document provides an overview of parsing an input against a CSS grammar.
 
 The input of the CSS parser can have different sources:
 
@@ -15,13 +15,13 @@ The input of the CSS parser can have different sources:
 
 The output can be a list of component values, a declaration, a `CSSRule`, a `CSSStyleDeclaration`, or a `CSSStyleSheet`.
 
-Let's introduce the CSS grammar and look at parsing a declaration specified with `Element.style.setProperty()`, before grasping a complete picture by looking at parsing a style sheet.
+Let's introduce the CSS grammar and look at parsing a declaration specified with `Element.style.setProperty()`, before sketching a complete picture by looking at parsing a style sheet.
 
 ## CSS grammar
 
 The CSS grammar is structred on three levels: lexic, syntax, and semantics. Lexic and syntax define the structure of a value while semantics define its contextual meaning. For example, `opacity: red` is a valid `<declaration>` but its value is invalid according to its name.
 
-In CSS specifications, *grammar* always refers to a production or [value definition](./value-definition.md) and implicitly includes any specific semantic rules defined in prose. Theoretically, the CSS grammar can be defined only with production rules, but encoding semantics is not always trivial. Besides, a CSS value failing to match a production must not always have to cause the entire process to fail.
+In CSS specifications, *grammar* always refers to a production or [value definition](./value-definition.md) and implicitly includes any semantic rules defined in prose. Theoretically, the CSS grammar can be defined only with production rules, but encoding semantics is not always trivial. Besides, a CSS value failing to match a production must not always have to cause the entire process to fail.
 
 The following list introduces the different levels of CSS structures:
 
@@ -45,7 +45,7 @@ Style sheet and rule block values are represented with one of the few production
 
 `Element.style` is an instance of `CSSStyleDeclaration` storing a list of declarations.
 
-A declaration for a property can appear in the prelude (as a feature or style query) or the block value of any rule. A declaration for a descriptor can only appear in the block value of an at-rule. A property applies to one or more elements whereas a descriptor applies to a single resource.
+A declaration for a property can appear in the prelude (as a feature or style query) or the block value of an at-rule or a qualified rule. A declaration for a descriptor can only appear in the block value of an at-rule. A property applies to one or more elements whereas a descriptor applies to a single resource.
 
 ---
 

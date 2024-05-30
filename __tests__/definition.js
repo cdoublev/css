@@ -562,7 +562,7 @@ describe('context rules', () => {
                 0,
                 31))
     })
-    it('represents <calc-sum># produced by <hypoth()>, <max()>, <min()>', () => {
+    test('<calc-sum># produced by <hypoth()>, <max()>, <min()>', () => {
         const production = { definition: { name: '<hypoth()>' } }
         expect(parse('<calc-sum>#', production)).toEqual(repeat(type('<calc-sum>'), 1, 32, ','))
     })

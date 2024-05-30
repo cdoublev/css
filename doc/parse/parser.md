@@ -3,9 +3,9 @@
 
 Entry points normalize the input into a token stream before any specific processing and parsing against a CSS grammar defined in:
 
-  - [CSS Syntax](https://drafts.csswg.org/css-syntax-3/#rule-defs), with the productions of rule block value types, defined with an algorithm that consumes a list of declarations and a list of rules from the token stream, and requires validating them in the context
+  - [CSS Syntax](https://drafts.csswg.org/css-syntax-3/#rule-defs), with the productions of rule block value types, defined with an algorithm that consumes declarations and rules from the token stream, and requires validating them in the context
   - [CSS Value](https://drafts.csswg.org/css-values-4/#value-defs), with the productions of CSS basic data types, defined with their corresponding token, and other productions used in many CSS values
-  - other CSS specifications, with productions usually defined with a value definition and possibly specific rules written in prose
+  - other CSS specifications, with productions usually defined with a value definition and possibly specific rules written in prose, sometimes with an algorithm
 
 There are many established tools like Lex + Yacc or ANTLR that take a grammar defined with production rules as input, and return a parser as output, which is often as efficient as any handwritten parser. Then why implement a CSS parser?
 
@@ -19,7 +19,7 @@ Parsing is the process of deriving an unstructured input into a representation e
 
 A **derivation** is the path followed to traverse the input and production rules.
 
-**Note:** in functional programming, `traverse` can be described as a more powerfull version of `reduce`, and parsing does indeed reduce a string into an object (the parse tree), but both functions are not powerfull enough to parse CSS.
+**Note:** in functional programming, `traverse` can be described as a more powerfull version of `reduce`, and parsing does indeed reduce a string into a parse tree, but both are not powerfull enough to parse CSS.
 
 A **derivation tree** (aka. concrete tree or parse tree) is a hierarchical representation of this traversal. A branch node represents a non-terminal, a combination, a repetition, as a container for zero or more component values. A leaf node represents a terminal as a single component value.
 
@@ -99,17 +99,17 @@ WIP
 
 ### Backtracking
 
-A CSS parser must backtrack after failing to match a component value or when the input is not fully consumed. This requirement is not defined in any specification and only applies to parsing a list of component values.
+A CSS parser must backtrack after failing to match a component value or when the input is not fully consumed. This requirement is unspecified and only applies to parsing a list of component values.
 
-The parser must successfully parse `a a b` against `[a | a a] b`, or `a a` against `a | a a`, by backtracking, instead of failing to find a match after the first choice in `a | a a` (greedy parser), or instead of looking ahead or re-ordering `a | a a` to `a a | a` to find the longest match (maximal munch parser).
+It must successfully parse `a a b` against `[a | a a] b`, or `a a` against `a | a a`, by backtracking, instead of failing to find a match after the first choice in `a | a a` (greedy parser), or instead of looking ahead or re-ordering `a | a a` to `a a | a` to find the longest match (maximal munch parser).
 
-Backtracking requires saving the index in the list of component values that corresponds to the location before parsing a node. If parsing the tail node fails and cannot yield an alternative result, the node must be removed from the tree before backtracking again. Any sequence of symbols combined with `|`, `||`, `&&`, or any symbol qualified by a multiplier where `min < max`, can yield alternatives.
+Backtracking requires saving the index in the list of component values that corresponds to the location before parsing a node. If parsing the tail node fails and cannot yield an alternative result, it must be removed from the tree before backtracking again. Any sequence of symbols combined with `|`, `||`, `&&`, or any symbol qualified by a multiplier where `min < max`, yield alternatives.
 
 One would expect to read combined symbols in the same direction as the input. For example, `a a` would match the first alternative in `[a | a a] a?` (`a?` would not be omitted). But the specifications do not define such priority in alternations (`|`) and arrangements (`||`).
 
 **Note:** the CSS grammar defines some priorities, like `<number>` or `<integer>` over `<length>` (or `<length-percentage>`) when the input is `0`.
 
-It would be useless to try other `<color>` alternatives when matching `#000 false` against `<color> true`. Actually, there are only a few productions that can yield a different match after backtracking, and they would not need it if their alternatives were sorted in left precedence order for a longest match priority.
+It would be useless to try other `<color>` alternatives when matching `#000 false` against `<color> true`. Actually, there are only a few productions that can yield a different result after backtracking, and they would not need it if their alternatives were sorted in left precedence order for longest match priority.
 
 Similarly, backtracking is useless when a function or simple block value failed to match its (context-free) value definition, or when a value is invalid according to a specific rule for the production: the whole input is guaranteed to be invalid. But many functions and simple blocks are defined with alternative value definitions like `rgb(<percentage>#{3}, <alpha-value>?) | rgb(<number>#{3}, <alpha-value>?)` instead of `rgb([<number>#{3} | <percentage>#{3}], <alpha-value>?)`.
 
@@ -126,11 +126,11 @@ What a rule's value definition like `@page <page-selector-list> { <declaration-a
   1. an `<at-keyword-token>` representing `@page`, followed by tokens matching `<page-selector-list>`, `<{-token>`, tokens resulting from parsing `<declaration-rule-list>`, and `<}-token>`
   2. a single object whose `name`, `prelude`, and `value`, match the corresponding parts of the value definition, similarly as for a function `name` and `value`
 
-To parse `<declaration-at-rule-list>` and other [`<block-contents>` subtypes](https://drafts.csswg.org/css-syntax-3/#typedef-block-contents), the parser must *consume a block’s contents* (rules and declarations), which requires to filter out invalid contents in the context, which means any qualified rule, and any at-rule or declaration that is not accepted in `@page` or that does not match the corresponding grammar.
+To parse `<declaration-at-rule-list>` and other [`<block-contents>` subtypes](https://drafts.csswg.org/css-syntax-3/#typedef-block-contents), the parser must *consume a block’s contents* (rules and declarations), which requires filtering out invalid contents in the context, which means any qualified rule, and any at-rule or declaration that is not accepted in `@page` or that does not match the corresponding grammar.
 
-The parser must not only be able to parse a grammar by matching a value definition, but also by validating the result against a specific rule, excluding or replacing invalid parts, etc.
+The parser must not only be able to parse a grammar by matching a value definition, but also by validating the result against a specific rule, removing or replacing invalid parts, etc.
 
-For example, to parse `<media-query-list>` in `@media`, `<forgiving-selector-list>` in a style rule, or `<font-src-list>` in `@font-face`, the parser must *parse a comma-separated list according to a CSS grammar*, which matches each list resulting from *parse a comma-separated list of component values* against `<media-query>`, `<complex-real-selector>`, `<font-src>`, respectively, or returns an empty list.
+For example, to parse `<media-query-list>` in `@media`, `<forgiving-selector-list>` in a style rule, or `<font-src-list>` in `@font-face`, the parser must *parse a comma-separated list according to a CSS grammar*, which matches each list of component values resulting from *parse a comma-separated list of component values* against `<media-query>`, `<complex-real-selector>`, `<font-src>`, respectively, or returns an empty list.
 
 **Note:** to parse `Element.media`, `Window.matchMedia()`, run `parseCSSGrammar(input, '<media-query[-list]>')`.
 
@@ -154,7 +154,7 @@ A CSS rule definition must define:
   - the properties/descriptors that can or cannot be declared in its block value
   - whether declarations cascade
 
-Reading the semantic context may require traversing the tree from bottom to top. Such requirement is related to the well-known time and space trade off: storing a reference of a parent node in child nodes takes space but traversing a linear tree takes time. Other trade-offs exist between a static path, coupled with the grammar and exposed to the slightest change, and a functional search, which is slightly more complex to run.
+Reading the semantic context may require traversing the tree from bottom to top. Such requirement is related to the well-known time and space trade off: storing a reference of a parent node in child nodes takes space but traversing a linear tree takes time. Other trade-offs exist between a static path, coupled with the grammar and exposed to the slightest change, and a functional search, whose time complexity could be slightly greater.
 
 As an example of a semantic context rule, there must be a whitespace preceding `+` and `-` in `<calc-sum>`. This raises the question of how to apply semantic context rules.
 
