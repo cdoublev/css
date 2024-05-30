@@ -417,6 +417,10 @@ const excluded = {
             // Prefer SVG
             'pointer-events',
         ],
+        'mathml-core': [
+            // https://github.com/w3c/mathml-core/issues/246
+            'text-transform',
+        ],
     },
     rules: {},
     selectors: {
