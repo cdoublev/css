@@ -327,7 +327,7 @@ describe('CSS grammar', () => {
             @invalid } @layer reset;
             style-2 { style }
             invalid } style {}
-            style-3 { --custom: }
+            style-3 { --custom:
         `)
 
         expect(cssRules).toHaveLength(3)
