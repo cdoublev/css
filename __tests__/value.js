@@ -2882,7 +2882,7 @@ describe('<color>', () => {
             ['rgb(0.501 0.499 0 / 50.1%)', 'rgba(1, 0, 0, 0.5)'],
             // Relative color syntax
             ['rgb(from green alpha calc(r) calc(g * 1%) / calc(b + 1 + 1))', 'rgb(from green alpha calc(r) calc(1% * g) / calc(2 + b))'],
-            ['rgba(from hsla(0 0 0) 0% 0% 0% / 100%)', 'rgba(from rgb(0, 0, 0) 0 0 0)'],
+            ['rgba(from hsla(0 0 0) 0% 0% 0% / 100%)', 'rgb(from hsl(0 0 0) 0 0 0)'],
         ]
         valid.forEach(([input, expected = input]) => expect(parse('<color>', input)).toBe(expected))
     })
@@ -2928,7 +2928,7 @@ describe('<color>', () => {
             ['hsl(0 100% 50% / 50.1%)', 'rgba(255, 0, 0, 0.5)'],
             // Relative color syntax
             ['hsl(from green alpha calc(h) calc(s * 1%) / calc(l + 1 + 1))', 'hsl(from green alpha calc(h) calc(1% * s) / calc(2 + l))'],
-            ['hsla(from hsla(0 0 0) 0deg 0% 0% / 100%)', 'hsla(from rgb(0, 0, 0) 0 0 0)'],
+            ['hsla(from hsla(0 0 0) 0deg 0% 0% / 100%)', 'hsl(from hsl(0 0 0) 0 0 0)'],
         ]
         valid.forEach(([input, expected = input]) => expect(parse('<color>', input)).toBe(expected))
     })
@@ -2969,7 +2969,7 @@ describe('<color>', () => {
             ['hwb(0 0% 0% / 50.1%)', 'rgba(255, 0, 0, 0.5)'],
             // Relative color syntax
             ['hwb(from green alpha calc(h) calc(w * 1%) / calc(b + 1 + 1))', 'hwb(from green alpha calc(h) calc(1% * w) / calc(2 + b))'],
-            ['hwb(from hsla(0 0 0) 0deg 0% 0% / 100%)', 'hwb(from rgb(0, 0, 0) 0 0 0)'],
+            ['hwb(from hsla(0 0 0) 0deg 0% 0% / 100%)', 'hwb(from hsl(0 0 0) 0 0 0)'],
         ]
         valid.forEach(([input, expected = input]) => expect(parse('<color>', input)).toBe(expected))
     })
@@ -2990,7 +2990,7 @@ describe('<color>', () => {
             ['lab(0.00000051% 0.00000041% 0 / 50.1%)', 'lab(0.000001 0.000001 0 / 0.5)'],
             // Relative color syntax
             ['lab(from green alpha calc(l) calc(a * 1%) / calc(b + 1 + 1))', 'lab(from green alpha calc(l) calc(1% * a) / calc(2 + b))'],
-            ['lab(from hsla(0 0 0) 0% 0% 0% / 100%)', 'lab(from rgb(0, 0, 0) 0 0 0)'],
+            ['lab(from hsla(0 0 0) 0% 0% 0% / 100%)', 'lab(from hsl(0 0 0) 0 0 0)'],
         ]
         valid.forEach(([input, expected = input]) => expect(parse('<color>', input)).toBe(expected))
     })
@@ -3011,7 +3011,7 @@ describe('<color>', () => {
             ['lch(0.00000051% 0.00000041% 0.00000051deg / 50.1%)', 'lch(0.000001 0.000001 0.000001 / 0.5)'],
             // Relative color syntax
             ['lch(from green alpha calc(l) calc(c * 1deg) / calc(h + 1 + 1))', 'lch(from green alpha calc(l) calc(1deg * c) / calc(2 + h))'],
-            ['lch(from hsla(0 0 0) 0% 0% 0deg / 100%)', 'lch(from rgb(0, 0, 0) 0 0 0)'],
+            ['lch(from hsla(0 0 0) 0% 0% 0deg / 100%)', 'lch(from hsl(0 0 0) 0 0 0)'],
         ]
         valid.forEach(([input, expected = input]) => expect(parse('<color>', input)).toBe(expected))
     })
@@ -3032,7 +3032,7 @@ describe('<color>', () => {
             ['oklab(0.00005% 0.00013% 0 / 50.1%)', 'oklab(0.000001 0.000001 0 / 0.5)'],
             // Relative color syntax
             ['oklab(from green alpha calc(l) calc(a * 1%) / calc(b + 1 + 1))', 'oklab(from green alpha calc(l) calc(1% * a) / calc(2 + b))'],
-            ['oklab(from hsla(0 0 0) 0% 0% 0% / 100%)', 'oklab(from rgb(0, 0, 0) 0 0 0)'],
+            ['oklab(from hsla(0 0 0) 0% 0% 0% / 100%)', 'oklab(from hsl(0 0 0) 0 0 0)'],
         ]
         valid.forEach(([input, expected = input]) => expect(parse('<color>', input)).toBe(expected))
     })
@@ -3053,7 +3053,7 @@ describe('<color>', () => {
             ['oklch(0.00005% 0.00013% 0.00000051deg / 50.1%)', 'oklch(0.000001 0.000001 0.000001 / 0.5)'],
             // Relative color syntax
             ['oklch(from green alpha calc(l) calc(c * 1deg) / calc(h + 1 + 1))', 'oklch(from green alpha calc(l) calc(1deg * c) / calc(2 + h))'],
-            ['oklch(from hsla(0 0 0) 0% 0% 0deg / 100%)', 'oklch(from rgb(0, 0, 0) 0 0 0)'],
+            ['oklch(from hsla(0 0 0) 0% 0% 0deg / 100%)', 'oklch(from hsl(0 0 0) 0 0 0)'],
         ]
         valid.forEach(([input, expected = input]) => expect(parse('<color>', input)).toBe(expected))
     })
@@ -3078,7 +3078,7 @@ describe('<color>', () => {
             ['color(from green srgb alpha calc(r) calc(g * 1%) / calc(b + 1 + 1))', 'color(from green srgb alpha calc(r) calc(1% * g) / calc(2 + b))'],
             ['color(from green xyz-d65 calc(alpha) calc(x) y / z)'],
             ['color(from green --profile calc(alpha) calc(channel-identifier))'],
-            ['color(from hsla(0 0 0) srgb 0% 0% 0% / 100%)', 'color(from rgb(0, 0, 0) srgb 0 0 0)'],
+            ['color(from hsla(0 0 0) srgb 0% 0% 0% / 100%)', 'color(from hsl(0 0 0) srgb 0 0 0)'],
         ]
         valid.forEach(([input, expected = input]) => expect(parse('<color>', input)).toBe(expected))
     })
