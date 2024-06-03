@@ -1017,7 +1017,6 @@ describe('CSS grammar', () => {
                 @import "./global.css";
                 @namespace svg "http://www.w3.org/2000/svg";
                 @annotation {}
-                @starting-style {}
                 @top-left {}
                 0% {}
                 color: red;
@@ -1037,6 +1036,7 @@ describe('CSS grammar', () => {
                 @position-try --position {}
                 @property --custom { syntax: "*"; inherits: false }
                 @scope {}
+                @starting-style {}
                 @supports (color: green) {}
                 @view-transition {}
                 style {}
