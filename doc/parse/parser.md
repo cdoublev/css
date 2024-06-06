@@ -144,7 +144,7 @@ When `@media` and `@supports` are nested in a style rule, their block value does
 
 Looking first at how to access a higher level CSS rule value, definition, or both, it can be achieved by ensuring the parser keeps track of them. But when using `CSSRule.insertRule()`, they would be missing.
 
-The initial context must be initialized with the existing CSSOM tree, which is also required to validate that any namespace prefix used in a selector has been declared in a top-level `@namespace`.
+Therefore the initial context must be initialized with the existing CSSOM tree, which is also required to validate that any namespace prefix has been declared in a top-level `@namespace`.
 
 **Note:** `*` and null are the only valid namespace prefixes allowed in `Element.querySelector[All]()` because this interface does not allow resolving declared namespaces.
 
@@ -154,7 +154,7 @@ A CSS rule definition must define:
   - the properties/descriptors that can or cannot be declared in its block value
   - whether declarations cascade
 
-Reading the semantic context may require traversing the tree from bottom to top. Such requirement is related to the well-known time and space trade off: storing a reference of a parent node in child nodes takes space but traversing a linear tree takes time. Other trade-offs exist between a static path, coupled with the grammar and exposed to the slightest change, and a functional search, whose time complexity could be slightly greater.
+Reading the semantic context may require traversing the tree from bottom to top. Such requirement is related to the well-known time and space trade off: storing a reference of a parent node in child nodes takes space but traversing a tree takes time. Other trade-offs exist between a static tree path, coupled with the grammar and exposed to the slightest change, and a functional search, whose time complexity could be slightly greater.
 
 As an example of a semantic context rule, there must be a whitespace preceding `+` and `-` in `<calc-sum>`. This raises the question of how to apply semantic context rules.
 

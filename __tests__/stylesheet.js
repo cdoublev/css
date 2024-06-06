@@ -1057,6 +1057,7 @@ describe('CSS grammar', () => {
             CSSPositionTryRule,
             CSSPropertyRule,
             CSSScopeRule,
+            CSSStartingStyleRule,
             CSSSupportsRule,
             CSSViewTransitionRule,
             CSSStyleRule,
