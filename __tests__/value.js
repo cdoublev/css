@@ -2863,6 +2863,8 @@ describe('<color>', () => {
             // Out of range arguments
             ['rgb(-1 0 0 / -1)', 'rgba(0, 0, 0, 0)'],
             ['rgb(256 0 0 / 2)', 'rgb(255, 0, 0)'],
+            ['rgb(calc(-infinity) calc(-infinity) calc(infinity))', 'rgb(0, 0, 255)'],
+            ['rgb(calc(infinity) calc(infinity) calc(-infinity))', 'rgb(255, 255, 0)'],
             // Map <percentage> to <number>
             ['rgb(-1% 0% 0% / -1%)', 'rgba(0, 0, 0, 0)'],
             ['rgb(101% 100% 100% / 101%)', 'rgb(255, 255, 255)'],
@@ -2907,6 +2909,8 @@ describe('<color>', () => {
             ['hsl(540 101 50 / 2)', 'rgb(0, 255, 255)'],
             ['hsl(0 0 -1)', 'rgb(0, 0, 0)'],
             ['hsl(0 0 101)', 'rgb(255, 255, 255)'],
+            ['hsl(calc(-infinity) calc(-infinity) calc(infinity))', 'rgb(255, 255, 255)'],
+            ['hsl(calc(infinity) calc(infinity) calc(-infinity))', 'rgb(0, 0, 0)'],
             // Map <angle> and <percentage> to <number>
             ['hsl(-1.5turn -1% 50% / -1%)', 'rgba(128, 128, 128, 0)'],
             ['hsl(1.5turn 101% 50% / 101%)', 'rgb(0, 255, 255)'],
@@ -2943,15 +2947,18 @@ describe('<color>', () => {
             ['hwb(540 0 0 / 2)', 'rgb(0, 255, 255)'],
             ['hwb(0 -1 100)', 'rgb(0, 0, 0)'],
             ['hwb(0 100 -1)', 'rgb(255, 255, 255)'],
-            ['hwb(0 1000 1)', 'rgb(255, 255, 255)'],
-            ['hwb(0 1 1000)', 'rgb(0, 0, 0)'],
+            ['hwb(0 1000 1)', 'rgb(252, 252, 252)'],
+            ['hwb(0 1 1000)', 'rgb(3, 3, 3)'],
+            ['hwb(calc(-infinity) calc(-infinity) calc(infinity))', 'rgb(0, 0, 0)'],
+            ['hwb(calc(infinity) calc(infinity) calc(-infinity))', 'rgb(255, 255, 255)'],
+            ['hwb(0 calc(infinity) calc(infinity))', 'rgb(128, 128, 128)'],
             // Map <angle> and <percentage> to <number>
             ['hwb(-1.5turn 0% 0% / -1%)', 'rgba(0, 255, 255, 0)'],
             ['hwb(-1.5turn 0% 0% / 101%)', 'rgb(0, 255, 255)'],
             ['hwb(0 -1% 100%)', 'rgb(0, 0, 0)'],
             ['hwb(0 100% -1%)', 'rgb(255, 255, 255)'],
             ['hwb(0 1000% -1%)', 'rgb(255, 255, 255)'],
-            ['hwb(0 1% 1000%)', 'rgb(0, 0, 0)'],
+            ['hwb(0 1% 1000%)', 'rgb(3, 3, 3)'],
             // Map `none` to `0`
             ['hwb(none none none / none)', 'rgba(255, 0, 0, 0)'],
             ['hwb(0 none none)', 'rgb(255, 0, 0)'],
