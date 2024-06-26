@@ -920,7 +920,6 @@ function build(specifications) {
 webref.listAll()
     .then(build)
     .catch(error => {
-        console.log(error)
         console.log('Please report this issue: https://github.com/cdoublev/css/issues/new')
         throw error
     })
