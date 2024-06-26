@@ -123,7 +123,7 @@ But [`@page`](https://drafts.csswg.org/css-page-3/#syntax-page-selector), a top-
 
 What a rule's value definition like `@page <page-selector-list> { <declaration-at-rule-list> }` represents is unclear because of this problem. It could be either:
 
-  1. an `<at-keyword-token>` representing `@page`, followed by tokens matching `<page-selector-list>`, `<{-token>`, tokens resulting from parsing `<declaration-rule-list>`, and `<}-token>`
+  1. an `<at-keyword-token>` representing `@page`, followed by tokens matching `<page-selector-list>`, `<{-token>`, tokens resulting from parsing `<declaration-at-rule-list>`, and `<}-token>`
   2. a single object whose `name`, `prelude`, and `value`, match the corresponding parts of the value definition, similarly as for a function `name` and `value`
 
 To parse `<declaration-at-rule-list>` and other [`<block-contents>` subtypes](https://drafts.csswg.org/css-syntax-3/#typedef-block-contents), the parser must *consume a block’s contents* (rules and declarations), which requires filtering out invalid contents in the context, which means any qualified rule, and any at-rule or declaration that is not accepted in `@page` or that does not match the corresponding grammar.

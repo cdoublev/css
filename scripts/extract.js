@@ -32,8 +32,6 @@ const webref = require('./webref.js')
 
 const logicalGroups = Object.keys(logical)
 
-const reportErrors = process.env.NODE_ENV === 'development'
-
 /* eslint-disable sort-keys */
 const initial = {
     descriptors: {},
@@ -458,7 +456,6 @@ const excluded = {
             '<}-token>',
             '<CDC-token>',
             '<CDO-token>',
-            '<EOF-token>',
             '<at-keyword-token>',
             '<bad-string-token>',
             '<bad-url-token>',
@@ -466,6 +463,7 @@ const excluded = {
             '<comma-token>',
             '<delim-token>',
             '<dimension-token>',
+            '<eof-token>',
             '<function-token>',
             '<hash-token>',
             '<ident-token>',
@@ -539,6 +537,80 @@ const descriptors = [...Object.keys(initial.descriptors).map(rule => [rule, Obje
 const properties = [...Object.entries(initial.properties)]
 const types = [...Object.entries(initial.types), ...Object.entries(replaced.types)]
 
+const reportErrors = process.env.NODE_ENV === 'development'
+
+// TODO: periodically review this list to remove errors that no longer occur
+const errors = {
+    '@charset': {
+        cause: 'It should always be ignored in a CSS input.',
+        link: ['https://drafts.csswg.org/css-syntax-3/#charset-rule'],
+    },
+    '@container': {
+        cause: 'It should be defined with <rule-list> instead of <block-contents>.',
+        links: ['https://github.com/w3c/csswg-drafts/pull/9215'],
+    },
+    '@custom-media': { cause: 'It is not yet supported.' },
+    '@custom-selector': { cause: 'It is not yet supported.' },
+    '@else': { cause: 'It is not yet supported.' },
+    '@font-feature-values': {
+        cause: 'In this library, it is intentionally defined with <declaration-at-rule-list> instead of <declaration-rule-list>, which is interpreted like <block-contents>.',
+        links: ['https://github.com/w3c/csswg-drafts/issues/8834#issuecomment-1554481507'],
+    },
+    '@historical-forms': {
+        cause: 'It should be removed.',
+        links: ['https://github.com/w3c/csswg-drafts/issues/9926'],
+    },
+    '@layer': { cause: 'It is the only rule with alternative definitions therefore only the first (block) definition is correctly checked.' },
+    '@page': {
+        cause: 'In this library, it is intentionally defined with <declaration-at-rule-list> instead of <declaration-rule-list>, which is interpreted like <block-contents>.',
+        links: ['https://github.com/w3c/csswg-drafts/issues/8834#issuecomment-1554481507'],
+    },
+    '@viewport': {
+        cause: 'It has been removed but there is still a descriptor defined in CSS Round Display.',
+        links: ['https://github.com/w3c/csswg-drafts/issues/8097'],
+    },
+    '@when': { cause: 'It is not yet supported.' },
+    '<-webkit-image-set()>': { cause: 'Function aliases should be skipped.' },
+    '<bool-test>': { cause: 'It is not yet supported.' },
+    '<box>': {
+        cause: 'It is a generic type notation that is no longer used anywhere, and should not be exported.',
+        links: [
+            'https://github.com/w3c/csswg-drafts/commit/7dc439c83df8bd34885f74689f8cbc7dff77b5e0',
+            'https://github.com/w3c/csswg-drafts/commit/798ba91a41295c5d8e084ba7e93c4073e720b4f3',
+            'https://github.com/w3c/csswg-drafts/commit/3a1c2a859a5e28a553f03757b45c237d9444680b',
+        ],
+    },
+    '<calc-mix()>': { cause: 'It is already defined with a value definition. Basically, this is definition markup problem.' },
+    '<container-progress()>': { cause: 'It is already defined with a value definition. Basically, this is definition markup problem.' },
+    '<crossorigin()>': { cause: 'It is not yet supported.' },
+    '<first-valid()>': { cause: 'It is already defined with a value definition. Basically, this is definition markup problem.' },
+    '<integrity()>': { cause: 'It is not yet supported.' },
+    '<referrerpolicy()>': { cause: 'It is not yet supported.' },
+    '<identifier>': { cause: 'It is equivalent to <ident>. Since most of CSS 2.2 is superseded, it is not worth requesting a change.' },
+    '<media-progress()>': { cause: 'It is already defined with a value definition. Basically, this is definition markup problem.' },
+    '<palette-mix()>': { cause: 'It is already defined with a value definition. Basically, this is definition markup problem.' },
+    '<progress()>': { cause: 'It is already defined with a value definition. Basically, this is definition markup problem.' },
+    '<repeat()>': { cause: 'It is a functional notation that is not used anywhere, and should not be exported.' },
+    '<toggle()>': { cause: 'It is already defined with a value definition. Basically, this is definition markup problem.' },
+    '<transform-mix()>': { cause: 'It is already defined with a value definition. Basically, this is definition markup problem.' },
+    '<unicode-range-token>': {
+        cause: 'It is intended to replace <urange> but there are ongoing problems with consuming this token therefore it is not yet implemented.',
+        links: ['https://github.com/w3c/csswg-drafts/issues/8835'],
+    },
+    ':nth()': { cause: 'It is not yet supported. It should be restricted to <pseudo-page> (CSS Page 3). Its value should not include the leading colon.' },
+}
+
+/**
+ * @param {string} spec
+ * @param {string} name
+ * @param {string} message
+ */
+function reportError(spec, name, message) {
+    if (reportErrors && !errors[name]) {
+        console.log(`[${spec}] ${message}`)
+    }
+}
+
 /**
  * @param {object[]} selectors
  * @param {string} key
@@ -553,22 +625,22 @@ function reportMissingPseudoSelectors(selectors, key) {
         if (name.startsWith('::')) {
             if (name.endsWith('()')) {
                 if (!elements.functions[name.slice(2, -2)]) {
-                    console.log(`[${key}] ${name} is a new pseudo-element`)
+                    reportError(key, name, `${name} is a new pseudo-element`)
                 }
             } else if (!elements.identifiers[name.slice(2)]) {
-                console.log(`[${key}] ${name} is a new pseudo-element`)
+                reportError(key, name, `${name} is a new pseudo-element`)
             }
             return
         }
         if (name.endsWith('()')) {
             if (!classes.functions[name.slice(1, -2)]) {
-                console.log(`[${key}] ${name} is a new pseudo-class`)
+                reportError(key, name, `${name} is a new pseudo-class`)
             }
             return
         }
         // Ignore pseudo-elements with legacy syntax and `:lang()` incorrectly named `:lang` in CSS 2
         if (!classes.identifiers.includes(name.slice(1)) && key !== 'CSS') {
-            console.log(`[${key}] ${name} is a new pseudo-class`)
+            reportError(key, name, `${name} is a new pseudo-class`)
         }
     })
 }
@@ -723,13 +795,13 @@ function addTypes(definitions = [], key) {
             }
             if (initial.types[name]) {
                 if (value && reportErrors) {
-                    console.log(`[${key}] ${name} is now extracted`)
+                    reportError(key, name, `${name} is now extracted`)
                 }
                 return
             }
             if (!value) {
                 if (reportErrors && !replaced[name]) {
-                    console.log(`[${key}] ${name} is defined in prose and must be replaced with a value definiton`)
+                    reportError(key, name, `${name} is defined in prose and must be replaced with a value definiton`)
                 }
                 return
             }
@@ -764,7 +836,7 @@ function addProperties(definitions = [], key) {
         }
         if (initial.properties[name]) {
             if (reportErrors) {
-                console.log(`[${key}] ${name} (property) is now extracted`)
+                reportError(key, name, `${name} (property) is now extracted`)
             }
             return
         }
@@ -817,7 +889,7 @@ function addDescriptors(definitions = [], rule, key) {
         }
         if (initialDescriptors?.[name]) {
             if (reportErrors) {
-                console.log(`[${key}] ${name} (descriptor for ${rule}) is now extracted`)
+                reportError(key, name, `${name} (descriptor for ${rule}) is now extracted`)
             }
             return
         }
@@ -875,11 +947,11 @@ function addRules(definitions = [], key) {
         const rule = findRule(name, rules)
         if (rule) {
             if (reportErrors && value && isUpdatedRule(name, value, rule)) {
-                console.log(`[${key}] ${name} has a new definition`)
+                reportError(key, name, `${name} has a new definition`)
             }
             addDescriptors(definitions, name, key)
         } else if (reportErrors) {
-            console.log(`[${key}] ${name} is a new rule`)
+            reportError(key, name, `${name} is a new rule`)
         }
     })
 }
