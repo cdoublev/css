@@ -1,7 +1,7 @@
 
 # Parser
 
-Entry points normalize the input into a token stream before any specific processing and parsing against a CSS grammar defined in:
+The parser entry points normalize the input into a token stream before any specific processing and parsing against a CSS grammar defined in:
 
   - [CSS Syntax](https://drafts.csswg.org/css-syntax-3/#rule-defs), with the productions of rule block value types, defined with an algorithm that consumes declarations and rules from the token stream, and requires validating them in the context
   - [CSS Value](https://drafts.csswg.org/css-values-4/#value-defs), with the productions of CSS basic data types, defined with their corresponding token, and other productions used in many CSS values
@@ -29,7 +29,7 @@ This traversal can start from the root node, follow a **pre-order**, which means
 
 **Note:** *pre-order* and *post-order* are also named *top-down* and *bottom-up* orders because parse trees are often represented with their root node at the top and their leaves at the bottom, which makes these names coupled to the visual representation of the tree.
 
-How a production rule is applied depends on the traversal order. When following a pre-order, the left-hand side of a production is *expanded* with the symbols on its right-hand side, which are *folded* into the left-hand side when following a post-order.
+How a production rule is applied depends on the traversal order. When following a pre-order, its left-hand side is *expanded* with the symbols on its right-hand side, which are *folded* into the left-hand side when following a post-order.
 
 An **abstract syntax tree** is the result of simplifying the parse tree in order to be semantically interpreted or compiled by another program (eg. the HTML document renderer or a CSS processing tool).
 
@@ -46,13 +46,13 @@ But CSS productions can also be sensitive to parent or higher level productions:
   - `context: <production>`
   - `@context { <production> }`
 
-The *syntactic context* is any visible object surrounding a value, whereas the *semantic context* is an invisible wrapper that can change the syntax and interpretation of a value. A CSS rule, declaration, or function, represent both context types.
+The *syntactic context* is any visible object (rule, declaration, function) surrounding a value, whereas the *semantic context* is an invisible wrapper. Both can change the syntax and interpretation of a value.
 
 ### Ambiguity
 
 An **ambiguity** exists when there are multiple derivations for the same input.
 
-A canonical example to illustrate a parsing ambiguity is the grammar of math operations, which involves associativity and precedence rules. The priorities associated with these rules are important because the (semantic) result could be different.
+A canonical example to illustrate a parsing ambiguity is the grammar of math operations, which involves associativity and precedence rules. The priorities associated with these rules are important because the (semantic) result could be different without them.
 
 As in math operations, left associativity is usually expected for parsing programming languages: the parser must read the input from left to right: `1 - 2 + 3` must be interpreted to `2` instead of `4`. But to interpret `1 + 2 * 3` to `7` instead of `9`, precedence rules must be hard-coded with a more complex value definition than `<calc-value> [['+' | '-' | '*' | '/'] <calc-value>]*`.
 
@@ -113,13 +113,13 @@ It would be useless to try other `<color>` alternatives when matching `#000 fals
 
 Similarly, backtracking is useless when a function or simple block value failed to match its (context-free) value definition, or when a value is invalid according to a specific rule for the production: the whole input is guaranteed to be invalid. But many functions and simple blocks are defined with alternative value definitions like `rgb(<percentage>#{3}, <alpha-value>?) | rgb(<number>#{3}, <alpha-value>?)` instead of `rgb([<number>#{3} | <percentage>#{3}], <alpha-value>?)`.
 
-The only way to short-circuit recursive parse functions and immediately abort parsing, is to throw an error and catch it in a main parse function. However, there should be appropriate error boundaries to resume parsing at a higher level.
+The only way to short-circuit recursive parse functions and immediately abort parsing, is to throw an error and catch it in a main parse function. However, error boundaries are needed to resume parsing at a higher level.
 
 ### Parsing flow
 
 To [parse a CSS style sheet](https://drafts.csswg.org/css-syntax-3/#parse-a-css-stylesheet), the parser must *consume a stylesheet's contents* as objects (rules) from the token stream. Similarly, to [parse a CSS rule](https://drafts.csswg.org/cssom-1/#parse-a-css-rule), it must consume a rule as an object.
 
-But [`@page`](https://drafts.csswg.org/css-page-3/#syntax-page-selector), a top-level rule defined since CSS 1, must be parsed with *parse something according to a CSS grammar*, which must first *parse a list of component values*, which does not expect a high-level object.
+But [`@page`](https://drafts.csswg.org/css-page-3/#syntax-page-selector), a top-level rule defined since CSS 1, must be parsed with *parse something according to a CSS grammar*, which runs first *parse a list of component values*, which does not expect a high-level object.
 
 What a rule's value definition like `@page <page-selector-list> { <declaration-at-rule-list> }` represents is unclear because of this problem. It could be either:
 
@@ -132,8 +132,6 @@ The parser must not only be able to parse a grammar by matching a value definiti
 
 For example, to parse `<media-query-list>` in `@media`, `<forgiving-selector-list>` in a style rule, or `<font-src-list>` in `@font-face`, the parser must *parse a comma-separated list according to a CSS grammar*, which matches each list of component values resulting from *parse a comma-separated list of component values* against `<media-query>`, `<complex-real-selector>`, `<font-src>`, respectively, or returns an empty list.
 
-**Note:** to parse `Element.media`, `Window.matchMedia()`, run `parseCSSGrammar(input, '<media-query[-list]>')`.
-
 CSSOM implicitly requires creating a `CSSRule` before validating its order but neither CSSOM or CSS Syntax prescribe when to create `CSSStyleSheet` or `CSSRule`, before or after parsing it againt its grammar.
 
 ### Context
@@ -144,9 +142,9 @@ When `@media` and `@supports` are nested in a style rule, their block value does
 
 Looking first at how to access a higher level CSS rule value, definition, or both, it can be achieved by ensuring the parser keeps track of them. But when using `CSSRule.insertRule()`, they would be missing.
 
-Therefore the initial context must be initialized with the existing CSSOM tree, which is also required to validate that any namespace prefix has been declared in a top-level `@namespace`.
+Therefore the initial context must be initialized with the existing CSSOM tree.
 
-**Note:** `*` and null are the only valid namespace prefixes allowed in `Element.querySelector[All]()` because this interface does not allow resolving declared namespaces.
+**Note:** having the whole CSSOM tree allows any namespace prefix to be validated while parsing, by resolving namespaces declared in top-level `@namespace`, which explains that `*` and null are the only valid namespace prefixes allowed in `Element.querySelector[All]()`, because this interface does not allow resolving declared namespaces.
 
 A CSS rule definition must define:
 

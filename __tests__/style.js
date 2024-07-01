@@ -4003,37 +4003,6 @@ describe('scroll-start', () => {
         expect(style.cssText).toBe('scroll-start: auto;')
     })
 })
-describe('scroll-start-target', () => {
-
-    const longhands = shorthands.get('scroll-start-target')
-
-    test('shorthand expansion', () => {
-
-        const style = createStyleBlock()
-
-        // Initial longhand values
-        style.scrollStartTarget = 'none none'
-        expect(style).toHaveLength(longhands.length)
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.scrollStartTarget).toBe('none')
-        expect(style.cssText).toBe('scroll-start-target: none;')
-
-        // Missing longhand values
-        style.scrollStartTarget = 'none'
-        longhands.forEach(longhand => expect(style[longhand]).toBe('none'))
-        expect(style.scrollStartTarget).toBe('none')
-        expect(style.cssText).toBe('scroll-start-target: none;')
-    })
-    test('shorthand reification', () => {
-
-        const style = createStyleBlock()
-
-        // Initial longhand values
-        longhands.forEach(longhand => style[longhand] = initial(longhand))
-        expect(style.scrollStartTarget).toBe('none')
-        expect(style.cssText).toBe('scroll-start-target: none;')
-    })
-})
 describe('scroll-timeline', () => {
 
     const longhands = shorthands.get('scroll-timeline')
