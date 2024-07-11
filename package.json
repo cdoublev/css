@@ -40,7 +40,7 @@
     "test:watch": "jest --watchAll -b"
   },
   "dependencies": {
-    "webref": "w3c/webref#a2685770e27a599a3503d1653924e5142be992c7",
+    "webref": "w3c/webref#7fd6f8b9b0efdc6228d948a8307f22ca3b00d6ce",
     "webidl2js": "^18.0.0"
   },
   "devDependencies": {

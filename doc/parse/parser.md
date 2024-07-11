@@ -164,7 +164,7 @@ Other semantic rules can be encoded in nodes. For example, math functions must s
 
 A more generic solution is `preprocess(node)` executing any sub-routine associated to the name of the production represented by `node`. It could return `Error` to abort parsing when the whitespace is missing, or `null` to backtrack.
 
-There are many semantic rules that can only be applied after matching the value definition, to validate the result against the context, or to create a different representation (eg. math functions and `<an+b>`). This can be achieved with `postprocess(node)` (or `validate(node)` and `normalize(node)`).
+There are many semantic rules that can only be applied after matching the value definition, to validate the result against the context, or to create a different representation (eg. math functions and `<an+b>`). This can be achieved with `postprocess(node)` (or `validate(node)` and `represent(node)`).
 
 All numeric values can be replaced with a math function. This can be achieved with `replace(node)` returning the result from parsing the alternative grammar.
 

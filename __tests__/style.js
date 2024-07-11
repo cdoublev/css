@@ -1137,20 +1137,6 @@ describe('initial-letter', () => {
         expect(style.initialLetter).toBe('1')
     })
 })
-describe('masonry-auto-flow', () => {
-    test('valid', () => {
-        const style = createStyleBlock()
-        const valid = [
-            ['pack definite-first', 'pack'],
-            ['pack ordered', 'ordered'],
-            ['next definite-first', 'next'],
-        ]
-        valid.forEach(([input, expected = input]) => {
-            style.masonryAutoFlow = input
-            expect(style.masonryAutoFlow).toBe(expected)
-        })
-    })
-})
 describe('object-fit', () => {
     test('valid', () => {
         const style = createStyleBlock()
@@ -3970,37 +3956,6 @@ describe('scroll-padding-block, scroll-padding-inline', () => {
         longhands.forEach(longhand => style[longhand] = initial(longhand))
         expect(style.scrollPaddingBlock).toBe('auto')
         expect(style.cssText).toBe('scroll-padding-block: auto;')
-    })
-})
-describe('scroll-start', () => {
-
-    const longhands = shorthands.get('scroll-start')
-
-    test('shorthand expansion', () => {
-
-        const style = createStyleBlock()
-
-        // Initial longhand values
-        style.scrollStart = 'auto auto'
-        expect(style).toHaveLength(longhands.length)
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.scrollStart).toBe('auto')
-        expect(style.cssText).toBe('scroll-start: auto;')
-
-        // Missing longhand values
-        style.scrollStart = 'auto'
-        longhands.forEach(longhand => expect(style[longhand]).toBe('auto'))
-        expect(style.scrollStart).toBe('auto')
-        expect(style.cssText).toBe('scroll-start: auto;')
-    })
-    test('shorthand reification', () => {
-
-        const style = createStyleBlock()
-
-        // Initial longhand values
-        longhands.forEach(longhand => style[longhand] = initial(longhand))
-        expect(style.scrollStart).toBe('auto')
-        expect(style.cssText).toBe('scroll-start: auto;')
     })
 })
 describe('scroll-timeline', () => {
