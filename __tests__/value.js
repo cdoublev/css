@@ -3278,8 +3278,8 @@ describe('<font-format>', () => {
 })
 describe('<gradient>', () => {
     test('invalid', () => {
-        expect(parse('<gradient>', 'radial-gradient(circle 1px 1px)', false)).toBeNull()
-        expect(parse('<gradient>', 'radial-gradient(circle closest-corner closest-corner)', false)).toBeNull()
+        expect(parse('<gradient>', 'radial-gradient(circle 1px 1px, red)', false)).toBeNull()
+        expect(parse('<gradient>', 'radial-gradient(circle closest-corner closest-corner, red)', false)).toBeNull()
     })
     test('representation', () => {
 
