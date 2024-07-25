@@ -40,13 +40,13 @@
     "test:watch": "jest --watchAll -b"
   },
   "dependencies": {
-    "webref": "w3c/webref#7fd6f8b9b0efdc6228d948a8307f22ca3b00d6ce",
+    "webref": "w3c/webref#5b4a98dbee18bfed71aeef7713ce90800cf50d60",
     "webidl2js": "^18.0.0"
   },
   "devDependencies": {
-    "@babel/core": "^7.24.7",
-    "@babel/eslint-parser": "^7.24.7",
-    "@babel/preset-env": "^7.24.7",
+    "@babel/core": "^7.24.9",
+    "@babel/eslint-parser": "^7.24.8",
+    "@babel/preset-env": "^7.24.8",
     "@cdoublev/eslint-config": "^0.10.3",
     "eslint": "^8.57.0",
     "eslint-plugin-jest": "^28.6.0",

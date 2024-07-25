@@ -19,7 +19,6 @@ const blocks = require('../lib/values/blocks.js')
 const colors = require('../lib/values/colors.js')
 const compatibility = require('../lib/compatibility.js')
 const { definitions: dimensions } = require('../lib/values/dimensions.js')
-const font = require('../lib/values/font.js')
 const forgiving = require('../lib/values/forgiving.js')
 const fs = require('node:fs/promises')
 const logical = require('../lib/properties/logical.js')
@@ -44,8 +43,6 @@ const initial = {
         '<x>': '<number>',
         '<y>': '<number>',
         '<whole-value>': '<declaration-value>?',
-        // https://github.com/w3c/csswg-drafts/issues/9410
-        '<generic-family-name>': font.family.generic.join(' | '),
         // https://github.com/w3c/csswg-drafts/issues/8835
         '<urange>': "u '+' <ident-token> '?'* | u <dimension-token> '?'* | u <number-token> '?'* | u <number-token> <dimension-token> | u <number-token> <number-token> | u '+' '?'+",
     },
@@ -163,15 +160,13 @@ const replaced = {
         // https://github.com/w3c/csswg-drafts/issues/7016
         '<general-enclosed>': '<function> | (<any-value>?)',
         '<pseudo-class-selector>': ': <ident> | : <function>',
-        // https://github.com/w3c/csswg-drafts/issues/9410
-        '<generic-family>': 'generic(<custom-ident>+) | <generic-family-name>',
         // https://github.com/w3c/fxtf-drafts/issues/532
         '<mask-reference>': 'none | <image>',
         // https://github.com/w3c/csswg-drafts/pull/10131
         '<media-feature>': '<mf-plain> | <mf-boolean> | <mf-range>',
         '<media-in-parens>': '(<media-condition>) | (<media-feature>) | <general-enclosed>',
         // TODO: fix `value` of `<mix()>`
-        '<mix()>': 'mix(<progress> ; <whole-value> ; <whole-value>) | mix(<progress> && of <keyframes-name>)',
+        '<mix()>': 'mix(<progress> , <whole-value> , <whole-value>) | mix(<progress> && of <keyframes-name>)',
         // TODO: fix `value` of `<progress>`
         '<progress>': "[<percentage> | <number> | <'animation-timeline'>] && [by <easing-function>]?",
         // TODO: fix `value` of `<pseudo-page>`
@@ -478,7 +473,7 @@ const excluded = {
             ...Object.keys(forgiving),
             // Legacy webkit function name aliases
             ...[...compatibility.values['*'].values()].flatMap(replacements => replacements.aliases),
-            // TODO: remove `value` of `fit-content()`, `minmax()`
+            // TODO: remove `value` of `fit-content()`, `minmax()`, `type()`
             '<fit-content()>',
             '<minmax()>',
         ],
@@ -514,6 +509,8 @@ const excluded = {
         'css-images-4': [
             // https://github.com/w3c/csswg-drafts/issues/1981
             '<element()>',
+            // TODO: remove `value` of `fit-content()`, `minmax()`, `type()`
+            '<type()>',
         ],
         'css-masking': [
             // https://github.com/w3c/fxtf-drafts/pull/468
