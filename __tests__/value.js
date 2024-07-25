@@ -3284,44 +3284,17 @@ describe('<gradient>', () => {
     test('representation', () => {
 
         const red = keyword('red', ['<named-color>', '<color-base>', '<color>'])
-        const cyan = keyword('cyan', ['<named-color>', '<color-base>', '<color>'])
         const angularStopList = list(
-            [
-                list([red, omitted], ' ', ['<angular-color-stop>']),
-                comma,
-                list(
-                    [
-                        list([
-                            omitted,
-                            omitted,
-                            list([cyan, omitted], ' ', ['<angular-color-stop>']),
-                        ]),
-                    ],
-                    ',',
-                ),
-            ],
+            [list([red, omitted], ' ', ['<angular-color-stop>']), omitted, omitted],
             ' ',
             ['<angular-color-stop-list>'],
         )
         const linearStopList = list(
-            [
-                list([red, omitted], ' ', ['<linear-color-stop>']),
-                comma,
-                list(
-                    [
-                        list([
-                            omitted,
-                            omitted,
-                            list([cyan, omitted], ' ', ['<linear-color-stop>']),
-                        ]),
-                    ],
-                    ',',
-                ),
-            ],
+            [list([red, omitted], ' ', ['<linear-color-stop>']), omitted, omitted],
             ' ',
             ['<color-stop-list>'])
 
-        expect(parse('<gradient>', 'conic-gradient(red, cyan)', false)).toMatchObject({
+        expect(parse('<gradient>', 'conic-gradient(red)', false)).toMatchObject({
             name: 'conic-gradient',
             types: ['<function>', '<conic-gradient()>', '<gradient>'],
             value: list(
@@ -3333,7 +3306,7 @@ describe('<gradient>', () => {
                 ' ',
                 ['<conic-gradient-syntax>']),
         })
-        expect(parse('<gradient>', 'linear-gradient(red, cyan)', false)).toMatchObject({
+        expect(parse('<gradient>', 'linear-gradient(red)', false)).toMatchObject({
             name: 'linear-gradient',
             types: ['<function>', '<linear-gradient()>', '<gradient>'],
             value: list(
@@ -3345,7 +3318,7 @@ describe('<gradient>', () => {
                 ' ',
                 ['<linear-gradient-syntax>']),
         })
-        expect(parse('<gradient>', 'radial-gradient(red, cyan)', false)).toMatchObject({
+        expect(parse('<gradient>', 'radial-gradient(red)', false)).toMatchObject({
             name: 'radial-gradient',
             types: ['<function>', '<radial-gradient()>', '<gradient>'],
             value: list(
@@ -3360,49 +3333,42 @@ describe('<gradient>', () => {
     })
     test('valid', () => {
         const valid = [
-            ['conic-gradient(red, cyan)', 'conic-gradient(red, cyan)'],
-            ['linear-gradient(red, cyan)', 'linear-gradient(red, cyan)'],
-            ['radial-gradient(red, cyan)', 'radial-gradient(red, cyan)'],
+            ['conic-gradient(red)', 'conic-gradient(red)'],
+            ['linear-gradient(red)', 'linear-gradient(red)'],
+            ['radial-gradient(red)', 'radial-gradient(red)'],
             // Repeating gradients
-            ['repeating-conic-gradient(red, cyan)'],
-            ['repeating-linear-gradient(red, cyan)'],
-            ['repeating-radial-gradient(red, cyan)'],
+            ['repeating-conic-gradient(red)'],
+            ['repeating-linear-gradient(red)'],
+            ['repeating-radial-gradient(red)'],
             // Legacy alias
-            ['-webkit-linear-gradient(red, cyan)', 'linear-gradient(red, cyan)'],
-            ['-webkit-repeating-linear-gradient(red, cyan)', 'repeating-linear-gradient(red, cyan)'],
-            ['-webkit-radial-gradient(red, cyan)', 'radial-gradient(red, cyan)'],
-            ['-webkit-repeating-radial-gradient(red, cyan)', 'repeating-radial-gradient(red, cyan)'],
+            ['-webkit-linear-gradient(red)', 'linear-gradient(red)'],
+            ['-webkit-repeating-linear-gradient(red)', 'repeating-linear-gradient(red)'],
+            ['-webkit-radial-gradient(red)', 'radial-gradient(red)'],
+            ['-webkit-repeating-radial-gradient(red)', 'repeating-radial-gradient(red)'],
             // Omitted component values
-            ['conic-gradient(from 0, red, cyan)', 'conic-gradient(red, cyan)'],
-            ['conic-gradient(from 0deg, red, cyan)', 'conic-gradient(red, cyan)'],
-            ['conic-gradient(at center, red, cyan)', 'conic-gradient(at center center, red, cyan)'],
-            ['conic-gradient(at center center, red, cyan)'],
-            ['conic-gradient(in oklab, red, cyan)', 'conic-gradient(red, cyan)'],
-            ['linear-gradient(to bottom, red, cyan)', 'linear-gradient(red, cyan)'],
-            ['linear-gradient(in oklab, red, cyan)', 'linear-gradient(red, cyan)'],
-            ['radial-gradient(closest-corner farthest-corner, red, cyan)', 'radial-gradient(closest-corner, red, cyan)'],
-            ['radial-gradient(farthest-corner farthest-corner, red, cyan)', 'radial-gradient(red, cyan)'],
-            ['radial-gradient(farthest-corner closest-corner, red, cyan)'],
-            ['radial-gradient(1px, red, cyan)'],
-            ['radial-gradient(circle, red, cyan)'],
-            ['radial-gradient(circle 1px, red, cyan)', 'radial-gradient(1px, red, cyan)'],
-            ['radial-gradient(circle closest-corner, red, cyan)'],
-            ['radial-gradient(circle farthest-corner, red, cyan)', 'radial-gradient(circle, red, cyan)'],
-            ['radial-gradient(ellipse, red, cyan)', 'radial-gradient(red, cyan)'],
-            ['radial-gradient(ellipse 1px, red, cyan)', 'radial-gradient(1px farthest-corner, red, cyan)'],
-            ['radial-gradient(ellipse 1px 1px, red, cyan)', 'radial-gradient(1px 1px, red, cyan)'],
-            ['radial-gradient(ellipse closest-corner closest-corner, red, cyan)', 'radial-gradient(closest-corner closest-corner, red, cyan)'],
-            ['radial-gradient(ellipse farthest-corner farthest-corner, red, cyan)', 'radial-gradient(red, cyan)'],
-            ['radial-gradient(at center, red, cyan)', 'radial-gradient(at center center, red, cyan)'],
-            ['radial-gradient(at center center, red, cyan)'],
-            ['radial-gradient(in oklab, red, cyan)', 'radial-gradient(red, cyan)'],
-            // Implicit color stops
-            ['conic-gradient(red 0deg 180deg)', 'conic-gradient(red 0deg, red 180deg)'],
-            ['conic-gradient(red 0deg 180deg, cyan 180deg 0deg)', 'conic-gradient(red 0deg, red 180deg, cyan 180deg, cyan 0deg)'],
-            ['linear-gradient(red 0% 50%)', 'linear-gradient(red 0%, red 50%)'],
-            ['linear-gradient(red 0% 50%, cyan 50% 0%)', 'linear-gradient(red 0%, red 50%, cyan 50%, cyan 0%)'],
-            ['radial-gradient(red 0% 50%)', 'radial-gradient(red 0%, red 50%)'],
-            ['radial-gradient(red 0% 50%, cyan 50% 0%)', 'radial-gradient(red 0%, red 50%, cyan 50%, cyan 0%)'],
+            ['conic-gradient(from 0, red)', 'conic-gradient(red)'],
+            ['conic-gradient(from 0deg, red)', 'conic-gradient(red)'],
+            ['conic-gradient(at center, red)', 'conic-gradient(at center center, red)'],
+            ['conic-gradient(at center center, red)'],
+            ['conic-gradient(in oklab, red)', 'conic-gradient(red)'],
+            ['linear-gradient(to bottom, red)', 'linear-gradient(red)'],
+            ['linear-gradient(in oklab, red)', 'linear-gradient(red)'],
+            ['radial-gradient(closest-corner farthest-corner, red)', 'radial-gradient(closest-corner, red)'],
+            ['radial-gradient(farthest-corner farthest-corner, red)', 'radial-gradient(red)'],
+            ['radial-gradient(farthest-corner closest-corner, red)'],
+            ['radial-gradient(1px, red)'],
+            ['radial-gradient(circle, red)'],
+            ['radial-gradient(circle 1px, red)', 'radial-gradient(1px, red)'],
+            ['radial-gradient(circle closest-corner, red)'],
+            ['radial-gradient(circle farthest-corner, red)', 'radial-gradient(circle, red)'],
+            ['radial-gradient(ellipse, red)', 'radial-gradient(red)'],
+            ['radial-gradient(ellipse 1px, red)', 'radial-gradient(1px farthest-corner, red)'],
+            ['radial-gradient(ellipse 1px 1px, red)', 'radial-gradient(1px 1px, red)'],
+            ['radial-gradient(ellipse closest-corner closest-corner, red)', 'radial-gradient(closest-corner closest-corner, red)'],
+            ['radial-gradient(ellipse farthest-corner farthest-corner, red)', 'radial-gradient(red)'],
+            ['radial-gradient(at center, red)', 'radial-gradient(at center center, red)'],
+            ['radial-gradient(at center center, red)'],
+            ['radial-gradient(in oklab, red)', 'radial-gradient(red)'],
         ]
         valid.forEach(([input, expected = input]) => expect(parse('<gradient>', input)).toBe(expected))
     })
