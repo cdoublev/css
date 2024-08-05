@@ -33,7 +33,12 @@ const logicalGroups = Object.keys(logical)
 
 /* eslint-disable sort-keys */
 const initial = {
-    descriptors: {},
+    descriptors: {
+        '@function': {
+            // https://github.com/w3c/reffy/issues/1567
+            '--*': { initial: null, value: '<declaration-value>?' },
+        },
+    },
     properties: {
         // https://github.com/w3c/reffy/issues/1567
         '--*': { initial: null, value: '<declaration-value>?' },
@@ -550,6 +555,10 @@ const errors = {
     '@custom-selector': { cause: 'It is not yet supported.' },
     '@else': { cause: 'It is not yet supported.' },
     '@font-feature-values': {
+        cause: 'In this library, it is intentionally defined with <declaration-at-rule-list> instead of <declaration-rule-list>, which is interpreted like <block-contents>.',
+        links: ['https://github.com/w3c/csswg-drafts/issues/8834#issuecomment-1554481507'],
+    },
+    '@function': {
         cause: 'In this library, it is intentionally defined with <declaration-at-rule-list> instead of <declaration-rule-list>, which is interpreted like <block-contents>.',
         links: ['https://github.com/w3c/csswg-drafts/issues/8834#issuecomment-1554481507'],
     },

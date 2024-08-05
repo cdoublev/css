@@ -3233,6 +3233,17 @@ describe('<counter-style-name>', () => {
         expect(parse('<counter-style-name>', 'NAME')).toBe('NAME')
     })
 })
+describe('<function-dependency-list>, <function-parameter-list>', () => {
+    test('invalid', () => {
+        expect(parse('<function-dependency-list>', '--name, --name', false)).toBeNull()
+    })
+    test('representation', () => {
+        const name = dashedIdent('--name', ['<custom-property-name>'])
+        const parameter = list([name, omitted, omitted], ' ', ['<function-parameter>'])
+        const parameters = list([parameter], ',', ['<function-dependency-list>'])
+        expect(parse('<function-dependency-list>', '--name', false)).toMatchObject(parameters)
+    })
+})
 describe('<drop-shadow()>', () => {
     test('representation', () => {
         expect(parse('<drop-shadow()>', 'drop-shadow(1px 1px)', false)).toMatchObject({
@@ -3886,6 +3897,20 @@ describe('<style-feature>', () => {
             types: ['<declaration>', '<style-feature>'],
             value: keyword('green', ['<named-color>', '<color-base>', '<color>', 'color']),
         })
+    })
+})
+describe('<syntax-component>', () => {
+    test('invalid', () => {
+        expect(parse('<syntax-component>', 'a #', false)).toBeNull()
+        expect(parse('<syntax-component>', '< angle>', false)).toBeNull()
+        expect(parse('<syntax-component>', '<angle >', false)).toBeNull()
+        expect(parse('<syntax-component>', '< transform-list>', false)).toBeNull()
+        expect(parse('<syntax-component>', '<transform-list >', false)).toBeNull()
+    })
+    test('representation', () => {
+        const componentName = customIdent('a', ['<syntax-component-name>'])
+        const component = list([componentName, omitted], '', ['<syntax-component>'])
+        expect(parse('<syntax-component>', 'a', false)).toMatchObject(component)
     })
 })
 describe('<supports-decl>', () => {

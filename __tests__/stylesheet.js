@@ -32,6 +32,7 @@ const {
     CSSFontFeatureValuesMap,
     CSSFontFeatureValuesRule,
     CSSFontPaletteValuesRule,
+    CSSFunctionRule,
     CSSKeyframeProperties,
     CSSKeyframeRule,
     CSSKeyframesRule,
@@ -503,6 +504,7 @@ describe('CSS grammar', () => {
                 @font-face {}
                 @font-feature-values family {}
                 @font-palette-values --palette { font-family: my-font }
+                @function --name {}
                 @keyframes animation {}
                 @layer reset;
                 @media {}
@@ -524,6 +526,7 @@ describe('CSS grammar', () => {
             CSSFontFaceRule,
             CSSFontFeatureValuesRule,
             CSSFontPaletteValuesRule,
+            CSSFunctionRule,
             CSSKeyframesRule,
             CSSLayerStatementRule,
             CSSMediaRule,
@@ -616,6 +619,7 @@ describe('CSS grammar', () => {
                 @font-face {}
                 @font-feature-values family {}
                 @font-palette-values --palette { font-family: my-font }
+                @function --name {}
                 @keyframes animation {}
                 @layer reset;
                 @media {}
@@ -652,7 +656,7 @@ describe('CSS grammar', () => {
                 /* invalid */
                 style {}
                 color: red;
-                base-palette: -1;
+                base-palette: invalid;
                 --custom: value;
                 base-palette: var(--custom);
                 font-family: my-important-font !important;
@@ -667,6 +671,63 @@ describe('CSS grammar', () => {
         expect(rule.color).toBeUndefined()
         expect(rule.basePalette).toBe('')
         expect(rule.fontFamily).toBe('my-font')
+    })
+    it('ignores invalid contents in @function', () => {
+
+        const { cssRules: [rule] } = createStyleSheet(`
+            @FUNCTION --name {
+
+                /* invalid */
+                @unknown {}
+                @unknown;
+                @media;
+                style;
+                @charset "utf-8";
+                @import "./global.css";
+                @namespace svg "http://www.w3.org/2000/svg";
+                @annotation {}
+                @color-profile --profile {}
+                @counter-style counter {}
+                @font-face {}
+                @font-feature-values family {}
+                @font-palette-values --palette { font-family: my-font }
+                @function --name {}
+                @keyframes animation {}
+                @layer reset;
+                @page {}
+                @position-try --position {}
+                @property --custom { syntax: "*"; inherits: false }
+                @top-left {}
+                @scope {}
+                @starting-style {}
+                @view-transition {}
+                0% {}
+                style {}
+                color: red;
+                result: 0 !important;
+
+                /* valid */
+                @container (1px < width) {}
+                @media {}
+                @supports (color: green) {}
+                --custom: {} var(--custom);
+                RESULT: { var(--custom) };
+
+                /* invalid */
+                result: {} var(--custom);
+            }
+        `)
+
+        const valid = [
+            CSSContainerRule,
+            CSSMediaRule,
+            CSSSupportsRule,
+        ]
+
+        expect(rule.cssRules).toHaveLength(valid.length)
+        valid.forEach((CSSRule, index) => expect(CSSRule.is(rule.cssRules[index])).toBeTruthy())
+        // TODO: add support for `CSSNestedDeclarations`
+        // expect(rule.cssText).toBe('@function --name { @container (1px < width) {} @media {} @supports (color: green) {} --custom: {} var(--custom); result: { var(--custom) } }')
     })
     it('ignores invalid contents in @keyframes', () => {
 
@@ -688,6 +749,7 @@ describe('CSS grammar', () => {
                 @font-face {}
                 @font-feature-values family {}
                 @font-palette-values --palette { font-family: my-font }
+                @function --name {}
                 @keyframes animation {}
                 @layer reset;
                 @media {}
@@ -738,6 +800,7 @@ describe('CSS grammar', () => {
                 @font-face {}
                 @font-feature-values family {}
                 @font-palette-values --palette { font-family: my-font }
+                @function --name {}
                 @keyframes animation {}
                 @layer reset;
                 @media {}
@@ -759,6 +822,7 @@ describe('CSS grammar', () => {
             CSSFontFaceRule,
             CSSFontFeatureValuesRule,
             CSSFontPaletteValuesRule,
+            CSSFunctionRule,
             CSSKeyframesRule,
             CSSLayerStatementRule,
             CSSMediaRule,
@@ -802,6 +866,7 @@ describe('CSS grammar', () => {
                 @font-face {}
                 @font-feature-values family {}
                 @font-palette-values --palette { font-family: my-font }
+                @function --name {}
                 @keyframes animation {}
                 @layer reset;
                 @media {}
@@ -823,6 +888,7 @@ describe('CSS grammar', () => {
             CSSFontFaceRule,
             CSSFontFeatureValuesRule,
             CSSFontPaletteValuesRule,
+            CSSFunctionRule,
             CSSKeyframesRule,
             CSSLayerStatementRule,
             CSSMediaRule,
@@ -860,6 +926,7 @@ describe('CSS grammar', () => {
                 @font-face {}
                 @font-feature-values family {}
                 @font-palette-values --palette { font-family: my-font }
+                @function --name {}
                 @keyframes animation {}
                 @layer reset;
                 @media {}
@@ -965,6 +1032,7 @@ describe('CSS grammar', () => {
                 @font-face {}
                 @font-feature-values family {}
                 @font-palette-values --palette { font-family: my-font }
+                @function --name {}
                 @keyframes animation {}
                 @layer reset;
                 @media {}
@@ -986,6 +1054,7 @@ describe('CSS grammar', () => {
             CSSFontFaceRule,
             CSSFontFeatureValuesRule,
             CSSFontPaletteValuesRule,
+            CSSFunctionRule,
             CSSKeyframesRule,
             CSSLayerStatementRule,
             CSSMediaRule,
@@ -1029,6 +1098,7 @@ describe('CSS grammar', () => {
                 @font-face {}
                 @font-feature-values family {}
                 @font-palette-values --palette { font-family: my-font }
+                @function --name {}
                 @keyframes animation {}
                 @layer reset;
                 @media {}
@@ -1050,6 +1120,7 @@ describe('CSS grammar', () => {
             CSSFontFaceRule,
             CSSFontFeatureValuesRule,
             CSSFontPaletteValuesRule,
+            CSSFunctionRule,
             CSSKeyframesRule,
             CSSLayerStatementRule,
             CSSMediaRule,
@@ -1093,6 +1164,7 @@ describe('CSS grammar', () => {
                 @font-face {}
                 @font-feature-values family {}
                 @font-palette-values --palette { font-family: my-font }
+                @function --name {}
                 @keyframes animation {}
                 @layer reset;
                 @media {}
@@ -1114,6 +1186,7 @@ describe('CSS grammar', () => {
             CSSFontFaceRule,
             CSSFontFeatureValuesRule,
             CSSFontPaletteValuesRule,
+            CSSFunctionRule,
             CSSKeyframesRule,
             CSSLayerStatementRule,
             CSSMediaRule,
@@ -1288,6 +1361,7 @@ describe('CSS grammar', () => {
                     @font-face {}
                     @font-feature-values family {}
                     @font-palette-values --palette { font-family: my-font }
+                    @function --name {}
                     @keyframes animation {}
                     @layer reset;
                     @page {}
@@ -1354,6 +1428,7 @@ describe('CSS grammar', () => {
                     @font-face {}
                     @font-feature-values family {}
                     @font-palette-values --palette { font-family: my-font }
+                    @function --name {}
                     @keyframes animation {}
                     @layer reset;
                     @page {}
@@ -1417,6 +1492,7 @@ describe('CSS grammar', () => {
                 @font-face {}
                 @font-feature-values family {}
                 @font-palette-values --palette { font-family: my-font }
+                @function --name {}
                 @keyframes animation {}
                 @layer reset;
                 @page {}
