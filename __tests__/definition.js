@@ -94,7 +94,7 @@ function type(name) {
  * @param {string} definition
  * @param {object} [production]
  */
-function parse(definition, production = null) {
+function parse(definition, production) {
     return parseDefinition(definition, production)
 }
 
