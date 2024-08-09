@@ -1521,7 +1521,7 @@ describe('animation-range', () => {
         // Ambiguous <length-percentage>
         style.animationRangeEnd = '100%'
         expect(style.animationRange).toBe('entry 0% 100%')
-        expect(style.cssText).toBe(`animation-range: entry 0% 100%;`)
+        expect(style.cssText).toBe('animation-range: entry 0% 100%;')
     })
 })
 describe('background', () => {

@@ -97,7 +97,7 @@ function getCompatibilityNames(attributes, map) {
  * @param {object} rule
  * @returns {string[]}
  */
-function getRuleAttributes({ name, value: { descriptors, properties }}) {
+function getRuleAttributes({ name, value: { descriptors, properties } }) {
     const attributes = []
     if (descriptors) {
         const replacements = compatibility.descriptors[name]

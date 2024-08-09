@@ -366,7 +366,7 @@ describe('multipliers', () => {
         expect(parse(input)).toEqual(parsed)
         expect(serialize(parsed)).toBe(input)
     })
-    test(",?", () => {
+    test(',?', () => {
         const input = ',?'
         const parsed = optional(comma)
         expect(parse(input)).toEqual(parsed)
@@ -547,7 +547,7 @@ describe('context rules', () => {
         // property = <'property'> = a# b
         expect(parse('a# b', range)).toEqual(sequence(as, b))
         // property = <'property'> = fn(a#)
-        expect(parse('fn(a#)', range)).toEqual({ type: 'function', name: 'fn', value: as })
+        expect(parse('fn(a#)', range)).toEqual({ name: 'fn', type: 'function', value: as })
         // property = <'property'> = <production> = a#
         const production = { definition: { name: 'production', type: 'non-terminal' }, parent: range }
         expect(parse('a#', production)).toEqual(as)
