@@ -83,8 +83,6 @@ const replaced = {
         'voice-family': { initial: 'female', value: '[<family-name> | <generic-voice>]# | preserve' },
         // https://github.com/w3c/csswg-drafts/issues/8032
         'glyph-orientation-vertical': { value: 'auto | <angle> | <number>' },
-        // https://github.com/w3c/csswg-drafts/issues/7700
-        'outline': { value: "<'outline-width'> || <'outline-style'> || <'outline-color'>" },
         // https://github.com/w3c/svgwg/issues/888
         'stop-color': { initial: 'black', value: "<'color'>" },
         'stop-opacity': { initial: '1', value: "<'opacity'>" },
@@ -118,7 +116,7 @@ const replaced = {
         '<id>': '<id-selector>',
         '<ident>': '<ident-token>',
         '<integer>': '<number-token>',
-        '<intrinsic-size-keyword>': '<custom-ident>',
+        '<intrinsic-size-keyword>': '<ident>',
         '<length>': '<dimension>',
         '<mq-boolean>': '<integer [0,1]>',
         '<n-dimension>': '<dimension-token>',
@@ -154,6 +152,10 @@ const replaced = {
         '<url-modifier>': '<custom-ident> | <function>',
         '<url-set>': '<image-set()>',
         '<zero>': '<number-token>',
+        // https://github.com/w3c/csswg-drafts/issues/10697
+        '<arc-command>': 'arc [<by-to> <coordinate-pair> && of <length-percentage>{1,2} && <arc-sweep>? && <arc-size>? && [rotate <angle>]?]',
+        '<curve-command>': 'curve [<by-to> <coordinate-pair> && [using <coordinate-pair>{1,2}]?]',
+        '<smooth-command>': 'smooth [<by-to> <coordinate-pair> && [using <coordinate-pair>]?]',
         // https://github.com/w3c/csswg-drafts/issues/8346, https://github.com/w3c/csswg-drafts/pull/8367#issuecomment-1408147460
         '<angular-color-hint>': '<angle-percentage> | <zero>',
         '<color-stop-angle>': '[<angle-percentage> | <zero>]{1,2}',
@@ -187,6 +189,46 @@ const excluded = {
         'css-round-display': [
             // https://github.com/w3c/csswg-drafts/issues/8097
             'viewport-fit',
+        ],
+    },
+    functions: {
+        'css-easing': [
+            // Defined inline
+            'cubic-bezier()',
+            'linear()',
+        ],
+        'css-grid': [
+            // Defined inline
+            'fit-content()',
+            'minmax()',
+            // Informative
+            'repeat()',
+        ],
+        'css-images-4': [
+            // Aliases do not need to have a value definition
+            '-webkit-image-set()',
+            // Defined inline
+            'type()',
+        ],
+        'css-sizing': [
+            // Defined inline
+            'fit-content()',
+            // Prefer CSS Values 5
+            'calc-size()',
+        ],
+        'css-values-5': [
+            // Already defined with a type
+            'calc-mix()',
+            'container-progress()',
+            'first-valid()',
+            'media-progress()',
+            'progress()',
+            'toggle()',
+            'transform-mix()',
+            // Defined inline
+            'crossorigin()',
+            'integrity()',
+            'referrerpolicy()',
         ],
     },
     properties: {
@@ -478,9 +520,6 @@ const excluded = {
             ...Object.keys(forgiving),
             // Legacy webkit function name aliases
             ...[...compatibility.values['*'].values()].flatMap(replacements => replacements.aliases),
-            // TODO: remove `value` of `fit-content()`, `minmax()`, `type()`
-            '<fit-content()>',
-            '<minmax()>',
         ],
         'CSS': [
             // Obsoleted by CSS Backgrounds
@@ -514,8 +553,6 @@ const excluded = {
         'css-images-4': [
             // https://github.com/w3c/csswg-drafts/issues/1981
             '<element()>',
-            // TODO: remove `value` of `fit-content()`, `minmax()`, `type()`
-            '<type()>',
         ],
         'css-masking': [
             // https://github.com/w3c/fxtf-drafts/pull/468
@@ -576,7 +613,6 @@ const errors = {
         links: ['https://github.com/w3c/csswg-drafts/issues/8097'],
     },
     '@when': { cause: 'It is not yet supported.' },
-    '<-webkit-image-set()>': { cause: 'Function aliases should be skipped.' },
     '<bool-test>': { cause: 'It is not yet supported.' },
     '<box>': {
         cause: 'It is a generic type notation that is no longer used anywhere, and should not be exported.',
@@ -586,19 +622,8 @@ const errors = {
             'https://github.com/w3c/csswg-drafts/commit/3a1c2a859a5e28a553f03757b45c237d9444680b',
         ],
     },
-    '<calc-mix()>': { cause: 'It is already defined with a value definition. Basically, this is definition markup problem.' },
-    '<container-progress()>': { cause: 'It is already defined with a value definition. Basically, this is definition markup problem.' },
-    '<crossorigin()>': { cause: 'It is not yet supported.' },
-    '<first-valid()>': { cause: 'It is already defined with a value definition. Basically, this is definition markup problem.' },
-    '<integrity()>': { cause: 'It is not yet supported.' },
-    '<referrerpolicy()>': { cause: 'It is not yet supported.' },
     '<identifier>': { cause: 'It is equivalent to <ident>. Since most of CSS 2.2 is superseded, it is not worth requesting a change.' },
-    '<media-progress()>': { cause: 'It is already defined with a value definition. Basically, this is definition markup problem.' },
-    '<palette-mix()>': { cause: 'It is already defined with a value definition. Basically, this is definition markup problem.' },
-    '<progress()>': { cause: 'It is already defined with a value definition. Basically, this is definition markup problem.' },
-    '<repeat()>': { cause: 'It is a functional notation that is not used anywhere, and should not be exported.' },
-    '<toggle()>': { cause: 'It is already defined with a value definition. Basically, this is definition markup problem.' },
-    '<transform-mix()>': { cause: 'It is already defined with a value definition. Basically, this is definition markup problem.' },
+    '<palette-mix()>': { cause: 'It is extracted by w3c/reffy without its value definition, which is basically a problem with the definition markup.' },
     '<unicode-range-token>': {
         cause: 'It is intended to replace <urange> but there are ongoing problems with consuming this token therefore it is not yet implemented.',
         links: ['https://github.com/w3c/csswg-drafts/issues/8835'],
@@ -780,6 +805,7 @@ function sortByName([a], [b]) {
  */
 function addTypes(definitions = [], key) {
     const { types: { '*': skipFromAllSpecs = [], [key]: skip = [] } } = excluded
+    const excludedFunctions = excluded.functions[key] ?? []
     definitions.forEach(({ name, type, value, values }) => {
         if (type === 'value') {
             if (!/^<.+>$/.test(name)) {
@@ -791,6 +817,9 @@ function addTypes(definitions = [], key) {
             }
             type = 'type'
         } else if (type === 'function') {
+            if (excludedFunctions.includes(name)) {
+                return
+            }
             name = `<${name}>`
             type = 'type'
         }

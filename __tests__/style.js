@@ -4053,6 +4053,54 @@ describe('text-align', () => {
         expect(style.cssText).toBe('text-align: start;')
     })
 })
+describe('text-box', () => {
+
+    const longhands = shorthands.get('text-box')
+
+    test('shorthand expansion', () => {
+
+        const style = createStyleBlock()
+
+        // Invalid value
+        style.textBox = 'auto'
+        expect(style.textBox).toBe('')
+        style.textBox = 'none'
+        expect(style.textBox).toBe('')
+
+        // normal
+        style.textBox = 'normal'
+        expect(style).toHaveLength(longhands.length)
+        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
+        expect(style.textBox).toBe('normal')
+        expect(style.cssText).toBe('text-box: normal;')
+
+        // Missing longhand values
+        style.textBox = 'both'
+        expect(style.textBoxTrim).toBe('both')
+        expect(style.textBoxEdge).toBe('auto')
+        expect(style.textBox).toBe('both')
+        expect(style.cssText).toBe('text-box: both;')
+        style.textBox = 'text'
+        expect(style.textBoxTrim).toBe('both')
+        expect(style.textBoxEdge).toBe('text')
+        expect(style.textBox).toBe('text')
+        expect(style.cssText).toBe('text-box: text;')
+    })
+    test('shorthand reification', () => {
+
+        const style = createStyleBlock()
+
+        // Initial longhand values
+        longhands.forEach(longhand => style[longhand] = initial(longhand))
+        expect(style.textBox).toBe('normal')
+        expect(style.cssText).toBe('text-box: normal;')
+
+        // All longhands cannot be represented
+        style.textBoxEdge = 'text'
+        expect(style.textBox).toBe('')
+        expect(style.cssText).toBe('text-box-trim: none; text-box-edge: text;')
+    })
+})
 describe('text-emphasis', () => {
 
     const longhands = shorthands.get('text-emphasis')

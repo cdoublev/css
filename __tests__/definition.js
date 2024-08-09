@@ -271,8 +271,8 @@ describe('symbols', () => {
     test("<'background-color'>", () => {
         const input = "<'background-color'>"
         const parsed = {
-            name: 'background-color',
-            type: 'property',
+            name: "<'background-color'>",
+            type: 'non-terminal',
             value: properties['background-color'].value,
         }
         expect(parse(input)).toEqual(parsed)
@@ -533,10 +533,10 @@ describe('groups', () => {
 describe('context rules', () => {
     test("a# produced by <'property'>", () => {
 
-        const root = { definition: { type: 'property' } }
+        const root = { definition: { name: 'property', type: 'property' } }
 
         // property = <'property'> = a#
-        const range = { definition: { type: 'property' }, parent: root }
+        const range = { definition: { name: "<'property'>", type: 'non-terminal' }, parent: root }
         expect(parse('a#', range)).toEqual(a)
         expect(parse('[a b]#', range)).toEqual(sequence(a, b))
         expect(parse('<number>#', range)).toEqual(number)
@@ -549,7 +549,7 @@ describe('context rules', () => {
         // property = <'property'> = fn(a#)
         expect(parse('fn(a#)', range)).toEqual({ type: 'function', name: 'fn', value: as })
         // property = <'property'> = <production> = a#
-        const production = { definition: { type: 'non-terminal' }, parent: range }
+        const production = { definition: { name: 'production', type: 'non-terminal' }, parent: range }
         expect(parse('a#', production)).toEqual(as)
     })
     test("[['+' | '-'] <calc-product>]* produced by <calc-sum>", () => {

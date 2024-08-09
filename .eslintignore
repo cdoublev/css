@@ -1,3 +1,0 @@
-/lib/cssom/*.js
-!/lib/cssom/*-impl.js
-/node_modules

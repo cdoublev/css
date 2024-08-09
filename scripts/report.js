@@ -43,7 +43,6 @@ function parseDefinitionDeep(parent, { name, type, value }, context) {
         case 'block-contents':
         case 'forgiving':
         case 'non-terminal':
-        case 'property':
             if (
                 name === '<keyword>'
                 || arbitrary[name]

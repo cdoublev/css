@@ -2698,7 +2698,8 @@ describe('<arc-command>', () => {
         const coordinate = list([zero, zero], ' ', ['<coordinate-pair>'])
         const of = keyword('of')
         const radii = list([zero])
-        const command = list([arc, by, coordinate, of, radii, omitted], ' ', ['<arc-command>'])
+        const parameters = list([list([by, coordinate]), list([of, radii]), omitted, omitted, omitted])
+        const command = list([arc, parameters], ' ', ['<arc-command>'])
 
         expect(parse('<arc-command>', 'arc by 0px 0px of 0px', false)).toMatchObject(command)
     })
@@ -3960,6 +3961,21 @@ describe('<symbols()>', () => {
         expect(parse('<symbols()>', 'symbols(symbolic "a")')).toBe('symbols("a")')
     })
 })
+describe('<text-edge>', () => {
+    test('representation', () => {
+        expect(parse('<text-edge>', 'text', false))
+            .toMatchObject(list([keyword('text'), omitted], ' ', ['<text-edge>']))
+    })
+    test('valid', () => {
+        const valid = [
+            'text text',
+            'cap text',
+            'ideographic ideographic',
+            'ideographic-ink ideographic-ink',
+        ]
+        valid.forEach(input => expect(parse('<text-edge>', input)).toBe(input.split(' ')[0]))
+    })
+})
 describe('<translate()>', () => {
     test('representation', () => {
         expect(parse('<translate()>', 'translate(1px)', false)).toMatchObject({
@@ -4190,7 +4206,7 @@ describe("<'border-radius'>", () => {
     test('representation', () => {
         const radius = length(1, 'px', ['<length-percentage>'])
         const side = list([radius, radius, radius, radius])
-        const radii = list([side, side], '/', ['border-radius'])
+        const radii = list([side, side], '/', ["<'border-radius'>"])
         expect(parse("<'border-radius'>", '1px', false)).toMatchObject(radii)
     })
     test('valid', () => {
