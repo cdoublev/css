@@ -4075,13 +4075,13 @@ describe('text-box', () => {
         expect(style.cssText).toBe('text-box: normal;')
 
         // Missing longhand values
-        style.textBox = 'both'
-        expect(style.textBoxTrim).toBe('both')
+        style.textBox = 'trim-both'
+        expect(style.textBoxTrim).toBe('trim-both')
         expect(style.textBoxEdge).toBe('auto')
-        expect(style.textBox).toBe('both')
-        expect(style.cssText).toBe('text-box: both;')
+        expect(style.textBox).toBe('trim-both')
+        expect(style.cssText).toBe('text-box: trim-both;')
         style.textBox = 'text'
-        expect(style.textBoxTrim).toBe('both')
+        expect(style.textBoxTrim).toBe('trim-both')
         expect(style.textBoxEdge).toBe('text')
         expect(style.textBox).toBe('text')
         expect(style.cssText).toBe('text-box: text;')
