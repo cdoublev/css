@@ -2908,6 +2908,7 @@ describe('<color>', () => {
             ['rgb(calc(256) 0 0 / calc(2))', 'rgb(255, 0, 0)'],
             ['rgb(calc(-1%) 0% 0% / calc(-1%))', 'rgba(0, 0, 0, 0)'],
             ['rgb(calc(101%) 0% 0% / calc(101%))', 'rgb(255, 0, 0)'],
+            ['rgba(-1 calc(1em / 1px) 101% / 1)', 'rgb(0 calc(1em / 1px) 255)'],
             // Precision (at least 8 bit integers)
             ['rgb(127.499 0 0 / 0.498)', 'rgba(127, 0, 0, 0.498)'],
             ['rgb(127.501 0 0 / 0.499)', 'rgba(128, 0, 0, 0.498)'],
@@ -2956,6 +2957,7 @@ describe('<color>', () => {
             ['hsl(calc(540) 100% 50% / calc(2))', 'rgb(0, 255, 255)'],
             ['hsl(calc(-540deg) 100% 50% / calc(-1%))', 'rgba(0, 255, 255, 0)'],
             ['hsl(calc(540deg) 100% 50% / 101%)', 'rgb(0, 255, 255)'],
+            ['hsla(-540 calc(1em / 1px) 101% / 1)', 'hsl(180 calc(1em / 1px) 100)'],
             // Precision (at least 8 bit integers)
             ['hsl(0.498 100% 49.8% / 0.498)', 'rgba(254, 2, 0, 0.498)'],
             ['hsl(0.499 100% 49.9% / 0.499)', 'rgba(254, 2, 0, 0.498)'],
@@ -2999,6 +3001,7 @@ describe('<color>', () => {
             ['hwb(calc(540) 0% 0% / calc(2))', 'rgb(0, 255, 255)'],
             ['hwb(calc(-540deg) 0% 0% / calc(-1%))', 'rgba(0, 255, 255, 0)'],
             ['hwb(calc(540deg) 0% 0% / calc(101%))', 'rgb(0, 255, 255)'],
+            ['hwb(-540 calc(1em / 1px) 101% / 1)', 'hwb(180 calc(1em / 1px) 100)'],
             // Precision (at least 8 bit integers)
             ['hwb(0.498 0% 49.8% / 0.498)', 'rgba(128, 1, 0, 0.498)'],
             ['hwb(0.499 0% 49.9% / 0.499)', 'rgba(128, 1, 0, 0.498)'],
