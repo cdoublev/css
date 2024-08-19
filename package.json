@@ -40,12 +40,12 @@
     "test:watch": "jest --watchAll -b"
   },
   "dependencies": {
-    "webref": "w3c/webref#d774e552a6c7c8040fc5a7f53c664ea4121cbd66",
+    "webref": "w3c/webref#99a92cf3af89d67cc09135e90a88badc54052754",
     "webidl2js": "^18.0.0"
   },
   "devDependencies": {
     "@cdoublev/eslint-config": "0.11.0",
-    "@stylistic/eslint-plugin-js": "^2.6.2",
+    "@stylistic/eslint-plugin-js": "^2.6.4",
     "eslint": "^9.9.0",
     "eslint-plugin-jest": "^28.8.0",
     "eslint-plugin-node": "^11.1.0",
