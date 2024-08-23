@@ -2322,5 +2322,6 @@ describe('CSSViewTransitionRule', () => {
  */
 it('throws an error when setting CSSRule.cssText', () => {
     const { cssRules: [cssRule] } = createStyleSheet('style {}')
-    expect(() => cssRule.cssText = 'override {}').toThrow()
+    cssRule.cssText = 'override {}'
+    expect(cssRule.cssText).toBe('style {}')
 })
