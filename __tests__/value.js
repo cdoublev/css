@@ -3743,7 +3743,7 @@ describe('<mf-range>', () => {
         const name = ident('width', ['<mf-name>'])
         const comparator = delimiter('=', ['<mf-eq>', '<mf-comparison>'])
         const value = dimension(1, 'px', ['<mf-value>'])
-        expect(parse('<mf-range>', 'width = 1px', false))
+        expect(parse('<mf-range>', 'width = 1px', false, mediaQueryContext))
             .toMatchObject(list([name, comparator, value], ' ', ['<mf-range>']))
     })
 })
