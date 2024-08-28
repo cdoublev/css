@@ -2691,6 +2691,8 @@ describe('<sign()>', () => {
 describe('<calc-mix()>', () => {
     test('invalid', () => {
         const invalid = [
+            // Invalid <progress> type
+            ['<length>', 'calc-mix(calc(1px), 1px, 1px)'],
             // Inconsistent calculation types
             ['<number> | <length>', 'calc-mix(0, 1, 1px)'],
             ['<number> | <percentage>', 'calc-mix(0, 1, 1%)'],
