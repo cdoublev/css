@@ -1882,7 +1882,7 @@ describe('<calc()>', () => {
             ['<number>', 'calc(1 - 1px)'],
             ['<number>', 'calc(1 / 1px)'],
             ['<number>', 'calc(1px / 1px / 1px)'],
-            ['<number>', 'calc((1px + 1%) / 1px)'],
+            ['<number>', 'calc((1% + 1px) / 1px)'],
             ['<length>', 'calc(1)'],
             ['<length>', 'calc(1%)'],
             ['<length>', 'calc(1px + 1)'],
@@ -1890,13 +1890,18 @@ describe('<calc()>', () => {
             ['<length>', 'calc(1 / 1px)'],
             ['<length>', 'calc(1px * 1px)'],
             ['<length>', 'calc(1px / 1px)'],
+            ['<length>', 'calc(1px * 1px / 1)'],
+            ['<length>', 'calc(1px / 1 * 1px)'],
+            ['<length>', 'calc(1 / 1px / 1px)'],
             ['<length>', 'calc(1px + 1s)'],
             ['<length>', 'calc(1px - 1s)'],
             ['<length>', 'calc(1px * 1s)'],
             ['<length>', 'calc(1px / 1s)'],
-            ['<length>', 'calc(1px * 1px / 1)'],
-            ['<length>', 'calc(1px / 1 * 1px)'],
-            ['<length>', 'calc(1 / 1px / 1px)'],
+            ['<length>', 'calc(1px + 1%)'],
+            ['<length>', 'calc(1px - 1%)'],
+            ['<length>', 'calc(1px * 1%)'],
+            ['<length>', 'calc(1px / 1%)'],
+            ['<length>', 'calc(1% / 1px)'],
             ['<percentage>', 'calc(1)'],
             ['<percentage>', 'calc(1px)'],
             ['<percentage>', 'calc(1% + 1)'],
@@ -2144,10 +2149,12 @@ describe('<calc()>', () => {
 describe('<min()>, <max()>', () => {
     test('invalid', () => {
         const invalid = [
-            // Arguments must have consistent types
+            // Inconsistent calculation types
             ['<number> | <length>', 'min(1, 1px)'],
             ['<number> | <percentage>', 'min(1, 1%)'],
-            ['<number> | <percentage>', 'min(1, (1px + 1%) / 1px)'],
+            // Result type mismatch
+            ['<number> | <percentage>', 'min((1% + 1px) / 1px)'],
+            ['<length>', 'min(1px, 1%)'],
             // Maximum 32 <calc-value>
             ['<number>', `min(${[...Array(16)].map(() => '1 + 1').join(', ')}, 1)`],
             ['<number>', `min(${[...Array(16)].map(() => '((1))').join(', ')}, (1))`],
@@ -2177,7 +2184,7 @@ describe('<min()>, <max()>', () => {
             // Different units
             ['<length>', 'min(1px, 1in)', 'calc(1px)'],
             ['<length>', 'max(1px, 1in)', 'calc(96px)'],
-            ['<length-percentage>', 'min(min(0%, 1%), 1px)'],
+            ['<length-percentage>', 'min(1px, min(0%, 1%))'],
             // Maximum 32 <calc-value>
             ['<number>', `min(${[...Array(15)].map(() => '1 + 1').join(', ')}, 1)`, 'calc(1)'],
             ['<number>', `min(${[...Array(15)].map(() => '(1)').join(', ')}, (1))`, 'calc(1)'],
@@ -2190,11 +2197,12 @@ describe('<min()>, <max()>', () => {
 describe('<clamp()>', () => {
     test('invalid', () => {
         const invalid = [
-            // Arguments must have consistent types
-            ['<number>', 'clamp(1, 1px, 1)'],
-            ['<length>', 'clamp(1px, 1, 1px)'],
+            // Inconsistent calculation types
+            ['<number> | <length>', 'clamp(1, 1px, 1)'],
             ['<number> | <percentage>', 'clamp(1, 1%, 1)'],
-            ['<number> | <percentage>', 'clamp(1, (1px + 1%) / 1px, 1)'],
+            // Result type mismatch
+            ['<number> | <percentage>', 'clamp(1, (1% + 1px) / 1px, 1)'],
+            ['<length>', 'clamp(1px, 1%, 1px)'],
         ]
         invalid.forEach(([definition, input]) => expect(parse(definition, input, false)).toBeNull())
     })
@@ -2211,7 +2219,7 @@ describe('<clamp()>', () => {
             // Different units
             ['<length>', 'clamp(0px, 1in, 2px)', 'calc(2px)'],
             ['<length>', 'clamp(0em, 1px, 2px)'],
-            ['<length-percentage>', 'clamp(clamp(0%, 1%, 2%), 1px, 2px)'],
+            ['<length-percentage>', 'clamp(0px, 1px, clamp(0%, 1%, 2%))'],
             // none
             ['<number>', 'clamp(0, 1, none)'],
             ['<number>', 'clamp(none, 1, 2)'],
@@ -2223,12 +2231,13 @@ describe('<clamp()>', () => {
 describe('<round()>', () => {
     test('invalid', () => {
         const invalid = [
-            // Arguments must have consistent types
-            ['<number>', 'round(1px, 1)'],
-            ['<length>', 'round(1px)'],
-            ['<length>', 'round(1, 1px)'],
-            ['<number> | <percentage>', 'round(1%, 1)'],
-            ['<number> | <percentage>', 'round((1px + 1%) / 1px, 1)'],
+            // Inconsistent calculation types
+            ['<number> | <length>', 'round(1, 1px)'],
+            ['<number> | <length>', 'round(1px)'],
+            ['<number> | <percentage>', 'round(1, 1%)'],
+            // Result type mismatch
+            ['<number> | <percentage>', 'round(1, (1% + 1px) / 1px)'],
+            ['<length>', 'round(1px, 1%)'],
         ]
         invalid.forEach(([definition, input]) => expect(parse(definition, input, false)).toBeNull())
     })
@@ -2247,7 +2256,7 @@ describe('<round()>', () => {
             // Different units
             ['<length>', 'round(nearest, 1cm, 1px)', 'calc(38px)'],
             ['<length>', 'round(1em, 1px)'],
-            ['<length-percentage>', 'round(round(1%, 1%), 1px)'],
+            ['<length-percentage>', 'round(1px, round(1%, 1%))'],
         ]
         valid.forEach(([definition, input, expected = input]) => expect(parse(definition, input)).toBe(expected))
     })
@@ -2307,11 +2316,12 @@ describe('<round()>', () => {
 describe('<mod()>', () => {
     test('invalid', () => {
         const invalid = [
-            // Arguments must have consistent types
-            ['<number>', 'mod(1px, 1)'],
-            ['<length>', 'mod(1, 1px)'],
-            ['<number> | <percentage>', 'mod(1%, 1)'],
-            ['<number> | <percentage>', 'mode((1px + 1%) / 1px, 1)'],
+            // Inconsistent calculation types
+            ['<number> | <length>', 'mod(1, 1px)'],
+            ['<number> | <percentage>', 'mod(1, 1%)'],
+            // Result type mismatch
+            ['<number> | <percentage>', 'mod(1, (1% + 1px) / 1px)'],
+            ['<length>', 'mod(1px, 1%)'],
         ]
         invalid.forEach(([definition, input]) => expect(parse(definition, input, false)).toBeNull())
     })
@@ -2327,7 +2337,7 @@ describe('<mod()>', () => {
             // Different units
             ['<length>', 'mod(1in, 5px)', 'calc(1px)'],
             ['<length>', 'mod(1em, 1px)'],
-            ['<length-percentage>', 'mod(mod(1%, 1%), 1px)'],
+            ['<length-percentage>', 'mod(1px, mod(1%, 1%))'],
         ]
         valid.forEach(([definition, input, expected = input]) => expect(parse(definition, input)).toBe(expected))
     })
@@ -2350,11 +2360,12 @@ describe('<mod()>', () => {
 describe('<rem()>', () => {
     test('invalid', () => {
         const invalid = [
-            // Arguments must have consistent types
-            ['<number>', 'rem(1px, 1)'],
-            ['<length>', 'rem(1, 1px)'],
-            ['<number> | <percentage>', 'rem(1%, 1)'],
-            ['<number> | <percentage>', 'rem((1px + 1%) / 1px, 1)'],
+            // Inconsistent calculation types
+            ['<number> | <length>', 'rem(1, 1px)'],
+            ['<number> | <percentage>', 'rem(1, 1%)'],
+            // Result type mismatch
+            ['<number> | <percentage>', 'rem(1, (1% + 1px) / 1px)'],
+            ['<length>', 'rem(1px, 1%)'],
         ]
         invalid.forEach(([definition, input]) => expect(parse(definition, input, false)).toBeNull())
     })
@@ -2370,7 +2381,7 @@ describe('<rem()>', () => {
             // Different units
             ['<length>', 'rem(1in, 5px)', 'calc(1px)'],
             ['<length>', 'rem(1em, 1px)'],
-            ['<length-percentage>', 'rem(rem(1%, 1%), 1px)'],
+            ['<length-percentage>', 'rem(1px, rem(1%, 1%))'],
         ]
         valid.forEach(([definition, input, expected = input]) => expect(parse(definition, input)).toBe(expected))
     })
@@ -2392,11 +2403,12 @@ describe('<rem()>', () => {
 describe('<sin()>', () => {
     test('invalid', () => {
         const invalid = [
-            // Argument must resolve to <number> or <angle>
-            ['<number>', 'sin(1px)'],
+            // Calculation type mismatch
+            ['<number> | <length>', 'sin(1px)'],
             ['<number> | <percentage>', 'sin(1%)'],
-            // Result type must be <number> made consistent with the argument
-            ['<number>', 'sin((1px + 1%) / 1px)'],
+            // Result type mismatch
+            ['<number> | <percentage>', 'sin((1% + 1px) / 1px)'],
+            ['<angle>', 'calc(sin(1% + 1deg) * 1deg)'],
         ]
         invalid.forEach(([definition, input]) => expect(parse(definition, input, false)).toBeNull())
     })
@@ -2405,7 +2417,6 @@ describe('<sin()>', () => {
             ['<number>', 'sin(45)', `calc(${+Math.sin(45).toFixed(6)})`],
             ['<number>', 'sin(45deg)', `calc(${+Math.sin(toRadians(45)).toFixed(6)})`],
             ['<angle-percentage>', 'calc(1deg * sin(1%))'],
-            ['<length-percentage>', 'calc(1px * sin(1% / 1px))'],
         ]
         valid.forEach(([definition, input, expected = input]) => expect(parse(definition, input)).toBe(expected))
     })
@@ -2418,11 +2429,12 @@ describe('<sin()>', () => {
 describe('<cos()>', () => {
     test('invalid', () => {
         const invalid = [
-            // Argument must resolve to <number> or <angle>
-            ['<number>', 'cos(1px)'],
+            // Calculation type mismatch
+            ['<number> | <length>', 'cos(1px)'],
             ['<number> | <percentage>', 'cos(1%)'],
-            // Result type must be <number> made consistent with the argument
-            ['<number>', 'cos((1px + 1%) / 1px)'],
+            // Result type mismatch
+            ['<number> | <percentage>', 'cos((1% + 1px) / 1px)'],
+            ['<angle>', 'calc(cos(1% + 1deg) * 1deg)'],
         ]
         invalid.forEach(([definition, input]) => expect(parse(definition, input, false)).toBeNull())
     })
@@ -2431,7 +2443,6 @@ describe('<cos()>', () => {
             ['<number>', 'cos(45)', `calc(${+Math.cos(45).toFixed(6)})`],
             ['<number>', 'cos(45deg)', `calc(${+Math.cos(toRadians(45)).toFixed(6)})`],
             ['<angle-percentage>', 'calc(1deg * cos(1%))'],
-            ['<length-percentage>', 'calc(1px * cos(1% / 1px))'],
         ]
         valid.forEach(([definition, input, expected = input]) => expect(parse(definition, input)).toBe(expected))
     })
@@ -2439,11 +2450,12 @@ describe('<cos()>', () => {
 describe('<tan()>', () => {
     test('invalid', () => {
         const invalid = [
-            // Argument must resolve to <number> or <angle>
-            ['<number>', 'tan(1px)'],
+            // Calculation type mismatch
+            ['<number> | <length>', 'tan(1px)'],
             ['<number> | <percentage>', 'tan(1%)'],
-            // Result type must be <number> made consistent with the argument
-            ['<number>', 'tan((1px + 1%) / 1px)'],
+            // Result type mismatch
+            ['<number> | <percentage>', 'tan((1% + 1px) / 1px)'],
+            ['<angle>', 'calc(tan(1% + 1deg) * 1deg)'],
         ]
         invalid.forEach(([definition, input]) => expect(parse(definition, input, false)).toBeNull())
     })
@@ -2452,7 +2464,6 @@ describe('<tan()>', () => {
             ['<number>', 'tan(45)', `calc(${+Math.tan(45).toFixed(6)})`],
             ['<number>', 'tan(45deg)', `calc(${+Math.tan(toRadians(45)).toFixed(6)})`],
             ['<angle-percentage>', 'calc(1deg * tan(1%))'],
-            ['<length-percentage>', 'calc(1px * tan(1% / 1px))'],
         ]
         valid.forEach(([definition, input, expected = input]) => expect(parse(definition, input)).toBe(expected))
     })
@@ -2475,89 +2486,77 @@ describe('<tan()>', () => {
 describe('<asin()>', () => {
     test('invalid', () => {
         const invalid = [
-            // Argument must resolve to <number>
+            // Calculation type mismatch
             ['<angle>', 'asin(1deg)'],
-            ['<angle>', 'asin(asin(1))'],
             ['<angle-percentage>', 'asin(1%)'],
             ['<number> | <percentage>', 'calc(asin(1%) / 1deg)'],
-            // Result type must be <angle> made consistent with the argument
-            ['<number>', 'calc(asin((1px + 1%) / 1px) / 1deg)'],
+            // Result type mismatch
+            ['<number> | <percentage>', 'calc(asin((1% + 1px) / 1px) / 1deg)'],
+            ['<angle>', 'asin((1% + 1deg) / 1deg)'],
         ]
         invalid.forEach(([definition, input]) => expect(parse(definition, input, false)).toBeNull())
     })
     test('valid', () => {
-        const valid = [
-            ['<angle>', 'asin(0.5)', 'calc(30deg)'],
-            ['<angle-percentage>', 'asin(1% / 1%)'],
-            ['<length-percentage>', 'calc(1deg * 1px / asin(1% / 1px))'],
-        ]
-        valid.forEach(([definition, input, expected = input]) => expect(parse(definition, input)).toBe(expected))
+        expect(parse('<angle>', 'asin(0.5)')).toBe('calc(30deg)')
+        expect(parse('<angle-percentage>', 'asin(1% / 1deg)')).toBe('asin(1% / 1deg)')
     })
 })
 describe('<acos()>', () => {
     test('invalid', () => {
         const invalid = [
-            // Argument must resolve to <number>
+            // Calculation type mismatch
             ['<angle>', 'acos(1deg)'],
-            ['<angle>', 'acos(acos(1))'],
             ['<angle-percentage>', 'acos(1%)'],
             ['<number> | <percentage>', 'calc(acos(1%) / 1deg)'],
-            // Result type must be <angle> made consistent with the argument
-            ['<number>', 'calc(acos((1px + 1%) / 1px) / 1deg)'],
+            // Result type mismatch
+            ['<number> | <percentage>', 'calc(acos((1% + 1px) / 1px) / 1deg)'],
+            ['<angle>', 'acos((1% + 1deg) / 1deg)'],
         ]
         invalid.forEach(([definition, input]) => expect(parse(definition, input, false)).toBeNull())
     })
     test('valid', () => {
-        const valid = [
-            ['<angle>', 'acos(0.5)', 'calc(60deg)'],
-            ['<angle-percentage>', 'acos(1% / 1%)'],
-            ['<length-percentage>', 'calc(1deg * 1px / acos(1% / 1px))'],
-        ]
-        valid.forEach(([definition, input, expected = input]) => expect(parse(definition, input)).toBe(expected))
+        expect(parse('<angle>', 'acos(0.5)')).toBe('calc(60deg)')
+        expect(parse('<angle-percentage>', 'acos(1% / 1deg)')).toBe('acos(1% / 1deg)')
     })
 })
 describe('<atan()>', () => {
     test('invalid', () => {
         const invalid = [
-            // Argument must resolve to <number>
+            // Calculation type mismatch
             ['<angle>', 'atan(1deg)'],
-            ['<angle>', 'atan(atan(1))'],
             ['<angle-percentage>', 'atan(1%)'],
             ['<number> | <percentage>', 'calc(atan(1%) / 1deg)'],
-            // Result type must be <angle> made consistent with the argument
-            ['<number>', 'calc(atan((1px + 1%) / 1px) / 1deg)'],
+            // Result type mismatch
+            ['<number> | <percentage>', 'calc(atan((1% + 1px) / 1px) / 1deg)'],
+            ['<angle>', 'atan((1% + 1deg) / 1deg)'],
         ]
         invalid.forEach(([definition, input]) => expect(parse(definition, input, false)).toBeNull())
     })
     test('valid', () => {
-        const valid = [
-            ['<angle>', 'atan(0.5)', `calc(${+toDegrees(Math.atan(0.5)).toFixed(6)}deg)`],
-            ['<angle-percentage>', 'atan(1% / 1%)'],
-            ['<length-percentage>', 'calc(1deg * 1px / atan(1% / 1px))'],
-        ]
-        valid.forEach(([definition, input, expected = input]) => expect(parse(definition, input)).toBe(expected))
+        expect(parse('<angle>', 'atan(0.5)')).toBe(`calc(${+toDegrees(Math.atan(0.5)).toFixed(6)}deg)`)
+        expect(parse('<angle-percentage>', 'atan(1% / 1deg)')).toBe('atan(1% / 1deg)')
     })
 })
 describe('<atan2()>', () => {
     test('invalid', () => {
         const invalid = [
-            // Arguments must have consistent types
-            'atan2(1, 1%)',
-            'atan2(1, 1px)',
-            'atan2(1%, 1)',
-            'atan2(1%, 1px)',
-            'atan2(1px, 1)',
-            'atan2(1px, 1%)',
+            // Inconsistent calculation types
+            ['<number> | <length>', 'calc(atan2(1, 1px) / 1deg)'],
+            ['<number> | <percentage>', 'calc(atan2(1, 1%) / 1deg)'],
+            // Result type mismatch
+            ['<number> | <percentage>', 'calc(atan2(1, (1% + 1px) / 1px) / 1deg)'],
+            ['<angle>', 'atan2(1deg, 1%)'],
         ]
-        invalid.forEach(input => expect(parse('<angle>', input, false)).toBeNull())
+        invalid.forEach(([definition, input]) => expect(parse(definition, input, false)).toBeNull())
     })
     test('valid', () => {
         const valid = [
             ['<angle>', 'atan2(1, 1)', `calc(${+toDegrees(Math.atan2(1, 1)).toFixed(6)}deg)`],
             ['<angle>', 'atan2(1px, 1px)', `calc(${+toDegrees(Math.atan2(1, 1)).toFixed(6)}deg)`],
+            ['<angle>', 'atan2(1%, 1%)', `calc(${+toDegrees(Math.atan2(1, 1)).toFixed(6)}deg)`],
             ['<angle>', 'atan2(1in, 100px)', `calc(${+toDegrees(Math.atan2(96, 100)).toFixed(6)}deg)`],
             ['<angle>', 'atan2(1em, 1px)', 'atan2(1em, 1px)'],
-            ['<angle-percentage>', 'atan2(atan2(1%, 1deg), 1deg)', 'atan2(atan2(1%, 1deg), 1deg)'],
+            ['<angle-percentage>', 'atan2(1deg, atan2(1%, 1%))', 'atan2(1deg, atan2(1%, 1%))'],
         ]
         valid.forEach(([definition, input, expected]) => expect(parse(definition, input)).toBe(expected))
     })
@@ -2565,51 +2564,46 @@ describe('<atan2()>', () => {
 describe('<pow()>', () => {
     test('invalid', () => {
         const invalid = [
-            // Arguments must resolve to <number>s
-            ['<number>', 'pow(1px, 1)'],
-            ['<number>', 'pow(1, 1px)'],
-            ['<number> | <percentage>', 'pow(1%, 1)'],
+            // Calculation types mismatch
+            ['<number> | <length>', 'pow(1, 1px)'],
             ['<number> | <percentage>', 'pow(1, 1%)'],
-            // Result type must be `<number>` made consistent with the arguments
-            ['<number>', 'pow((1px + 1%) / 1px, 1)'],
+            // Result type mismatch
+            ['<number> | <percentage>', 'pow(1, (1% + 1px) / 1px)'],
+            ['<length>', 'calc(1px * pow(1, (1% + 1px) / 1px))'],
         ]
         invalid.forEach(([definition, input]) => expect(parse(definition, input, false)).toBeNull())
     })
     test('valid', () => {
         expect(parse('<number>', 'pow(4, 2)')).toBe('calc(16)')
-        const valid = [
-            ['<number>', 'pow(4, 2)', 'calc(16)'],
-            ['<length-percentage>', 'calc(1px * pow(1% / 1px, 1))'],
-        ]
-        valid.forEach(([definition, input, expected = input]) => expect(parse(definition, input)).toBe(expected))
+        expect(parse('<length-percentage>', 'calc(1px * pow(1, 1% / 1px))')).toBe('calc(1px * pow(1, 1% / 1px))')
     })
 })
 describe('<sqrt()>', () => {
     test('invalid', () => {
         const invalid = [
-            // Argument must resolve to <number>
-            ['<number>', 'sqrt(1px)'],
+            // Calculation type mismatch
+            ['<number> | <length>', 'sqrt(1px)'],
             ['<number> | <percentage>', 'sqrt(1%)'],
-            // Result type must be `<number>` made consistent with the argument
-            ['<number>', 'sqrt((1px + 1%) / 1px)'],
+            // Result type mismatch
+            ['<number> | <percentage>', 'sqrt((1% + 1px) / 1px)'],
+            ['<length>', 'calc(1px * sqrt((1% + 1px) / 1px))'],
         ]
         invalid.forEach(([definition, input]) => expect(parse(definition, input, false)).toBeNull())
     })
     test('valid', () => {
-        const valid = [
-            ['<number>', 'sqrt(4)', 'calc(2)'],
-            ['<length-percentage>', 'calc(1px * sqrt(1% / 1px))'],
-        ]
-        valid.forEach(([definition, input, expected = input]) => expect(parse(definition, input)).toBe(expected))
+        expect(parse('<number>', 'sqrt(4)')).toBe('calc(2)')
+        expect(parse('<length-percentage>', 'calc(1px * sqrt(1% / 1px))')).toBe('calc(1px * sqrt(1% / 1px))')
     })
 })
 describe('<hypot()>', () => {
     test('invalid', () => {
         const invalid = [
-            // Arguments must have consistent types
-            ['<number>', 'hypot(1px, 1)'],
-            ['<length>', 'hypot(1, 1px)'],
-            ['<number> | <percentage>', 'hypot(1%, 1)'],
+            // Inconsistent calculation types
+            ['<number> | <length>', 'hypot(1, 1px)'],
+            ['<number> | <percentage>', 'hypot(1, 1%)'],
+            // Result type mismatch
+            ['<number> | <percentage>', 'hypot(1, (1% + 1px) / 1px)'],
+            ['<length>', 'hypot(1px, 1%)'],
         ]
         invalid.forEach(([definition, input]) => expect(parse(definition, input, false)).toBeNull())
     })
@@ -2618,12 +2612,12 @@ describe('<hypot()>', () => {
             // Identical units
             ['<number>', 'hypot(3, 4)', 'calc(5)'],
             ['<length>', 'hypot(1em, 2em)'],
-            ['<length-percentage>', 'hypot(1%, 2%)'],
+            ['<length-percentage>', 'hypot(1%)'],
             ['<percentage>', 'hypot(3%, 4%)', 'calc(5%)'],
             // Different units
             ['<length>', 'hypot(1in, 72px)', 'calc(120px)'],
             ['<length>', 'hypot(1em, 1px)'],
-            ['<length-percentage>', 'hypot(hypot(1%, 1%), 1px)'],
+            ['<length-percentage>', 'hypot(1px, hypot(1%))'],
         ]
         valid.forEach(([definition, input, expected = input]) => expect(parse(definition, input)).toBe(expected))
     })
@@ -2631,13 +2625,12 @@ describe('<hypot()>', () => {
 describe('<log()>', () => {
     test('invalid', () => {
         const invalid = [
-            // Arguments must resolve to <number>s
-            ['<number>', 'log(1px, 1)'],
-            ['<number>', 'log(1, 1px)'],
-            ['<number> | <percentage>', 'log(1%, 1)'],
+            // Calculation types mismatch
+            ['<number> | <length>', 'log(1, 1px)'],
             ['<number> | <percentage>', 'log(1, 1%)'],
-            // Result type must be `<number>` made consistent with the arguments
-            ['<number>', 'log((1px + 1%) / 1px, 1)'],
+            // Result type mismatch
+            ['<number> | <percentage>', 'log(1, (1% + 1px) / 1px)'],
+            ['<length>', 'calc(log(1, 1px * (1% + 1px) / 1px))'],
         ]
         invalid.forEach(([definition, input]) => expect(parse(definition, input, false)).toBeNull())
     })
@@ -2645,7 +2638,7 @@ describe('<log()>', () => {
         const valid = [
             ['<number>', 'log(e)', 'calc(1)'],
             ['<number>', 'log(8, 2)', 'calc(3)'],
-            ['<length-percentage>', 'calc(1px * log(1% / 1px, 1))'],
+            ['<length-percentage>', 'calc(1px * log(1, 1% / 1px))'],
         ]
         valid.forEach(([definition, input, expected = input]) => expect(parse(definition, input)).toBe(expected))
     })
@@ -2653,11 +2646,12 @@ describe('<log()>', () => {
 describe('<exp()>', () => {
     test('invalid', () => {
         const invalid = [
-            // Argument must resolve to <number>
-            ['<number>', 'exp(1px)'],
+            // Calculation types mismatch
+            ['<number> | <length>', 'exp(1px)'],
             ['<number> | <percentage>', 'exp(1%)'],
-            // Result type must be `<number>` made consistent with the argument
-            ['<number>', 'exp((1px + 1%) / 1px)'],
+            // Result type mismatch
+            ['<number> | <percentage>', 'exp((1% + 1px) / 1px)'],
+            ['<length>', 'calc(1px * exp((1% + 1px) / 1px))'],
         ]
         invalid.forEach(([definition, input]) => expect(parse(definition, input, false)).toBeNull())
     })
@@ -2679,6 +2673,10 @@ describe('<abs()>', () => {
     })
 })
 describe('<sign()>', () => {
+    test('invalid', () => {
+        expect(parse('<number> | <percentage>', 'abs((1% + 1px) / 1px)', false)).toBeNull()
+        expect(parse('<length>', 'abs(1% / 1px)', false)).toBeNull()
+    })
     test('valid', () => {
         const valid = [
             ['<number>', 'sign(-2)', 'calc(-1)'],
@@ -2693,23 +2691,24 @@ describe('<sign()>', () => {
 describe('<calc-mix()>', () => {
     test('invalid', () => {
         const invalid = [
-            // Arguments must have consistent types
-            ['<number>', 'calc-mix(50%, 1px, 2)'],
-            ['<length>', 'calc-mix(50%, 1, 2px)'],
-            ['<number> | <percentage>', 'calc-mix(50%, 50%, 1)'],
+            // Inconsistent calculation types
+            ['<number> | <length>', 'calc-mix(0, 1, 1px)'],
+            ['<number> | <percentage>', 'calc-mix(0, 1, 1%)'],
+            // Result type mismatch
+            ['<number> | <percentage>', 'calc-mix(0, 1, (1% + 1px) / 1px)'],
+            ['<number> | <percentage>', 'calc-mix(calc((1% + 1px) / 1px), 1, 1)'],
+            ['<length>', 'calc-mix(0, 1px, 1%)'],
+            ['<length>', 'calc-mix(progress(1% from 1px to 1px), 1px, 1px)'],
         ]
         invalid.forEach(([definition, input]) => expect(parse(definition, input, false)).toBeNull())
     })
     test('valid', () => {
         const valid = [
-            // Identical unit
-            ['<number>', 'calc-mix(50%, 0, 2)'],
-            ['<length>', 'calc-mix(50%, 0em, 2em)'],
-            ['<length-percentage>', 'calc-mix(0.5, 0%, 100%)'],
-            // Different units
-            ['<length>', 'calc-mix(50%, 0px, 1in)', 'calc-mix(50%, 0px, 96px)'],
-            ['<length>', 'calc-mix(50%, 0px, 1em)'],
-            ['<length-percentage>', 'calc-mix(50%, calc-mix(50%, 0px, 100%), 200%)'],
+            ['<number>', 'calc-mix(0%, 1 * 1, 1% / 1%)', 'calc-mix(0%, 1, 1)'],
+            ['<length-percentage>', 'calc-mix(0, 1px, 1%)'],
+            ['<length-percentage>', 'calc(1px * calc-mix(0, 1% / 1px, 1))'],
+            ['<length-percentage>', 'calc(1px * calc-mix(calc(1% / 1px), 1, 1))'],
+            ['<length-percentage>', 'calc-mix(progress(1% from 1px to 1px), 1px, 1px)'],
         ]
         valid.forEach(([definition, input, expected = input]) => expect(parse(definition, input)).toBe(expected))
     })
@@ -2717,23 +2716,20 @@ describe('<calc-mix()>', () => {
 describe('<random()>', () => {
     test('invalid', () => {
         const invalid = [
-            // Arguments must have consistent types
-            ['<number>', 'random(50%, 1px, by 2)'],
-            ['<length>', 'random(50%, 1, by 2px)'],
-            ['<number> | <percentage>', 'random(50%, 50%, by 1)'],
+            // Inconsistent calculation types
+            ['<number> | <length>', 'random(1, 1px, by 1)'],
+            ['<number> | <percentage>', 'random(1, 1%, by 1)'],
+            // Result type mismatch
+            ['<number> | <percentage>', 'random(1, (1% + 1px) / 1px, by 1)'],
+            ['<length>', 'random(1px, 1%, by 1px)'],
         ]
         invalid.forEach(([definition, input]) => expect(parse(definition, input, false)).toBeNull())
     })
     test('valid', () => {
         const valid = [
-            // Identical unit
-            ['<number>', 'random(per-element, 1, 1)'],
-            ['<length>', 'random(1em, 1em)'],
-            ['<length-percentage>', 'random(1%, 1%)'],
-            // Different units
-            ['<length>', 'random(96px, 1in)', 'random(96px, 96px)'],
-            ['<length>', 'random(1px, 1em)'],
-            ['<length-percentage>', 'random(random(1px, 1%), 1%)'],
+            ['<number>', 'random(per-element, 1% / 1%, 1em / 1px)', 'random(per-element, 1, 1em / 1px)'],
+            ['<length-percentage>', 'random(1px, 1%)'],
+            ['<length-percentage>', 'calc(1px * random(1% / 1px, 1))'],
         ]
         valid.forEach(([definition, input, expected = input]) => expect(parse(definition, input)).toBe(expected))
     })
