@@ -334,7 +334,7 @@ describe('CSSFontFaceDescriptors', () => {
             ['attr(name)'],
             ['env(name, attr(name))'],
             ['mix(50%, 1, 1)', 'mix(50%, 1%, 1%)'],
-            ['progress(1 from 1 to 1)', 'progress(1% from 1% to 1%)'],
+            ['progress(1 from 1 to 1)', 'calc(1% * progress(1 from 1 to 1))'],
             ['random-item(--key, 1)', 'random-item(--key, 1%)'],
             ['sibling-count()', 'calc(1% * sibling-count())'],
             ['toggle(1, 1)', 'toggle(1%, 1%)'],
@@ -428,6 +428,8 @@ describe('CSSKeyframeProperties', () => {
         expect(style.fontWeight).toBe('attr(name)')
         style.fontWeight = 'mix(50%, 1, 1)'
         expect(style.fontWeight).toBe('mix(50%, 1, 1)')
+        style.fontWeight = 'progress(1 from 1 to 1)'
+        expect(style.fontWeight).toBe('progress(1 from 1 to 1)')
         style.fontWeight = 'random-item(--key, 1)'
         expect(style.fontWeight).toBe('random-item(--key, 1)')
         style.fontWeight = 'sibling-count()'
@@ -507,7 +509,7 @@ describe('CSSPageDescriptors', () => {
             // Substitution accepted in element-dependent context
             ['attr(name)', 'attr(name)'],
             ['mix(50%, 1, 1)', 'mix(50%, 1px, 1px)'],
-            ['progress(1 from 1 to 1)', 'progress(1px from 1px to 1px)'],
+            ['progress(1 from 1 to 1)', 'calc(1px * progress(1 from 1 to 1))'],
             ['random-item(--key, 1)', 'random-item(--key, 1px)'],
             ['sibling-count()', 'calc(1px * sibling-count())'],
             ['toggle(1, 1)', 'toggle(1px, 1px)'],
@@ -591,6 +593,8 @@ describe('CSSPositionTryDescriptors', () => {
         expect(style.top).toBe('attr(name)')
         style.top = 'mix(50%, 1px, 1px)'
         expect(style.top).toBe('mix(50%, 1px, 1px)')
+        style.top = 'calc(1px * progress(1 from 1 to 1))'
+        expect(style.top).toBe('calc(1px * progress(1 from 1 to 1))')
         style.top = 'random-item(--key, 1px)'
         expect(style.top).toBe('random-item(--key, 1px)')
         style.top = 'calc(1px * sibling-count())'

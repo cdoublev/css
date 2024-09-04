@@ -2737,6 +2737,71 @@ describe('<random()>', () => {
     })
 })
 
+describe('<progress()>', () => {
+    test('invalid', () => {
+        const invalid = [
+            // Inconsistent calculation types
+            ['<number> | <length>', 'progress(1 from 1px to 1)'],
+            ['<number> | <percentage>', 'progress(1 from 1% to 1)'],
+            // Result type mismatch
+            ['<number> | <percentage>', 'progress(1 from (1% + 1px) / 1px to 1)'],
+            ['<length>', 'calc(1px * progress(1% from 1px to 1px))'],
+        ]
+        invalid.forEach(([definition, input]) => expect(parse(definition, input, false)).toBeNull())
+    })
+    test('valid', () => {
+        expect(parse('<number>', 'progress(1 * 1 from 1% / 1% to 1em / 1px)'))
+            .toBe('progress(1 from 1 to 1em / 1px)')
+        expect(parse('<length-percentage>', 'calc(1px * progress(1 * 1 from 1% / 1% to 1em / 1px))'))
+            .toBe('calc(1px * progress(1 from 1% / 1% to 1em / 1px))')
+    })
+})
+describe('<container-progress()>', () => {
+    test('invalid', () => {
+        const invalid = [
+            // Invalid feature
+            ['<number>', 'container-progress(resolution from 1dpi to 1dpi)'],
+            ['<number>', 'container-progress(orientation from 1 to 1)'],
+            ['<number>', 'container-progress(width: 1px from 1px to 1px)'],
+            ['<number>', 'container-progress(width < 1px from 1px to 1px)'],
+            // Invalid value
+            ['<number>', 'container-progress(width from 1 to 1)'],
+            ['<number>', 'container-progress(width from 1% to 1%)'],
+            ['<length-percentage>', 'calc(1px * container-progress(width from 1% to 1px))'],
+            ['<length>', 'calc(1px * container-progress(width from 1% + 1px to 1px))'],
+        ]
+        invalid.forEach(([definition, input]) => expect(parse(definition, input, false)).toBeNull())
+    })
+    test('valid', () => {
+        expect(parse('<number>', 'container-progress(width from 0px + 1px to 1px * 1)'))
+            .toBe('container-progress(width from 1px to 1px)')
+        expect(parse('<number>', 'container-progress(aspect-ratio from -1 to 1)'))
+            .toBe('container-progress(aspect-ratio from -1 to 1)')
+    })
+})
+describe('<media-progress()>', () => {
+    test('invalid', () => {
+        const invalid = [
+            // Invalid feature
+            ['<number>', 'media-progress(inline-size from 1px to 1px)'],
+            ['<number>', 'media-progress(orientation from 1 to 1)'],
+            ['<number>', 'media-progress(width: 1px from 1px to 1px)'],
+            ['<number>', 'media-progress(width < 1px from 1px to 1px)'],
+            // Invalid value
+            ['<number>', 'media-progress(width from 1 to 1)'],
+            ['<number>', 'media-progress(width from 1% to 1%)'],
+            ['<length-percentage>', 'calc(1px * media-progress(width from 1% to 1px))'],
+            ['<length>', 'calc(1px * media-progress(width from 1% + 1px to 1px))'],
+        ]
+        invalid.forEach(([definition, input]) => expect(parse(definition, input, false)).toBeNull())
+    })
+    test('valid', () => {
+        expect(parse('<number>', 'media-progress(width from 0px + 1px to 1px * 1)'))
+            .toBe('media-progress(width from 1px to 1px)')
+        expect(parse('<number>', 'media-progress(aspect-ratio from -1 to 1)'))
+            .toBe('media-progress(aspect-ratio from -1 to 1)')
+    })
+})
 describe('<sibling-count()>, <sibling-index()>', () => {
     test('valid', () => {
         expect(parse('<integer>', 'sibling-index()')).toBe('sibling-index()')
