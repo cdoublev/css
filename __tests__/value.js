@@ -2886,6 +2886,14 @@ describe('<baseline-position>', () => {
     })
 })
 describe('<basic-shape>', () => {
+    test('invalid', () => {
+        const invalid = [
+            'circle(1px 1px)',
+            'circle(1% 1%)',
+            'circle(closest-side closest-side)',
+        ]
+        invalid.forEach(input => expect(parse('<basic-shape>', input, false)).toBeNull())
+    })
     test('representation', () => {
         const px = length(1, 'px', ['<length-percentage>'])
         const valid = [
