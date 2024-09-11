@@ -90,7 +90,10 @@ const replaced = {
         'transition-property': { value: '[none | <single-transition-property>]#' },
     },
     types: {
-        // Extensions
+        // Extensions (https://github.com/w3c/reffy/issues/1647)
+        '<color-mix()>': 'color-mix([<progress> && <color-interpolation-method>?], <color>, <color>) | color-mix(<color-interpolation-method>, [<color> && <percentage [0,100]>?]#{2})',
+        '<cross-fade()>': 'cross-fade(<progress>, [<image> | <color>], [<image> | <color>]) | cross-fade(<cf-image>#)',
+        '<keyframe-selector>': 'from | to | <percentage [0,100]> | <timeline-range-name> <percentage>',
         '<radial-size>': '<radial-extent>{1,2} | <length-percentage [0,∞]>{1,2}',
         // Missing production rules
         '<absolute-size>': 'xx-small | x-small | small | medium | large | x-large | xx-large',
