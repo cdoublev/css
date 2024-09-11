@@ -1875,14 +1875,16 @@ describe('<calc()>', () => {
             ['<number>', `calc(${[...Array(32)].reduce(n => `calc(${n})`, '1')})`],
             ['<number>', `calc((1) + ${[...Array(30)].reduce(n => `(${n})`, '1')})`],
             ['<number>', `calc(calc(1) + ${[...Array(30)].reduce(n => `calc(${n})`, '1')})`],
-            // Type failure or mismatch
+            // Result type failure or mismatch
             ['<number>', 'calc(1px)'],
             ['<number>', 'calc(1%)'],
             ['<number>', 'calc(1 + 1px)'],
             ['<number>', 'calc(1 - 1px)'],
             ['<number>', 'calc(1 / 1px)'],
-            ['<number>', 'calc(1px / 1px / 1px)'],
+            ['<number>', 'calc(1px * 1px)'],
             ['<number>', 'calc((1% + 1px) / 1px)'],
+            ['<number>', 'calc(1px / 1 * 1px)'],
+            ['<number>', 'calc(1 / 1px / 1px)'],
             ['<length>', 'calc(1)'],
             ['<length>', 'calc(1%)'],
             ['<length>', 'calc(1px + 1)'],
@@ -1890,9 +1892,8 @@ describe('<calc()>', () => {
             ['<length>', 'calc(1 / 1px)'],
             ['<length>', 'calc(1px * 1px)'],
             ['<length>', 'calc(1px / 1px)'],
-            ['<length>', 'calc(1px * 1px / 1)'],
-            ['<length>', 'calc(1px / 1 * 1px)'],
-            ['<length>', 'calc(1 / 1px / 1px)'],
+            ['<length>', 'calc(1px / 1px / 1px)'],
+            ['<length>', 'calc(1px / 1% / 1%)'],
             ['<length>', 'calc(1px + 1s)'],
             ['<length>', 'calc(1px - 1s)'],
             ['<length>', 'calc(1px * 1s)'],
@@ -1909,9 +1910,6 @@ describe('<calc()>', () => {
             ['<percentage>', 'calc(1 / 1%)'],
             ['<percentage>', 'calc(1% * 1%)'],
             ['<percentage>', 'calc(1% / 1%)'],
-            ['<percentage>', 'calc(1% * 1% / 1)'],
-            ['<percentage>', 'calc(1% / 1 * 1%)'],
-            ['<percentage>', 'calc(1 / 1% / 1%)'],
             // <dimension> does not match a type that a math function can resolve to
             ['<dimension>', 'calc(1n)'],
             // 0 is parsed as <number> in calculations
@@ -2646,7 +2644,7 @@ describe('<log()>', () => {
 describe('<exp()>', () => {
     test('invalid', () => {
         const invalid = [
-            // Calculation types mismatch
+            // Calculation type mismatch
             ['<number> | <length>', 'exp(1px)'],
             ['<number> | <percentage>', 'exp(1%)'],
             // Result type mismatch
@@ -2661,6 +2659,10 @@ describe('<exp()>', () => {
     })
 })
 describe('<abs()>', () => {
+    test('invalid', () => {
+        expect(parse('<number> | <percentage>', 'abs((1% + 1px) / 1px)', false)).toBeNull()
+        expect(parse('<length>', 'abs(1% + 1px)', false)).toBeNull()
+    })
     test('valid', () => {
         const valid = [
             ['<number>', 'abs(-1)', 'calc(1)'],
@@ -2674,8 +2676,8 @@ describe('<abs()>', () => {
 })
 describe('<sign()>', () => {
     test('invalid', () => {
-        expect(parse('<number> | <percentage>', 'abs((1% + 1px) / 1px)', false)).toBeNull()
-        expect(parse('<length>', 'abs(1% / 1px)', false)).toBeNull()
+        expect(parse('<number> | <percentage>', 'sign((1% + 1px) / 1px)', false)).toBeNull()
+        expect(parse('<length>', 'calc(1px * sign(1% + 1px))', false)).toBeNull()
     })
     test('valid', () => {
         const valid = [
@@ -2692,25 +2694,31 @@ describe('<calc-mix()>', () => {
     test('invalid', () => {
         const invalid = [
             // Invalid <progress> type
-            ['<length>', 'calc-mix(calc(1px), 1px, 1px)'],
+            ['<number> | <length>', 'calc-mix(1px, 1, 1)'],
+            ['<length-percentage>', 'calc-mix(calc(1% / 1px), 1px, 1px)'],
+            ['<length-percentage>', 'calc-mix(calc((1% + 1px) / 1px), 1px, 1px)'],
+            ['<length-percentage>', 'calc-mix(progress(1% from 1px to 1px), 1px, 1px)'],
             // Inconsistent calculation types
             ['<number> | <length>', 'calc-mix(0, 1, 1px)'],
             ['<number> | <percentage>', 'calc-mix(0, 1, 1%)'],
             // Result type mismatch
             ['<number> | <percentage>', 'calc-mix(0, 1, (1% + 1px) / 1px)'],
-            ['<number> | <percentage>', 'calc-mix(calc((1% + 1px) / 1px), 1, 1)'],
-            ['<length>', 'calc-mix(0, 1px, 1%)'],
-            ['<length>', 'calc-mix(progress(1% from 1px to 1px), 1px, 1px)'],
+            ['<length>', 'calc-mix(0, 1px, 1% + 1px)'],
         ]
         invalid.forEach(([definition, input]) => expect(parse(definition, input, false)).toBeNull())
     })
     test('valid', () => {
         const valid = [
-            ['<number>', 'calc-mix(0%, 1 * 1, 1% / 1%)', 'calc-mix(0%, 1, 1)'],
+            ['<length>', 'calc-mix(--timeline, 1px * 1, 1px)', 'calc-mix(--timeline, 1px, 1px)'],
+            ['<length>', 'calc-mix(0, 1px, 1px)'],
+            ['<length>', 'calc-mix(0%, 1px, 1px)'],
+            ['<length>', 'calc-mix(calc(0%), 1px, 1px)'],
+            ['<length>', 'calc-mix(progress(1% from 1% to 1%), 1px, 1px)'],
             ['<length-percentage>', 'calc-mix(0, 1px, 1%)'],
-            ['<length-percentage>', 'calc(1px * calc-mix(0, 1% / 1px, 1))'],
-            ['<length-percentage>', 'calc(1px * calc-mix(calc(1% / 1px), 1, 1))'],
-            ['<length-percentage>', 'calc-mix(progress(1% from 1px to 1px), 1px, 1px)'],
+            ['<length-percentage>', 'calc-mix(0%, 1px, 1%)'],
+            ['<length-percentage>', 'calc-mix(calc(0%), 1px, 1%)'],
+            ['<length-percentage>', 'calc-mix(progress(1% from 1% to 1%), 1px, 1%)'],
+            ['<length-percentage>', 'calc(1px * calc-mix(calc(0%), 1% / 1px, (1% + 1px) / 1px))'],
         ]
         valid.forEach(([definition, input, expected = input]) => expect(parse(definition, input)).toBe(expected))
     })

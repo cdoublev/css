@@ -174,7 +174,7 @@ const replaced = {
         '<media-in-parens>': '(<media-condition>) | (<media-feature>) | <general-enclosed>',
         // TODO: fix `value` of `<mix()>`
         '<mix()>': 'mix(<progress> , <whole-value> , <whole-value>) | mix(<progress> && of <keyframes-name>)',
-        // TODO: fix `value` of `<progress>`
+        // https://github.com/w3c/csswg-drafts/pull/10781
         '<progress>': "[<percentage> | <number> | <'animation-timeline'>] && [by <easing-function>]?",
         // TODO: fix `value` of `<pseudo-page>`
         '<pseudo-page>': ': [left | right | first | blank | nth(<an+b> [of <custom-ident>]?)]',
