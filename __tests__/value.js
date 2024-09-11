@@ -3875,12 +3875,22 @@ describe('<position>', () => {
 })
 describe('<progress>', () => {
     test('invalid', () => {
-        expect(parse('<progress>', 'auto', false)).toBeNull()
-        expect(parse('<progress>', 'none', false)).toBeNull()
+        const invalid = [
+            // Invalid <calc-sum>
+            '(1% + 1px) / 1px',
+            'progress(1% from 1px to 1px)',
+            // Invalid <'animation-timeline'>
+            'auto',
+            'none',
+        ]
+        invalid.forEach(input => expect(parse('<progress>', input, false)).toBeNull())
     })
     test('representation', () => {
         const calculation = percentage(50, ['<calc-value>'])
         expect(parse('<progress>', '50%', false)).toMatchObject(list([calculation, omitted], ' ', ['<progress>']))
+    })
+    test('valid', () => {
+        expect(parse('<progress>', '100% / 2')).toBe('50%')
     })
 })
 describe('<pt-name-and-class-selector>', () => {
