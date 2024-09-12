@@ -50,6 +50,8 @@ const initial = {
         '<whole-value>': '<declaration-value>?',
         // https://github.com/w3c/csswg-drafts/issues/8835
         '<urange>': "u '+' <ident-token> '?'* | u <dimension-token> '?'* | u <number-token> '?'* | u <number-token> <dimension-token> | u <number-token> <number-token> | u '+' '?'+",
+        // TODO: fix parsing/serializing `<radial-gradient-syntax>`, `<radial-size>`
+        '<radial-radius>': 'closest-side | farthest-side | <length-percentage [0,∞]>',
     },
 }
 const replaced = {
@@ -94,7 +96,6 @@ const replaced = {
         '<color-mix()>': 'color-mix([<progress> && <color-interpolation-method>?], <color>, <color>) | color-mix(<color-interpolation-method>, [<color> && <percentage [0,100]>?]#{2})',
         '<cross-fade()>': 'cross-fade(<progress>, [<image> | <color>], [<image> | <color>]) | cross-fade(<cf-image>#)',
         '<keyframe-selector>': 'from | to | <percentage [0,100]> | <timeline-range-name> <percentage>',
-        '<radial-size>': '<radial-extent>{1,2} | <length-percentage [0,∞]>{1,2}',
         // Missing production rules
         '<absolute-size>': 'xx-small | x-small | small | medium | large | x-large | xx-large',
         '<age>': 'child | young | old',
@@ -159,12 +160,13 @@ const replaced = {
         '<arc-command>': 'arc [<by-to> <coordinate-pair> && of <length-percentage>{1,2} && <arc-sweep>? && <arc-size>? && [rotate <angle>]?]',
         '<curve-command>': 'curve [<by-to> <coordinate-pair> && [using <coordinate-pair>{1,2}]?]',
         '<smooth-command>': 'smooth [<by-to> <coordinate-pair> && [using <coordinate-pair>]?]',
-        // https://github.com/w3c/csswg-drafts/issues/8346, https://github.com/w3c/csswg-drafts/pull/8367#issuecomment-1408147460
+        // https://github.com/w3c/csswg-drafts/issues/8346, https://github.com/w3c/csswg-drafts/pull/8367#issuecomment-1408147460, https://github.com/w3c/csswg-drafts/issues/9729, https://github.com/w3c/csswg-drafts/issues/10833
         '<angular-color-hint>': '<angle-percentage> | <zero>',
         '<color-stop-angle>': '[<angle-percentage> | <zero>]{1,2}',
         '<conic-gradient-syntax>': '[[[from [<angle> | <zero>]]? [at <position>]?]! || <color-interpolation-method>]? , <angular-color-stop-list>',
         '<linear-gradient-syntax>': '[[<angle> | <zero> | to <side-or-corner>] || <color-interpolation-method>]? , <color-stop-list>',
         '<radial-gradient-syntax>': '[[[<radial-shape> || <radial-size>]? [at <position>]?]! || <color-interpolation-method>]? , <color-stop-list>',
+        '<radial-size>': 'closest-corner | farthest-corner | <radial-radius>{1,2}',
         // TODO: fix `value` of `@container`, `<container-condition>`
         '<container-condition>': '[<container-name>]? <container-query>#',
         // https://github.com/w3c/csswg-drafts/issues/7016
@@ -556,6 +558,10 @@ const excluded = {
             // Prefer CSS Generated Content
             '<content()>',
             '<content-list>',
+        ],
+        'css-images': [
+            // TODO: fix parsing/serializing `<radial-gradient-syntax>`, `<radial-size>`
+            '<radial-extent>',
         ],
         'css-images-4': [
             // https://github.com/w3c/csswg-drafts/issues/1981

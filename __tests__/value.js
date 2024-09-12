@@ -2716,7 +2716,7 @@ describe('<calc-mix()>', () => {
             ['<length-percentage>', 'calc-mix(0, 1px, 1%)'],
             ['<length-percentage>', 'calc-mix(0%, 1px, 1%)'],
             ['<length-percentage>', 'calc-mix(progress(1% from 1% to 1%), 1px, 1%)'],
-            ['<length-percentage>', 'calc(1px * calc-mix(0%, 1% / 1px, (1% + 1px) / 1px))', 'calc(1px * calc-mix(0%, 1% / 1px, (1% + 1px) / 1px))'],
+            ['<length-percentage>', 'calc(1px * calc-mix(0%, 1% / 1px, (1% + 1px) / 1px))'],
         ]
         valid.forEach(([definition, input, expected = input]) => expect(parse(definition, input)).toBe(expected))
     })
@@ -2943,23 +2943,25 @@ describe('<basic-shape>', () => {
     })
     test('valid', () => {
         const valid = [
-            ['circle()', 'circle()'],
+            ['circle(closest-side)', 'circle()'],
             ['circle(at center)', 'circle(at center center)'],
             ['circle(at center center)'],
-            ['ellipse()', 'ellipse()'],
+            ['ellipse(1px 1px)', 'ellipse(1px)'],
+            ['ellipse(closest-side closest-side)', 'ellipse()'],
+            ['ellipse(farthest-side farthest-side)', 'ellipse(farthest-side)'],
             ['ellipse(at center)', 'ellipse(at center center)'],
             ['ellipse(at center center)'],
             ['inset(1px 1px 1px 1px round 1px / 1px)', 'inset(1px round 1px)'],
             ['inset(1px round 0px / 0px)', 'inset(1px)'],
-            ['inset(1px round 0in)', 'inset(1px round 0in)'],
+            ['inset(1px round 0in)'],
             ['path(nonzero, "M0 0")', 'path("M0 0")'],
             ['polygon(nonzero, 1px 1px)', 'polygon(1px 1px)'],
             ['rect(1px 1px 1px 1px round 1px / 1px)', 'rect(1px 1px 1px 1px round 1px)'],
             ['rect(1px 1px 1px 1px round 0px / 0px)', 'rect(1px 1px 1px 1px)'],
-            ['rect(1px 1px 1px 1px round 0in)', 'rect(1px 1px 1px 1px round 0in)'],
+            ['rect(1px 1px 1px 1px round 0in)'],
             ['xywh(1px 1px 1px 1px round 1px / 1px)', 'xywh(1px 1px 1px 1px round 1px)'],
             ['xywh(1px 1px 1px 1px round 0px / 0px)', 'xywh(1px 1px 1px 1px)'],
-            ['xywh(1px 1px 1px 1px round 0in)', 'xywh(1px 1px 1px 1px round 0in)'],
+            ['xywh(1px 1px 1px 1px round 0in)'],
         ]
         valid.forEach(([input, expected = input]) => expect(parse('<basic-shape>', input)).toBe(expected))
     })
@@ -3489,7 +3491,7 @@ describe('<font-format>', () => {
 describe('<gradient>', () => {
     test('invalid', () => {
         expect(parse('<gradient>', 'radial-gradient(circle 1px 1px, red)', false)).toBeNull()
-        expect(parse('<gradient>', 'radial-gradient(circle closest-corner closest-corner, red)', false)).toBeNull()
+        expect(parse('<gradient>', 'radial-gradient(circle closest-side closest-side, red)', false)).toBeNull()
     })
     test('representation', () => {
 
@@ -3543,9 +3545,9 @@ describe('<gradient>', () => {
     })
     test('valid', () => {
         const valid = [
-            ['conic-gradient(red)', 'conic-gradient(red)'],
-            ['linear-gradient(red)', 'linear-gradient(red)'],
-            ['radial-gradient(red)', 'radial-gradient(red)'],
+            ['conic-gradient(red)'],
+            ['linear-gradient(red)'],
+            ['radial-gradient(red)'],
             // Repeating gradients
             ['repeating-conic-gradient(red)'],
             ['repeating-linear-gradient(red)'],
@@ -3563,19 +3565,12 @@ describe('<gradient>', () => {
             ['conic-gradient(in oklab, red)', 'conic-gradient(red)'],
             ['linear-gradient(to bottom, red)', 'linear-gradient(red)'],
             ['linear-gradient(in oklab, red)', 'linear-gradient(red)'],
-            ['radial-gradient(closest-corner farthest-corner, red)', 'radial-gradient(closest-corner, red)'],
-            ['radial-gradient(farthest-corner farthest-corner, red)', 'radial-gradient(red)'],
-            ['radial-gradient(farthest-corner closest-corner, red)'],
-            ['radial-gradient(1px, red)'],
-            ['radial-gradient(circle, red)'],
-            ['radial-gradient(circle 1px, red)', 'radial-gradient(1px, red)'],
-            ['radial-gradient(circle closest-corner, red)'],
             ['radial-gradient(circle farthest-corner, red)', 'radial-gradient(circle, red)'],
-            ['radial-gradient(ellipse, red)', 'radial-gradient(red)'],
-            ['radial-gradient(ellipse 1px, red)', 'radial-gradient(1px farthest-corner, red)'],
-            ['radial-gradient(ellipse 1px 1px, red)', 'radial-gradient(1px 1px, red)'],
-            ['radial-gradient(ellipse closest-corner closest-corner, red)', 'radial-gradient(closest-corner closest-corner, red)'],
-            ['radial-gradient(ellipse farthest-corner farthest-corner, red)', 'radial-gradient(red)'],
+            ['radial-gradient(circle 1px, red)', 'radial-gradient(1px, red)'],
+            ['radial-gradient(circle farthest-side, red)'],
+            ['radial-gradient(ellipse farthest-corner, red)', 'radial-gradient(red)'],
+            ['radial-gradient(ellipse 1px 1px, red)', 'radial-gradient(1px, red)'],
+            ['radial-gradient(ellipse farthest-side farthest-side, red)', 'radial-gradient(farthest-side, red)'],
             ['radial-gradient(at center, red)', 'radial-gradient(at center center, red)'],
             ['radial-gradient(at center center, red)'],
             ['radial-gradient(in oklab, red)', 'radial-gradient(red)'],
