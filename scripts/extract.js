@@ -139,6 +139,7 @@ const replaced = {
         '<resolution>': '<dimension>',
         '<scope-end>': '<forgiving-selector-list>',
         '<scope-start>': '<forgiving-selector-list>',
+        '<scroll-state-feature>': '<media-feature>',
         '<semitones>': '<dimension>',
         '<sibling-count()>': 'sibling-count()',
         '<sibling-index()>': 'sibling-index()',
