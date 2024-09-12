@@ -153,7 +153,7 @@ const replaced = {
         '<timeline-range-name>': 'contain | cover | entry | entry-crossing | exit | exit-crossing',
         '<transform-function>': '<matrix()> | <matrix3d()> | <perspective()> | <translate()> | <translateX()> | <translateY()> | <translateZ()> | <translate3d()> | <scale()> | <scaleX()> | <scaleY()> | <scaleZ()> | <scale3d()> | <rotate()> | <rotateX()> | <rotateY()> | <rotateZ()> | <rotate3d()> | <skew()> | <skewX()> | <skewY()>',
         '<uri>': '<url>',
-        '<url-modifier>': '<custom-ident> | <function>',
+        '<url-modifier>': '<request-url-modifier> | <ident> | <function>',
         '<url-set>': '<image-set()>',
         '<zero>': '<number-token>',
         // https://github.com/w3c/csswg-drafts/issues/10697
