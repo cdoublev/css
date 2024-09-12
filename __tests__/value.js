@@ -2926,7 +2926,7 @@ describe('<basic-shape>', () => {
             ['polygon(1px 1px)', {
                 name: 'polygon',
                 types: ['<function>', '<polygon()>', '<basic-shape>'],
-                value: list([omitted, omitted, list([list([px, px])], ',')]),
+                value: list([omitted, omitted, omitted, list([list([px, px])], ',')]),
             }],
             ['rect(1px 1px 1px 1px)', {
                 name: 'rect',

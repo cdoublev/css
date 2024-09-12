@@ -198,7 +198,6 @@ const excluded = {
         'css-easing': [
             // Defined inline
             'cubic-bezier()',
-            'linear()',
         ],
         'css-grid': [
             // Defined inline
@@ -483,6 +482,7 @@ const excluded = {
         'css-color-6',
         'css-color-hdr',
         'css-conditional-values',
+        'css-grid-3',
         'webvtt',
         // Prefer SVG 2
         'fill-stroke',
