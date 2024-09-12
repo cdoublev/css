@@ -1701,10 +1701,6 @@ describe('CSSContainerRule', () => {
 
         // CSSConditionRule
         expect(rule.conditionText).toBe('layout (1px < width)')
-
-        // CSSContainerRule
-        expect(rule.containerName).toBe('layout')
-        expect(rule.containerQuery).toBe('(1px < width)')
     })
 })
 describe('CSSCounterStyleRule', () => {

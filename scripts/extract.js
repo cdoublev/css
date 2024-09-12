@@ -167,8 +167,6 @@ const replaced = {
         '<linear-gradient-syntax>': '[[<angle> | <zero> | to <side-or-corner>] || <color-interpolation-method>]? , <color-stop-list>',
         '<radial-gradient-syntax>': '[[[<radial-shape> || <radial-size>]? [at <position>]?]! || <color-interpolation-method>]? , <color-stop-list>',
         '<radial-size>': 'closest-corner | farthest-corner | <radial-radius>{1,2}',
-        // TODO: fix `value` of `@container`, `<container-condition>`
-        '<container-condition>': '[<container-name>]? <container-query>#',
         // https://github.com/w3c/csswg-drafts/issues/7016
         '<general-enclosed>': '<function> | (<any-value>?)',
         '<pseudo-class-selector>': ': <ident> | : <function>',
