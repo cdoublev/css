@@ -3574,6 +3574,10 @@ describe('<gradient>', () => {
             ['radial-gradient(at center, red)', 'radial-gradient(at center center, red)'],
             ['radial-gradient(at center center, red)'],
             ['radial-gradient(in oklab, red)', 'radial-gradient(red)'],
+            // Implicit color stops
+            ['conic-gradient(red 0deg 180deg)', 'conic-gradient(red 0deg, red 180deg)'],
+            ['linear-gradient(red 0% 50%)', 'linear-gradient(red 0%, red 50%)'],
+            ['radial-gradient(red 0% 50%)', 'radial-gradient(red 0%, red 50%)'],
         ]
         valid.forEach(([input, expected = input]) => expect(parse('<gradient>', input)).toBe(expected))
     })
@@ -3731,6 +3735,18 @@ describe('<line-names>', () => {
             types: ['<simple-block>', '<line-names>'],
             value: list([customIdent('name')]),
         })
+    })
+})
+describe('<linear()>', () => {
+    test('representation', () => {
+        expect(parse('<linear()>', 'linear(1)', false)).toMatchObject({
+            name: 'linear',
+            types: ['<function>', '<linear()>'],
+            value: list([list([number(1), list()])], ','),
+        })
+    })
+    test('valid', () => {
+        expect(parse('<linear()>', 'linear(0 0% 50%)')).toBe('linear(0 0%, 0 50%)')
     })
 })
 describe('<media-type>', () => {
