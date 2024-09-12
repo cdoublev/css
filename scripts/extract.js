@@ -151,7 +151,7 @@ const replaced = {
         '<target-name>': '<string>',
         '<time>': '<dimension>',
         '<timeline-range-name>': 'contain | cover | entry | entry-crossing | exit | exit-crossing',
-        '<transform-function>': '<matrix()> | <translate()> | <translateX()> | <translateY()> | <scale()> | <scaleX()> | <scaleY()> | <rotate()> | <skew()> | <skewX()> | <skewY()>',
+        '<transform-function>': '<matrix()> | <matrix3d()> | <perspective()> | <translate()> | <translateX()> | <translateY()> | <translateZ()> | <translate3d()> | <scale()> | <scaleX()> | <scaleY()> | <scaleZ()> | <scale3d()> | <rotate()> | <rotateX()> | <rotateY()> | <rotateZ()> | <rotate3d()> | <skew()> | <skewX()> | <skewY()>',
         '<uri>': '<url>',
         '<url-modifier>': '<custom-ident> | <function>',
         '<url-set>': '<image-set()>',
