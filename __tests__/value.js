@@ -3777,10 +3777,14 @@ describe('<mf-comparison>', () => {
 describe('<mf-boolean>', () => {
     test('invalid', () => {
         expect(parse('<mf-boolean>', 'min-orientation', false, mediaQueryContext)).toBeNull()
+        expect(parse('<mf-boolean>', 'min-width', false, mediaQueryContext)).toBeNull()
     })
     test('representation', () => {
         expect(parse('<mf-boolean>', 'width', false, mediaQueryContext))
             .toMatchObject(ident('width', ['<mf-name>', '<mf-boolean>']))
+    })
+    test('valid', () => {
+        expect(parse('<mf-boolean>', 'orientation', true, mediaQueryContext)).toBe('orientation')
     })
 })
 describe('<mf-name>', () => {
@@ -3804,6 +3808,7 @@ describe('<mf-name>', () => {
 })
 describe('<mf-plain>', () => {
     test('invalid', () => {
+        expect(parse('<mf-plain>', 'min-orientation: landscape', false, mediaQueryContext)).toBeNull()
         expect(parse('<mf-plain>', 'width: 1', false, mediaQueryContext)).toBeNull()
     })
     test('representation', () => {
@@ -3811,6 +3816,9 @@ describe('<mf-plain>', () => {
         const value = dimension(1, 'px', ['<mf-value>'])
         expect(parse('<mf-plain>', 'width: 1px', false, mediaQueryContext))
             .toMatchObject(list([name, delimiter(':'), value], ' ', ['<mf-plain>']))
+    })
+    test('valid', () => {
+        expect(parse('<mf-plain>', 'min-width: 1px', true, mediaQueryContext)).toBe('min-width: 1px')
     })
 })
 describe('<mf-range>', () => {
