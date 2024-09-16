@@ -4054,21 +4054,26 @@ describe('<snap-block()>, <snap-inline()>', () => {
         expect(parse('<snap-block()>', 'snap-block(1px, near)')).toBe('snap-block(1px)')
     })
 })
-describe('<steps()>', () => {
+describe('<step-easing-function>', () => {
     test('invalid', () => {
-        expect(parse('<steps()>', 'steps(0)', false)).toBeNull()
-        expect(parse('<steps()>', 'steps(1, jump-none)', false)).toBeNull()
+        expect(parse('<step-easing-function>', 'steps(0)', false)).toBeNull()
+        expect(parse('<step-easing-function>', 'steps(1, jump-none)', false)).toBeNull()
     })
     test('representation', () => {
-        expect(parse('<steps()>', 'steps(1)', false)).toMatchObject({
+        expect(parse('<step-easing-function>', 'steps(1)', false)).toMatchObject({
             name: 'steps',
-            types: ['<function>', '<steps()>'],
+            types: ['<function>', '<steps()>', '<step-easing-function>'],
             value: list([numberToken(1, ['<integer>']), omitted, omitted]),
         })
     })
     test('valid', () => {
-        expect(parse('<steps()>', 'steps(1, end)')).toBe('steps(1)')
-        expect(parse('<steps()>', 'steps(1, jump-end)')).toBe('steps(1)')
+        const valid = [
+            ['step-start', 'steps(1, start)'],
+            ['step-end', 'steps(1)'],
+            ['steps(1, end)', 'steps(1)'],
+            ['steps(1, jump-end)', 'steps(1)'],
+        ]
+        valid.forEach(([input, expected]) => expect(parse('<step-easing-function>', input)).toBe(expected))
     })
 })
 describe('<string()>', () => {
