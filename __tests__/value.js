@@ -3844,6 +3844,12 @@ describe('<mf-range>', () => {
         expect(parse('<mf-range>', 'width = 1px', false, mediaQueryContext))
             .toMatchObject(list([name, comparator, value], ' ', ['<mf-range>']))
     })
+    test('valid', () => {
+        expect(parse('<mf-range>', 'width < 1px', true, mediaQueryContext))
+            .toBe('width < 1px')
+        expect(parse('<mf-range>', '0 / 0 < aspect-ratio < 1 / 1', true, mediaQueryContext))
+            .toBe('0 / 0 < aspect-ratio < 1 / 1')
+    })
 })
 describe('<opentype-tag>', () => {
     test('invalid', () => {
