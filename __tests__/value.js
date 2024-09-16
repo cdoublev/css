@@ -1763,103 +1763,6 @@ describe('<ndashdigit-dimension>', () => {
         valid.forEach(([input, expected]) => expect(parse('<ndashdigit-dimension>', input, false)).toMatchObject(expected))
     })
 })
-describe('<urange>', () => {
-    test('invalid', () => {
-        const invalid = [
-            // Invalid whitespaces
-            'U +0-1',
-            'U+ 0-1',
-            'U+0 -1',
-            // `U+` must appear first
-            'U-0',
-            'U0',
-            // Start/end code points must have 0 < hexadecimal digits < 7
-            'U+-1',
-            'U+0-',
-            'U+0000001',
-            'U+0-0000001',
-            'U+000000a',
-            'U+0-000000a',
-            'U+000000?',
-            'U+0-000000?',
-            // `?` must appear last
-            'U+?0',
-            'U+0?-1',
-            'U+0-?0',
-            // Start/end code points must be separated with an hyphen
-            'U+0+1',
-            // Start/end code points must be hexadecimal digits
-            'U+0g',
-            'U+0-0g',
-            // Start/end code points must be lower than 10FFFF
-            'U+110000',
-            'U+11????',
-            // Start code point must be lower or equal than end code point
-            'U+1-0',
-        ]
-        invalid.forEach(input => expect(parse('<urange>', input, false)).toBeNull())
-    })
-    test('representation', () => {
-        expect(parse('<urange>', 'U+0-f', false)).toMatchObject({ from: 0, to: 15, types: ['<urange>'] })
-    })
-    test('valid', () => {
-        const valid = [
-            ['U+0', 'U+0'],
-            ['u+0a-1a', 'U+A-1A'],
-            ['U+0000-00001', 'U+0-1'],
-            ['U+????', 'U+0-FFFF'],
-        ]
-        valid.forEach(([input, expected]) => expect(parse('<urange>', input)).toBe(expected))
-    })
-})
-describe('<an+b>', () => {
-    test('invalid', () => {
-        const invalid = [
-            '+ n-1',
-            '+ n- 1',
-            '+ n -1',
-            '+ n - 1',
-        ]
-        invalid.forEach(input => expect(parse('<an+b>', input, false)).toBeNull())
-    })
-    test('representation', () => {
-        expect(parse('<an+b>', 'even', false)).toMatchObject({ types: ['<an+b>'], value: { a: 2, b: 0 } })
-        expect(parse('<an+b>', '1n+1', false)).toMatchObject({ types: ['<an+b>'], value: { a: 1, b: 1 } })
-    })
-    test('valid', () => {
-        const valid = [
-            ['even', '2n'],
-            ['odd', '2n+1'],
-            ['1'],
-            ['1n', 'n'],
-            ['n'],
-            ['+n', 'n'],
-            ['-n'],
-            ['1n-1', 'n-1'],
-            ['n-1'],
-            ['+n-1', 'n-1'],
-            ['-n-1'],
-            ['1n -1', 'n-1'],
-            ['n -1', 'n-1'],
-            ['+n -1', 'n-1'],
-            ['-n -1', '-n-1'],
-            ['1n -1', 'n-1'],
-            ['n- 1', 'n-1'],
-            ['+n- 1', 'n-1'],
-            ['-n- 1', '-n-1'],
-            ['1n - 1', 'n-1'],
-            ['1n - 1', 'n-1'],
-            ['1n + 1', 'n+1'],
-            ['n - 1', 'n-1'],
-            ['n + 1', 'n+1'],
-            ['+n - 1', 'n-1'],
-            ['+n + 1', 'n+1'],
-            ['-n - 1', '-n-1'],
-            ['-n + 1', '-n+1'],
-        ]
-        valid.forEach(([input, expected = input]) => expect(parse('<an+b>', input)).toBe(expected))
-    })
-})
 
 describe('<calc()>', () => {
     test('invalid', () => {
@@ -2829,6 +2732,54 @@ describe('<alpha-value>', () => {
             ['2'],
         ]
         valid.forEach(([input, expected = input]) => expect(parse('<alpha-value>', input)).toBe(expected))
+    })
+})
+describe('<an+b>', () => {
+    test('invalid', () => {
+        const invalid = [
+            '+ n-1',
+            '+ n- 1',
+            '+ n -1',
+            '+ n - 1',
+        ]
+        invalid.forEach(input => expect(parse('<an+b>', input, false)).toBeNull())
+    })
+    test('representation', () => {
+        expect(parse('<an+b>', 'even', false)).toMatchObject({ types: ['<an+b>'], value: { a: 2, b: 0 } })
+        expect(parse('<an+b>', '1n+1', false)).toMatchObject({ types: ['<an+b>'], value: { a: 1, b: 1 } })
+    })
+    test('valid', () => {
+        const valid = [
+            ['even', '2n'],
+            ['odd', '2n+1'],
+            ['1'],
+            ['1n', 'n'],
+            ['n'],
+            ['+n', 'n'],
+            ['-n'],
+            ['1n-1', 'n-1'],
+            ['n-1'],
+            ['+n-1', 'n-1'],
+            ['-n-1'],
+            ['1n -1', 'n-1'],
+            ['n -1', 'n-1'],
+            ['+n -1', 'n-1'],
+            ['-n -1', '-n-1'],
+            ['1n -1', 'n-1'],
+            ['n- 1', 'n-1'],
+            ['+n- 1', 'n-1'],
+            ['-n- 1', '-n-1'],
+            ['1n - 1', 'n-1'],
+            ['1n - 1', 'n-1'],
+            ['1n + 1', 'n+1'],
+            ['n - 1', 'n-1'],
+            ['n + 1', 'n+1'],
+            ['+n - 1', 'n-1'],
+            ['+n + 1', 'n+1'],
+            ['-n - 1', '-n-1'],
+            ['-n + 1', '-n+1'],
+        ]
+        valid.forEach(([input, expected = input]) => expect(parse('<an+b>', input)).toBe(expected))
     })
 })
 describe('<animateable-feature>', () => {
@@ -4194,6 +4145,55 @@ describe('<translate()>', () => {
     })
     test('valid', () => {
         expect(parse('<translate()>', 'translate(1px, 0px)')).toBe('translate(1px)')
+    })
+})
+describe('<urange>', () => {
+    test('invalid', () => {
+        const invalid = [
+            // Invalid whitespaces
+            'U +0-1',
+            'U+ 0-1',
+            'U+0 -1',
+            // `U+` must appear first
+            'U-0',
+            'U0',
+            // Start/end code points must have 0 < hexadecimal digits < 7
+            'U+-1',
+            'U+0-',
+            'U+0000001',
+            'U+0-0000001',
+            'U+000000a',
+            'U+0-000000a',
+            'U+000000?',
+            'U+0-000000?',
+            // `?` must appear last
+            'U+?0',
+            'U+0?-1',
+            'U+0-?0',
+            // Start/end code points must be separated with an hyphen
+            'U+0+1',
+            // Start/end code points must be hexadecimal digits
+            'U+0g',
+            'U+0-0g',
+            // Start/end code points must be lower than 10FFFF
+            'U+110000',
+            'U+11????',
+            // Start code point must be lower or equal than end code point
+            'U+1-0',
+        ]
+        invalid.forEach(input => expect(parse('<urange>', input, false)).toBeNull())
+    })
+    test('representation', () => {
+        expect(parse('<urange>', 'U+0-f', false)).toMatchObject({ from: 0, to: 15, types: ['<urange>'] })
+    })
+    test('valid', () => {
+        const valid = [
+            ['U+0', 'U+0'],
+            ['u+0a-1a', 'U+A-1A'],
+            ['U+0000-00001', 'U+0-1'],
+            ['U+????', 'U+0-FFFF'],
+        ]
+        valid.forEach(([input, expected]) => expect(parse('<urange>', input)).toBe(expected))
     })
 })
 describe('<url-set>', () => {
