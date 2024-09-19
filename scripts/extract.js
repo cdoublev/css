@@ -178,14 +178,12 @@ const replaced = {
         '<media-in-parens>': '(<media-condition>) | (<media-feature>) | <general-enclosed>',
         // TODO: fix `value` of `<mix()>`
         '<mix()>': 'mix(<progress> , <whole-value> , <whole-value>) | mix(<progress> && of <keyframes-name>)',
-        // https://github.com/w3c/csswg-drafts/pull/10781, https://github.com/w3c/csswg-drafts/issues/10797
+        // https://github.com/w3c/csswg-drafts/issues/10797
         '<progress>': "[<calc-sum> | <'animation-timeline'>] && [by <easing-function>]?",
         // TODO: fix `value` of `<pseudo-page>`
         '<pseudo-page>': ': [left | right | first | blank | nth(<an+b> [of <custom-ident>]?)]',
         // https://github.com/w3c/csswg-drafts/issues/7897
         '<single-transition>': '<time> || <easing-function> || <time> || <transition-behavior-value> || [none | <single-transition-property>]',
-        // TODO: fix `value` of `<step-easing-function>`
-        '<step-easing-function>': 'step-start | step-end | <steps()>',
     },
 }
 const excluded = {
@@ -196,10 +194,6 @@ const excluded = {
         ],
     },
     functions: {
-        'css-easing': [
-            // Defined inline
-            'cubic-bezier()',
-        ],
         'css-grid': [
             // Defined inline
             'fit-content()',
@@ -383,9 +377,7 @@ const excluded = {
             'box-shadow',
         ],
         'css-backgrounds-4': [
-            // https://github.com/w3c/csswg-drafts/issues/9253
-            'background-position',
-            // https://github.com/w3c/csswg-drafts/pull/9084
+            // Not ready
             'background-tbd',
         ],
         'css-content': [

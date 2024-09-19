@@ -3836,7 +3836,7 @@ describe('<page-selector-list>', () => {
 })
 describe('<position>', () => {
     test('representation', () => {
-        expect(parse('<position>', 'left', false)).toMatchObject(keyword('left', ['<position>']))
+        expect(parse('<position>', 'left', false)).toMatchObject(keyword('left', ['<position-one>', '<position>']))
     })
     test('valid', () => {
         const valid = [
