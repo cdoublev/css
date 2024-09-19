@@ -48,7 +48,7 @@ function parseDefinitionDeep(parent, { name, type, value }, context) {
                 || arbitrary[name]
                 || forgiving[name]
                 || nonTerminal[name]
-                || properties[name]
+                || properties[name.slice(2, -2)]
                 || blocks.contents.includes(name)
             ) {
                 return
