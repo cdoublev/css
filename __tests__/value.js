@@ -3843,6 +3843,10 @@ describe('<position>', () => {
             ['center', 'center center'],
             ['left', 'left center'],
             ['top', 'center top'],
+            ['x-start', 'x-start center'],
+            ['y-start', 'center y-start'],
+            ['block-start', 'block-start center'],
+            ['inline-start', 'center inline-start'],
             ['50%', '50% center'],
             ['0px', '0px center'],
         ]
