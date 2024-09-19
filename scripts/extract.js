@@ -541,10 +541,6 @@ const excluded = {
             '<right>',
             '<top>',
         ],
-        'css-backgrounds-4': [
-            // https://github.com/w3c/csswg-drafts/issues/116
-            '<repeat-style>',
-        ],
         'css-gcpm': [
             // Prefer CSS Generated Content
             '<content()>',
