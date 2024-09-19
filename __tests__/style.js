@@ -1398,7 +1398,7 @@ describe('all', () => {
 
         // Not all equal longhand values
         const [head, ...tail] = longhands
-        const excluded = ['all', 'border', 'text-wrap']
+        const excluded = ['all', 'background', 'border', 'text-wrap']
         const initial = tail.reduce(
             (properties, property) => {
                 for (const [shorthand, longhands] of shorthands) {
@@ -1653,16 +1653,59 @@ describe('background', () => {
         // Pending-substitution value
         longhands.forEach(longhand => style[longhand] = 'var(--custom)')
         expect(style.background).toBe('')
-        expect(style.cssText).toBe('background-position: var(--custom); background-size: var(--custom); background-repeat: var(--custom); background-attachment: var(--custom); background-origin: var(--custom); background-clip: var(--custom); background-color: var(--custom); background-blend-mode: var(--custom); background-image: var(--custom);')
+        expect(style.cssText).toBe('background-position: var(--custom); background-size: var(--custom); background-repeat-x: var(--custom); background-repeat-y: var(--custom); background-attachment: var(--custom); background-origin: var(--custom); background-clip: var(--custom); background-color: var(--custom); background-blend-mode: var(--custom); background-image: var(--custom);')
         style.background = 'var(--custom)'
         style.backgroundImage = 'var(--custom)'
         expect(style.background).toBe('')
-        expect(style.cssText).toBe('background-position: ; background-size: ; background-repeat: ; background-attachment: ; background-origin: ; background-clip: ; background-color: ; background-blend-mode: ; background-image: var(--custom);')
+        expect(style.cssText).toBe('background-position: ; background-size: ; background-repeat-x: ; background-repeat-y: ; background-attachment: ; background-origin: ; background-clip: ; background-color: ; background-blend-mode: ; background-image: var(--custom);')
         longhands.forEach(longhand => style[longhand] = 'first-valid(initial)')
         expect(style.background).toBe('')
-        expect(style.cssText).toBe('background-position: first-valid(initial); background-size: first-valid(initial); background-repeat: first-valid(initial); background-attachment: first-valid(initial); background-origin: first-valid(initial); background-clip: first-valid(initial); background-color: first-valid(initial); background-blend-mode: first-valid(initial); background-image: first-valid(initial);')
+        expect(style.cssText).toBe('background-position: first-valid(initial); background-size: first-valid(initial); background-repeat-x: first-valid(initial); background-repeat-y: first-valid(initial); background-attachment: first-valid(initial); background-origin: first-valid(initial); background-clip: first-valid(initial); background-color: first-valid(initial); background-blend-mode: first-valid(initial); background-image: first-valid(initial);')
         style.background = 'first-valid(initial)'
         style.backgroundImage = 'first-valid(initial)'
+    })
+})
+describe('background-repeat', () => {
+
+    const longhands = shorthands.get('background-repeat')
+
+    test('shorthand expansion', () => {
+
+        const style = createStyleBlock()
+
+        // Initial longhand values
+        style.backgroundRepeat = 'repeat repeat'
+        expect(style).toHaveLength(longhands.length)
+        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
+        expect(style.backgroundRepeat).toBe('repeat')
+        expect(style.cssText).toBe('background-repeat: repeat;')
+
+        // Missing longhand values
+        style.backgroundRepeat = 'no-repeat'
+        longhands.forEach(longhand => expect(style[longhand]).toBe('no-repeat'))
+        expect(style.backgroundRepeat).toBe('no-repeat')
+        expect(style.cssText).toBe('background-repeat: no-repeat;')
+
+        // repeat-*
+        style.backgroundRepeat = 'repeat-x'
+        expect(style.backgroundRepeatX).toBe('repeat')
+        expect(style.backgroundRepeatY).toBe('no-repeat')
+        expect(style.backgroundRepeat).toBe('repeat-x')
+        expect(style.cssText).toBe('background-repeat: repeat-x;')
+        style.backgroundRepeat = 'repeat-y'
+        expect(style.backgroundRepeatX).toBe('no-repeat')
+        expect(style.backgroundRepeatY).toBe('repeat')
+        expect(style.backgroundRepeat).toBe('repeat-y')
+        expect(style.cssText).toBe('background-repeat: repeat-y;')
+    })
+    test('shorthand reification', () => {
+
+        const style = createStyleBlock()
+
+        // Initial longhand values
+        longhands.forEach(longhand => style[longhand] = initial(longhand))
+        expect(style.backgroundRepeat).toBe('repeat')
+        expect(style.cssText).toBe('background-repeat: repeat;')
     })
 })
 describe('block-step', () => {
