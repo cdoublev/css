@@ -1535,7 +1535,7 @@ describe('background', () => {
     test('shorthand expansion', () => {
 
         const style = createStyleBlock()
-        const background = 'none 0% 0% / auto repeat scroll padding-box border-box transparent'
+        const background = 'none 0% 0% / auto repeat repeat scroll padding-box border-box transparent'
 
         // Initial longhand values
         style.background = background
@@ -1586,28 +1586,36 @@ describe('background', () => {
         expect(style.background).toBe('none, none')
         expect(style.cssText).toBe('background: none, none;')
 
-        // Initial background-position and non-initial background-size
+        // background-position background-size
         style.background = '0% 0% / cover'
         longhands.forEach(longhand =>
             expect(style[longhand]).toBe(longhand === 'background-size' ? 'cover' : initial(longhand)))
         expect(style.background).toBe('0% 0% / cover')
         expect(style.cssText).toBe('background: 0% 0% / cover;')
 
-        // Initial background-origin and non-initial background-clip
+        // background-repeat-x background-repeat-y
+        style.background = 'repeat-x'
+        longhands.forEach(longhand =>
+            expect(style[longhand]).toBe(longhand === 'background-repeat-y' ? 'no-repeat' : initial(longhand)))
+        expect(style.background).toBe('repeat-x')
+        expect(style.cssText).toBe('background: repeat-x;')
+        style.background = 'repeat-y'
+        longhands.forEach(longhand =>
+            expect(style[longhand]).toBe(longhand === 'background-repeat-x' ? 'no-repeat' : initial(longhand)))
+        expect(style.background).toBe('repeat-y')
+        expect(style.cssText).toBe('background: repeat-y;')
+
+        // background-origin background-clip
         style.background = 'padding-box content-box'
         longhands.forEach(longhand =>
             expect(style[longhand]).toBe(longhand === 'background-clip' ? 'content-box' : initial(longhand)))
         expect(style.background).toBe('content-box')
         expect(style.cssText).toBe('background: content-box;')
-
-        // Single <visual-box>
         style.background = 'padding-box'
         longhands.forEach(longhand =>
             expect(style[longhand]).toBe(longhand === 'background-clip' ? 'padding-box' : initial(longhand)))
         expect(style.background).toBe('padding-box')
         expect(style.cssText).toBe('background: padding-box;')
-
-        // Same <visual-box>
         style.background = 'border-box border-box'
         longhands.forEach(longhand =>
             expect(style[longhand]).toBe(longhand === 'background-origin' ? 'border-box' : initial(longhand)))
