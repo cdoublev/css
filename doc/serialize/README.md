@@ -1,25 +1,10 @@
 
 # Serializing CSS
 
-This document focuses on serializing CSS property values, which vary depending on the interface:
+The procedure to [*serialize a CSS rule*](https://drafts.csswg.org/cssom-1/#serialize-a-css-rule) is rather explicit for prelude and descriptor serialization, therefore this document only focuses on property serialization, which depends on the interface:
 
   - `Element.style`, `CSSRule.style`, `CSSRule.cssText`: the declared value
   - `getComputedStyle()` or the `Computed` tab of browser development tools: the resolved value
-
-Rule preludes are serialized as defined in the procedure to [*serialize a CSS rule*](https://drafts.csswg.org/cssom-1/#serialize-a-css-rule) (CSSOM), and the serialization of descriptor values is not specified but is assumed to be the same as for specified property values.
-
-## General principles
-
-General serialization principles are defined in step 2 of the procedure to [*serialize a CSS value*](https://drafts.csswg.org/cssom-1/#serialize-a-css-value), and can be summarized as follows:
-
-  1. round-trip from parsing to serializing must not change the meaning of the value
-  2. find the simplest way to re-specify the input in the most backward compatible way
-
-The first principle means that the representation resulting from parsing an input must be the same as the representation resulting from parsing its serialization. It does not apply to shorthands, which must output an empty string when they cannot represent all their longhands.
-
-The second principle means sorting component values in the canonical order defined by the grammar and removing component values that can be omitted.
-
-## Declared to actual value
 
 `Element.style` and all `CSSRule.style` and `HTMLStyleElement.style` in the document can have different declaration values applying to the same `Element` for the same property. CSS cascade defines how to resolve a *cascaded value* from these declared values, and other values at later processing stages:
 
@@ -32,13 +17,22 @@ The second principle means sorting component values in the canonical order defin
   - [used value](https://drafts.csswg.org/css-cascade-5/#used): *the result of taking the computed value and completing any remaining calculations to make it the absolute theoretical value*
   - [actual value](https://drafts.csswg.org/css-cascade-5/#actual): *the used value after any such [user agent dependent] adjustments have been made*
 
-The declared value may serialize to a slightly different value than the authored value, according to the general serialization principles, and because the lexical parser does not keep minor details like trailing decimal 0, letter case, etc.
+The declared value may serialize to a slightly different value than the authored value, according to the general serialization principles, and because the lexical parser does not keep minor details like trailing decimal 0, character case, etc.
 
-The computed and later value may serialize to the same value than the declared value, or a value closer to its absolute equivalent, computed using data that may not be available when parsing the declared value, like property values of another `Element` or the viewport size.
+The computed and later value may serialize to the same value than the declared value, or a value closer to its absolute equivalent, computed using data that may not be available when parsing the declared value, like property values declared for an ancestor `Element` or the viewport size.
 
-## Model
+## General principles
 
-## Specified value
+General serialization principles are defined in step 2 of the procedure to [*serialize a CSS value*](https://drafts.csswg.org/cssom-1/#serialize-a-css-value), and can be summarized as follows:
+
+  1. round-trip from parsing to serializing must not change the meaning of the value
+  2. find the simplest way to re-specify the input in the most backward compatible way
+
+The first principle means that the representation resulting from parsing an input must be the same as the representation resulting from parsing its serialization. It does not apply to shorthands, which might be serialized with an empty string when they cannot represent all their longhands.
+
+The second principle means sorting component values in the canonical order defined by the grammar and removing component values that can be omitted.
+
+## Implementation
 
 CSS values are currently represented either as a `List` or a plain object, with a `types` property.
 
@@ -51,5 +45,3 @@ CSS values are currently represented either as a `List` or a plain object, with 
   > 5. Join the items of components into a single string, inserting `" "` (U+0020 SPACE) between each pair of items unless the second item is a `","` (U+002C COMMA). Return the result.
 
 `serializeCSSComponentValue()`, the implementation of *serialize a CSS component value*, does not expect a value without `types`.
-
-## Resolved value
