@@ -371,8 +371,8 @@ describe('CSSFontFaceDescriptors', () => {
         expect(style.sizeAdjust).toBe('first-valid(1%)')
         style.fontWeight = 'calc(progress(1 from 0 to 1))'
         style.sizeAdjust = 'calc(1% * progress(1 from 0 to 1))'
-        expect(style.fontWeight).toBe('calc(progress(1 from 0 to 1))')
-        expect(style.sizeAdjust).toBe('calc(1% * progress(1 from 0 to 1))')
+        expect(style.fontWeight).toBe('calc(1)')
+        expect(style.sizeAdjust).toBe('calc(1%)')
 
         // Specific serialization rules
         style.ascentOverride = '1% 1%'
@@ -428,7 +428,7 @@ describe('CSSKeyframeProperties', () => {
         style.fontWeight = 'first-valid(1)'
         expect(style.fontWeight).toBe('first-valid(1)')
         style.fontWeight = 'calc(progress(1 from 0 to 1))'
-        expect(style.fontWeight).toBe('calc(progress(1 from 0 to 1))')
+        expect(style.fontWeight).toBe('calc(1)')
 
         // Substitution accepted in element-dependent context
         style.fontWeight = 'attr(name)'
@@ -494,7 +494,7 @@ describe('CSSMarginDescriptors', () => {
         style.fontWeight = 'first-valid(1)'
         expect(style.fontWeight).toBe('first-valid(1)')
         style.fontWeight = 'calc(progress(1 from 0 to 1))'
-        expect(style.fontWeight).toBe('calc(progress(1 from 0 to 1))')
+        expect(style.fontWeight).toBe('calc(1)')
 
         // Substitution accepted in cascade-dependent context
         style.fontWeight = 'var(--custom)'
@@ -555,8 +555,8 @@ describe('CSSPageDescriptors', () => {
         expect(style.size).toBe('first-valid(1px)')
         style.fontWeight = 'calc(progress(1 from 0 to 1))'
         style.size = 'calc(1px * progress(1 from 0 to 1))'
-        expect(style.fontWeight).toBe('calc(progress(1 from 0 to 1))')
-        expect(style.size).toBe('calc(1px * progress(1 from 0 to 1))')
+        expect(style.fontWeight).toBe('calc(1)')
+        expect(style.size).toBe('calc(1px)')
 
         // Substitution accepted in cascade-dependent context
         style.fontWeight = 'var(--custom)'
@@ -602,7 +602,7 @@ describe('CSSPositionTryDescriptors', () => {
         style.top = 'first-valid(1px)'
         expect(style.top).toBe('first-valid(1px)')
         style.top = 'calc(1px * progress(1 from 0 to 1))'
-        expect(style.top).toBe('calc(1px * progress(1 from 0 to 1))')
+        expect(style.top).toBe('calc(1px)')
 
         // Substitution accepted in element-dependent context
         style.top = 'attr(name)'

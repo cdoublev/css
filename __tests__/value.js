@@ -2661,10 +2661,22 @@ describe('<progress()>', () => {
         invalid.forEach(([definition, input]) => expect(parse(definition, input, false)).toBeNull())
     })
     test('valid', () => {
-        expect(parse('<number>', 'progress(1 * 1 from 1% / 1% to 1em / 1px)'))
-            .toBe('progress(1 from 1 to 1em / 1px)')
-        expect(parse('<length-percentage>', 'calc(1px * progress(1 * 1 from 1% / 1% to 1em / 1px))'))
-            .toBe('calc(1px * progress(1 from 1% / 1% to 1em / 1px))')
+        const valid = [
+            // Identical units
+            ['<number>', 'progress(1 from 0 to 2)', 'calc(0.5)'],
+            ['<number>', 'progress(1 from 2 to 0)', 'calc(0.5)'],
+            ['<number>', 'progress(-1 from 0 to 2)', 'calc(-0.5)'],
+            ['<number>', 'progress(1em from 0em to 2em)'],
+            ['<length-percentage>', 'calc(1px * progress(1% from 0% to 2%))'],
+            ['<number>', 'progress(1% from 1% to 2%)', 'calc(0)'],
+            // Different units
+            ['<number>', 'progress(48px from 0px to 1in)', 'calc(0.5)'],
+            ['<length-percentage>', 'calc(1px * progress(1px from 0% to 2px))'],
+            // Mixed but consistent types
+            ['<number>', 'progress(1 * 1 from 1% / 1% to 1em / 1px)', 'progress(1 from 1 to 1em / 1px)'],
+            ['<length-percentage>', 'calc(1px * progress(1 * 1 from 1% / 1% to 1em / 1px))', 'calc(1px * progress(1 from 1% / 1% to 1em / 1px))'],
+        ]
+        valid.forEach(([definition, input, expected = input]) => expect(parse(definition, input)).toBe(expected))
     })
 })
 describe('<container-progress()>', () => {
@@ -3034,7 +3046,7 @@ describe('<color>', () => {
             ['rgb(calc(-1%) 0% 0% / calc(-1%))', 'rgba(0, 0, 0, 0)'],
             ['rgb(calc(101%) 0% 0% / calc(101%))', 'rgb(255, 0, 0)'],
             ['rgba(-1 calc(1em / 1px) 101% / 1)', 'rgb(0 calc(1em / 1px) 255)'],
-            ['rgb(calc(1) sibling-index() progress(1 from 1 to 1))', 'rgb(1 sibling-index() progress(1 from 1 to 1))'],
+            ['rgb(calc(1) sibling-index() progress(1 from 0 to 2))', 'rgb(1 sibling-index() 1)'],
             // Relative color syntax
             ['rgb(from green alpha calc(r) calc(g * 1%) / calc(b + 1 + 1))', 'rgb(from green alpha calc(r) calc(1% * g) / calc(2 + b))'],
             ['rgba(from rgba(-1 256 0 / -1) -100% 200% 0% / 101%)', 'rgb(from rgb(-1 256 0 / 0) -255 510 0)'],
@@ -3084,7 +3096,7 @@ describe('<color>', () => {
             ['hsl(calc(-540deg) 100% 50% / calc(-1%))', 'rgba(0, 255, 255, 0)'],
             ['hsl(calc(540deg) 100% 50% / 101%)', 'rgb(0, 255, 255)'],
             ['hsla(-540 calc(1em / 1px) 101% / 1)', 'hsl(180 calc(1em / 1px) 100)'],
-            ['hsl(calc(1) sibling-index() progress(1 from 1 to 1))', 'hsl(1 sibling-index() progress(1 from 1 to 1))'],
+            ['hsl(calc(1) sibling-index() progress(1 from 0 to 2))', 'hsl(1 sibling-index() 0.5)'],
             // Relative color syntax
             ['hsl(from green alpha calc(h) calc(s * 1%) / calc(l + 1 + 1))', 'hsl(from green alpha calc(h) calc(1% * s) / calc(2 + l))'],
             ['hsla(from hsla(540 -1 0 / -1) 540deg 101% 0% / 101%)', 'hsl(from hsl(180 -1 0 / 0) 180 101 0)'],
@@ -3130,7 +3142,7 @@ describe('<color>', () => {
             ['hwb(calc(-540deg) 0% 0% / calc(-1%))', 'rgba(0, 255, 255, 0)'],
             ['hwb(calc(540deg) 0% 0% / calc(101%))', 'rgb(0, 255, 255)'],
             ['hwb(-540 calc(1em / 1px) 101% / 1)', 'hwb(180 calc(1em / 1px) 100)'],
-            ['hwb(calc(1) sibling-index() progress(1 from 1 to 1))', 'hwb(1 sibling-index() progress(1 from 1 to 1))'],
+            ['hwb(calc(1) sibling-index() progress(1 from 0 to 2))', 'hwb(1 sibling-index() 0.5)'],
             // Relative color syntax
             ['hwb(from green alpha calc(h) calc(w * 1%) / calc(b + 1 + 1))', 'hwb(from green alpha calc(h) calc(1% * w) / calc(2 + b))'],
             ['hwb(from hwb(540 -1 0 / -1) 540deg -1% 0% / 101%)', 'hwb(from hwb(180 -1 0 / 0) 180 -1 0)'],
