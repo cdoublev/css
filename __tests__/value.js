@@ -1873,14 +1873,14 @@ describe('<calc()>', () => {
                 name: 'calc',
                 range: undefined,
                 round: false,
-                types: ['<function>', '<calc()>', '<math-function>'],
+                types: ['<function>', '<calc()>', '<calc-function>'],
                 value: number(1, ['<calc-value>']),
             }],
             ['<number>', 'calc(1 + 2)', {
                 name: 'calc',
                 range: undefined,
                 round: false,
-                types: ['<function>', '<calc()>', '<math-function>'],
+                types: ['<function>', '<calc()>', '<calc-function>'],
                 value: {
                     types: ['<number-token>', '<number>', '<calc-value>'],
                     value: 3,

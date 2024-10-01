@@ -333,11 +333,12 @@ describe('CSSFontFaceDescriptors', () => {
             // Substitution accepted in element-dependent context
             ['attr(name)'],
             ['env(name, attr(name))'],
-            ['mix(50%, 1, 1)', 'mix(50%, 1%, 1%)'],
-            ['progress(1 from 1 to 1)', 'calc(1% * progress(1 from 1 to 1))'],
             ['random-item(--key, 1)', 'random-item(--key, 1%)'],
-            ['sibling-count()', 'calc(1% * sibling-count())'],
+            ['mix(50%, 1, 1)', 'mix(50%, 1%, 1%)'],
             ['toggle(1, 1)', 'toggle(1%, 1%)'],
+            ['calc-mix(0, 1, 1)', 'calc-mix(0, 1%, 1%)'],
+            ['random(1, 1)', 'random(1%, 1%)'],
+            ['sibling-count()', 'calc(1% * sibling-count())'],
             // Substitution accepted in cascade-dependent context
             ['var(--custom)'],
             ['initial'],
@@ -368,6 +369,10 @@ describe('CSSFontFaceDescriptors', () => {
         style.sizeAdjust = 'first-valid(1%)'
         expect(style.fontWeight).toBe('first-valid(1)')
         expect(style.sizeAdjust).toBe('first-valid(1%)')
+        style.fontWeight = 'calc(progress(1 from 0 to 1))'
+        style.sizeAdjust = 'calc(1% * progress(1 from 0 to 1))'
+        expect(style.fontWeight).toBe('calc(progress(1 from 0 to 1))')
+        expect(style.sizeAdjust).toBe('calc(1% * progress(1 from 0 to 1))')
 
         // Specific serialization rules
         style.ascentOverride = '1% 1%'
@@ -422,20 +427,20 @@ describe('CSSKeyframeProperties', () => {
         expect(style.fontWeight).toBe('env(name)')
         style.fontWeight = 'first-valid(1)'
         expect(style.fontWeight).toBe('first-valid(1)')
+        style.fontWeight = 'calc(progress(1 from 0 to 1))'
+        expect(style.fontWeight).toBe('calc(progress(1 from 0 to 1))')
 
         // Substitution accepted in element-dependent context
         style.fontWeight = 'attr(name)'
         expect(style.fontWeight).toBe('attr(name)')
-        style.fontWeight = 'mix(50%, 1, 1)'
-        expect(style.fontWeight).toBe('mix(50%, 1, 1)')
-        style.fontWeight = 'progress(1 from 1 to 1)'
-        expect(style.fontWeight).toBe('progress(1 from 1 to 1)')
         style.fontWeight = 'random-item(--key, 1)'
         expect(style.fontWeight).toBe('random-item(--key, 1)')
-        style.fontWeight = 'sibling-count()'
-        expect(style.fontWeight).toBe('sibling-count()')
+        style.fontWeight = 'mix(50%, 1, 1)'
+        expect(style.fontWeight).toBe('mix(50%, 1, 1)')
         style.fontWeight = 'toggle(1, 1)'
         expect(style.fontWeight).toBe('toggle(1, 1)')
+        style.fontWeight = 'calc-mix(0, random(1, 1), sibling-count())'
+        expect(style.fontWeight).toBe('calc-mix(0, random(1, 1), sibling-count())')
 
         // Substitution accepted in cascade-dependent context
         style.fontWeight = 'var(--custom)'
@@ -458,11 +463,12 @@ describe('CSSMarginDescriptors', () => {
             // Substitution accepted in element-dependent context
             'attr(name)',
             'env(attr(name))',
-            'mix(50%, 1, 1)',
-            'progress(1 from 1 to 1)',
             'random-item(--key, 1)',
-            'sibling-count()',
+            'mix(50%, 1, 1)',
             'toggle(1, 1)',
+            'calc-mix(0, 1, 1)',
+            'random(1, 1)',
+            'sibling-count()',
         ]
         invalid.forEach(input => {
             style.fontWeight = input
@@ -487,6 +493,8 @@ describe('CSSMarginDescriptors', () => {
         expect(style.fontWeight).toBe('env(name)')
         style.fontWeight = 'first-valid(1)'
         expect(style.fontWeight).toBe('first-valid(1)')
+        style.fontWeight = 'calc(progress(1 from 0 to 1))'
+        expect(style.fontWeight).toBe('calc(progress(1 from 0 to 1))')
 
         // Substitution accepted in cascade-dependent context
         style.fontWeight = 'var(--custom)'
@@ -507,14 +515,16 @@ describe('CSSPageDescriptors', () => {
 
         const invalid = [
             // Substitution accepted in element-dependent context
-            ['attr(name)', 'attr(name)'],
-            ['mix(50%, 1, 1)', 'mix(50%, 1px, 1px)'],
-            ['progress(1 from 1 to 1)', 'calc(1px * progress(1 from 1 to 1))'],
+            ['attr(name)'],
+            ['env(name, attr(name))'],
             ['random-item(--key, 1)', 'random-item(--key, 1px)'],
-            ['sibling-count()', 'calc(1px * sibling-count())'],
+            ['mix(50%, 1, 1)', 'mix(50%, 1px, 1px)'],
             ['toggle(1, 1)', 'toggle(1px, 1px)'],
+            ['calc-mix(0, 1, 1)', 'calc-mix(0, 1px, 1px)'],
+            ['random(1, 1)', 'random(1px, 1px)'],
+            ['sibling-count()', 'calc(1px * sibling-count())'],
         ]
-        invalid.forEach(([fontWeight, size]) => {
+        invalid.forEach(([fontWeight, size = fontWeight]) => {
             style.fontWeight = fontWeight
             style.size = size
             expect(style.fontWeight).toBe('')
@@ -543,6 +553,10 @@ describe('CSSPageDescriptors', () => {
         style.size = 'first-valid(1px)'
         expect(style.fontWeight).toBe('first-valid(1)')
         expect(style.size).toBe('first-valid(1px)')
+        style.fontWeight = 'calc(progress(1 from 0 to 1))'
+        style.size = 'calc(1px * progress(1 from 0 to 1))'
+        expect(style.fontWeight).toBe('calc(progress(1 from 0 to 1))')
+        expect(style.size).toBe('calc(1px * progress(1 from 0 to 1))')
 
         // Substitution accepted in cascade-dependent context
         style.fontWeight = 'var(--custom)'
@@ -587,20 +601,20 @@ describe('CSSPositionTryDescriptors', () => {
         expect(style.top).toBe('env(name)')
         style.top = 'first-valid(1px)'
         expect(style.top).toBe('first-valid(1px)')
+        style.top = 'calc(1px * progress(1 from 0 to 1))'
+        expect(style.top).toBe('calc(1px * progress(1 from 0 to 1))')
 
         // Substitution accepted in element-dependent context
         style.top = 'attr(name)'
         expect(style.top).toBe('attr(name)')
-        style.top = 'mix(50%, 1px, 1px)'
-        expect(style.top).toBe('mix(50%, 1px, 1px)')
-        style.top = 'calc(1px * progress(1 from 1 to 1))'
-        expect(style.top).toBe('calc(1px * progress(1 from 1 to 1))')
         style.top = 'random-item(--key, 1px)'
         expect(style.top).toBe('random-item(--key, 1px)')
-        style.top = 'calc(1px * sibling-count())'
-        expect(style.top).toBe('calc(1px * sibling-count())')
+        style.top = 'mix(50%, 1px, 1px)'
+        expect(style.top).toBe('mix(50%, 1px, 1px)')
         style.top = 'toggle(1px, 1px)'
         expect(style.top).toBe('toggle(1px, 1px)')
+        style.top = 'calc-mix(sibling-count(), random(1px, 1px), 1px)'
+        expect(style.top).toBe('calc-mix(sibling-count(), random(1px, 1px), 1px)')
 
         // Substitution accepted in cascade-dependent context
         style.top = 'var(--custom)'
