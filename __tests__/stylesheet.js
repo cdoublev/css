@@ -462,9 +462,9 @@ describe('CSS grammar', () => {
                 /* invalid */
                 style {}
                 color: red;
-                rendering-itent: invalid;
+                components: none;
                 --custom: value;
-                rendering-itent: var(--custom);
+                components: var(--custom);
                 src: url("profile-important.icc") !important;
 
                 /* valid */
@@ -475,7 +475,7 @@ describe('CSS grammar', () => {
         expect(rule.cssRules).toBeUndefined()
         expect(rule.style).toBeUndefined()
         expect(rule.color).toBeUndefined()
-        expect(rule.renderingIntent).toBe('')
+        expect(rule.components).toBe('')
         expect(rule.src).toBe('url("profile.icc")')
     })
     it('ignores invalid contents in @container', () => {
