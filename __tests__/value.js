@@ -3046,7 +3046,7 @@ describe('<color>', () => {
             ['rgb(calc(-1%) 0% 0% / calc(-1%))', 'rgba(0, 0, 0, 0)'],
             ['rgb(calc(101%) 0% 0% / calc(101%))', 'rgb(255, 0, 0)'],
             ['rgba(-1 calc(1em / 1px) 101% / 1)', 'rgb(0 calc(1em / 1px) 255)'],
-            ['rgb(calc(1) sibling-index() progress(1 from 0 to 2))', 'rgb(1 sibling-index() 1)'],
+            ['rgb(calc(1) sibling-index() progress(1 from 0 to 2))', 'rgb(1 sibling-index() 0.5)'],
             // Relative color syntax
             ['rgb(from green alpha calc(r) calc(g * 1%) / calc(b + 1 + 1))', 'rgb(from green alpha calc(r) calc(1% * g) / calc(2 + b))'],
             ['rgba(from rgba(-1 256 0 / -1) -100% 200% 0% / 101%)', 'rgb(from rgb(-1 256 0 / 0) -255 510 0)'],
