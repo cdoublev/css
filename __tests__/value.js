@@ -2675,6 +2675,8 @@ describe('<progress()>', () => {
             // Mixed but consistent types
             ['<number>', 'progress(1 * 1 from 1% / 1% to 1em / 1px)', 'progress(1 from 1 to 1em / 1px)'],
             ['<length-percentage>', 'calc(1px * progress(1 * 1 from 1% / 1% to 1em / 1px))', 'calc(1px * progress(1 from 1% / 1% to 1em / 1px))'],
+            // Equal argument values
+            ['<number>', 'progress(1 from 1 to 1)', 'calc(0)'],
         ]
         valid.forEach(([definition, input, expected = input]) => expect(parse(definition, input)).toBe(expected))
     })
