@@ -2911,13 +2911,13 @@ describe('<basic-shape>', () => {
     test('valid', () => {
         const valid = [
             ['circle(closest-side)', 'circle()'],
-            ['circle(at center)', 'circle(at center center)'],
-            ['circle(at center center)'],
+            ['circle(at center)', 'circle()'],
+            ['circle(at center center)', 'circle()'],
             ['ellipse(1px 1px)', 'ellipse(1px)'],
             ['ellipse(closest-side closest-side)', 'ellipse()'],
             ['ellipse(farthest-side farthest-side)', 'ellipse(farthest-side)'],
-            ['ellipse(at center)', 'ellipse(at center center)'],
-            ['ellipse(at center center)'],
+            ['ellipse(at center)', 'ellipse()'],
+            ['ellipse(at center center)', 'ellipse()'],
             ['inset(1px 1px 1px 1px round 1px / 1px)', 'inset(1px round 1px)'],
             ['inset(1px round 0px / 0px)', 'inset(1px)'],
             ['inset(1px round 0in)'],

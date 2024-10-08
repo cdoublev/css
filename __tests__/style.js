@@ -1167,10 +1167,20 @@ describe('object-fit', () => {
 describe('offset-path', () => {
     test('valid', () => {
         const style = createStyleBlock()
-        style.offsetPath = 'url("path.svg") border-box'
-        expect(style.offsetPath).toBe('url("path.svg")')
-        style.offsetPath = 'path(evenodd, "M0 0")'
-        expect(style.offsetPath).toBe('path("M0 0")')
+        const valid = [
+            // Omitted value
+            ['url("path.svg") border-box', 'url("path.svg")'],
+            ['path(evenodd, "M0 0")', 'path("M0 0")'],
+            // Preserve at <position>
+            ['circle()'],
+            ['ellipse()'],
+            ['circle(at center center)'],
+            ['ellipse(at center center)'],
+        ]
+        valid.forEach(([input, expected = input]) => {
+            style.offsetPath = input
+            expect(style.offsetPath).toBe(expected)
+        })
     })
 })
 describe('offset-rotate', () => {
