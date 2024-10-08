@@ -332,7 +332,6 @@ describe('CSSFontFaceDescriptors', () => {
         const invalid = [
             // Substitution accepted in element-dependent context
             ['attr(name)'],
-            ['env(name, attr(name))'],
             ['random-item(--key, 1)', 'random-item(--key, 1%)'],
             ['mix(50%, 1, 1)', 'mix(50%, 1%, 1%)'],
             ['toggle(1, 1)', 'toggle(1%, 1%)'],
@@ -361,10 +360,10 @@ describe('CSSFontFaceDescriptors', () => {
         expect(style.fontWidth).toBe('condensed')
 
         // Substitution accepted in any context
-        style.fontWeight = 'env(name)'
-        style.sizeAdjust = 'env(name)'
-        expect(style.fontWeight).toBe('env(name)')
-        expect(style.sizeAdjust).toBe('env(name)')
+        style.fontWeight = 'env(name, attr(name))'
+        style.sizeAdjust = 'env(name, attr(name))'
+        expect(style.fontWeight).toBe('env(name, attr(name))')
+        expect(style.sizeAdjust).toBe('env(name, attr(name))')
         style.fontWeight = 'first-valid(1)'
         style.sizeAdjust = 'first-valid(1%)'
         expect(style.fontWeight).toBe('first-valid(1)')
@@ -516,7 +515,6 @@ describe('CSSPageDescriptors', () => {
         const invalid = [
             // Substitution accepted in element-dependent context
             ['attr(name)'],
-            ['env(name, attr(name))'],
             ['random-item(--key, 1)', 'random-item(--key, 1px)'],
             ['mix(50%, 1, 1)', 'mix(50%, 1px, 1px)'],
             ['toggle(1, 1)', 'toggle(1px, 1px)'],
@@ -545,10 +543,10 @@ describe('CSSPageDescriptors', () => {
         expect(style.getPropertyPriority('size')).toBe('important')
 
         // Substitution accepted in any context
-        style.fontWeight = 'env(name)'
-        style.size = 'env(name)'
-        expect(style.fontWeight).toBe('env(name)')
-        expect(style.size).toBe('env(name)')
+        style.fontWeight = 'env(name, attr(name))'
+        style.size = 'env(name, attr(name))'
+        expect(style.fontWeight).toBe('env(name, attr(name))')
+        expect(style.size).toBe('env(name, attr(name))')
         style.fontWeight = 'first-valid(1)'
         style.size = 'first-valid(1px)'
         expect(style.fontWeight).toBe('first-valid(1)')
@@ -728,14 +726,14 @@ describe('--*', () => {
         const style = createStyleBlock()
         const valid = [
             // Whitespaces and comments
-            ['  /**/  Red  ,  (  orange  /**/  )  ,  green  /**/  ', 'Red  ,  (  orange  /**/  )  ,  green'],
-            // Guaranteed-invalid value (initial)
-            ['  /**/  ', ''],
             [''],
+            ['  /**/  ', ''],
+            ['  /**/  Red  ,  (  orange  /**/  )  ,  green  /**/  ', 'Red  ,  (  orange  /**/  )  ,  green'],
             // Substitutions
             ['var(  --PROPerty, /**/ 1e0 /**/  )  ', 'var(  --PROPerty, /**/ 1e0 /**/  )'],
             ['mix(50,/**/, 1e0 )  ', 'mix(50,/**/, 1e0 )'],
             ['initial'],
+            ['initial initial'],
         ]
         valid.forEach(([input, expected = input]) => {
             style.cssText = `--custom: ${input}`
