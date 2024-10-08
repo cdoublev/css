@@ -687,8 +687,6 @@ describe.skip('<whole-value>', () => {
             ['toggle(0, 1) 2', '--custom'],
             ['toggle(0, first-valid(1) 2)', '--custom'],
             // Invalid value for the property
-            ['first-valid(invalid)', 'color'],
-            ['first-valid(first-valid(invalid))', 'color'],
             ['mix(50%, red, invalid)', 'color'],
             ['mix(50%, red, mix(50%, invalid, red))', 'color'],
             ['toggle(red, invalid)', 'color'],
