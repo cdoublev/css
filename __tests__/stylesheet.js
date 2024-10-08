@@ -1542,42 +1542,6 @@ describe('CSS grammar', () => {
     it('ignores @property missing a declaration for inherits', () => {
         expect(createStyleSheet('@property --custom { syntax: "*"; initial-value: 1; }').cssRules).toHaveLength(0)
     })
-    it('ignores @property missing a declaration for initial-value', () => {
-
-        const invalid = [
-            // Invalid syntax
-            [''],
-            ['initial'],
-            ['initial', '*'],
-            ['var(--custom)'],
-            ['1'],
-            // Computationally dependent
-            ['1em'],
-            ['smaller', 'smaller'],
-            ['calc(1px + 1em)'],
-        ]
-        const valid = [
-            // Empty value
-            ['', '*'],
-            [' ', '*'],
-            // Computationally independent
-            ['1in', '<length>'],
-            ['small', 'small'],
-        ]
-        const cases = [invalid, valid]
-
-        cases.forEach((group, index) =>
-            group.forEach(([value, syntax = '<length>']) => {
-                const styleSheet = createStyleSheet(`
-                    @property --custom {
-                        syntax: "${syntax}";
-                        initial-value: ${value};
-                        inherits: true;
-                    }
-                `)
-                expect(styleSheet.cssRules).toHaveLength(index)
-            }))
-    })
     it('ignores @property missing a declaration for syntax', () => {
 
         expect(createStyleSheet('@property --custom { inherits: true; initial-value: 1; }').cssRules).toHaveLength(0)
@@ -1630,6 +1594,53 @@ describe('CSS grammar', () => {
                 const styleSheet = createStyleSheet(`
                     @property --custom {
                         syntax: "${syntax}";
+                        initial-value: ${value};
+                        inherits: true;
+                    }
+                `)
+                expect(styleSheet.cssRules).toHaveLength(index)
+            }))
+    })
+    it('ignores @property with initial-value declared with an invalid value', () => {
+
+        const invalid = [
+            // Invalid syntax
+            ['', '<length>'],
+            ['1', '<length>'],
+            ['initial', '<length>'],
+            ['env(name)', '<length>'],
+            ['var(--custom)', '<length>'],
+            ['random-item(1px, 1px)', '<length>'],
+            // Computationally dependent
+            ['1em', '<length>'],
+            ['calc(1em + 1px)', '<length>'],
+            ['translate(1em)', '<transform-function>'],
+            ['rgb(calc(1em / 1px) 0 0)', '<color>'],
+            // https://github.com/w3c/css-houdini-drafts/issues/1076
+            ['initial', '*'],
+        ]
+        const valid = [
+            // Empty value
+            ['', '*'],
+            [' ', '*'],
+            // Computationally independent
+            ['1in', '<length>'],
+            ['1%', '<length-percentage>'],
+            ['calc(1% + 1px)', '<length-percentage>'],
+            ['translate(1px)', '<transform-function>'],
+            // Substitutions
+            ['env(name)', '*'],
+            ['var(--custom)', '*'],
+            ['first-valid(1px)', '*'],
+        ]
+        const cases = [invalid, valid]
+
+        cases.forEach((group, index) =>
+            group.forEach(([value, syntax]) => {
+                const styleSheet = createStyleSheet(`
+                    @property --custom {
+                        syntax: "${syntax}";
+                        initial-value: 1px;
                         initial-value: ${value};
                         inherits: true;
                     }

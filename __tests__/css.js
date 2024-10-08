@@ -35,8 +35,13 @@ describe('CSS.registerProperty()', () => {
             [{ inherits: true, name: '--custom', syntax: '<color>' }, MISSING_INITIAL_CUSTOM_PROPERTY_VALUE],
             [{ inherits: true, initialValue: 'any', name: '--custom', syntax: '<unknown>' }, INVALID_CUSTOM_PROPERTY_SYNTAX],
             [{ inherits: true, initialValue: ';', name: '--custom', syntax: '*' }, INVALID_INITIAL_CUSTOM_PROPERTY_VALUE_UNIVERSAL],
-            [{ inherits: true, initialValue: '1px', name: '--custom', syntax: '<color>' }, INVALID_INITIAL_CUSTOM_PROPERTY_VALUE],
-            [{ inherits: true, initialValue: '1em', name: '--custom', syntax: '<color>' }, INVALID_INITIAL_CUSTOM_PROPERTY_VALUE],
+            [{ inherits: true, initialValue: '', name: '--custom', syntax: '<length>' }, INVALID_INITIAL_CUSTOM_PROPERTY_VALUE_UNIVERSAL],
+            [{ inherits: true, initialValue: '1', name: '--custom', syntax: '<length>' }, INVALID_INITIAL_CUSTOM_PROPERTY_VALUE],
+            [{ inherits: true, initialValue: 'initial', name: '--custom', syntax: '<length>' }, INVALID_INITIAL_CUSTOM_PROPERTY_VALUE],
+            [{ inherits: true, initialValue: 'var(--custom)', name: '--custom', syntax: '<length>' }, INVALID_INITIAL_CUSTOM_PROPERTY_VALUE],
+            [{ inherits: true, initialValue: '1em', name: '--custom', syntax: '<length>' }, INVALID_INITIAL_CUSTOM_PROPERTY_VALUE],
+            [{ inherits: true, initialValue: 'calc(1em + 1px)', name: '--custom', syntax: '<length>' }, INVALID_INITIAL_CUSTOM_PROPERTY_VALUE],
+            [{ inherits: true, initialValue: 'initial', name: '--custom', syntax: '*' }, INVALID_INITIAL_CUSTOM_PROPERTY_VALUE],
         ]
         document._registeredPropertySet.push({
             inherits: true,
@@ -51,6 +56,9 @@ describe('CSS.registerProperty()', () => {
             { inherits: true, name: '--custom-1', syntax: '*' },
             { inherits: true, initialValue: '', name: '--custom-2', syntax: '*' },
             { inherits: true, initialValue: ' \f\n\r\t', name: '--custom-3', syntax: '*' },
+            { inherits: true, initialValue: 'env(name)', name: '--custom-4', syntax: '*' },
+            { inherits: true, initialValue: 'var(--custom)', name: '--custom-5', syntax: '*' },
+            { inherits: true, initialValue: 'first-valid(1px)', name: '--custom-6', syntax: '*' },
         ]
         const { document: { _registeredPropertySet: register } } = globalThis
         valid.forEach(property => {
