@@ -391,6 +391,10 @@ const excluded = {
             'align-self',
             'justify-content',
         ],
+        'css-gcpm': [
+            // https://github.com/w3c/csswg-drafts/issues/1981
+            'content',
+        ],
         'css-logical': [
             // Superseded by CSS Borders
             'border-block',
@@ -545,14 +549,12 @@ const excluded = {
             // Prefer CSS Generated Content
             '<content()>',
             '<content-list>',
+            // https://github.com/w3c/csswg-drafts/issues/1981
+            '<element()>',
         ],
         'css-images': [
             // TODO: fix parsing/serializing `<radial-gradient-syntax>`, `<radial-size>`
             '<radial-extent>',
-        ],
-        'css-images-4': [
-            // https://github.com/w3c/csswg-drafts/issues/1981
-            '<element()>',
         ],
         'css-masking': [
             // https://github.com/w3c/fxtf-drafts/pull/468
