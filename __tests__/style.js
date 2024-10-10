@@ -680,20 +680,20 @@ describe.skip('<whole-value>', () => {
         const style = createStyleBlock()
         const invalid = [
             // Not the <whole-value>
-            ['first-valid(0) 1', '--custom'],
-            ['first-valid(first-valid(0) 1)', '--custom'],
-            ['mix(50%, 0, 1) 2', '--custom'],
-            ['mix(50%, 0, first-valid(1) 2)', '--custom'],
-            ['toggle(0, 1) 2', '--custom'],
-            ['toggle(0, first-valid(1) 2)', '--custom'],
+            ['first-valid(0) 0', 'margin'],
+            ['first-valid(first-valid(0) 0)', 'margin'],
+            ['mix(0%, 0, 0) 0', 'margin'],
+            ['mix(0%, 0, first-valid(0) 0)', 'margin'],
+            ['toggle(0, 0) 0', 'margin'],
+            ['toggle(0, first-valid(0) 0)', 'margin'],
             // Invalid value for the property
-            ['mix(50%, red, invalid)', 'color'],
-            ['mix(50%, red, mix(50%, invalid, red))', 'color'],
+            ['mix(0%, red, invalid)', 'color'],
+            ['mix(0%, red, mix(0%, invalid, red))', 'color'],
             ['toggle(red, invalid)', 'color'],
             // Non-animatable property
-            ['mix(50%, 1s, 2s)', 'animation-duration'],
+            ['mix(0%, 0s, 0s)', 'animation-duration'],
             // Nested <toggle()>
-            ['toggle(mix(50%, toggle(0, 1), 2), 3)', '--custom'],
+            ['toggle(mix(0%, toggle(0, 0), 0), 0)', '--custom'],
         ]
         invalid.forEach(([substitution, property]) => {
             style.setProperty(property, substitution)
@@ -711,6 +711,14 @@ describe.skip('<whole-value>', () => {
             ['mix(50%, 0, mix(50%, 1, 2))'],
             // Omitted value
             ['toggle(,)', 'toggle(,)', '--custom'],
+            // Priority to the declaration value range
+            ['first-valid(0) 1', '--custom'],
+            ['first-valid(first-valid(0) 1)', '--custom'],
+            ['mix(50%, 0, 1) 2', '--custom'],
+            ['mix(50%, 0, first-valid(1) 2)', '--custom'],
+            ['toggle(0, 1) 2', '--custom'],
+            ['toggle(0, first-valid(1) 2)', '--custom'],
+            ['toggle(mix(50%, toggle(0, 1), 2), 3)', '--custom'],
         ]
         valid.forEach(([input, expected = input, property = 'opacity']) => {
             style.setProperty(property, input)
