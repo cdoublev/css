@@ -1784,6 +1784,7 @@ describe('<calc()>', () => {
             ['<number>', 'calc(1 + 1px)'],
             ['<number>', 'calc(1 - 1px)'],
             ['<number>', 'calc(1 / 1px)'],
+            ['<number>', 'calc(1% / 1%)'],
             ['<number>', 'calc(1px * 1px)'],
             ['<number>', 'calc((1% + 1px) / 1px)'],
             ['<number>', 'calc(1px / 1 * 1px)'],
@@ -2011,12 +2012,6 @@ describe('<calc()>', () => {
             ['<number>', 'calc(9px / 3 / 3px)', 'calc(1)'],
             ['<number>', 'calc(2px / 3px * 3)', 'calc(2)'],
             ['<number>', 'calc(9px / 3px / 3)', 'calc(1)'],
-            ['<number>', 'calc(2 * 3% / 3%)', 'calc(2)'],
-            ['<number>', 'calc(2 / 3% * 3%)', 'calc(2)'],
-            ['<number>', 'calc(2% * 3 / 3%)', 'calc(2)'],
-            ['<number>', 'calc(9% / 3 / 3%)', 'calc(1)'],
-            ['<number>', 'calc(2% / 3% * 3)', 'calc(2)'],
-            ['<number>', 'calc(9% / 3% / 3)', 'calc(1)'],
             // Multiplication or division by unresolved <number>
             ['<length>', 'calc(1em * 1em / 1px)', 'calc(1em * 1em / 1px)'],
             ['<length>', 'calc(1em / 1em * 1px)', 'calc(1em * 1px / 1em)'],
@@ -2456,7 +2451,7 @@ describe('<atan2()>', () => {
         const valid = [
             ['<angle>', 'atan2(1, 1)', `calc(${+toDegrees(Math.atan2(1, 1)).toFixed(6)}deg)`],
             ['<angle>', 'atan2(1px, 1px)', `calc(${+toDegrees(Math.atan2(1, 1)).toFixed(6)}deg)`],
-            ['<angle>', 'atan2(1%, 1%)', `calc(${+toDegrees(Math.atan2(1, 1)).toFixed(6)}deg)`],
+            ['<length-percentage>', 'calc(atan2(1%, 1%) / 1deg * 1px)', 'calc(1px * atan2(1%, 1%) / 1deg)'],
             ['<angle>', 'atan2(1in, 100px)', `calc(${+toDegrees(Math.atan2(96, 100)).toFixed(6)}deg)`],
             ['<angle>', 'atan2(1em, 1px)', 'atan2(1em, 1px)'],
             ['<angle-percentage>', 'atan2(1deg, atan2(1%, 1%))', 'atan2(1deg, atan2(1%, 1%))'],
@@ -2590,7 +2585,6 @@ describe('<sign()>', () => {
             ['<number>', 'sign(-infinity)', 'calc(-1)'],
             ['<number>', 'sign(-1em)', 'sign(-1em)'],
             ['<length-percentage>', 'calc(sign(-1%) * 1%)', 'calc(1% * sign(-1%))'],
-            ['<number>', 'sign(-1%)', 'calc(-1)'],
         ]
         valid.forEach(([definition, input, expected]) => expect(parse(definition, input)).toBe(expected))
     })
@@ -2640,7 +2634,7 @@ describe('<random()>', () => {
     })
     test('valid', () => {
         const valid = [
-            ['<number>', 'random(per-element, 1% / 1%, 1em / 1px)', 'random(per-element, 1, 1em / 1px)'],
+            ['<number>', 'random(per-element, 1 / 1, 1em / 1px)', 'random(per-element, 1, 1em / 1px)'],
             ['<length-percentage>', 'random(1px, 1%)'],
             ['<length-percentage>', 'calc(1px * random(1% / 1px, 1))'],
         ]
@@ -2668,12 +2662,11 @@ describe('<progress()>', () => {
             ['<number>', 'progress(-1 from 0 to 2)', 'calc(-0.5)'],
             ['<number>', 'progress(1em from 0em to 2em)'],
             ['<length-percentage>', 'calc(1px * progress(1% from 0% to 2%))'],
-            ['<number>', 'progress(1% from 1% to 2%)', 'calc(0)'],
             // Different units
             ['<number>', 'progress(48px from 0px to 1in)', 'calc(0.5)'],
             ['<length-percentage>', 'calc(1px * progress(1px from 0% to 2px))'],
-            // Mixed but consistent types
-            ['<number>', 'progress(1 * 1 from 1% / 1% to 1em / 1px)', 'progress(1 from 1 to 1em / 1px)'],
+            // Consistent type
+            ['<number>', 'progress(1 * 1 from 360deg / 1turn to 1em / 1px)', 'progress(1 from 1 to 1em / 1px)'],
             ['<length-percentage>', 'calc(1px * progress(1 * 1 from 1% / 1% to 1em / 1px))', 'calc(1px * progress(1 from 1% / 1% to 1em / 1px))'],
             // Equal argument values
             ['<number>', 'progress(1 from 1 to 1)', 'calc(0)'],
