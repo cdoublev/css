@@ -2611,7 +2611,7 @@ describe('<calc-mix()>', () => {
             ['<length>', 'calc-mix(--timeline, 1px * 1, 1px)', 'calc-mix(--timeline, 1px, 1px)'],
             ['<length>', 'calc-mix(0 * 1, 1px, 1px)', 'calc-mix(0, 1px, 1px)'],
             ['<length>', 'calc-mix(0%, 1px, 1px)'],
-            ['<length>', 'calc-mix(progress(1% from 1% + 1% to 1%), 1px, 1px)', 'calc-mix(progress(1% from 2% to 1%), 1px, 1px)'],
+            ['<length>', 'calc-mix(progress(1% from 1% + 1% to 1%), 1px, 1px)', 'calc-mix(1, 1px, 1px)'],
             ['<length-percentage>', 'calc-mix(0, 1px, 1%)'],
             ['<length-percentage>', 'calc-mix(0%, 1px, 1%)'],
             ['<length-percentage>', 'calc-mix(progress(1% from 1% to 1%), 1px, 1%)'],
