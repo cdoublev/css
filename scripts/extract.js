@@ -443,15 +443,6 @@ const excluded = {
             // https://github.com/w3c/csswg-drafts/issues/6433
             'shape-inside',
         ],
-        'css-sizing-4': [
-            // https://github.com/w3c/csswg-drafts/issues/7370
-            'block-size',
-            'inline-size',
-            'max-block-size',
-            'max-inline-size',
-            'min-block-size',
-            'min-inline-size',
-        ],
         'css-ui': [
             // Prefer SVG
             'pointer-events',
