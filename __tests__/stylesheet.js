@@ -2322,12 +2322,17 @@ describe('CSSViewTransitionRule', () => {
 })
 
 /**
- * The following does not conform to the specification, which expects the setter
- * to do nothing and requires implementing it in each CSSRule child classes.
- *
  * @see {@link https://github.com/w3c/csswg-drafts/issues/8778}
+ *
+ * The specification wants the setter of CSSRule.cssText to do nothing, which
+ * requires implementing it in every CSSRule child class, as one cannot set a
+ * property when its getter is defined on the child class and its setter is
+ * defined on the parent class: in strict mode, it throws an error.
+ *
+ * Instead, CSSRule.cssText is defined as read-only, which has the same effect
+ * than implementing a setter on CSSRule, but prevents shadowing the attribute.
  */
-it('throws an error when setting CSSRule.cssText', () => {
+test('Setting CSSRule.cssText does nothing', () => {
     const { cssRules: [cssRule] } = createStyleSheet('style {}')
     cssRule.cssText = 'override {}'
     expect(cssRule.cssText).toBe('style {}')

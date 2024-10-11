@@ -4,6 +4,7 @@
 // https://drafts.csswg.org/css-conditional-3/#extensions-to-cssrule-interface
 // https://drafts.csswg.org/css-counter-styles-3/#extensions-to-cssrule-interface
 // https://drafts.csswg.org/css-fonts-4/#om-fontfeaturevalues
+// https://github.com/w3c/csswg-drafts/issues/8778
 [Exposed=Window]
 interface CSSRule {
     const unsigned short STYLE_RULE = 1;
