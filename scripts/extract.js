@@ -73,6 +73,8 @@ const replaced = {
         'clip': { value: 'rect([<length> | auto]{4} | [<length> | auto]#{4}) | auto' },
         // TODO: fix `value` of `copy-into`
         'copy-into': { value: 'none | [<custom-ident> <content-level>]#' },
+        // https://github.com/w3c/svgwg/issues/320
+        'd': { value: 'none | path(<string>)' },
         // TODO: fix `value` of `fill-opacity`, `stroke-opacity`
         'fill-opacity': { value: "<'opacity'>" },
         'stroke-opacity': { value: "<'opacity'>" },
