@@ -3285,6 +3285,11 @@ describe('<color>', () => {
         ]
         valid.forEach(([input, expected = input]) => expect(parse('<color>', input)).toBe(expected))
     })
+    test('valid <contrast-color()>', () => {
+        // Preserve channel values except <hue> and <alpha-value>
+        expect(parse('<color>', 'contrast-color(rgba(-100% 200% 0 / 101%))')).toBe('contrast-color(rgb(-255 510 0))')
+        expect(parse('<color>', 'contrast-color(hsla(540deg -1% 0 / 50%))')).toBe('contrast-color(hsl(180 -1 0 / 0.5))')
+    })
 })
 describe('<combinator>', () => {
     test('invalid', () => {
