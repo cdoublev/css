@@ -4100,7 +4100,18 @@ describe('<supports-decl>', () => {
         expect(parse('<supports-decl>', '(color: invalid)', false)).toBeNull()
     })
     test('representation', () => {
-        expect(parse('<supports-decl>', '(color: green)')).toBe('(color: green)')
+        const declaration = {
+            important: false,
+            name: 'color',
+            types: ['<declaration>'],
+            value: keyword('green', ['<named-color>', '<color-base>', '<color>', 'color']),
+        }
+        const block = {
+            associatedToken: '(',
+            types: ['<simple-block>', '<supports-decl>'],
+            value: declaration,
+        }
+        expect(parse('<supports-decl>', '(color: green)', false)).toMatchObject(block)
     })
 })
 describe('<supports-feature>', () => {
