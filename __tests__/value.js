@@ -56,12 +56,14 @@ const rules = `
     @namespace svg "http://www.w3.org/2000/svg";
     style {}
     @container (1px < width) {}
+    @keyframes animation { 0% {} }
     @media {}
     @supports (width: 1px) {}
 `
 const styleSheet = cssom.CSSStyleSheet.createImpl(globalThis, undefined, { rules })
-const { _rules: [,, styleRule, containerRule, mediaRule, supportsRule] } = styleSheet
+const { _rules: [,, styleRule, containerRule, { _rules: [keyframeRule] }, mediaRule, supportsRule] } = styleSheet
 const containerContext = createContext(containerRule)
+const keyframeContext = createContext(keyframeRule)
 const mediaQueryContext = createContext(mediaRule)
 const supportsContext = createContext(supportsRule)
 
@@ -3661,11 +3663,17 @@ describe('<image-set()>', () => {
 })
 describe('<keyframe-selector>', () => {
     test('representation', () => {
-        expect(parse('<keyframe-selector>', '0%', false)).toMatchObject(percentage(0, ['<keyframe-selector>']))
+        expect(parse('<keyframe-selector>', '0%', false, keyframeContext))
+            .toMatchObject(percentage(0, ['<keyframe-selector>']))
     })
     test('valid', () => {
-        expect(parse('<keyframe-selector>', 'from')).toBe('0%')
-        expect(parse('<keyframe-selector>', 'to')).toBe('100%')
+        const valid = [
+            ['from', '0%'],
+            ['to', '100%'],
+            ['calc(1% * calc-mix(0, 1, 1))', 'calc(1% * calc-mix(0, 1, 1))'],
+        ]
+        valid.forEach(([input, expected]) =>
+            expect(parse('<keyframe-selector>', input, true, keyframeContext)).toBe(expected))
     })
 })
 describe('<keyframes-name>', () => {
@@ -4080,8 +4088,15 @@ describe('<style-feature>', () => {
         })
     })
     test('valid', () => {
-        expect(parse('<style-feature>', '--custom: fn(  /**/  1e0  /**/  )', true, containerContext))
-            .toBe('--custom: fn(  /**/  1e0  /**/  )')
+        const valid = [
+            // Custom property
+            '--custom: fn(  /**/  1e0  /**/  )',
+            // Substitution
+            'width: var(--custom)',
+            'width: first-valid(green)',
+            'width: calc-mix(0, 1px, 1px)',
+        ]
+        valid.forEach(input => expect(parse('<style-feature>', input, true, containerContext)).toBe(input))
     })
 })
 describe('<syntax-component>', () => {
@@ -4118,8 +4133,15 @@ describe('<supports-decl>', () => {
         expect(parse('<supports-decl>', '(color: green)', false, supportsContext)).toMatchObject(block)
     })
     test('valid', () => {
-        expect(parse('<supports-decl>', '(--custom: fn(  /**/  1e0  /**/  ))', true, supportsContext))
-            .toBe('(--custom: fn(  /**/  1e0  /**/  ))')
+        const valid = [
+            // Custom property
+            '(--custom: fn(  /**/  1e0  /**/  ))',
+            // Substitution
+            '(width: var(--custom))',
+            '(width: first-valid(green))',
+            '(width: calc-mix(0, 1px, 1px))',
+        ]
+        valid.forEach(input => expect(parse('<supports-decl>', input, true, supportsContext)).toBe(input))
     })
 })
 describe('<supports-feature>', () => {
