@@ -4068,16 +4068,20 @@ describe('<string()>', () => {
 })
 describe('<style-feature>', () => {
     test('invalid', () => {
-        expect(parse('<style-feature>', 'width: revert', false)).toBeNull()
-        expect(parse('<style-feature>', 'width: revert-layer', false)).toBeNull()
+        expect(parse('<style-feature>', 'width: revert', false, containerContext)).toBeNull()
+        expect(parse('<style-feature>', 'width: revert-layer', false, containerContext)).toBeNull()
     })
     test('representation', () => {
-        expect(parse('<style-feature>', 'color: green !important', false)).toMatchObject({
+        expect(parse('<style-feature>', 'color: green !important', false, containerContext)).toMatchObject({
             important: true,
             name: 'color',
             types: ['<declaration>', '<style-feature>'],
             value: keyword('green', ['<named-color>', '<color-base>', '<color>', 'color']),
         })
+    })
+    test('valid', () => {
+        expect(parse('<style-feature>', '--custom: fn(  /**/  1e0  /**/  )', true, containerContext))
+            .toBe('--custom: fn(  /**/  1e0  /**/  )')
     })
 })
 describe('<syntax-component>', () => {
@@ -4096,8 +4100,8 @@ describe('<syntax-component>', () => {
 })
 describe('<supports-decl>', () => {
     test('invalid', () => {
-        expect(parse('<supports-decl>', '(unknown: initial)', false)).toBeNull()
-        expect(parse('<supports-decl>', '(color: invalid)', false)).toBeNull()
+        expect(parse('<supports-decl>', '(unknown: initial)', false, supportsContext)).toBeNull()
+        expect(parse('<supports-decl>', '(color: invalid)', false, supportsContext)).toBeNull()
     })
     test('representation', () => {
         const declaration = {
@@ -4111,7 +4115,11 @@ describe('<supports-decl>', () => {
             types: ['<simple-block>', '<supports-decl>'],
             value: declaration,
         }
-        expect(parse('<supports-decl>', '(color: green)', false)).toMatchObject(block)
+        expect(parse('<supports-decl>', '(color: green)', false, supportsContext)).toMatchObject(block)
+    })
+    test('valid', () => {
+        expect(parse('<supports-decl>', '(--custom: fn(  /**/  1e0  /**/  ))', true, supportsContext))
+            .toBe('(--custom: fn(  /**/  1e0  /**/  ))')
     })
 })
 describe('<supports-feature>', () => {
@@ -4121,7 +4129,7 @@ describe('<supports-feature>', () => {
             'selector(:is(:not))',
             'selector(::webkit-unknown)',
         ]
-        invalid.forEach(input => expect(parse('<supports-feature>', input, false)).toBeNull())
+        invalid.forEach(input => expect(parse('<supports-feature>', input, false, supportsContext)).toBeNull())
     })
     test('representation', () => {
         expect(parse('<supports-feature>', '(color: green)', false, supportsContext)).toMatchObject({
@@ -4432,7 +4440,7 @@ describe('<media-query-list>', () => {
         const mediaQuery = list([omitted, mediaType, omitted], ' ', ['<media-query>'])
         const mediaQueryList = list([mediaQuery], ',', ['<media-query-list>'])
 
-        expect(parse('<media-query-list>', 'all', false)).toMatchObject(mediaQueryList)
+        expect(parse('<media-query-list>', 'all', false, mediaQueryContext)).toMatchObject(mediaQueryList)
     })
     test('valid', () => {
         expect(parse('<media-query-list>', ';, 1, (condition)', true, mediaQueryContext))
