@@ -3794,7 +3794,13 @@ describe('<mf-plain>', () => {
             .toMatchObject(list([name, delimiter(':'), value], ' ', ['<mf-plain>']))
     })
     test('valid', () => {
-        expect(parse('<mf-plain>', 'min-width: 1px', true, mediaQueryContext)).toBe('min-width: 1px')
+        const valid = [
+            ['orientation: PORTRAIT', 'orientation: portrait'],
+            ['color: 1.0', 'color: 1'],
+            ['min-width: 0', 'min-width: 0px'],
+            ['aspect-ratio: 1', 'aspect-ratio: 1 / 1'],
+        ]
+        valid.forEach(([input, expected]) => expect(parse('<mf-plain>', input, true, mediaQueryContext)).toBe(expected))
     })
 })
 describe('<mf-range>', () => {
@@ -3821,10 +3827,8 @@ describe('<mf-range>', () => {
             .toMatchObject(list([name, comparator, value], ' ', ['<mf-range>']))
     })
     test('valid', () => {
-        expect(parse('<mf-range>', 'width < 1px', true, mediaQueryContext))
-            .toBe('width < 1px')
-        expect(parse('<mf-range>', '0 / 0 < aspect-ratio < 1 / 1', true, mediaQueryContext))
-            .toBe('0 / 0 < aspect-ratio < 1 / 1')
+        expect(parse('<mf-range>', 'width < 0', true, mediaQueryContext)).toBe('width < 0px')
+        expect(parse('<mf-range>', '0 < aspect-ratio < 1', true, mediaQueryContext)).toBe('0 / 1 < aspect-ratio < 1 / 1')
     })
 })
 describe('<opentype-tag>', () => {
