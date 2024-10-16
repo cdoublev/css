@@ -3789,7 +3789,7 @@ describe('<mf-plain>', () => {
     })
     test('representation', () => {
         const name = ident('width', ['<mf-name>'])
-        const value = dimension(1, 'px', ['<mf-value>'])
+        const value = length(1, 'px', ['<mf-value>'])
         expect(parse('<mf-plain>', 'width: 1px', false, mediaQueryContext))
             .toMatchObject(list([name, delimiter(':'), value], ' ', ['<mf-plain>']))
     })
@@ -3816,7 +3816,7 @@ describe('<mf-range>', () => {
     test('representation', () => {
         const name = ident('width', ['<mf-name>'])
         const comparator = delimiter('=', ['<mf-eq>', '<mf-comparison>'])
-        const value = dimension(1, 'px', ['<mf-value>'])
+        const value = length(1, 'px', ['<mf-value>'])
         expect(parse('<mf-range>', 'width = 1px', false, mediaQueryContext))
             .toMatchObject(list([name, comparator, value], ' ', ['<mf-range>']))
     })
