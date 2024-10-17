@@ -412,8 +412,7 @@ describe('CSSKeyframeProperties', () => {
         style.setProperty('font-weight', '1', 'important')
         expect(style.fontWeight).toBe('')
     })
-    // TODO: add support for replacing `,` with `;` in functions
-    test.skip('valid', () => {
+    test('valid', () => {
 
         const style = CSSKeyframeProperties.create(globalThis, undefined, { parentRule: keyframeRule })
 
@@ -434,12 +433,13 @@ describe('CSSKeyframeProperties', () => {
         expect(style.fontWeight).toBe('attr(name)')
         style.fontWeight = 'random-item(--key, 1)'
         expect(style.fontWeight).toBe('random-item(--key, 1)')
-        style.fontWeight = 'mix(50%, 1, 1)'
-        expect(style.fontWeight).toBe('mix(50%, 1, 1)')
-        style.fontWeight = 'toggle(1, 1)'
-        expect(style.fontWeight).toBe('toggle(1, 1)')
-        style.fontWeight = 'calc-mix(0, random(1, 1), sibling-count())'
-        expect(style.fontWeight).toBe('calc-mix(0, random(1, 1), sibling-count())')
+        // TODO: add support for comma-containing productions nested in {}
+        // style.fontWeight = 'mix(50%, 1, 1)'
+        // expect(style.fontWeight).toBe('mix(50%, 1, 1)')
+        // style.fontWeight = 'toggle(1, 1)'
+        // expect(style.fontWeight).toBe('toggle(1, 1)')
+        // style.fontWeight = 'calc-mix(0, random(1, 1), sibling-count())'
+        // expect(style.fontWeight).toBe('calc-mix(0, random(1, 1), sibling-count())')
 
         // Substitution accepted in cascade-dependent context
         style.fontWeight = 'var(--custom)'
@@ -589,8 +589,7 @@ describe('CSSPositionTryDescriptors', () => {
         style.setProperty('top', '1px', 'important')
         expect(style.top).toBe('')
     })
-    // TODO: add support for replacing `,` with `;` in functions
-    test.skip('valid', () => {
+    test('valid', () => {
 
         const style = CSSPositionTryDescriptors.create(globalThis, undefined, { parentRule: positionTryRule })
 
@@ -607,12 +606,13 @@ describe('CSSPositionTryDescriptors', () => {
         expect(style.top).toBe('attr(name)')
         style.top = 'random-item(--key, 1px)'
         expect(style.top).toBe('random-item(--key, 1px)')
-        style.top = 'mix(50%, 1px, 1px)'
-        expect(style.top).toBe('mix(50%, 1px, 1px)')
-        style.top = 'toggle(1px, 1px)'
-        expect(style.top).toBe('toggle(1px, 1px)')
-        style.top = 'calc-mix(sibling-count(), random(1px, 1px), 1px)'
-        expect(style.top).toBe('calc-mix(sibling-count(), random(1px, 1px), 1px)')
+        // TODO: add support for comma-containing productions nested in {}
+        // style.top = 'mix(50%, 1px, 1px)'
+        // expect(style.top).toBe('mix(50%, 1px, 1px)')
+        // style.top = 'toggle(1px, 1px)'
+        // expect(style.top).toBe('toggle(1px, 1px)')
+        // style.top = 'calc-mix(sibling-count(), random(1px, 1px), 1px)'
+        // expect(style.top).toBe('calc-mix(sibling-count(), random(1px, 1px), 1px)')
 
         // Substitution accepted in cascade-dependent context
         style.top = 'var(--custom)'
@@ -634,39 +634,38 @@ describe('CSS-wide keyword', () => {
 describe('arbitrary substitution', () => {
     test('invalid', () => {
         const style = createStyleBlock()
-        style.setProperty('--custom', 'src(var(--))')
-        expect(style.getPropertyValue('--custom')).toBe('')
+        const invalid = [
+            'attr(name, attr())',
+            'env(name, env())',
+            'random-item(1, random-item())',
+            'var(--custom, var())',
+        ]
+        invalid.forEach(input => {
+            style.setProperty('--custom', input)
+            expect(style.getPropertyValue('--custom')).toBe('')
+        })
     })
-    // TODO: add support for replacing `,` with `;` in functions
-    test.skip('valid', () => {
+    test('valid', () => {
         const style = createStyleBlock()
         const valid = [
-            // <attr()>
-            ['attr(title', 'attr(title)'],
-            ['attr(title, attr(alt))'],
-            ['fn(attr(title))'],
-            ['  /**/  attr(  title, /**/ "title"  )  ', 'attr(title, "title")'],
-            ['attr(title string, "")', 'attr(title)'],
-            ['attr(quantity number, "")'],
-            // <env()>
-            ['env(ab-test-color', 'env(ab-test-color)'],
-            ['env(ab-test-color, env(ab-test-2))'],
-            ['fn(env(ab-test-color))'],
-            ['  /**/  env(  ab-test-color/*, 1 */, 0, 1e0  )  ', 'env(ab-test-color, 0, 1)'],
-            ['env(ab-test-color, 1, 2)'],
-            // <random-item()>
-            ['random-item(--key, 1, 2', 'random-item(--key, 1, 2)'],
-            ['random-item(--key, 1, random-item(--key, 2, 3))'],
-            ['fn(random-item(per-element, 1, 2))'],
-            ['  /**/  random-item(  --key/*, 1 */, 0, 1e0  )  ', 'random-item(--key, 0, 1)'],
-            // <var()>
-            ['var(--custom', 'var(--custom)'],
-            ['var(--custom, var(--fallback))'],
-            ['fn(var(--custom))'],
-            ['  /**/  var(  --CUSTom, /**/ 1e0 /**/)  ', 'var(--CUSTom, 1)'],
+            // Valid at parse time
+            ['unknown(attr(name))'],
+            ['unknown(env(name))'],
+            ['unknown(random-item(--key, 1, 1))'],
+            ['unknown(var(--custom))'],
+            // Nested inside itself
+            ['attr(name, attr(name))'],
+            ['env(name, env(name))'],
+            ['random-item(--key, random-item(--key, 1, 1), 1)'],
+            ['var(--custom, var(--custom))'],
+            // Serialize the list of tokens
+            ['  /**/  attr(  name, /**/ 1e0 /**/  ', 'attr(name, 1)'],
+            ['  /**/  env(  name, /**/ 1e0 /**/  ', 'env(name, 1)'],
+            ['  /**/  random-item(  --key, /**/ 1, 1e0 /**/  ', 'random-item(--key, 1, 1)'],
+            ['  /**/  var(  --custom, /**/ 1e0 /**/  ', 'var(--custom, 1)'],
+            // Exception to comma-elision rules
             ['var(--custom,)', 'var(--custom,)'],
             ['var(--custom, )', 'var(--custom,)'],
-            ['var(--custom, 1, 2)'],
         ]
         valid.forEach(([input, expected = input]) => {
             style.opacity = input
@@ -674,26 +673,23 @@ describe('arbitrary substitution', () => {
         })
     })
 })
-// TODO: add support for replacing `,` with `;` in functions
-describe.skip('<whole-value>', () => {
+describe('<whole-value>', () => {
     test('invalid', () => {
         const style = createStyleBlock()
         const invalid = [
             // Not the <whole-value>
             ['first-valid(0) 0', 'margin'],
-            ['first-valid(first-valid(0) 0)', 'margin'],
             ['mix(0%, 0, 0) 0', 'margin'],
             ['mix(0%, 0, first-valid(0) 0)', 'margin'],
             ['toggle(0, 0) 0', 'margin'],
             ['toggle(0, first-valid(0) 0)', 'margin'],
-            // Invalid value for the property
-            ['mix(0%, red, invalid)', 'color'],
-            ['mix(0%, red, mix(0%, invalid, red))', 'color'],
+            // Invalid <whole-value> argument for the property
+            ['mix(0%, mix(0%, invalid, red), red)', 'color'],
             ['toggle(red, invalid)', 'color'],
-            // Non-animatable property
+            // mix() for non-animatable property
             ['mix(0%, 0s, 0s)', 'animation-duration'],
-            // Nested <toggle()>
-            ['toggle(mix(0%, toggle(0, 0), 0), 0)', '--custom'],
+            // toggle() nested inside itself
+            ['toggle(0, toggle(0, 0))', 'opacity'],
         ]
         invalid.forEach(([substitution, property]) => {
             style.setProperty(property, substitution)
@@ -702,25 +698,27 @@ describe.skip('<whole-value>', () => {
     })
     test('valid', () => {
         const style = createStyleBlock()
+        // TODO: add support for comma-containing productions nested in {}
         const valid = [
             // Serialize the list of tokens
-            ['  /**/  first-valid(  0, /**/ 1e0 /**/)  ', 'first-valid(0, 1)'],
-            ['  /**/  mix(  50%, 0, /**/ 1e0 /**/)  ', 'mix(50%, 0, 1)'],
-            ['  /**/  toggle(0, /**/ 1e0 /**/)  ', 'toggle(0, 1)'],
-            ['first-valid(0, first-valid(1, 2))'],
-            ['mix(50%, 0, mix(50%, 1, 2))'],
+            ['  /**/  first-valid(  0, /**/ 1e0 /**/  ', 'first-valid(0, 1)', 'opacity'],
+            // ['  /**/  mix(  0%, 0, /**/ 1e0 /**/  ', 'mix(0%, 0, 1)', 'opacity'],
+            // ['  /**/  toggle(  0, /**/ 1e0 /**/  ', 'toggle(0, 1)', 'opacity'],
+            // Nested inside itself
+            ['first-valid(toggle(first-valid(1)))', 'first-valid(toggle(first-valid(1)))', 'opacity'],
+            // ['mix(0%, 1, toggle(mix(0%, 1, 1))', 'mix(0%, 0, mix(0%, 1, 1))', 'opacity'],
             // Omitted value
+            ['mix(0%,,)', 'mix(0%,,)', '--custom'],
             ['toggle(,)', 'toggle(,)', '--custom'],
             // Priority to the declaration value range
-            ['first-valid(0) 1', '--custom'],
-            ['first-valid(first-valid(0) 1)', '--custom'],
-            ['mix(50%, 0, 1) 2', '--custom'],
-            ['mix(50%, 0, first-valid(1) 2)', '--custom'],
-            ['toggle(0, 1) 2', '--custom'],
-            ['toggle(0, first-valid(1) 2)', '--custom'],
-            ['toggle(mix(50%, toggle(0, 1), 2), 3)', '--custom'],
+            ['first-valid(1) 1', 'first-valid(1) 1', '--custom'],
+            ['mix(0%, 1, 1) 1', 'mix(0%, 1, 1) 1', '--custom'],
+            ['toggle(1) 1', 'toggle(1) 1', '--custom'],
+            ['toggle(toggle(1))', 'toggle(toggle(1))', '--custom'],
+            // <first-valid()> arguments are validated at parse time
+            ['first-valid(first-valid(invalid))', 'first-valid(first-valid(invalid))', 'opacity'],
         ]
-        valid.forEach(([input, expected = input, property = 'opacity']) => {
+        valid.forEach(([input, expected, property]) => {
             style.setProperty(property, input)
             expect(style.getPropertyValue(property)).toBe(expected)
         })

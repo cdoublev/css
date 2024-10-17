@@ -818,18 +818,18 @@ describe('comma-separated values', () => {
         expect(parse(definition, 'a a, a')).toBe('a a, a')
     })
 })
-// TODO: add support for replacing `,` with `;` in functions
+// TODO: add support for comma-containing productions nested in {}
 describe.skip('functions', () => {
     test('invalid', () => {
         const invalid = [
-            // Upgraded comma
-            ['fn(a?, a)', 'fn(; a)'],
-            ['fn(a, a?)', 'fn(a ;)'],
-            ['fn(a, a?, a)', 'fn(a ;; a)'],
-            ['fn(a#, b#)', 'fn(a, a; b)'],
-            ['fn(a#, b#)', 'fn(a; b, b)'],
-            ['fn(<any-value>)', 'fn(a, a)'],
-            ['fn(<declaration-value>)', 'fn(a, a)'],
+            ['fn(<any-value>)', 'fn(,)'],
+            ['fn(<any-value>)', 'fn(a {})'],
+            ['fn(<any-value>)', 'fn({} a)'],
+            ['fn(<any-value>?)', 'fn({})'],
+            ['fn(<declaration-value>)', 'fn(,)'],
+            ['fn(<declaration-value>)', 'fn(a {})'],
+            ['fn(<declaration-value>)', 'fn({} a)'],
+            ['fn(<declaration-value>?)', 'fn({})'],
         ]
         invalid.forEach(([definition, input]) => expect(parse(definition, input, false)).toBeNull())
     })
@@ -837,21 +837,16 @@ describe.skip('functions', () => {
         const valid = [
             // Case-insensitive name
             ['function(a)', 'FUNction(a)', 'function(a)'],
-            // Upgraded comma
-            ['fn(a#, b#)', 'fn(a; a; b; b)', 'fn(a, a, b, b)'],
-            ['fn(a, a?, a)', 'fn(a; a)', 'fn(a, a)'],
-            ['fn(a, fn(<declaration-value>, <declaration-value>))', 'fn(a; fn(a; a, a))', 'fn(a, fn(a; a, a))'],
-            ['fn(<declaration-value>#)', 'fn(a, b)'],
-            ['fn(<declaration-value>#)', 'fn(a; b, b)'],
-            ['fn(<declaration-value>#)', 'fn(a, a; b)'],
+            // Comma-containing productions
+            ['fn(<declaration-value>)', 'fn({ , })'],
+            ['fn(<declaration-value>)', 'fn({ a })', 'fn(a)'],
         ]
         valid.forEach(([definition, input, expected = input]) => expect(parse(definition, input)).toBe(expected))
     })
 })
 
 describe('<any-value>', () => {
-    // TODO: add support for replacing `,` with `;` in functions
-    test.skip('invalid', () => {
+    test('invalid', () => {
         const invalid = [
             // One or more tokens
             [''],
@@ -861,7 +856,6 @@ describe('<any-value>', () => {
             [')'],
             [']'],
             ['}'],
-            ['fn(,)', 'fn(<any-value>)'],
         ]
         invalid.forEach(([input, definition = '<any-value>']) =>
             expect(parse(definition, input, false)).toBeNull())
@@ -875,8 +869,7 @@ describe('<any-value>', () => {
     })
 })
 describe('<declaration-value>', () => {
-    // TODO: add support for replacing `,` with `;` in functions
-    test.skip('invalid', () => {
+    test('invalid', () => {
         const invalid = [
             // One or more tokens
             [''],
@@ -888,7 +881,6 @@ describe('<declaration-value>', () => {
             ['}'],
             [';'],
             ['!'],
-            ['fn(,)', 'fn(<declaration-value>)'],
         ]
         invalid.forEach(([input, definition = '<declaration-value>']) =>
             expect(parse(definition, input, false)).toBeNull())
