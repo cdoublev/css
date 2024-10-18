@@ -75,20 +75,20 @@ const equal = delimiter('=')
 const lt = delimiter('<')
 
 describe('combined values', () => {
-    it('parses and serializes a value matched against a b', () => {
+    test('a b', () => {
         const definition = 'a b'
         expect(parse(definition, 'a')).toBe('')
         expect(parse(definition, 'a b c')).toBe('')
         expect(parse(definition, 'a b')).toBe('a b')
     })
-    it('parses and serializes a value matched against a && b', () => {
+    test('a && b', () => {
         const definition = 'a && b'
         expect(parse(definition, 'a')).toBe('')
         expect(parse(definition, 'a b c')).toBe('')
         expect(parse(definition, 'a b')).toBe('a b')
         expect(parse(definition, 'b a')).toBe('a b')
     })
-    it('parses and serializes a value matched against a || b', () => {
+    test('a || b', () => {
         const definition = 'a || b'
         expect(parse(definition, 'a b c')).toBe('')
         expect(parse(definition, 'a')).toBe('a')
@@ -96,7 +96,7 @@ describe('combined values', () => {
         expect(parse(definition, 'a b')).toBe('a b')
         expect(parse(definition, 'b a')).toBe('a b')
     })
-    it('parses and serializes a value matched against a | b', () => {
+    test('a | b', () => {
         const definition = 'a | b'
         expect(parse(definition, 'c')).toBe('')
         expect(parse(definition, 'a b')).toBe('')
@@ -105,59 +105,46 @@ describe('combined values', () => {
     })
 })
 describe('multiplied values', () => {
-    it('parses a value matched against a?', () => {
-        const definition = 'a?'
-        expect(parse(definition, '', false)).toBe(omitted)
-        expect(parse(definition, 'a', false)).toMatchObject(a)
-    })
-    it('parses and serializes a value matched against a?', () => {
+    test('a?', () => {
         const definition = 'a?'
         expect(parse(definition, '')).toBe('')
+        expect(parse(definition, '', false)).toBe(omitted)
         expect(parse(definition, 'a a')).toBe('')
         expect(parse(definition, 'a')).toBe('a')
     })
-    it('parses a value matched against a*', () => {
-        const definition = 'a*'
-        expect(parse(definition, '', false)).toMatchObject(list())
-        expect(parse(definition, 'a', false)).toMatchObject(list([a]))
-        expect(parse(definition, 'a a', false)).toMatchObject(list([a, a]))
-    })
-    it('parses and serializes a value matched against a*', () => {
+    test('a*', () => {
         const definition = 'a*'
         expect(parse(definition, '')).toBe('')
+        expect(parse(definition, '', false)).toMatchObject(list())
         expect(parse(definition, 'a, a')).toBe('')
         expect(parse(definition, 'a')).toBe('a')
         expect(parse(definition, 'a a')).toBe('a a')
     })
-    it('parses and serializes a value matched against a+', () => {
+    test('a+', () => {
         const definition = 'a+'
         expect(parse(definition, '')).toBe('')
         expect(parse(definition, 'a, a')).toBe('')
         expect(parse(definition, 'a')).toBe('a')
         expect(parse(definition, 'a a')).toBe('a a')
     })
-    it('parses a value matched against a#', () => {
-        const definition = 'a#'
-        expect(parse(definition, 'a', false)).toMatchObject(list([a], ','))
-        expect(parse(definition, 'a, a', false)).toMatchObject(list([a, a], ','))
-    })
-    it('parses and serializes a value matched against a#', () => {
+    test('a#', () => {
         const definition = 'a#'
         expect(parse(definition, '')).toBe('')
         expect(parse(definition, 'a, a,')).toBe('')
         expect(parse(definition, 'a a')).toBe('')
         expect(parse(definition, 'a')).toBe('a')
+        expect(parse(definition, 'a', false)).toMatchObject(list([a], ','))
         expect(parse(definition, 'a, a')).toBe('a, a')
         expect(parse(definition, 'a , a')).toBe('a, a')
     })
-    it('parses and serializes a value matched against a#?', () => {
+    test('a#?', () => {
         const definition = 'a a#?'
         expect(parse(definition, 'a, a')).toBe('')
         expect(parse(definition, 'a')).toBe('a')
         expect(parse(definition, 'a a')).toBe('a a')
         expect(parse(definition, 'a a, a')).toBe('a a, a')
     })
-    it('parses and serializes a value matched against a+#', () => {
+    test('a+#', () => {
         const definition = 'a+#'
         expect(parse(definition, 'a')).toBe('a')
         expect(parse(definition, 'a a')).toBe('a a')
@@ -165,7 +152,7 @@ describe('multiplied values', () => {
         expect(parse(definition, 'a a, a')).toBe('a a, a')
         expect(parse(definition, 'a, a a')).toBe('a, a a')
     })
-    it('parses and serializes a value matched against a+#?', () => {
+    test('a+#?', () => {
         const definition = 'a a+#?'
         expect(parse(definition, 'a, a')).toBe('')
         expect(parse(definition, 'a')).toBe('a')
@@ -175,190 +162,185 @@ describe('multiplied values', () => {
         expect(parse(definition, 'a a, a a')).toBe('a a, a a')
         expect(parse(definition, 'a a a, a')).toBe('a a a, a')
     })
-    it('parses a value matched against a{2}', () => {
-        const definition = 'a{2}'
-        expect(parse(definition, 'a', false)).toBeNull()
-        expect(parse(definition, 'a a', false)).toMatchObject(list([a, a]))
-    })
-    it('parses and serializes a value matched against a{2}', () => {
+    test('a{2}', () => {
         const definition = 'a{2}'
         expect(parse(definition, 'a')).toBe('')
         expect(parse(definition, 'a a')).toBe('a a')
         expect(parse(definition, 'a a a')).toBe('')
         expect(parse(definition, 'a, a')).toBe('')
     })
-    it('parses and serializes a value matched against a{2,3}', () => {
+    test('a{2,3}', () => {
         const definition = 'a{2,3}'
         expect(parse(definition, 'a')).toBe('')
         expect(parse(definition, 'a a')).toBe('a a')
         expect(parse(definition, 'a a a')).toBe('a a a')
         expect(parse(definition, 'a a a a')).toBe('')
     })
-    it('parses and serializes a value matched against a{2,∞}', () => {
+    test('a{2,∞}', () => {
         const definition = 'a{2,∞}'
         expect(parse(definition, 'a')).toBe('')
         expect(parse(definition, 'a a')).toBe('a a')
         expect(parse(definition, 'a a a')).toBe('a a a')
     })
-    it('parses and serializes a value matched against a{2,}', () => {
+    test('a{2,}', () => {
         const definition = 'a{2,}'
         expect(parse(definition, 'a')).toBe('')
         expect(parse(definition, 'a a')).toBe('a a')
         expect(parse(definition, 'a a a')).toBe('a a a')
     })
-    it('parses a value matched against a{0,∞}', () => {
+    test('a{0,∞}', () => {
         const definition = 'a{0,∞}'
         expect(parse(definition, '', false)).toMatchObject(list())
         expect(parse(definition, 'a a', false)).toMatchObject(list([a, a]))
     })
-    it('parses a value matched against [a b?]', () => {
+    test('[a b?]', () => {
         const definition = '[a b?]'
         expect(parse(definition, '', false)).toBeNull()
         expect(parse(definition, 'a', false)).toMatchObject(list([a, omitted]))
         expect(parse(definition, 'a b', false)).toMatchObject(list([a, b]))
     })
-    it('parses a value matched against [a b?]?', () => {
+    test('[a b?]?', () => {
         const definition = '[a b?]?'
         expect(parse(definition, '', false)).toBe(omitted)
         expect(parse(definition, 'a', false)).toMatchObject(list([a, omitted]))
         expect(parse(definition, 'a b', false)).toMatchObject(list([a, b]))
     })
-    it('parses a value matched against [a b?]*', () => {
+    test('[a b?]*', () => {
         const definition = '[a b?]*'
         expect(parse(definition, '', false)).toMatchObject(list())
         expect(parse(definition, 'a', false)).toMatchObject(list([list([a, omitted])]))
         expect(parse(definition, 'a b', false)).toMatchObject(list([list([a, b])]))
     })
-    it('parses a value matched against [a b?]#', () => {
+    test('[a b?]#', () => {
         const definition = '[a b?]#'
         expect(parse(definition, '', false)).toBeNull()
         expect(parse(definition, 'a', false)).toMatchObject(list([list([a, omitted])], ','))
         expect(parse(definition, 'a b', false)).toMatchObject(list([list([a, b])], ','))
     })
-    it('parses a value matched against [a? b?]', () => {
+    test('[a? b?]', () => {
         const definition = '[a? b?]'
         expect(parse(definition, '', false)).toMatchObject(list([omitted, omitted]))
         expect(parse(definition, 'a', false)).toMatchObject(list([a, omitted]))
         expect(parse(definition, 'a b', false)).toMatchObject(list([a, b]))
     })
-    it('parses a value matched against [a? b?]?', () => {
+    test('[a? b?]?', () => {
         const definition = '[a? b?]?'
         expect(parse(definition, '', false)).toMatchObject(list([omitted, omitted]))
         expect(parse(definition, 'a', false)).toMatchObject(list([a, omitted]))
         expect(parse(definition, 'b', false)).toMatchObject(list([omitted, b]))
         expect(parse(definition, 'a b', false)).toMatchObject(list([a, b]))
     })
-    it('parses a value matched against [a? b?]!', () => {
+    test('[a? b?]!', () => {
         const definition = '[a? b?]!'
         expect(parse(definition, '', false)).toBeNull()
         expect(parse(definition, 'a', false)).toMatchObject(list([a, omitted]))
         expect(parse(definition, 'b', false)).toMatchObject(list([omitted, b]))
         expect(parse(definition, 'a b', false)).toMatchObject(list([a, b]))
     })
-    it('parses and serializes a value matched against a [b? c?]!', () => {
+    test('a [b? c?]!', () => {
         const definition = 'a [b? c?]!'
         expect(parse(definition, 'a')).toBe('')
         expect(parse(definition, 'a b')).toBe('a b')
         expect(parse(definition, 'a c')).toBe('a c')
     })
-    it('parses a value matched against [a b]', () => {
+    test('[a b]', () => {
         const definition = '[a b]'
         expect(parse(definition, '', false)).toBeNull()
         expect(parse(definition, 'a', false)).toBeNull()
         expect(parse(definition, 'b', false)).toBeNull()
         expect(parse(definition, 'a b', false)).toMatchObject(list([a, b]))
     })
-    it('parses a value matched against [a b]?', () => {
+    test('[a b]?', () => {
         const definition = '[a b]?'
         expect(parse(definition, '', false)).toBe(omitted)
         expect(parse(definition, 'a', false)).toBeNull()
         expect(parse(definition, 'b', false)).toBeNull()
         expect(parse(definition, 'a b', false)).toMatchObject(list([a, b]))
     })
-    it('parses a value matched against [a b]*', () => {
+    test('[a b]*', () => {
         const definition = '[a b]*'
         expect(parse(definition, '', false)).toMatchObject(list())
         expect(parse(definition, 'a', false)).toBeNull()
         expect(parse(definition, 'b', false)).toBeNull()
         expect(parse(definition, 'a b', false)).toMatchObject(list([list([a, b])]))
     })
-    it('parses a value matched against [a b]#', () => {
+    test('[a b]#', () => {
         const definition = '[a b]#'
         expect(parse(definition, '', false)).toBeNull()
         expect(parse(definition, 'a', false)).toBeNull()
         expect(parse(definition, 'b', false)).toBeNull()
         expect(parse(definition, 'a b', false)).toMatchObject(list([list([a, b])], ','))
     })
-    it('parses a value matched against [a | b]', () => {
+    test('[a | b]', () => {
         const definition = '[a | b]'
         expect(parse(definition, '', false)).toBeNull()
         expect(parse(definition, 'a', false)).toMatchObject(a)
         expect(parse(definition, 'b', false)).toMatchObject(b)
     })
-    it('parses a value matched against [a | b]?', () => {
+    test('[a | b]?', () => {
         const definition = '[a | b]?'
         expect(parse(definition, '', false)).toBe(omitted)
         expect(parse(definition, 'a', false)).toMatchObject(a)
         expect(parse(definition, 'b', false)).toMatchObject(b)
     })
-    it('parses a value matched against [a | b]*', () => {
+    test('[a | b]*', () => {
         const definition = '[a | b]*'
         expect(parse(definition, '', false)).toMatchObject(list())
         expect(parse(definition, 'a', false)).toMatchObject(list([a]))
         expect(parse(definition, 'b', false)).toMatchObject(list([b]))
     })
-    it('parses a value matched against [a | b]#', () => {
+    test('[a | b]#', () => {
         const definition = '[a | b]#'
         expect(parse(definition, '', false)).toBeNull()
         expect(parse(definition, 'a', false)).toMatchObject(list([a], ','))
         expect(parse(definition, 'b', false)).toMatchObject(list([b], ','))
     })
-    it('parses a value matched against [a | b b]', () => {
+    test('[a | b b]', () => {
         const definition = '[a | b b]'
         expect(parse(definition, '', false)).toBeNull()
         expect(parse(definition, 'a', false)).toMatchObject(a)
         expect(parse(definition, 'b b', false)).toMatchObject(list([b, b]))
     })
-    it('parses a value matched against [a | b b]?', () => {
+    test('[a | b b]?', () => {
         const definition = '[a | b b]?'
         expect(parse(definition, '', false)).toBe(omitted)
         expect(parse(definition, 'a', false)).toMatchObject(a)
         expect(parse(definition, 'b b', false)).toMatchObject(list([b, b]))
     })
-    it('parses a value matched against [a | b b]*', () => {
+    test('[a | b b]*', () => {
         const definition = '[a | b b]*'
         expect(parse(definition, '', false)).toMatchObject(list())
         expect(parse(definition, 'a', false)).toMatchObject(list([a]))
         expect(parse(definition, 'b b', false)).toMatchObject(list([list([b, b])]))
     })
-    it('parses a value matched against [a | b b]#', () => {
+    test('[a | b b]#', () => {
         const definition = '[a | b b]#'
         expect(parse(definition, '', false)).toBeNull()
         expect(parse(definition, 'a', false)).toMatchObject(list([a], ','))
         expect(parse(definition, 'b b', false)).toMatchObject(list([list([b, b])], ','))
     })
-    it('parses a value matched against [a || b]', () => {
+    test('[a || b]', () => {
         const definition = '[a || b]'
         expect(parse(definition, '', false)).toBeNull()
         expect(parse(definition, 'a', false)).toMatchObject(list([a, omitted]))
         expect(parse(definition, 'b', false)).toMatchObject(list([omitted, b]))
         expect(parse(definition, 'a b', false)).toMatchObject(list([a, b]))
     })
-    it('parses a value matched against [a || b]?', () => {
+    test('[a || b]?', () => {
         const definition = '[a || b]?'
         expect(parse(definition, '', false)).toBe(omitted)
         expect(parse(definition, 'a', false)).toMatchObject(list([a, omitted]))
         expect(parse(definition, 'b', false)).toMatchObject(list([omitted, b]))
         expect(parse(definition, 'a b', false)).toMatchObject(list([a, b]))
     })
-    it('parses a value matched against [a || b]*', () => {
+    test('[a || b]*', () => {
         const definition = '[a || b]*'
         expect(parse(definition, '', false)).toMatchObject(list())
         expect(parse(definition, 'a', false)).toMatchObject(list([list([a, omitted])]))
         expect(parse(definition, 'b', false)).toMatchObject(list([list([omitted, b])]))
         expect(parse(definition, 'a b', false)).toMatchObject(list([list([a, b])]))
     })
-    it('parses a value matched against [a || b]#', () => {
+    test('[a || b]#', () => {
         const definition = '[a || b]#'
         expect(parse(definition, '', false)).toBeNull()
         expect(parse(definition, 'a, b', false)).toMatchObject(list([list([a, omitted]), list([omitted, b])], ','))
@@ -367,28 +349,28 @@ describe('multiplied values', () => {
         expect(parse(definition, 'a b', false)).toMatchObject(list([list([a, b])], ','))
         expect(parse(definition, 'a b, b', false)).toMatchObject(list([list([a, b]), list([omitted, b])], ','))
     })
-    it('parses a value matched against [a || b b]', () => {
+    test('[a || b b]', () => {
         const definition = '[a || b b]'
         expect(parse(definition, '', false)).toBeNull()
         expect(parse(definition, 'a', false)).toMatchObject(list([a, omitted]))
         expect(parse(definition, 'b b', false)).toMatchObject(list([omitted, list([b, b])]))
         expect(parse(definition, 'a b b', false)).toMatchObject(list([a, list([b, b])]))
     })
-    it('parses a value matched against [a || b b]?', () => {
+    test('[a || b b]?', () => {
         const definition = '[a || b b]?'
         expect(parse(definition, '', false)).toBe(omitted)
         expect(parse(definition, 'a', false)).toMatchObject(list([a, omitted]))
         expect(parse(definition, 'b b', false)).toMatchObject(list([omitted, list([b, b])]))
         expect(parse(definition, 'a b b', false)).toMatchObject(list([a, list([b, b])]))
     })
-    it('parses a value matched against [a || b b]*', () => {
+    test('[a || b b]*', () => {
         const definition = '[a || b b]*'
         expect(parse(definition, '', false)).toMatchObject(list())
         expect(parse(definition, 'a', false)).toMatchObject(list([list([a, omitted])]))
         expect(parse(definition, 'b b', false)).toMatchObject(list([list([omitted, list([b, b])])]))
         expect(parse(definition, 'a b b', false)).toMatchObject(list([list([a, list([b, b])])]))
     })
-    it('parses a value matched against [a || b b]#', () => {
+    test('[a || b b]#', () => {
         const definition = '[a || b b]#'
         expect(parse(definition, '', false)).toBeNull()
         expect(parse(definition, 'a', false)).toMatchObject(list([list([a, omitted])], ','))
@@ -398,21 +380,21 @@ describe('multiplied values', () => {
 })
 describe('backtracking', () => {
     // Simple backtracking
-    it('parses and serializes a value matched against a | a a | a a a', () => {
+    test('a | a a | a a a', () => {
         const definition = 'a | a a | a a a'
         expect(parse(definition, 'a')).toBe('a')
         expect(parse(definition, 'a a')).toBe('a a')
         expect(parse(definition, 'a a a')).toBe('a a a')
         expect(parse(definition, 'a a a a')).toBe('')
     })
-    it('parses and serializes a value matched against a a a | a a | a', () => {
+    test('a a a | a a | a', () => {
         const definition = 'a a a | a a | a'
         expect(parse(definition, 'a')).toBe('a')
         expect(parse(definition, 'a a')).toBe('a a')
         expect(parse(definition, 'a a a')).toBe('a a a')
         expect(parse(definition, 'a a a a')).toBe('')
     })
-    it('parses and serializes a value matched against a || a a || a a a', () => {
+    test('a || a a || a a a', () => {
         const definition = 'a || a a || a a a'
         expect(parse(definition, 'a')).toBe('a')
         expect(parse(definition, 'a a')).toBe('a a')
@@ -422,7 +404,7 @@ describe('backtracking', () => {
         expect(parse(definition, 'a a a a a a')).toBe('a a a a a a')
         expect(parse(definition, 'a a a a a a a')).toBe('')
     })
-    it('parses and serializes a value matched against a a a || a a || a', () => {
+    test('a a a || a a || a', () => {
         const definition = 'a a a || a a || a'
         expect(parse(definition, 'a')).toBe('a')
         expect(parse(definition, 'a a')).toBe('a a')
@@ -432,21 +414,21 @@ describe('backtracking', () => {
         expect(parse(definition, 'a a a a a a')).toBe('a a a a a a')
         expect(parse(definition, 'a a a a a a a')).toBe('')
     })
-    it('parses and serializes a value matched against a && a a', () => {
+    test('a && a a', () => {
         const definition = 'a && a a'
         expect(parse(definition, 'a')).toBe('')
         expect(parse(definition, 'a a')).toBe('')
         expect(parse(definition, 'a a a')).toBe('a a a')
         expect(parse(definition, 'a a a a')).toBe('')
     })
-    it('parses and serializes a value matched against a a && a', () => {
+    test('a a && a', () => {
         const definition = 'a a && a'
         expect(parse(definition, 'a')).toBe('')
         expect(parse(definition, 'a a')).toBe('')
         expect(parse(definition, 'a a a')).toBe('a a a')
         expect(parse(definition, 'a a a a')).toBe('')
     })
-    it('parses and serializes a value matched against a && a b && a b c', () => {
+    test('a && a b && a b c', () => {
         const definition = 'a && a b && a b c'
         expect(parse(definition, 'a')).toBe('')
         expect(parse(definition, 'a b')).toBe('')
@@ -467,7 +449,7 @@ describe('backtracking', () => {
         expect(parse(definition, 'a a b a b c a')).toBe('')
     })
     // Complex backtracking
-    it('parses and serializes a value matched against [a | a a | a a a] a', () => {
+    test('[a | a a | a a a] a', () => {
         const definition = '[a | a a | a a a] a'
         expect(parse(definition, 'a')).toBe('')
         expect(parse(definition, 'a a')).toBe('a a')
@@ -475,7 +457,7 @@ describe('backtracking', () => {
         expect(parse(definition, 'a a a a')).toBe('a a a a')
         expect(parse(definition, 'a a a a a')).toBe('')
     })
-    it('parses and serializes a value matched against [a | a a | a a a] && a', () => {
+    test('[a | a a | a a a] && a', () => {
         const definition = '[a | a a | a a a] && a'
         expect(parse(definition, 'a')).toBe('')
         expect(parse(definition, 'a a')).toBe('a a')
@@ -483,7 +465,7 @@ describe('backtracking', () => {
         expect(parse(definition, 'a a a a')).toBe('a a a a')
         expect(parse(definition, 'a a a a a')).toBe('')
     })
-    it('parses and serializes a value matched against [a | a a | a a a] || a', () => {
+    test('[a | a a | a a a] || a', () => {
         const definition = '[a | a a | a a a] || a'
         expect(parse(definition, 'a')).toBe('a')
         expect(parse(definition, 'a a')).toBe('a a')
@@ -491,7 +473,7 @@ describe('backtracking', () => {
         expect(parse(definition, 'a a a a')).toBe('a a a a')
         expect(parse(definition, 'a a a a a')).toBe('')
     })
-    it('parses and serializes a value matched against [a || a a || a a a] a', () => {
+    test('[a || a a || a a a] a', () => {
         const definition = '[a || a a || a a a] a'
         expect(parse(definition, 'a')).toBe('')
         expect(parse(definition, 'a a')).toBe('a a')
@@ -502,7 +484,7 @@ describe('backtracking', () => {
         expect(parse(definition, 'a a a a a a a')).toBe('a a a a a a a')
         expect(parse(definition, 'a a a a a a a a')).toBe('')
     })
-    it('parses and serializes a value matched against [a || a a || a a a] && a', () => {
+    test('[a || a a || a a a] && a', () => {
         const definition = '[a || a a || a a a] && a'
         expect(parse(definition, 'a')).toBe('')
         expect(parse(definition, 'a a')).toBe('a a')
@@ -513,7 +495,7 @@ describe('backtracking', () => {
         expect(parse(definition, 'a a a a a a a')).toBe('a a a a a a a')
         expect(parse(definition, 'a a a a a a a a')).toBe('')
     })
-    it('parses and serializes a value matched against [a || a a || a a a] | a', () => {
+    test('[a || a a || a a a] | a', () => {
         const definition = '[a || a a || a a a] | a'
         expect(parse(definition, 'a')).toBe('a')
         expect(parse(definition, 'a a')).toBe('a a')
@@ -523,7 +505,7 @@ describe('backtracking', () => {
         expect(parse(definition, 'a a a a a a')).toBe('a a a a a a')
         expect(parse(definition, 'a a a a a a a')).toBe('')
     })
-    it('parses and serializes a value matched against [a | a a | a a a]{2} a', () => {
+    test('[a | a a | a a a]{2} a', () => {
         const definition = '[a | a a | a a a]{2} a'
         expect(parse(definition, 'a')).toBe('')
         expect(parse(definition, 'a a')).toBe('')
@@ -534,26 +516,26 @@ describe('backtracking', () => {
         expect(parse(definition, 'a a a a a a a')).toBe('a a a a a a a')
         expect(parse(definition, 'a a a a a a a a')).toBe('')
     })
-    it('parses and serializes a value matched against a? a{2}', () => {
+    test('a? a{2}', () => {
         const definition = 'a? a{2}'
         expect(parse(definition, 'a')).toBe('')
         expect(parse(definition, 'a a')).toBe('a a')
         expect(parse(definition, 'a a a')).toBe('a a a')
     })
-    it('parses and serializes a value matched against [a | a a]* a', () => {
+    test('[a | a a]* a', () => {
         const definition = '[a | a a]* a'
         expect(parse(definition, 'a')).toBe('a')
         expect(parse(definition, 'a a')).toBe('a a')
         expect(parse(definition, 'a a a')).toBe('a a a')
     })
-    it('parses and serializes a value matched against [a? | a a] a', () => {
+    test('[a? | a a] a', () => {
         const definition = '[a? | a a] a'
         expect(parse(definition, 'a')).toBe('a')
         expect(parse(definition, 'a a')).toBe('a a')
         expect(parse(definition, 'a a a')).toBe('a a a')
         expect(parse(definition, 'a a a a')).toBe('')
     })
-    it('parses and serializes a value matched against [a? || a a] a', () => {
+    test('[a? || a a] a', () => {
         const definition = '[a? || a a] a'
         expect(parse(definition, 'a')).toBe('a')
         expect(parse(definition, 'a a')).toBe('a a')
@@ -561,21 +543,21 @@ describe('backtracking', () => {
         expect(parse(definition, 'a a a a')).toBe('a a a a')
         expect(parse(definition, 'a a a a a')).toBe('')
     })
-    it('parses and serializes a value matched against [a? && a?] a', () => {
+    test('[a? && a?] a', () => {
         const definition = '[a? && a?] a'
         expect(parse(definition, 'a')).toBe('a')
         expect(parse(definition, 'a a')).toBe('a a')
         expect(parse(definition, 'a a a')).toBe('a a a')
         expect(parse(definition, 'a a a a')).toBe('')
     })
-    it('parses and serializes a value matched against [a{2}]? && a', () => {
+    test('[a{2}]? && a', () => {
         const definition = '[a{2}]? && a'
         expect(parse(definition, 'a')).toBe('a')
         expect(parse(definition, 'a a')).toBe('')
         expect(parse(definition, 'a a a')).toBe('a a a')
         expect(parse(definition, 'a a a a')).toBe('')
     })
-    it('parses and serializes a value matched against [a | a a | a a a] [a | a a]', () => {
+    test('[a | a a | a a a] [a | a a]', () => {
         const definition = '[a | a a | a a a] [a | a a]'
         expect(parse(definition, 'a')).toBe('')
         expect(parse(definition, 'a a')).toBe('a a')
@@ -584,14 +566,14 @@ describe('backtracking', () => {
         expect(parse(definition, 'a a a a a')).toBe('a a a a a')
         expect(parse(definition, 'a a a a a a')).toBe('')
     })
-    it('parses and serializes a value matched against [a | a a] a | a', () => {
+    test('[a | a a] a | a', () => {
         const definition = '[a | a a] a | a'
         expect(parse(definition, 'a')).toBe('a')
         expect(parse(definition, 'a a')).toBe('a a')
         expect(parse(definition, 'a a a')).toBe('a a a')
         expect(parse(definition, 'a a a a')).toBe('')
     })
-    it('parses and serializes a value matched against [a && [a | a a]] a', () => {
+    test('[a && [a | a a]] a', () => {
         const definition = '[a && [a | a a]] a'
         expect(parse(definition, 'a')).toBe('')
         expect(parse(definition, 'a a')).toBe('')
@@ -603,7 +585,7 @@ describe('backtracking', () => {
      * There is no definition of the following requirement in specifications but
      * combination order often encode priorities to resolve an ambiguity.
      */
-    it('parses a value in lexicographic order', () => {
+    test('lexicographic order', () => {
 
         // <media-type> and <namespace-prefix> represent <ident>
         const definition = 'a || <media-type> || <namespace-prefix>'
@@ -628,22 +610,22 @@ describe('backtracking', () => {
      * 3. The list must not be updated with the result from parsing because it
      * may be different depending on the context production.
      */
-    it('parses and serializes a replacing value', () => {
+    test('replaced value', () => {
         expect(parse('<angle-percentage>? <length-percentage>', 'calc(1%)')).toBe('calc(1%)')
     })
 })
 describe('optional whitespace', () => {
-    it('parses and serializes a value with an omitted whitespace', () => {
+    test('omitted', () => {
         expect(parse('a a', 'a/**/a')).toBe('a a')
     })
-    it('parses and serializes a value including leading and trailing whitespaces', () => {
+    test('leading and trailing', () => {
         expect(parse('fn(a)', '  fn(  a  )  ')).toBe('fn(a)')
         expect(parse('(a)', '  (  a  )  ')).toBe('(a)')
     })
 })
 describe('comma-separated values', () => {
     // Comma-elision rules apply
-    it('parses and serializes a value matched against a?, a?, a', () => {
+    test('a?, a?, a', () => {
 
         const definition = 'a?, a?, a'
 
@@ -663,7 +645,7 @@ describe('comma-separated values', () => {
         expect(parse(definition, 'a,a')).toBe('a, a')
         expect(parse(definition, 'a, a, a')).toBe('a, a, a')
     })
-    it('parses and serializes a value matched against a, a?, a?', () => {
+    test('a, a?, a?', () => {
 
         const definition = 'a, a?, a?'
 
@@ -680,7 +662,7 @@ describe('comma-separated values', () => {
         expect(parse(definition, 'a, a')).toBe('a, a')
         expect(parse(definition, 'a, a, a')).toBe('a, a, a')
     })
-    it('parses and serializes a value matched against [a?, a?,] a', () => {
+    test('[a?, a?,] a', () => {
 
         const definition = '[a?, a?,] a'
 
@@ -694,7 +676,7 @@ describe('comma-separated values', () => {
         expect(parse(definition, 'a, a')).toBe('a, a')
         expect(parse(definition, 'a, a, a')).toBe('a, a, a')
     })
-    it('parses and serializes a value matched against a [, a? , a?]', () => {
+    test('a [, a? , a?]', () => {
 
         const definition = 'a [, a? , a?]'
 
@@ -708,7 +690,7 @@ describe('comma-separated values', () => {
         expect(parse(definition, 'a, a')).toBe('a, a')
         expect(parse(definition, 'a, a, a')).toBe('a, a, a')
     })
-    it('parses and serializes a value matched against a, && a, && a', () => {
+    test('a, && a, && a', () => {
 
         const definition = 'a, && a, && a'
 
@@ -719,7 +701,7 @@ describe('comma-separated values', () => {
         expect(parse(definition, 'a a, a')).toBe('a, a a')
         expect(parse(definition, 'a, a, a')).toBe('a, a, a')
     })
-    it('parses and serializes a value matched against a, || a, || a', () => {
+    test('a, || a, || a', () => {
 
         const definition = 'a, || a, || a'
 
@@ -735,7 +717,7 @@ describe('comma-separated values', () => {
         expect(parse(definition, 'a a, a')).toBe('a, a a')
         expect(parse(definition, 'a, a, a')).toBe('a, a, a')
     })
-    it('parses and serializes a value matched against a#?, a', () => {
+    test('a#?, a', () => {
 
         const definition = 'a#?, a'
 
@@ -747,7 +729,7 @@ describe('comma-separated values', () => {
         expect(parse(definition, 'a, a')).toBe('a, a')
         expect(parse(definition, 'a, a, a')).toBe('a, a, a')
     })
-    it('parses and serializes a value matched against a*, a', () => {
+    test('a*, a', () => {
 
         const definition = 'a*, a'
 
@@ -755,7 +737,7 @@ describe('comma-separated values', () => {
         expect(parse(definition, 'a, a')).toBe('a, a')
     })
     // Comma-elision rules do or do not apply
-    it('parses and serializes a value matched against a [a?, && a]', () => {
+    test('a [a?, && a]', () => {
 
         const definition = 'a [a?, && a]'
 
@@ -767,7 +749,7 @@ describe('comma-separated values', () => {
         expect(parse(definition, 'a a a')).toBe('a a a')
     })
     // Comma-elision rules do not apply
-    it('parses and serializes a value matched against a a?, a', () => {
+    test('a a?, a', () => {
 
         const definition = 'a a?, a'
 
@@ -777,7 +759,7 @@ describe('comma-separated values', () => {
         expect(parse(definition, 'a, a')).toBe('a, a')
         expect(parse(definition, 'a a, a')).toBe('a a, a')
     })
-    it('parses and serializes a value matched against a, a? a', () => {
+    test('a, a? a', () => {
 
         const definition = 'a, a? a'
 
@@ -787,7 +769,7 @@ describe('comma-separated values', () => {
         expect(parse(definition, 'a, a')).toBe('a, a')
         expect(parse(definition, 'a, a a')).toBe('a, a a')
     })
-    it('parses and serializes a value matched against a [a?, a]', () => {
+    test('a [a?, a]', () => {
 
         const definition = 'a [a?, a]'
 
@@ -797,7 +779,7 @@ describe('comma-separated values', () => {
         expect(parse(definition, 'a, a')).toBe('a, a')
         expect(parse(definition, 'a a, a')).toBe('a a, a')
     })
-    it('parses and serializes a value matched against a [, a? a]', () => {
+    test('a [, a? a]', () => {
 
         const definition = 'a [, a? a]'
 
@@ -807,7 +789,7 @@ describe('comma-separated values', () => {
         expect(parse(definition, 'a, a')).toBe('a, a')
         expect(parse(definition, 'a, a a')).toBe('a, a a')
     })
-    it('parses and serializes a value matched against [a a?,] a', () => {
+    test('[a a?,] a', () => {
 
         const definition = '[a a?,] a'
 
