@@ -893,6 +893,7 @@ describe('<declaration-value>', () => {
     })
     test('valid', () => {
         expect(parse('<declaration-value>', '  /**/  1e0  /**/  ')).toBe('1')
+        expect(parse('<declaration-value>', '" "')).toBe('" "')
     })
 })
 describe('<declaration>', () => {
