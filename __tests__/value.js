@@ -825,11 +825,11 @@ describe.skip('functions', () => {
             ['fn(<any-value>)', 'fn(,)'],
             ['fn(<any-value>)', 'fn(a {})'],
             ['fn(<any-value>)', 'fn({} a)'],
-            ['fn(<any-value>?)', 'fn({})'],
+            ['fn(<any-value>)', 'fn({})'],
             ['fn(<declaration-value>)', 'fn(,)'],
             ['fn(<declaration-value>)', 'fn(a {})'],
             ['fn(<declaration-value>)', 'fn({} a)'],
-            ['fn(<declaration-value>?)', 'fn({})'],
+            ['fn(<declaration-value>)', 'fn({})'],
         ]
         invalid.forEach(([definition, input]) => expect(parse(definition, input, false)).toBeNull())
     })
@@ -838,8 +838,10 @@ describe.skip('functions', () => {
             // Case-insensitive name
             ['function(a)', 'FUNction(a)', 'function(a)'],
             // Comma-containing productions
-            ['fn(<declaration-value>)', 'fn({ , })'],
             ['fn(<declaration-value>)', 'fn({ a })', 'fn(a)'],
+            ['fn(<declaration-value>)', 'fn({ , })', 'fn({,})'],
+            ['fn(<declaration-value>)', 'fn({{}})', 'fn({{}})'],
+            ['fn(<declaration-value>?)', 'fn({})', 'fn()'],
         ]
         valid.forEach(([definition, input, expected = input]) => expect(parse(definition, input)).toBe(expected))
     })
