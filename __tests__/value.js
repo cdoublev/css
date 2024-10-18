@@ -799,6 +799,18 @@ describe('comma-separated values', () => {
         expect(parse(definition, 'a, a')).toBe('a, a')
         expect(parse(definition, 'a a, a')).toBe('a a, a')
     })
+    test('a, <any-value>?', () => {
+        const definition = 'a, <any-value>?'
+        expect(parse(definition, 'a')).toBe('a')
+        expect(parse(definition, 'a,')).toBe('a,')
+        expect(parse(definition, 'a, ,')).toBe('a,,')
+    })
+    test('a, <declaration-value>?', () => {
+        const definition = 'a, <declaration-value>?'
+        expect(parse(definition, 'a')).toBe('a')
+        expect(parse(definition, 'a,')).toBe('a,')
+        expect(parse(definition, 'a, ,')).toBe('a,,')
+    })
 })
 // TODO: add support for comma-containing productions nested in {}
 describe.skip('functions', () => {

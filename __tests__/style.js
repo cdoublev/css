@@ -663,9 +663,6 @@ describe('arbitrary substitution', () => {
             ['  /**/  env(  name, /**/ 1e0 /**/  ', 'env(name, 1)'],
             ['  /**/  random-item(  --key, /**/ 1, 1e0 /**/  ', 'random-item(--key, 1, 1)'],
             ['  /**/  var(  --custom, /**/ 1e0 /**/  ', 'var(--custom, 1)'],
-            // Exception to comma-elision rules
-            ['var(--custom,)', 'var(--custom,)'],
-            ['var(--custom, )', 'var(--custom,)'],
         ]
         valid.forEach(([input, expected = input]) => {
             style.opacity = input
