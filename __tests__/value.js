@@ -767,7 +767,7 @@ describe('functions', () => {
         const valid = [
             // Case-insensitive name
             ['function(a)', 'FUNction(a)', 'function(a)'],
-            // Comma-containing productions
+            // Comma-containing production
             ['fn([<declaration-value>?]#)', 'fn({}, , { a }, { , }, {{}})', 'fn(,, a, {,}, {{}})'],
             ['fn(<declaration-value>?, a)', 'fn(, a)'],
         ]
@@ -1189,7 +1189,7 @@ describe('<number>', () => {
             ['0.1234567', '0.123457'],
             ['1.234567'],
             ['1.2345678', '1.234568'],
-            // Priority over <length> in "either" combination types
+            // Priority over <length> in "either" combination type
             ['0', '0', '<length> | <number>'],
             ['0', '0', '<length> || <number>'],
             ['0', '0', '<length-percentage> | <number>'],
@@ -1246,7 +1246,7 @@ describe('<integer>', () => {
             // 8 bits signed integer (browser conformance)
             [`${MIN_INTEGER - 1}`, MIN_INTEGER],
             [`${MAX_INTEGER + 1}`, MAX_INTEGER],
-            // Priority over <length> in "either" combination types
+            // Priority over <length> in "either" combination type
             ['0', '0', '<length> | <integer>'],
             ['0', '0', '<length> || <integer>'],
             ['0', '0', '<length-percentage> | <integer>'],
@@ -1756,7 +1756,7 @@ describe('<calc()>', () => {
         const two = number(2, ['<calc-value>'])
 
         const valid = [
-            // Unresolved calculations
+            // Unresolved calculation
             ['<calc()>', 'calc(1)', {
                 name: 'calc',
                 types: ['<function>', '<calc()>'],
@@ -1794,7 +1794,7 @@ describe('<calc()>', () => {
                     value: [one, { types: ['<calc-invert>'], value: two }],
                 },
             }],
-            // Resolved calculations
+            // Resolved calculation
             ['<number>', 'calc(1)', {
                 name: 'calc',
                 range: undefined,
@@ -3441,7 +3441,7 @@ describe('<gradient>', () => {
             ['conic-gradient(red)'],
             ['linear-gradient(red)'],
             ['radial-gradient(red)'],
-            // Repeating gradients
+            // Repeating gradient
             ['repeating-conic-gradient(red)'],
             ['repeating-linear-gradient(red)'],
             ['repeating-radial-gradient(red)'],
@@ -3467,7 +3467,7 @@ describe('<gradient>', () => {
             ['radial-gradient(at center, red)', 'radial-gradient(at center center, red)'],
             ['radial-gradient(at center center, red)'],
             ['radial-gradient(in oklab, red)', 'radial-gradient(red)'],
-            // Implicit color stops
+            // Implicit color stop
             ['conic-gradient(red 0deg 180deg)', 'conic-gradient(red 0deg, red 180deg)'],
             ['linear-gradient(red 0% 50%)', 'linear-gradient(red 0%, red 50%)'],
             ['radial-gradient(red 0% 50%)', 'radial-gradient(red 0%, red 50%)'],
@@ -3591,9 +3591,13 @@ describe('<keyframe-selector>', () => {
     })
     test('valid', () => {
         const valid = [
+            // Normalize keyword to <percentage>
             ['from', '0%'],
             ['to', '100%'],
-            ['calc(1% * calc-mix(0, 1, 1))', 'calc(1% * calc-mix(0, 1, 1))'],
+            // Element-dependent numeric substitution
+            ['calc-mix(0, 1%, 1%)', 'calc-mix(0, 1%, 1%)'],
+            ['random(1%, 1%)', 'random(1%, 1%)'],
+            ['calc(1% * sibling-index())', 'calc(1% * sibling-index())'],
         ]
         valid.forEach(([input, expected]) =>
             expect(parse('<keyframe-selector>', input, true, keyframeContext)).toBe(expected))
@@ -3707,8 +3711,15 @@ describe('<mf-name>', () => {
 })
 describe('<mf-plain>', () => {
     test('invalid', () => {
-        expect(parse('<mf-plain>', 'min-orientation: landscape', false, mediaQueryContext)).toBeNull()
-        expect(parse('<mf-plain>', 'width: 1', false, mediaQueryContext)).toBeNull()
+        const invalid = [
+            'min-orientation: landscape',
+            'width: 1',
+            // Element-dependent numeric substitution
+            'width: calc-mix(0, 1px, 1px)',
+            'width: random(1px, 1px)',
+            'width: calc(1px * sibling-index())',
+        ]
+        invalid.forEach(input => expect(parse('<mf-plain>', input, false, mediaQueryContext)).toBeNull())
     })
     test('representation', () => {
         const name = ident('width', ['<mf-name>'])
@@ -3741,8 +3752,9 @@ describe('<mf-range>', () => {
             '1 < width < 1px',
             '1px < width < 1',
             // Element-dependent numeric substitutions
-            'width: calc-mix(0, 1px, 1px)',
-            'width: calc(1px * sibling-index())',
+            'width < calc-mix(0, 1px, 1px)',
+            'width < random(1px, 1px)',
+            'width < calc(1px * sibling-index())',
         ]
         invalid.forEach(input => expect(parse('<mf-range>', input, false, mediaQueryContext)).toBeNull())
     })
@@ -3951,6 +3963,22 @@ describe('<shape()>', () => {
             .toBe('shape(from 0px 0px, move by 0px 0px)')
     })
 })
+describe('<size-feature>', () => {
+    test('valid', () => {
+        const valid = [
+            // Element-dependent numeric substitution
+            'width: calc-mix(0, 1px, 1px)',
+            'width: random(1px, 1px)',
+            'width: calc(1px * sibling-index())',
+            'width < calc-mix(0, 1px, 1px)',
+            'width < random(1px, 1px)',
+            'width < calc(1px * sibling-index())',
+        ]
+        valid.forEach(input => {
+            expect(parse('<size-feature>', input, true, containerContext)).toBe(input)
+        })
+    })
+})
 describe('<skew()>', () => {
     test('representation', () => {
         expect(parse('<skew()>', 'skew(1deg)', false)).toMatchObject({
@@ -4027,10 +4055,18 @@ describe('<style-feature>', () => {
         const valid = [
             // Custom property
             '--custom: fn(  /**/  1e0  /**/  )',
-            // Substitution
-            'width: var(--custom)',
+            // Dependency-free substitution
+            'width: env(name)',
             'width: first-valid(green)',
-            'width: calc-mix(0, 1px, 1px)',
+            // Element-dependent substitution
+            'width: attr(name)',
+            'width: random-item(--key, 1px)',
+            'width: mix(0, 1px, 1px)',
+            'width: toggle(1px)',
+            'width: calc-mix(0, random(1px, 1px), 1px * sibling-index())',
+            // Cascade-dependent substitution
+            'width: initial',
+            'width: var(--custom)',
         ]
         valid.forEach(input => expect(parse('<style-feature>', input, true, containerContext)).toBe(input))
     })
@@ -4072,10 +4108,18 @@ describe('<supports-decl>', () => {
         const valid = [
             // Custom property
             '(--custom: fn(  /**/  1e0  /**/  ))',
-            // Substitution
-            '(width: var(--custom))',
+            // Dependency-free substitution
+            '(width: env(name))',
             '(width: first-valid(green))',
-            '(width: calc-mix(0, 1px, 1px))',
+            // Element-dependent substitution
+            '(width: attr(name))',
+            '(width: random-item(--key, 1px))',
+            '(width: mix(0, 1px, 1px))',
+            '(width: toggle(1px))',
+            '(width: calc-mix(0, random(1px, 1px), 1px * sibling-index()))',
+            // Cascade-dependent substitution
+            '(width: initial)',
+            '(width: var(--custom))',
         ]
         valid.forEach(input => expect(parse('<supports-decl>', input, true, supportsContext)).toBe(input))
     })
@@ -4148,7 +4192,7 @@ describe('<translate()>', () => {
 describe('<urange>', () => {
     test('invalid', () => {
         const invalid = [
-            // Invalid whitespaces
+            // Invalid whitespace
             'U +0-1',
             'U+ 0-1',
             'U+0 -1',

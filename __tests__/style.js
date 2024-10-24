@@ -55,7 +55,7 @@ describe('CSSStyleDeclaration', () => {
         const { properties: { aliases, mappings } } = compatibility
         const names = [...aliases.keys(), ...mappings.keys(), ...Object.keys(properties)]
 
-        // Camel/kebab/pascal cased attributes
+        // Camel/kebab/pascal cased attribute
         names.forEach(property => {
 
             if (property === '--*') {
@@ -330,15 +330,15 @@ describe('CSSFontFaceDescriptors', () => {
         expect(style.fontWeight).toBe('')
 
         const invalid = [
-            // Substitution accepted in element-dependent context
+            // Element-dependent substitution
             ['attr(name)'],
             ['random-item(--key, 1)', 'random-item(--key, 1%)'],
-            ['mix(50%, 1, 1)', 'mix(50%, 1%, 1%)'],
-            ['toggle(1, 1)', 'toggle(1%, 1%)'],
+            ['mix(0, 1, 1)', 'mix(0, 1%, 1%)'],
+            ['toggle(1)', 'toggle(1%)'],
             ['calc-mix(0, 1, 1)', 'calc-mix(0, 1%, 1%)'],
             ['random(1, 1)', 'random(1%, 1%)'],
             ['sibling-count()', 'calc(1% * sibling-count())'],
-            // Substitution accepted in cascade-dependent context
+            // Cascade-dependent substitution
             ['var(--custom)'],
             ['initial'],
         ]
@@ -359,7 +359,7 @@ describe('CSSFontFaceDescriptors', () => {
         expect(style.fontStretch).toBe('condensed')
         expect(style.fontWidth).toBe('condensed')
 
-        // Substitution accepted in any context
+        // Dependency-free substitution
         style.fontWeight = 'env(name, attr(name))'
         style.sizeAdjust = 'env(name, attr(name))'
         expect(style.fontWeight).toBe('env(name, attr(name))')
@@ -373,7 +373,7 @@ describe('CSSFontFaceDescriptors', () => {
         expect(style.fontWeight).toBe('calc(1)')
         expect(style.sizeAdjust).toBe('calc(1%)')
 
-        // Specific serialization rules
+        // Specific serialization rule
         style.ascentOverride = '1% 1%'
         expect(style.ascentOverride).toBe('1%')
         style.descentOverride = '1% 1%'
@@ -420,7 +420,7 @@ describe('CSSKeyframeProperties', () => {
         style.setProperty('--custom', 'green')
         expect(style.getPropertyValue('--custom')).toBe('green')
 
-        // Substitution accepted in any context
+        // Dependency-free substitution
         style.fontWeight = 'env(name)'
         expect(style.fontWeight).toBe('env(name)')
         style.fontWeight = 'first-valid(1)'
@@ -428,19 +428,19 @@ describe('CSSKeyframeProperties', () => {
         style.fontWeight = 'calc(progress(1 from 0 to 1))'
         expect(style.fontWeight).toBe('calc(1)')
 
-        // Substitution accepted in element-dependent context
+        // Element-dependent substitution
         style.fontWeight = 'attr(name)'
         expect(style.fontWeight).toBe('attr(name)')
         style.fontWeight = 'random-item(--key, 1)'
         expect(style.fontWeight).toBe('random-item(--key, 1)')
-        style.fontWeight = 'mix(50%, 1, 1)'
-        expect(style.fontWeight).toBe('mix(50%, 1, 1)')
-        style.fontWeight = 'toggle(1, 1)'
-        expect(style.fontWeight).toBe('toggle(1, 1)')
+        style.fontWeight = 'mix(0, 1, 1)'
+        expect(style.fontWeight).toBe('mix(0, 1, 1)')
+        style.fontWeight = 'toggle(1)'
+        expect(style.fontWeight).toBe('toggle(1)')
         style.fontWeight = 'calc-mix(0, random(1, 1), sibling-count())'
         expect(style.fontWeight).toBe('calc-mix(0, random(1, 1), sibling-count())')
 
-        // Substitution accepted in cascade-dependent context
+        // Cascade-dependent substitution
         style.fontWeight = 'var(--custom)'
         expect(style.fontWeight).toBe('var(--custom)')
         style.fontWeight = 'initial'
@@ -458,12 +458,12 @@ describe('CSSMarginDescriptors', () => {
         expect(style.top).toBeUndefined()
 
         const invalid = [
-            // Substitution accepted in element-dependent context
+            // Element-dependent substitution
             'attr(name)',
             'env(attr(name))',
             'random-item(--key, 1)',
-            'mix(50%, 1, 1)',
-            'toggle(1, 1)',
+            'mix(0, 1, 1)',
+            'toggle(1)',
             'calc-mix(0, 1, 1)',
             'random(1, 1)',
             'sibling-count()',
@@ -486,7 +486,7 @@ describe('CSSMarginDescriptors', () => {
         expect(style.fontWeight).toBe('1')
         expect(style.getPropertyPriority('font-weight')).toBe('important')
 
-        // Substitution accepted in any context
+        // Dependency-free substitution
         style.fontWeight = 'env(name)'
         expect(style.fontWeight).toBe('env(name)')
         style.fontWeight = 'first-valid(1)'
@@ -494,7 +494,7 @@ describe('CSSMarginDescriptors', () => {
         style.fontWeight = 'calc(progress(1 from 0 to 1))'
         expect(style.fontWeight).toBe('calc(1)')
 
-        // Substitution accepted in cascade-dependent context
+        // Cascade-dependent substitution
         style.fontWeight = 'var(--custom)'
         expect(style.fontWeight).toBe('var(--custom)')
         style.fontWeight = 'initial'
@@ -512,11 +512,11 @@ describe('CSSPageDescriptors', () => {
         expect(style.top).toBeUndefined()
 
         const invalid = [
-            // Substitution accepted in element-dependent context
+            // Element-dependent substitution
             ['attr(name)'],
             ['random-item(--key, 1)', 'random-item(--key, 1px)'],
-            ['mix(50%, 1, 1)', 'mix(50%, 1px, 1px)'],
-            ['toggle(1, 1)', 'toggle(1px, 1px)'],
+            ['mix(0, 1, 1)', 'mix(0, 1px, 1px)'],
+            ['toggle(1)', 'toggle(1px)'],
             ['calc-mix(0, 1, 1)', 'calc-mix(0, 1px, 1px)'],
             ['random(1, 1)', 'random(1px, 1px)'],
             ['sibling-count()', 'calc(1px * sibling-count())'],
@@ -541,7 +541,7 @@ describe('CSSPageDescriptors', () => {
         expect(style.size).toBe('1px')
         expect(style.getPropertyPriority('size')).toBe('important')
 
-        // Substitution accepted in any context
+        // Dependency-free substitution
         style.fontWeight = 'env(name, attr(name))'
         style.size = 'env(name, attr(name))'
         expect(style.fontWeight).toBe('env(name, attr(name))')
@@ -555,7 +555,7 @@ describe('CSSPageDescriptors', () => {
         expect(style.fontWeight).toBe('calc(1)')
         expect(style.size).toBe('calc(1px)')
 
-        // Substitution accepted in cascade-dependent context
+        // Cascade-dependent substitution
         style.fontWeight = 'var(--custom)'
         style.size = 'var(--custom)'
         expect(style.fontWeight).toBe('var(--custom)')
@@ -565,7 +565,7 @@ describe('CSSPageDescriptors', () => {
         expect(style.fontWeight).toBe('initial')
         expect(style.size).toBe('initial')
 
-        // Specific serialization rules
+        // Specific serialization rule
         style.size = '1px 1px'
         expect(style.size).toBe('1px')
     })
@@ -592,7 +592,7 @@ describe('CSSPositionTryDescriptors', () => {
 
         const style = CSSPositionTryDescriptors.create(globalThis, undefined, { parentRule: positionTryRule })
 
-        // Substitution accepted in any context
+        // Dependency-free substitution
         style.top = 'env(name)'
         expect(style.top).toBe('env(name)')
         style.top = 'first-valid(1px)'
@@ -600,19 +600,19 @@ describe('CSSPositionTryDescriptors', () => {
         style.top = 'calc(1px * progress(1 from 0 to 1))'
         expect(style.top).toBe('calc(1px)')
 
-        // Substitution accepted in element-dependent context
+        // Element-dependent substitution
         style.top = 'attr(name)'
         expect(style.top).toBe('attr(name)')
         style.top = 'random-item(--key, 1px)'
         expect(style.top).toBe('random-item(--key, 1px)')
-        style.top = 'mix(50%, 1px, 1px)'
-        expect(style.top).toBe('mix(50%, 1px, 1px)')
-        style.top = 'toggle(1px, 1px)'
-        expect(style.top).toBe('toggle(1px, 1px)')
+        style.top = 'mix(0, 1px, 1px)'
+        expect(style.top).toBe('mix(0, 1px, 1px)')
+        style.top = 'toggle(1px)'
+        expect(style.top).toBe('toggle(1px)')
         style.top = 'calc-mix(sibling-count(), random(1px, 1px), 1px)'
         expect(style.top).toBe('calc-mix(sibling-count(), random(1px, 1px), 1px)')
 
-        // Substitution accepted in cascade-dependent context
+        // Cascade-dependent substitution
         style.top = 'var(--custom)'
         expect(style.top).toBe('var(--custom)')
         style.top = 'initial'
@@ -635,7 +635,7 @@ describe('arbitrary substitution', () => {
         const invalid = [
             'attr(name, attr())',
             'env(name, env())',
-            'random-item(1, random-item())',
+            'random-item(--key, random-item())',
             'var(--custom, var())',
         ]
         invalid.forEach(input => {
@@ -649,17 +649,17 @@ describe('arbitrary substitution', () => {
             // Valid at parse time
             ['unknown(attr(name))'],
             ['unknown(env(name))'],
-            ['unknown(random-item(--key, 1, 1))'],
+            ['unknown(random-item(--key, 1))'],
             ['unknown(var(--custom))'],
             // Nested inside itself
             ['attr(name, attr(name))'],
             ['env(name, env(name))'],
-            ['random-item(--key, random-item(--key, 1, 1), 1)'],
+            ['random-item(--key, random-item(--key, 1))'],
             ['var(--custom, var(--custom))'],
             // Serialize the list of tokens
             ['  /**/  attr(  name, /**/ 1e0 /**/  ', 'attr(name, 1)'],
             ['  /**/  env(  name, /**/ 1e0 /**/  ', 'env(name, 1)'],
-            ['  /**/  random-item(  --key, /**/ 1, 1e0 /**/  ', 'random-item(--key, 1, 1)'],
+            ['  /**/  random-item(  --key, /**/ 1e0 /**/  ', 'random-item(--key, 1)'],
             ['  /**/  var(  --custom, /**/ 1e0 /**/  ', 'var(--custom, 1)'],
             // Non-strict comma-containing production
             ['var(--custom,,)'],
@@ -677,17 +677,17 @@ describe('<whole-value>', () => {
         const invalid = [
             // Not the <whole-value>
             ['first-valid(0) 0', 'margin'],
-            ['mix(0%, 0, 0) 0', 'margin'],
-            ['mix(0%, 0, first-valid(0) 0)', 'margin'],
-            ['toggle(0, 0) 0', 'margin'],
-            ['toggle(0, first-valid(0) 0)', 'margin'],
+            ['mix(0, 0, 0) 0', 'margin'],
+            ['mix(0, 0, first-valid(0) 0)', 'margin'],
+            ['toggle(0) 0', 'margin'],
+            ['toggle(first-valid(0) 0)', 'margin'],
             // Invalid <whole-value> argument for the property
-            ['mix(0%, mix(0%, invalid, red), red)', 'color'],
-            ['toggle(red, invalid)', 'color'],
+            ['mix(0, mix(0, invalid, red), red)', 'color'],
+            ['toggle(invalid)', 'color'],
             // mix() for non-animatable property
-            ['mix(0%, 0s, 0s)', 'animation-duration'],
+            ['mix(0, 1s, 1s)', 'animation-duration'],
             // toggle() nested inside itself
-            ['toggle(0, toggle(0, 0))', 'opacity'],
+            ['toggle(toggle(1))', 'opacity'],
         ]
         invalid.forEach(([substitution, property]) => {
             style.setProperty(property, substitution)
@@ -696,24 +696,23 @@ describe('<whole-value>', () => {
     })
     test('valid', () => {
         const style = createStyleBlock()
-        // TODO: add support for comma-containing productions nested in {}
         const valid = [
             // Serialize the list of tokens
-            ['  /**/  first-valid(  0, /**/ 1e0 /**/  ', 'first-valid(0, 1)', 'opacity'],
-            // ['  /**/  mix(  0%, 0, /**/ 1e0 /**/  ', 'mix(0%, 0, 1)', 'opacity'],
-            // ['  /**/  toggle(  0, /**/ 1e0 /**/  ', 'toggle(0, 1)', 'opacity'],
+            ['  /**/  first-valid(  /**/ 1e0 /**/  ', 'first-valid(1)', 'opacity'],
+            ['  /**/  mix(  0, 1, /**/ 1e0 /**/  ', 'mix(0, 1, 1)', 'opacity'],
+            ['  /**/  toggle(  /**/ 1e0 /**/  ', 'toggle(1)', 'opacity'],
             // Nested inside itself
             ['first-valid(toggle(first-valid(1)))', 'first-valid(toggle(first-valid(1)))', 'opacity'],
-            // ['mix(0%, 1, toggle(mix(0%, 1, 1))', 'mix(0%, 0, mix(0%, 1, 1))', 'opacity'],
+            ['mix(0, 1, toggle(mix(0, 1, 1)))', 'mix(0, 1, toggle(mix(0, 1, 1)))', 'opacity'],
             // Omitted value
-            ['mix(0%,,)', 'mix(0%,,)', '--custom'],
+            ['mix(0,,)', 'mix(0,,)', '--custom'],
             ['toggle(,)', 'toggle(,)', '--custom'],
             // Priority to the declaration value range
             ['first-valid(1) 1', 'first-valid(1) 1', '--custom'],
-            ['mix(0%, 1, 1) 1', 'mix(0%, 1, 1) 1', '--custom'],
+            ['mix(0, 1, 1) 1', 'mix(0, 1, 1) 1', '--custom'],
             ['toggle(1) 1', 'toggle(1) 1', '--custom'],
             ['toggle(toggle(1))', 'toggle(toggle(1))', '--custom'],
-            // <first-valid()> arguments are validated at parse time
+            // <first-valid()> arguments are not validated at parse time
             ['first-valid(first-valid(invalid))', 'first-valid(first-valid(invalid))', 'opacity'],
         ]
         valid.forEach(([input, expected, property]) => {
@@ -731,9 +730,9 @@ describe('--*', () => {
             [''],
             ['  /**/  ', ''],
             ['  /**/  Red  ,  (  orange  /**/  )  ,  green  /**/  ', 'Red  ,  (  orange  /**/  )  ,  green'],
-            // Substitutions
+            // Substitution
             ['var(  --PROPerty, /**/ 1e0 /**/  )  ', 'var(  --PROPerty, /**/ 1e0 /**/  )'],
-            ['mix(50,/**/, 1e0 )  ', 'mix(50,/**/, 1e0 )'],
+            ['mix(0,/**/, 1e0 )  ', 'mix(0,/**/, 1e0 )'],
             ['initial'],
             ['initial initial'],
         ]
