@@ -544,7 +544,7 @@ describe('optional whitespace', () => {
         expect(parse('(a)', '  (  a  )  ')).toBe('(a)')
     })
 })
-describe('comma-separated values', () => {
+describe('comma separated values', () => {
     // Comma-elision rules apply
     test('a?, a?, a', () => {
 
@@ -3718,15 +3718,18 @@ describe('<mf-range>', () => {
     test('invalid', () => {
         const invalid = [
             // Prefixed <mf-name>
-            '(min-width = 1px)',
-            '(1px < min-width < 1px)',
+            'min-width = 1px',
+            '1px < min-width < 1px',
             // Discrete <mf-name>
-            '(orientation = 1)',
-            '(1 < orientation < 1)',
+            'orientation = 1',
+            '1 < orientation < 1',
             // Invalid <mf-value>
-            '(width = 1)',
-            '(1 < width < 1px)',
-            '(1px < width < 1)',
+            'width = 1',
+            '1 < width < 1px',
+            '1px < width < 1',
+            // Element-dependent numeric substitutions
+            'width: calc-mix(0, 1px, 1px)',
+            'width: calc(1px * sibling-index())',
         ]
         invalid.forEach(input => expect(parse('<mf-range>', input, false, mediaQueryContext)).toBeNull())
     })

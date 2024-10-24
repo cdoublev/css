@@ -995,7 +995,7 @@ describe('display', () => {
     })
 })
 describe('float', () => {
-    it('mirrors cssFloat', () => {
+    test('mirroring with cssFloat', () => {
         const style = createStyleBlock()
         style.cssFloat = 'left'
         expect(style.float).toBe('left')
@@ -1147,7 +1147,7 @@ describe('image-rendering', () => {
     })
 })
 describe('image-resolution', () => {
-    it('parses and serializss a valid value', () => {
+    test('valid', () => {
         const style = createStyleBlock()
         style.imageResolution = 'from-image 1dppx'
         expect(style.imageResolution).toBe('from-image')
