@@ -433,13 +433,12 @@ describe('CSSKeyframeProperties', () => {
         expect(style.fontWeight).toBe('attr(name)')
         style.fontWeight = 'random-item(--key, 1)'
         expect(style.fontWeight).toBe('random-item(--key, 1)')
-        // TODO: add support for comma-containing productions nested in {}
-        // style.fontWeight = 'mix(50%, 1, 1)'
-        // expect(style.fontWeight).toBe('mix(50%, 1, 1)')
-        // style.fontWeight = 'toggle(1, 1)'
-        // expect(style.fontWeight).toBe('toggle(1, 1)')
-        // style.fontWeight = 'calc-mix(0, random(1, 1), sibling-count())'
-        // expect(style.fontWeight).toBe('calc-mix(0, random(1, 1), sibling-count())')
+        style.fontWeight = 'mix(50%, 1, 1)'
+        expect(style.fontWeight).toBe('mix(50%, 1, 1)')
+        style.fontWeight = 'toggle(1, 1)'
+        expect(style.fontWeight).toBe('toggle(1, 1)')
+        style.fontWeight = 'calc-mix(0, random(1, 1), sibling-count())'
+        expect(style.fontWeight).toBe('calc-mix(0, random(1, 1), sibling-count())')
 
         // Substitution accepted in cascade-dependent context
         style.fontWeight = 'var(--custom)'
@@ -606,13 +605,12 @@ describe('CSSPositionTryDescriptors', () => {
         expect(style.top).toBe('attr(name)')
         style.top = 'random-item(--key, 1px)'
         expect(style.top).toBe('random-item(--key, 1px)')
-        // TODO: add support for comma-containing productions nested in {}
-        // style.top = 'mix(50%, 1px, 1px)'
-        // expect(style.top).toBe('mix(50%, 1px, 1px)')
-        // style.top = 'toggle(1px, 1px)'
-        // expect(style.top).toBe('toggle(1px, 1px)')
-        // style.top = 'calc-mix(sibling-count(), random(1px, 1px), 1px)'
-        // expect(style.top).toBe('calc-mix(sibling-count(), random(1px, 1px), 1px)')
+        style.top = 'mix(50%, 1px, 1px)'
+        expect(style.top).toBe('mix(50%, 1px, 1px)')
+        style.top = 'toggle(1px, 1px)'
+        expect(style.top).toBe('toggle(1px, 1px)')
+        style.top = 'calc-mix(sibling-count(), random(1px, 1px), 1px)'
+        expect(style.top).toBe('calc-mix(sibling-count(), random(1px, 1px), 1px)')
 
         // Substitution accepted in cascade-dependent context
         style.top = 'var(--custom)'
@@ -663,6 +661,9 @@ describe('arbitrary substitution', () => {
             ['  /**/  env(  name, /**/ 1e0 /**/  ', 'env(name, 1)'],
             ['  /**/  random-item(  --key, /**/ 1, 1e0 /**/  ', 'random-item(--key, 1, 1)'],
             ['  /**/  var(  --custom, /**/ 1e0 /**/  ', 'var(--custom, 1)'],
+            // Non-strict comma-containing production
+            ['var(--custom,,)'],
+            ['var(--custom, 1 {})'],
         ]
         valid.forEach(([input, expected = input]) => {
             style.opacity = input

@@ -749,8 +749,7 @@ describe('comma separated values', () => {
         expect(parse(definition, 'a, ,')).toBe('a,,')
     })
 })
-// TODO: add support for comma-containing productions nested in {}
-describe.skip('functions', () => {
+describe('functions', () => {
     test('invalid', () => {
         const invalid = [
             ['fn(<any-value>)', 'fn(,)'],
@@ -769,10 +768,8 @@ describe.skip('functions', () => {
             // Case-insensitive name
             ['function(a)', 'FUNction(a)', 'function(a)'],
             // Comma-containing productions
-            ['fn(<declaration-value>)', 'fn({ a })', 'fn(a)'],
-            ['fn(<declaration-value>)', 'fn({ , })', 'fn({,})'],
-            ['fn(<declaration-value>)', 'fn({{}})', 'fn({{}})'],
-            ['fn(<declaration-value>?)', 'fn({})', 'fn()'],
+            ['fn([<declaration-value>?]#)', 'fn({}, , { a }, { , }, {{}})', 'fn(,, a, {,}, {{}})'],
+            ['fn(<declaration-value>?, a)', 'fn(, a)'],
         ]
         valid.forEach(([definition, input, expected = input]) => expect(parse(definition, input)).toBe(expected))
     })
