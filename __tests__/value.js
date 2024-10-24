@@ -77,20 +77,20 @@ const lt = delimiter('<')
 describe('combined values', () => {
     test('a b', () => {
         const definition = 'a b'
-        expect(parse(definition, 'a')).toBe('')
-        expect(parse(definition, 'a b c')).toBe('')
+        expect(parse(definition, 'a', false)).toBeNull()
+        expect(parse(definition, 'a b c', false)).toBeNull()
         expect(parse(definition, 'a b')).toBe('a b')
     })
     test('a && b', () => {
         const definition = 'a && b'
-        expect(parse(definition, 'a')).toBe('')
-        expect(parse(definition, 'a b c')).toBe('')
+        expect(parse(definition, 'a', false)).toBeNull()
+        expect(parse(definition, 'a b c', false)).toBeNull()
         expect(parse(definition, 'a b')).toBe('a b')
         expect(parse(definition, 'b a')).toBe('a b')
     })
     test('a || b', () => {
         const definition = 'a || b'
-        expect(parse(definition, 'a b c')).toBe('')
+        expect(parse(definition, 'a b c', false)).toBeNull()
         expect(parse(definition, 'a')).toBe('a')
         expect(parse(definition, 'b')).toBe('b')
         expect(parse(definition, 'a b')).toBe('a b')
@@ -98,8 +98,7 @@ describe('combined values', () => {
     })
     test('a | b', () => {
         const definition = 'a | b'
-        expect(parse(definition, 'c')).toBe('')
-        expect(parse(definition, 'a b')).toBe('')
+        expect(parse(definition, 'a b', false)).toBeNull()
         expect(parse(definition, 'a')).toBe('a')
         expect(parse(definition, 'b')).toBe('b')
     })
@@ -107,39 +106,37 @@ describe('combined values', () => {
 describe('multiplied values', () => {
     test('a?', () => {
         const definition = 'a?'
-        expect(parse(definition, '')).toBe('')
         expect(parse(definition, '', false)).toBe(omitted)
-        expect(parse(definition, 'a a')).toBe('')
+        expect(parse(definition, '')).toBe('')
         expect(parse(definition, 'a')).toBe('a')
     })
     test('a*', () => {
         const definition = 'a*'
-        expect(parse(definition, '')).toBe('')
         expect(parse(definition, '', false)).toMatchObject(list())
-        expect(parse(definition, 'a, a')).toBe('')
+        expect(parse(definition, '')).toBe('')
+        expect(parse(definition, 'a, a', false)).toBeNull()
         expect(parse(definition, 'a')).toBe('a')
         expect(parse(definition, 'a a')).toBe('a a')
     })
     test('a+', () => {
         const definition = 'a+'
-        expect(parse(definition, '')).toBe('')
-        expect(parse(definition, 'a, a')).toBe('')
+        expect(parse(definition, '', false)).toBeNull()
+        expect(parse(definition, 'a, a', false)).toBeNull()
         expect(parse(definition, 'a')).toBe('a')
         expect(parse(definition, 'a a')).toBe('a a')
     })
     test('a#', () => {
         const definition = 'a#'
-        expect(parse(definition, '')).toBe('')
-        expect(parse(definition, 'a, a,')).toBe('')
-        expect(parse(definition, 'a a')).toBe('')
+        expect(parse(definition, '', false)).toBeNull()
+        expect(parse(definition, 'a, a,', false)).toBeNull()
+        expect(parse(definition, 'a a', false)).toBeNull()
         expect(parse(definition, 'a')).toBe('a')
-        expect(parse(definition, 'a', false)).toMatchObject(list([a], ','))
         expect(parse(definition, 'a, a')).toBe('a, a')
         expect(parse(definition, 'a , a')).toBe('a, a')
     })
     test('a#?', () => {
         const definition = 'a a#?'
-        expect(parse(definition, 'a, a')).toBe('')
+        expect(parse(definition, 'a, a', false)).toBeNull()
         expect(parse(definition, 'a')).toBe('a')
         expect(parse(definition, 'a a')).toBe('a a')
         expect(parse(definition, 'a a, a')).toBe('a a, a')
@@ -154,7 +151,7 @@ describe('multiplied values', () => {
     })
     test('a+#?', () => {
         const definition = 'a a+#?'
-        expect(parse(definition, 'a, a')).toBe('')
+        expect(parse(definition, 'a, a', false)).toBeNull()
         expect(parse(definition, 'a')).toBe('a')
         expect(parse(definition, 'a a')).toBe('a a')
         expect(parse(definition, 'a a a')).toBe('a a a')
@@ -164,91 +161,34 @@ describe('multiplied values', () => {
     })
     test('a{2}', () => {
         const definition = 'a{2}'
-        expect(parse(definition, 'a')).toBe('')
+        expect(parse(definition, 'a', false)).toBeNull()
         expect(parse(definition, 'a a')).toBe('a a')
-        expect(parse(definition, 'a a a')).toBe('')
-        expect(parse(definition, 'a, a')).toBe('')
+        expect(parse(definition, 'a a a', false)).toBeNull()
+        expect(parse(definition, 'a, a', false)).toBeNull()
     })
     test('a{2,3}', () => {
         const definition = 'a{2,3}'
-        expect(parse(definition, 'a')).toBe('')
+        expect(parse(definition, 'a', false)).toBeNull()
         expect(parse(definition, 'a a')).toBe('a a')
         expect(parse(definition, 'a a a')).toBe('a a a')
-        expect(parse(definition, 'a a a a')).toBe('')
+        expect(parse(definition, 'a a a a', false)).toBeNull()
+    })
+    test('a{0,∞}', () => {
+        const definition = 'a{0,∞}'
+        expect(parse(definition, '', false)).toMatchObject(list())
+        expect(parse(definition, 'a a')).toBe('a a')
     })
     test('a{2,∞}', () => {
         const definition = 'a{2,∞}'
-        expect(parse(definition, 'a')).toBe('')
+        expect(parse(definition, 'a', false)).toBeNull()
         expect(parse(definition, 'a a')).toBe('a a')
         expect(parse(definition, 'a a a')).toBe('a a a')
     })
     test('a{2,}', () => {
         const definition = 'a{2,}'
-        expect(parse(definition, 'a')).toBe('')
+        expect(parse(definition, 'a', false)).toBeNull()
         expect(parse(definition, 'a a')).toBe('a a')
         expect(parse(definition, 'a a a')).toBe('a a a')
-    })
-    test('a{0,∞}', () => {
-        const definition = 'a{0,∞}'
-        expect(parse(definition, '', false)).toMatchObject(list())
-        expect(parse(definition, 'a a', false)).toMatchObject(list([a, a]))
-    })
-    test('[a b?]', () => {
-        const definition = '[a b?]'
-        expect(parse(definition, '', false)).toBeNull()
-        expect(parse(definition, 'a', false)).toMatchObject(list([a, omitted]))
-        expect(parse(definition, 'a b', false)).toMatchObject(list([a, b]))
-    })
-    test('[a b?]?', () => {
-        const definition = '[a b?]?'
-        expect(parse(definition, '', false)).toBe(omitted)
-        expect(parse(definition, 'a', false)).toMatchObject(list([a, omitted]))
-        expect(parse(definition, 'a b', false)).toMatchObject(list([a, b]))
-    })
-    test('[a b?]*', () => {
-        const definition = '[a b?]*'
-        expect(parse(definition, '', false)).toMatchObject(list())
-        expect(parse(definition, 'a', false)).toMatchObject(list([list([a, omitted])]))
-        expect(parse(definition, 'a b', false)).toMatchObject(list([list([a, b])]))
-    })
-    test('[a b?]#', () => {
-        const definition = '[a b?]#'
-        expect(parse(definition, '', false)).toBeNull()
-        expect(parse(definition, 'a', false)).toMatchObject(list([list([a, omitted])], ','))
-        expect(parse(definition, 'a b', false)).toMatchObject(list([list([a, b])], ','))
-    })
-    test('[a? b?]', () => {
-        const definition = '[a? b?]'
-        expect(parse(definition, '', false)).toMatchObject(list([omitted, omitted]))
-        expect(parse(definition, 'a', false)).toMatchObject(list([a, omitted]))
-        expect(parse(definition, 'a b', false)).toMatchObject(list([a, b]))
-    })
-    test('[a? b?]?', () => {
-        const definition = '[a? b?]?'
-        expect(parse(definition, '', false)).toMatchObject(list([omitted, omitted]))
-        expect(parse(definition, 'a', false)).toMatchObject(list([a, omitted]))
-        expect(parse(definition, 'b', false)).toMatchObject(list([omitted, b]))
-        expect(parse(definition, 'a b', false)).toMatchObject(list([a, b]))
-    })
-    test('[a? b?]!', () => {
-        const definition = '[a? b?]!'
-        expect(parse(definition, '', false)).toBeNull()
-        expect(parse(definition, 'a', false)).toMatchObject(list([a, omitted]))
-        expect(parse(definition, 'b', false)).toMatchObject(list([omitted, b]))
-        expect(parse(definition, 'a b', false)).toMatchObject(list([a, b]))
-    })
-    test('a [b? c?]!', () => {
-        const definition = 'a [b? c?]!'
-        expect(parse(definition, 'a')).toBe('')
-        expect(parse(definition, 'a b')).toBe('a b')
-        expect(parse(definition, 'a c')).toBe('a c')
-    })
-    test('[a b]', () => {
-        const definition = '[a b]'
-        expect(parse(definition, '', false)).toBeNull()
-        expect(parse(definition, 'a', false)).toBeNull()
-        expect(parse(definition, 'b', false)).toBeNull()
-        expect(parse(definition, 'a b', false)).toMatchObject(list([a, b]))
     })
     test('[a b]?', () => {
         const definition = '[a b]?'
@@ -271,35 +211,30 @@ describe('multiplied values', () => {
         expect(parse(definition, 'b', false)).toBeNull()
         expect(parse(definition, 'a b', false)).toMatchObject(list([list([a, b])], ','))
     })
-    test('[a | b]', () => {
-        const definition = '[a | b]'
+    test('[a? b?]!', () => {
+        const definition = '[a? b?]!'
         expect(parse(definition, '', false)).toBeNull()
-        expect(parse(definition, 'a', false)).toMatchObject(a)
-        expect(parse(definition, 'b', false)).toMatchObject(b)
+        expect(parse(definition, 'a', false)).toMatchObject(list([a, omitted]))
+        expect(parse(definition, 'b', false)).toMatchObject(list([omitted, b]))
+        expect(parse(definition, 'a b', false)).toMatchObject(list([a, b]))
     })
     test('[a | b]?', () => {
         const definition = '[a | b]?'
         expect(parse(definition, '', false)).toBe(omitted)
-        expect(parse(definition, 'a', false)).toMatchObject(a)
-        expect(parse(definition, 'b', false)).toMatchObject(b)
+        expect(parse(definition, 'a')).toBe('a')
+        expect(parse(definition, 'b')).toBe('b')
     })
     test('[a | b]*', () => {
         const definition = '[a | b]*'
         expect(parse(definition, '', false)).toMatchObject(list())
-        expect(parse(definition, 'a', false)).toMatchObject(list([a]))
-        expect(parse(definition, 'b', false)).toMatchObject(list([b]))
+        expect(parse(definition, 'a')).toBe('a')
+        expect(parse(definition, 'b')).toBe('b')
     })
     test('[a | b]#', () => {
         const definition = '[a | b]#'
         expect(parse(definition, '', false)).toBeNull()
-        expect(parse(definition, 'a', false)).toMatchObject(list([a], ','))
-        expect(parse(definition, 'b', false)).toMatchObject(list([b], ','))
-    })
-    test('[a | b b]', () => {
-        const definition = '[a | b b]'
-        expect(parse(definition, '', false)).toBeNull()
-        expect(parse(definition, 'a', false)).toMatchObject(a)
-        expect(parse(definition, 'b b', false)).toMatchObject(list([b, b]))
+        expect(parse(definition, 'a')).toBe('a')
+        expect(parse(definition, 'b')).toBe('b')
     })
     test('[a | b b]?', () => {
         const definition = '[a | b b]?'
@@ -318,13 +253,6 @@ describe('multiplied values', () => {
         expect(parse(definition, '', false)).toBeNull()
         expect(parse(definition, 'a', false)).toMatchObject(list([a], ','))
         expect(parse(definition, 'b b', false)).toMatchObject(list([list([b, b])], ','))
-    })
-    test('[a || b]', () => {
-        const definition = '[a || b]'
-        expect(parse(definition, '', false)).toBeNull()
-        expect(parse(definition, 'a', false)).toMatchObject(list([a, omitted]))
-        expect(parse(definition, 'b', false)).toMatchObject(list([omitted, b]))
-        expect(parse(definition, 'a b', false)).toMatchObject(list([a, b]))
     })
     test('[a || b]?', () => {
         const definition = '[a || b]?'
@@ -348,13 +276,6 @@ describe('multiplied values', () => {
         expect(parse(definition, 'b', false)).toMatchObject(list([list([omitted, b])], ','))
         expect(parse(definition, 'a b', false)).toMatchObject(list([list([a, b])], ','))
         expect(parse(definition, 'a b, b', false)).toMatchObject(list([list([a, b]), list([omitted, b])], ','))
-    })
-    test('[a || b b]', () => {
-        const definition = '[a || b b]'
-        expect(parse(definition, '', false)).toBeNull()
-        expect(parse(definition, 'a', false)).toMatchObject(list([a, omitted]))
-        expect(parse(definition, 'b b', false)).toMatchObject(list([omitted, list([b, b])]))
-        expect(parse(definition, 'a b b', false)).toMatchObject(list([a, list([b, b])]))
     })
     test('[a || b b]?', () => {
         const definition = '[a || b b]?'
@@ -385,14 +306,14 @@ describe('backtracking', () => {
         expect(parse(definition, 'a')).toBe('a')
         expect(parse(definition, 'a a')).toBe('a a')
         expect(parse(definition, 'a a a')).toBe('a a a')
-        expect(parse(definition, 'a a a a')).toBe('')
+        expect(parse(definition, 'a a a a', false)).toBeNull()
     })
     test('a a a | a a | a', () => {
         const definition = 'a a a | a a | a'
         expect(parse(definition, 'a')).toBe('a')
         expect(parse(definition, 'a a')).toBe('a a')
         expect(parse(definition, 'a a a')).toBe('a a a')
-        expect(parse(definition, 'a a a a')).toBe('')
+        expect(parse(definition, 'a a a a', false)).toBeNull()
     })
     test('a || a a || a a a', () => {
         const definition = 'a || a a || a a a'
@@ -402,7 +323,7 @@ describe('backtracking', () => {
         expect(parse(definition, 'a a a a')).toBe('a a a a')
         expect(parse(definition, 'a a a a a')).toBe('a a a a a')
         expect(parse(definition, 'a a a a a a')).toBe('a a a a a a')
-        expect(parse(definition, 'a a a a a a a')).toBe('')
+        expect(parse(definition, 'a a a a a a a', false)).toBeNull()
     })
     test('a a a || a a || a', () => {
         const definition = 'a a a || a a || a'
@@ -412,58 +333,58 @@ describe('backtracking', () => {
         expect(parse(definition, 'a a a a')).toBe('a a a a')
         expect(parse(definition, 'a a a a a')).toBe('a a a a a')
         expect(parse(definition, 'a a a a a a')).toBe('a a a a a a')
-        expect(parse(definition, 'a a a a a a a')).toBe('')
+        expect(parse(definition, 'a a a a a a a', false)).toBeNull()
     })
     test('a && a a', () => {
         const definition = 'a && a a'
-        expect(parse(definition, 'a')).toBe('')
-        expect(parse(definition, 'a a')).toBe('')
+        expect(parse(definition, 'a', false)).toBeNull()
+        expect(parse(definition, 'a a', false)).toBeNull()
         expect(parse(definition, 'a a a')).toBe('a a a')
-        expect(parse(definition, 'a a a a')).toBe('')
+        expect(parse(definition, 'a a a a', false)).toBeNull()
     })
     test('a a && a', () => {
         const definition = 'a a && a'
-        expect(parse(definition, 'a')).toBe('')
-        expect(parse(definition, 'a a')).toBe('')
+        expect(parse(definition, 'a', false)).toBeNull()
+        expect(parse(definition, 'a a', false)).toBeNull()
         expect(parse(definition, 'a a a')).toBe('a a a')
-        expect(parse(definition, 'a a a a')).toBe('')
+        expect(parse(definition, 'a a a a', false)).toBeNull()
     })
     test('a && a b && a b c', () => {
         const definition = 'a && a b && a b c'
-        expect(parse(definition, 'a')).toBe('')
-        expect(parse(definition, 'a b')).toBe('')
-        expect(parse(definition, 'a a b')).toBe('')
-        expect(parse(definition, 'a b a')).toBe('')
-        expect(parse(definition, 'a b c')).toBe('')
-        expect(parse(definition, 'a a b c')).toBe('')
-        expect(parse(definition, 'a b c a')).toBe('')
-        expect(parse(definition, 'a b a b c')).toBe('')
-        expect(parse(definition, 'a b c a b')).toBe('')
+        expect(parse(definition, 'a', false)).toBeNull()
+        expect(parse(definition, 'a b', false)).toBeNull()
+        expect(parse(definition, 'a a b', false)).toBeNull()
+        expect(parse(definition, 'a b a', false)).toBeNull()
+        expect(parse(definition, 'a b c', false)).toBeNull()
+        expect(parse(definition, 'a a b c', false)).toBeNull()
+        expect(parse(definition, 'a b c a', false)).toBeNull()
+        expect(parse(definition, 'a b a b c', false)).toBeNull()
+        expect(parse(definition, 'a b c a b', false)).toBeNull()
         expect(parse(definition, 'a a b a b c')).toBe('a a b a b c')
         expect(parse(definition, 'a a b c a b')).toBe('a a b a b c')
         expect(parse(definition, 'a b a b c a')).toBe('a a b a b c')
         expect(parse(definition, 'a b a a b c')).toBe('a a b a b c')
         expect(parse(definition, 'a b c a b a')).toBe('a a b a b c')
         expect(parse(definition, 'a b c a a b')).toBe('a a b a b c')
-        expect(parse(definition, 'a b c a b c')).toBe('')
-        expect(parse(definition, 'a a b a b c a')).toBe('')
+        expect(parse(definition, 'a b c a b c', false)).toBeNull()
+        expect(parse(definition, 'a a b a b c a', false)).toBeNull()
     })
     // Complex backtracking
     test('[a | a a | a a a] a', () => {
         const definition = '[a | a a | a a a] a'
-        expect(parse(definition, 'a')).toBe('')
+        expect(parse(definition, 'a', false)).toBeNull()
         expect(parse(definition, 'a a')).toBe('a a')
         expect(parse(definition, 'a a a')).toBe('a a a')
         expect(parse(definition, 'a a a a')).toBe('a a a a')
-        expect(parse(definition, 'a a a a a')).toBe('')
+        expect(parse(definition, 'a a a a a', false)).toBeNull()
     })
     test('[a | a a | a a a] && a', () => {
         const definition = '[a | a a | a a a] && a'
-        expect(parse(definition, 'a')).toBe('')
+        expect(parse(definition, 'a', false)).toBeNull()
         expect(parse(definition, 'a a')).toBe('a a')
         expect(parse(definition, 'a a a')).toBe('a a a')
         expect(parse(definition, 'a a a a')).toBe('a a a a')
-        expect(parse(definition, 'a a a a a')).toBe('')
+        expect(parse(definition, 'a a a a a', false)).toBeNull()
     })
     test('[a | a a | a a a] || a', () => {
         const definition = '[a | a a | a a a] || a'
@@ -471,29 +392,29 @@ describe('backtracking', () => {
         expect(parse(definition, 'a a')).toBe('a a')
         expect(parse(definition, 'a a a')).toBe('a a a')
         expect(parse(definition, 'a a a a')).toBe('a a a a')
-        expect(parse(definition, 'a a a a a')).toBe('')
+        expect(parse(definition, 'a a a a a', false)).toBeNull()
     })
     test('[a || a a || a a a] a', () => {
         const definition = '[a || a a || a a a] a'
-        expect(parse(definition, 'a')).toBe('')
+        expect(parse(definition, 'a', false)).toBeNull()
         expect(parse(definition, 'a a')).toBe('a a')
         expect(parse(definition, 'a a a')).toBe('a a a')
         expect(parse(definition, 'a a a a')).toBe('a a a a')
         expect(parse(definition, 'a a a a a')).toBe('a a a a a')
         expect(parse(definition, 'a a a a a a')).toBe('a a a a a a')
         expect(parse(definition, 'a a a a a a a')).toBe('a a a a a a a')
-        expect(parse(definition, 'a a a a a a a a')).toBe('')
+        expect(parse(definition, 'a a a a a a a a', false)).toBeNull()
     })
     test('[a || a a || a a a] && a', () => {
         const definition = '[a || a a || a a a] && a'
-        expect(parse(definition, 'a')).toBe('')
+        expect(parse(definition, 'a', false)).toBeNull()
         expect(parse(definition, 'a a')).toBe('a a')
         expect(parse(definition, 'a a a')).toBe('a a a')
         expect(parse(definition, 'a a a a')).toBe('a a a a')
         expect(parse(definition, 'a a a a a')).toBe('a a a a a')
         expect(parse(definition, 'a a a a a a')).toBe('a a a a a a')
         expect(parse(definition, 'a a a a a a a')).toBe('a a a a a a a')
-        expect(parse(definition, 'a a a a a a a a')).toBe('')
+        expect(parse(definition, 'a a a a a a a a', false)).toBeNull()
     })
     test('[a || a a || a a a] | a', () => {
         const definition = '[a || a a || a a a] | a'
@@ -503,22 +424,22 @@ describe('backtracking', () => {
         expect(parse(definition, 'a a a a')).toBe('a a a a')
         expect(parse(definition, 'a a a a a')).toBe('a a a a a')
         expect(parse(definition, 'a a a a a a')).toBe('a a a a a a')
-        expect(parse(definition, 'a a a a a a a')).toBe('')
+        expect(parse(definition, 'a a a a a a a', false)).toBeNull()
     })
     test('[a | a a | a a a]{2} a', () => {
         const definition = '[a | a a | a a a]{2} a'
-        expect(parse(definition, 'a')).toBe('')
-        expect(parse(definition, 'a a')).toBe('')
+        expect(parse(definition, 'a', false)).toBeNull()
+        expect(parse(definition, 'a a', false)).toBeNull()
         expect(parse(definition, 'a a a')).toBe('a a a')
         expect(parse(definition, 'a a a a')).toBe('a a a a')
         expect(parse(definition, 'a a a a a')).toBe('a a a a a')
         expect(parse(definition, 'a a a a a a')).toBe('a a a a a a')
         expect(parse(definition, 'a a a a a a a')).toBe('a a a a a a a')
-        expect(parse(definition, 'a a a a a a a a')).toBe('')
+        expect(parse(definition, 'a a a a a a a a', false)).toBeNull()
     })
     test('a? a{2}', () => {
         const definition = 'a? a{2}'
-        expect(parse(definition, 'a')).toBe('')
+        expect(parse(definition, 'a', false)).toBeNull()
         expect(parse(definition, 'a a')).toBe('a a')
         expect(parse(definition, 'a a a')).toBe('a a a')
     })
@@ -533,7 +454,7 @@ describe('backtracking', () => {
         expect(parse(definition, 'a')).toBe('a')
         expect(parse(definition, 'a a')).toBe('a a')
         expect(parse(definition, 'a a a')).toBe('a a a')
-        expect(parse(definition, 'a a a a')).toBe('')
+        expect(parse(definition, 'a a a a', false)).toBeNull()
     })
     test('[a? || a a] a', () => {
         const definition = '[a? || a a] a'
@@ -541,45 +462,45 @@ describe('backtracking', () => {
         expect(parse(definition, 'a a')).toBe('a a')
         expect(parse(definition, 'a a a')).toBe('a a a')
         expect(parse(definition, 'a a a a')).toBe('a a a a')
-        expect(parse(definition, 'a a a a a')).toBe('')
+        expect(parse(definition, 'a a a a a', false)).toBeNull()
     })
     test('[a? && a?] a', () => {
         const definition = '[a? && a?] a'
         expect(parse(definition, 'a')).toBe('a')
         expect(parse(definition, 'a a')).toBe('a a')
         expect(parse(definition, 'a a a')).toBe('a a a')
-        expect(parse(definition, 'a a a a')).toBe('')
+        expect(parse(definition, 'a a a a', false)).toBeNull()
     })
     test('[a{2}]? && a', () => {
         const definition = '[a{2}]? && a'
         expect(parse(definition, 'a')).toBe('a')
-        expect(parse(definition, 'a a')).toBe('')
+        expect(parse(definition, 'a a', false)).toBeNull()
         expect(parse(definition, 'a a a')).toBe('a a a')
-        expect(parse(definition, 'a a a a')).toBe('')
+        expect(parse(definition, 'a a a a', false)).toBeNull()
     })
     test('[a | a a | a a a] [a | a a]', () => {
         const definition = '[a | a a | a a a] [a | a a]'
-        expect(parse(definition, 'a')).toBe('')
+        expect(parse(definition, 'a', false)).toBeNull()
         expect(parse(definition, 'a a')).toBe('a a')
         expect(parse(definition, 'a a a')).toBe('a a a')
         expect(parse(definition, 'a a a a')).toBe('a a a a')
         expect(parse(definition, 'a a a a a')).toBe('a a a a a')
-        expect(parse(definition, 'a a a a a a')).toBe('')
+        expect(parse(definition, 'a a a a a a', false)).toBeNull()
     })
     test('[a | a a] a | a', () => {
         const definition = '[a | a a] a | a'
         expect(parse(definition, 'a')).toBe('a')
         expect(parse(definition, 'a a')).toBe('a a')
         expect(parse(definition, 'a a a')).toBe('a a a')
-        expect(parse(definition, 'a a a a')).toBe('')
+        expect(parse(definition, 'a a a a', false)).toBeNull()
     })
     test('[a && [a | a a]] a', () => {
         const definition = '[a && [a | a a]] a'
-        expect(parse(definition, 'a')).toBe('')
-        expect(parse(definition, 'a a')).toBe('')
+        expect(parse(definition, 'a', false)).toBeNull()
+        expect(parse(definition, 'a a', false)).toBeNull()
         expect(parse(definition, 'a a a')).toBe('a a a')
         expect(parse(definition, 'a a a a')).toBe('a a a a')
-        expect(parse(definition, 'a a a a a')).toBe('')
+        expect(parse(definition, 'a a a a a', false)).toBeNull()
     })
     /**
      * There is no definition of the following requirement in specifications but
@@ -629,15 +550,15 @@ describe('comma-separated values', () => {
 
         const definition = 'a?, a?, a'
 
-        expect(parse(definition, 'a,')).toBe('')
-        expect(parse(definition, ', a')).toBe('')
-        expect(parse(definition, 'a,, a')).toBe('')
-        expect(parse(definition, 'a, , a')).toBe('')
-        expect(parse(definition, 'a, a,')).toBe('')
-        expect(parse(definition, ', a, a')).toBe('')
-        expect(parse(definition, 'a a')).toBe('')
-        expect(parse(definition, 'a, a a')).toBe('')
-        expect(parse(definition, 'a a, a')).toBe('')
+        expect(parse(definition, 'a,', false)).toBeNull()
+        expect(parse(definition, ', a', false)).toBeNull()
+        expect(parse(definition, 'a,, a', false)).toBeNull()
+        expect(parse(definition, 'a, , a', false)).toBeNull()
+        expect(parse(definition, 'a, a,', false)).toBeNull()
+        expect(parse(definition, ', a, a', false)).toBeNull()
+        expect(parse(definition, 'a a', false)).toBeNull()
+        expect(parse(definition, 'a, a a', false)).toBeNull()
+        expect(parse(definition, 'a a, a', false)).toBeNull()
 
         expect(parse(definition, 'a')).toBe('a')
         expect(parse(definition, 'a, a')).toBe('a, a')
@@ -649,14 +570,14 @@ describe('comma-separated values', () => {
 
         const definition = 'a, a?, a?'
 
-        expect(parse(definition, 'a,')).toBe('')
-        expect(parse(definition, ', a')).toBe('')
-        expect(parse(definition, 'a,, a')).toBe('')
-        expect(parse(definition, 'a, a,')).toBe('')
-        expect(parse(definition, ', a, a')).toBe('')
-        expect(parse(definition, 'a a')).toBe('')
-        expect(parse(definition, 'a, a a')).toBe('')
-        expect(parse(definition, 'a a, a')).toBe('')
+        expect(parse(definition, 'a,', false)).toBeNull()
+        expect(parse(definition, ', a', false)).toBeNull()
+        expect(parse(definition, 'a,, a', false)).toBeNull()
+        expect(parse(definition, 'a, a,', false)).toBeNull()
+        expect(parse(definition, ', a, a', false)).toBeNull()
+        expect(parse(definition, 'a a', false)).toBeNull()
+        expect(parse(definition, 'a, a a', false)).toBeNull()
+        expect(parse(definition, 'a a, a', false)).toBeNull()
 
         expect(parse(definition, 'a')).toBe('a')
         expect(parse(definition, 'a, a')).toBe('a, a')
@@ -666,11 +587,11 @@ describe('comma-separated values', () => {
 
         const definition = '[a?, a?,] a'
 
-        expect(parse(definition, 'a a')).toBe('')
-        expect(parse(definition, 'a, a a')).toBe('')
-        expect(parse(definition, 'a a, a')).toBe('')
-        expect(parse(definition, 'a,, a')).toBe('')
-        expect(parse(definition, ', a, a')).toBe('')
+        expect(parse(definition, 'a a', false)).toBeNull()
+        expect(parse(definition, 'a, a a', false)).toBeNull()
+        expect(parse(definition, 'a a, a', false)).toBeNull()
+        expect(parse(definition, 'a,, a', false)).toBeNull()
+        expect(parse(definition, ', a, a', false)).toBeNull()
 
         expect(parse(definition, 'a')).toBe('a')
         expect(parse(definition, 'a, a')).toBe('a, a')
@@ -680,11 +601,11 @@ describe('comma-separated values', () => {
 
         const definition = 'a [, a? , a?]'
 
-        expect(parse(definition, 'a a')).toBe('')
-        expect(parse(definition, 'a, a a')).toBe('')
-        expect(parse(definition, 'a a, a')).toBe('')
-        expect(parse(definition, 'a a,, a')).toBe('')
-        expect(parse(definition, 'a, a,')).toBe('')
+        expect(parse(definition, 'a a', false)).toBeNull()
+        expect(parse(definition, 'a, a a', false)).toBeNull()
+        expect(parse(definition, 'a a, a', false)).toBeNull()
+        expect(parse(definition, 'a a,, a', false)).toBeNull()
+        expect(parse(definition, 'a, a,', false)).toBeNull()
 
         expect(parse(definition, 'a')).toBe('a')
         expect(parse(definition, 'a, a')).toBe('a, a')
@@ -694,8 +615,8 @@ describe('comma-separated values', () => {
 
         const definition = 'a, && a, && a'
 
-        expect(parse(definition, 'a a a')).toBe('')
-        expect(parse(definition, 'a a, a,')).toBe('')
+        expect(parse(definition, 'a a a', false)).toBeNull()
+        expect(parse(definition, 'a a, a,', false)).toBeNull()
 
         expect(parse(definition, 'a, a a')).toBe('a, a a')
         expect(parse(definition, 'a a, a')).toBe('a, a a')
@@ -705,10 +626,10 @@ describe('comma-separated values', () => {
 
         const definition = 'a, || a, || a'
 
-        expect(parse(definition, 'a,')).toBe('')
-        expect(parse(definition, 'a a,')).toBe('')
-        expect(parse(definition, 'a a a')).toBe('')
-        expect(parse(definition, 'a a, a,')).toBe('')
+        expect(parse(definition, 'a,', false)).toBeNull()
+        expect(parse(definition, 'a a,', false)).toBeNull()
+        expect(parse(definition, 'a a a', false)).toBeNull()
+        expect(parse(definition, 'a a, a,', false)).toBeNull()
 
         expect(parse(definition, 'a')).toBe('a')
         expect(parse(definition, 'a a')).toBe('a a')
@@ -721,9 +642,9 @@ describe('comma-separated values', () => {
 
         const definition = 'a#?, a'
 
-        expect(parse(definition, 'a,')).toBe('')
-        expect(parse(definition, 'a,,')).toBe('')
-        expect(parse(definition, 'a a')).toBe('')
+        expect(parse(definition, 'a,', false)).toBeNull()
+        expect(parse(definition, 'a,,', false)).toBeNull()
+        expect(parse(definition, 'a a', false)).toBeNull()
 
         expect(parse(definition, 'a')).toBe('a')
         expect(parse(definition, 'a, a')).toBe('a, a')
@@ -741,8 +662,8 @@ describe('comma-separated values', () => {
 
         const definition = 'a [a?, && a]'
 
-        expect(parse(definition, 'a a,')).toBe('')
-        expect(parse(definition, 'a a a,')).toBe('')
+        expect(parse(definition, 'a a,', false)).toBeNull()
+        expect(parse(definition, 'a a a,', false)).toBeNull()
 
         expect(parse(definition, 'a a')).toBe('a a')
         expect(parse(definition, 'a a, a')).toBe('a a, a')
@@ -753,8 +674,8 @@ describe('comma-separated values', () => {
 
         const definition = 'a a?, a'
 
-        expect(parse(definition, 'a a')).toBe('')
-        expect(parse(definition, 'a a a')).toBe('')
+        expect(parse(definition, 'a a', false)).toBeNull()
+        expect(parse(definition, 'a a a', false)).toBeNull()
 
         expect(parse(definition, 'a, a')).toBe('a, a')
         expect(parse(definition, 'a a, a')).toBe('a a, a')
@@ -763,8 +684,8 @@ describe('comma-separated values', () => {
 
         const definition = 'a, a? a'
 
-        expect(parse(definition, 'a a')).toBe('')
-        expect(parse(definition, 'a a a')).toBe('')
+        expect(parse(definition, 'a a', false)).toBeNull()
+        expect(parse(definition, 'a a a', false)).toBeNull()
 
         expect(parse(definition, 'a, a')).toBe('a, a')
         expect(parse(definition, 'a, a a')).toBe('a, a a')
@@ -773,8 +694,8 @@ describe('comma-separated values', () => {
 
         const definition = 'a [a?, a]'
 
-        expect(parse(definition, 'a a')).toBe('')
-        expect(parse(definition, 'a a a')).toBe('')
+        expect(parse(definition, 'a a', false)).toBeNull()
+        expect(parse(definition, 'a a a', false)).toBeNull()
 
         expect(parse(definition, 'a, a')).toBe('a, a')
         expect(parse(definition, 'a a, a')).toBe('a a, a')
@@ -783,8 +704,8 @@ describe('comma-separated values', () => {
 
         const definition = 'a [, a? a]'
 
-        expect(parse(definition, 'a a')).toBe('')
-        expect(parse(definition, 'a a a')).toBe('')
+        expect(parse(definition, 'a a', false)).toBeNull()
+        expect(parse(definition, 'a a a', false)).toBeNull()
 
         expect(parse(definition, 'a, a')).toBe('a, a')
         expect(parse(definition, 'a, a a')).toBe('a, a a')
@@ -793,8 +714,8 @@ describe('comma-separated values', () => {
 
         const definition = '[a a?,] a'
 
-        expect(parse(definition, 'a a')).toBe('')
-        expect(parse(definition, 'a a a')).toBe('')
+        expect(parse(definition, 'a a', false)).toBeNull()
+        expect(parse(definition, 'a a a', false)).toBeNull()
 
         expect(parse(definition, 'a, a')).toBe('a, a')
         expect(parse(definition, 'a a, a')).toBe('a a, a')
