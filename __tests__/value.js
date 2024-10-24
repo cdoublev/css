@@ -141,6 +141,14 @@ describe('multiplied values', () => {
         expect(parse(definition, 'a a')).toBe('a a')
         expect(parse(definition, 'a a, a')).toBe('a a, a')
     })
+    test('[a?]#', () => {
+        const definition = '[a?]#'
+        expect(parse(definition, '', false)).toEqual(list([omitted], ','))
+        expect(parse(definition, '')).toBe('')
+        expect(parse(definition, 'a, a,', false)).toBeNull()
+        expect(parse(definition, 'a')).toBe('a')
+        expect(parse(definition, 'a, a')).toBe('a, a')
+    })
     test('a+#', () => {
         const definition = 'a+#'
         expect(parse(definition, 'a')).toBe('a')
@@ -217,6 +225,14 @@ describe('multiplied values', () => {
         expect(parse(definition, 'a', false)).toMatchObject(list([a, omitted]))
         expect(parse(definition, 'b', false)).toMatchObject(list([omitted, b]))
         expect(parse(definition, 'a b', false)).toMatchObject(list([a, b]))
+    })
+    test('[a? b?]#', () => {
+        const definition = '[a? b?]#'
+        expect(parse(definition, '', false)).toMatchObject(list([list([omitted, omitted])], ','))
+        expect(parse(definition, 'a', false)).toMatchObject(list([list([a, omitted])], ','))
+        expect(parse(definition, 'b', false)).toMatchObject(list([list([omitted, b])], ','))
+        expect(parse(definition, 'a b', false)).toMatchObject(list([list([a, b])], ','))
+        expect(parse(definition, 'a b,', false)).toBeNull()
     })
     test('[a | b]?', () => {
         const definition = '[a | b]?'
