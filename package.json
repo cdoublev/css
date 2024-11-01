@@ -40,17 +40,17 @@
     "test:watch": "jest --watchAll -b"
   },
   "dependencies": {
-    "webref": "w3c/webref#44518920c5f0ff7095d5a301a15c4b1d36be8318",
+    "webref": "w3c/webref#e1c3cf2401b095a5f25892ff47d61ffd44b71ba3",
     "webidl2js": "^18.0.0"
   },
   "devDependencies": {
     "@cdoublev/eslint-config": "^0.11.0",
-    "@stylistic/eslint-plugin-js": "^2.9.0",
-    "eslint": "^9.12.0",
-    "eslint-plugin-jest": "^28.8.3",
-    "eslint-plugin-node": "^11.1.0",
-    "globals": "^15.11.0",
-    "jest": "^29.7.0",
+    "@stylistic/eslint-plugin-js": "^2.0.0",
+    "eslint": "^9.0.0",
+    "eslint-plugin-jest": "^28.0.0",
+    "eslint-plugin-node": "^11.0.0",
+    "globals": "^15.0.0",
+    "jest": "^29.0.0",
     "jest-junit": "^16.0.0"
   },
   "publishConfig": {

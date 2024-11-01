@@ -178,7 +178,7 @@ const replaced = {
         // https://github.com/w3c/csswg-drafts/pull/10131
         '<media-feature>': '<mf-plain> | <mf-boolean> | <mf-range>',
         '<media-in-parens>': '(<media-condition>) | (<media-feature>) | <general-enclosed>',
-        // TODO: fix `value` of `<mix()>`
+        // https://github.com/w3c/csswg-drafts/issues/11121
         '<mix()>': 'mix(<progress> , <whole-value> , <whole-value>) | mix(<progress> && of <keyframes-name>)',
         // https://github.com/w3c/csswg-drafts/issues/10797
         '<progress>': "[<calc-sum> | <'animation-timeline'>] && [by <easing-function>]?",
@@ -220,6 +220,8 @@ const excluded = {
             'calc-mix()',
             'container-progress()',
             'first-valid()',
+            'if()',
+            'inherit()',
             'media-progress()',
             'progress()',
             'toggle()',
@@ -559,6 +561,12 @@ const excluded = {
             // https://github.com/w3c/fxtf-drafts/issues/532
             '<mask-source>',
         ],
+        'css-values-5': [
+            // TODO: add support for `<boolean[<test>]`
+            '<if()>',
+            '<if-condition>',
+            '<if-test>',
+        ],
         'filter-effects': [
             // Duplicate of CSS Values
             '<url>',
@@ -608,7 +616,6 @@ const errors = {
         links: ['https://github.com/w3c/csswg-drafts/issues/8097'],
     },
     '@when': { cause: 'It is not yet supported.' },
-    '<bool-test>': { cause: 'It is not yet supported.' },
     '<box>': {
         cause: 'It is a generic type notation that is no longer used anywhere, and should not be exported.',
         links: [
