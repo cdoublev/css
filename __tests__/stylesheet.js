@@ -1003,7 +1003,7 @@ describe('CSS grammar', () => {
         expect(rule.cssRules).toBeUndefined()
         expect(rule.style).toBeUndefined()
         expect(rule.color).toBeUndefined()
-        expect(rule.initialValue).toBeNull()
+        expect(rule.initialValue).toBe('')
         expect(rule.inherits).toBe('true')
         expect(rule.syntax).toBe('"*"')
     })
@@ -2118,7 +2118,7 @@ describe('CSSPropertyRule', () => {
         expect(rule.name).toBe('--custom')
         expect(rule.syntax).toBe('"*"')
         expect(rule.inherits).toBe('true')
-        expect(rule.initialValue).toBeNull()
+        expect(rule.initialValue).toBe('')
     })
 })
 describe('CSSScopeRule', () => {
