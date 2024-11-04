@@ -28,6 +28,7 @@ const {
 const { cssom, install } = require('../lib/index.js')
 const { toDegrees, toRadians } = require('../lib/utils/math.js')
 const { createContext } = require('../lib/utils/context.js')
+const { keywords: cssWideKeywords } = require('../lib/values/substitutions.js')
 const { parseCSSGrammar } = require('../lib/parse/parser.js')
 const { serializeCSSComponentValue } = require('../lib/serialize.js')
 
@@ -752,6 +753,7 @@ describe('comma separated values', () => {
 describe('functions', () => {
     test('invalid', () => {
         const invalid = [
+            // Comma-containing production
             ['fn(<any-value>)', 'fn(,)'],
             ['fn(<any-value>)', 'fn(a {})'],
             ['fn(<any-value>)', 'fn({} a)'],
@@ -920,11 +922,9 @@ describe('<custom-ident>', () => {
             // Invalid escape sequence (parse error)
             '\\\n',
             '-\\\n',
-            // Reserved
-            'initial',
-            'inherit',
-            'unset',
-            'default',
+            // Globally reserved
+            ...cssWideKeywords,
+            'DEFAULT',
         ]
         invalid.forEach(input => expect(parse('<custom-ident>', input, false)).toBeNull())
     })
@@ -3616,7 +3616,7 @@ describe('<layer-name>', () => {
             'prefix .name',
             'prefix. name',
             // Invalid CSS-wide keyword
-            'initial',
+            ...cssWideKeywords,
         ]
         invalid.forEach(input => expect(parse('<layer-name>', input, false)).toBeNull())
     })

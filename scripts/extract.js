@@ -630,7 +630,7 @@ const errors = {
         cause: 'It is intended to replace <urange> but there are ongoing problems with consuming this token therefore it is not yet implemented.',
         links: ['https://github.com/w3c/csswg-drafts/issues/8835'],
     },
-    ':nth()': { cause: 'It is not yet supported. It should be restricted to <pseudo-page> (CSS Page 3). Its value should not include the leading colon.' },
+    ':nth()': { cause: 'It should be restricted to <pseudo-page> (CSS Page 3). Its name should not include the leading colon.' },
 }
 
 /**

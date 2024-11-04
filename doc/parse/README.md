@@ -124,19 +124,17 @@ CSS Syntax defines entry points and algorithms to use to produce a `CSSStyleShee
 
 Each *parse* procedure from CSS Syntax is named a *parser entry point* and runs a corresponding *consume* procedure that is named a *parser algorithm*.
 
-  > [5.3. Parser Entry Points](https://drafts.csswg.org/css-syntax-3/#parser-entry-points)
+  > [5.4. Parser Entry Points](https://drafts.csswg.org/css-syntax-3/#parser-entry-points)
   >
   > The algorithms defined in this section produce high-level CSS objects from lists of CSS tokens.
   >
-  > The algorithms here are operate on a token stream as input, but for convenience can also be invoked with a number of other value types.
+  > The algorithms here operate on a token stream as input, but for convenience can also be invoked with a number of other value types.
   >
   > [...]
   >
-  > [5.4. Parser Algorithms](https://drafts.csswg.org/css-syntax-3/#parser-algorithms)
+  > [5.5. Parser Algorithms](https://drafts.csswg.org/css-syntax-3/#parser-algorithms)
   >
-  > The following algorithms comprise the parser. They are called by the parser entry points above.
-  >
-  > These algorithms may be called with a list of either tokens or of component values.
+  > The following algorithms comprise the parser. They are called by the parser entry points above, and generally should not be called directly by other specifications.
   >
   > [...]
 
