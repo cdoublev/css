@@ -337,6 +337,7 @@ describe('CSSFontFaceDescriptors', () => {
             ['toggle(1)', 'toggle(1%)'],
             ['calc-mix(0, 1, 1)', 'calc-mix(0, 1%, 1%)'],
             ['container-progress(aspect-ratio, 1, 1)', 'calc(1% * container-progress(aspect-ratio, 1, 1))'],
+            ['inherit(--custom)'],
             ['random(1, 1)', 'random(1%, 1%)'],
             ['sibling-count()', 'calc(1% * sibling-count())'],
             // Cascade-dependent substitution
@@ -442,6 +443,8 @@ describe('CSSKeyframeProperties', () => {
         expect(style.fontWeight).toBe('calc-mix(0, 1, 1)')
         style.fontWeight = 'container-progress(aspect-ratio, 1, 1)'
         expect(style.fontWeight).toBe('container-progress(aspect-ratio, 1, 1)')
+        style.fontWeight = 'inherit(--custom)'
+        expect(style.fontWeight).toBe('inherit(--custom)')
         style.fontWeight = 'random(1, 1)'
         expect(style.fontWeight).toBe('random(1, 1)')
         style.fontWeight = 'sibling-count()'
@@ -503,6 +506,8 @@ describe('CSSMarginDescriptors', () => {
         expect(style.fontWeight).toBe('calc(1)')
 
         // Cascade-dependent substitution
+        style.fontWeight = 'inherit(--custom)'
+        expect(style.fontWeight).toBe('inherit(--custom)')
         style.fontWeight = 'var(--custom)'
         expect(style.fontWeight).toBe('var(--custom)')
         style.fontWeight = 'initial'
@@ -565,6 +570,10 @@ describe('CSSPageDescriptors', () => {
         expect(style.size).toBe('calc(1px)')
 
         // Cascade-dependent substitution
+        style.fontWeight = 'inherit(--custom)'
+        style.size = 'inherit(--custom)'
+        expect(style.fontWeight).toBe('inherit(--custom)')
+        expect(style.size).toBe('inherit(--custom)')
         style.fontWeight = 'var(--custom)'
         style.size = 'var(--custom)'
         expect(style.fontWeight).toBe('var(--custom)')
@@ -628,6 +637,8 @@ describe('CSSPositionTryDescriptors', () => {
         expect(style.top).toBe('calc(1px * sibling-count())')
 
         // Cascade-dependent substitution
+        style.top = 'inherit(--custom)'
+        expect(style.top).toBe('inherit(--custom)')
         style.top = 'var(--custom)'
         expect(style.top).toBe('var(--custom)')
         style.top = 'initial'
@@ -650,6 +661,7 @@ describe('arbitrary substitution', () => {
         const invalid = [
             'attr(name, attr())',
             'env(name, env())',
+            'inherit(--custom, inherit())',
             'random-item(--key, random-item())',
             'var(--custom, var())',
         ]
@@ -664,11 +676,13 @@ describe('arbitrary substitution', () => {
             // Valid at parse time
             ['unknown(attr(name))'],
             ['unknown(env(name))'],
+            ['unknown(inherit(--custom))'],
             ['unknown(random-item(--key, 1))'],
             ['unknown(var(--custom))'],
             // Nested inside itself
             ['attr(name, attr(name))'],
             ['env(name, env(name))'],
+            ['inherit(--custom, inherit(--custom))'],
             ['random-item(--key, random-item(--key, 1))'],
             ['var(--custom, var(--custom))'],
             // Serialize the list of tokens
