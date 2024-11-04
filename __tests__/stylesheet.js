@@ -995,6 +995,7 @@ describe('CSS grammar', () => {
                 inherits: invalid;
                 --custom: value;
                 inherits: var(--custom);
+                syntax: "initial";
                 syntax: "<number>" !important;
             }
         `)
@@ -1543,63 +1544,7 @@ describe('CSS grammar', () => {
         expect(createStyleSheet('@property --custom { syntax: "*"; initial-value: 1; }').cssRules).toHaveLength(0)
     })
     it('ignores @property missing a declaration for syntax', () => {
-
         expect(createStyleSheet('@property --custom { inherits: true; initial-value: 1; }').cssRules).toHaveLength(0)
-
-        const invalid = [
-            [''],
-            // Invalid CSS type
-            ['<'],
-            // Unsupported CSS type
-            ['<any-value>'],
-            ['<LENGTH>', '1px'],
-            // Invalid <custom-ident>
-            ['initial'],
-            ['default'],
-            ['1identifier'],
-            ['!identifier'],
-            ['-1identifier'],
-            ['-!identifier'],
-            ['\\\n'],
-            ['-\\\n'],
-            // Unsupported CSS value definition syntaxes
-            ['a b'],
-            ['a && b', 'a b'],
-            ['a || b', 'a b'],
-            [','],
-            ["'/'", '/'],
-            ['fn()', 'fn()'],
-            ['a?'],
-            ['a{2}', 'a a'],
-            ['a*'],
-            ['a+#', 'a'],
-            ['a#?'],
-            // Pre-muliplied CSS type
-            ['<transform-list>+', 'translateX(1px)'],
-        ]
-        const valid = [
-            ['  *  ', 'a'],
-            ['  a+  ', 'a'],
-            ['a#', 'a'],
-            ['a | b', 'b'],
-            ['<length>', '1px'],
-            ['<length>', 'calc(1px)'],
-            ['<length>+', '1px'],
-            ['<length>#', '1px'],
-        ]
-        const cases = [invalid, valid]
-
-        cases.forEach((group, index) =>
-            group.forEach(([syntax, value = syntax]) => {
-                const styleSheet = createStyleSheet(`
-                    @property --custom {
-                        syntax: "${syntax}";
-                        initial-value: ${value};
-                        inherits: true;
-                    }
-                `)
-                expect(styleSheet.cssRules).toHaveLength(index)
-            }))
     })
     it('ignores @property with initial-value declared with an invalid value', () => {
 

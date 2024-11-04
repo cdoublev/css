@@ -4069,6 +4069,14 @@ describe('<style-feature>', () => {
         valid.forEach(input => expect(parse('<style-feature>', input, true, containerContext)).toBe(input))
     })
 })
+describe('<syntax-string>', () => {
+    test('invalid', () => {
+        expect(parse('<syntax-string>', '""', false)).toBeNull()
+    })
+    test('representation', () => {
+        expect(parse('<syntax-string>', '"*"', false)).toMatchObject(delimiter('*', ['<syntax>']))
+    })
+})
 describe('<syntax-component>', () => {
     test('invalid', () => {
         expect(parse('<syntax-component>', 'a #', false)).toBeNull()
