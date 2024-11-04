@@ -336,6 +336,7 @@ describe('CSSFontFaceDescriptors', () => {
             ['mix(0, 1, 1)', 'mix(0, 1%, 1%)'],
             ['toggle(1)', 'toggle(1%)'],
             ['calc-mix(0, 1, 1)', 'calc-mix(0, 1%, 1%)'],
+            ['container-progress(aspect-ratio, 1, 1)', 'calc(1% * container-progress(aspect-ratio, 1, 1))'],
             ['random(1, 1)', 'random(1%, 1%)'],
             ['sibling-count()', 'calc(1% * sibling-count())'],
             // Cascade-dependent substitution
@@ -437,8 +438,14 @@ describe('CSSKeyframeProperties', () => {
         expect(style.fontWeight).toBe('mix(0, 1, 1)')
         style.fontWeight = 'toggle(1)'
         expect(style.fontWeight).toBe('toggle(1)')
-        style.fontWeight = 'calc-mix(0, random(1, 1), sibling-count())'
-        expect(style.fontWeight).toBe('calc-mix(0, random(1, 1), sibling-count())')
+        style.fontWeight = 'calc-mix(0, 1, 1)'
+        expect(style.fontWeight).toBe('calc-mix(0, 1, 1)')
+        style.fontWeight = 'container-progress(aspect-ratio, 1, 1)'
+        expect(style.fontWeight).toBe('container-progress(aspect-ratio, 1, 1)')
+        style.fontWeight = 'random(1, 1)'
+        expect(style.fontWeight).toBe('random(1, 1)')
+        style.fontWeight = 'sibling-count()'
+        expect(style.fontWeight).toBe('sibling-count()')
 
         // Cascade-dependent substitution
         style.fontWeight = 'var(--custom)'
@@ -465,6 +472,7 @@ describe('CSSMarginDescriptors', () => {
             'mix(0, 1, 1)',
             'toggle(1)',
             'calc-mix(0, 1, 1)',
+            'container-progress(aspect-ratio, 1, 1)',
             'random(1, 1)',
             'sibling-count()',
         ]
@@ -518,6 +526,7 @@ describe('CSSPageDescriptors', () => {
             ['mix(0, 1, 1)', 'mix(0, 1px, 1px)'],
             ['toggle(1)', 'toggle(1px)'],
             ['calc-mix(0, 1, 1)', 'calc-mix(0, 1px, 1px)'],
+            ['container-progress(aspect-ratio, 1, 1)', 'calc(1px * container-progress(aspect-ratio, 1, 1))'],
             ['random(1, 1)', 'random(1px, 1px)'],
             ['sibling-count()', 'calc(1px * sibling-count())'],
         ]
@@ -609,8 +618,14 @@ describe('CSSPositionTryDescriptors', () => {
         expect(style.top).toBe('mix(0, 1px, 1px)')
         style.top = 'toggle(1px)'
         expect(style.top).toBe('toggle(1px)')
-        style.top = 'calc-mix(sibling-count(), random(1px, 1px), 1px)'
-        expect(style.top).toBe('calc-mix(sibling-count(), random(1px, 1px), 1px)')
+        style.top = 'calc-mix(0, 1px, 1px)'
+        expect(style.top).toBe('calc-mix(0, 1px, 1px)')
+        style.top = 'calc(1px * container-progress(aspect-ratio, 1, 1))'
+        expect(style.top).toBe('calc(1px * container-progress(aspect-ratio, 1, 1))')
+        style.top = 'random(1px, 1px)'
+        expect(style.top).toBe('random(1px, 1px)')
+        style.top = 'calc(1px * sibling-count())'
+        expect(style.top).toBe('calc(1px * sibling-count())')
 
         // Cascade-dependent substitution
         style.top = 'var(--custom)'
