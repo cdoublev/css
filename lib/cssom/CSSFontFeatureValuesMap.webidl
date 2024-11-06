@@ -1,5 +1,6 @@
 
 // https://drafts.csswg.org/css-fonts-4/#cssfontfeaturevaluesmap
+// https://github.com/w3c/csswg-drafts/issues/11158
 [Exposed=Window]
 interface CSSFontFeatureValuesMap {
 
@@ -12,5 +13,5 @@ interface CSSFontFeatureValuesMap {
     sequence<unsigned long> get(CSSOMString key);
     boolean has(CSSOMString key);
 
-    undefined set(CSSOMString key, (unsigned long or sequence<unsigned long>) values);
+    undefined set(CSSOMString key, (long or sequence<long>) values);
 };
