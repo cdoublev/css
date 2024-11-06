@@ -1495,7 +1495,7 @@ describe('animation', () => {
         expect(style.animation).toBe(animation)
         expect(style.cssText).toBe(`animation: ${animation};`)
 
-        // Repeated longhand values
+        // Coordinated value list
         const repeated = `${animation}, ${animation}`
         style.animation = repeated
         longhands.forEach(longhand =>
@@ -1551,7 +1551,7 @@ describe('animation-range', () => {
             expect(style.cssText).toBe(`animation-range: ${shorthand};`)
         })
 
-        // Repeated longhand values
+        // Coordinated value list
         style.animationRange = 'normal, normal'
         longhands.forEach(longhand => expect(style[longhand]).toBe(`${initial(longhand)}, ${initial(longhand)}`))
         expect(style.animationRange).toBe('normal, normal')
@@ -1631,7 +1631,7 @@ describe('background', () => {
         expect(style.background).toBe('first-valid(none)')
         expect(style.cssText).toBe('background: first-valid(none);')
 
-        // Repeated longhand values
+        // Coordinated value list
         style.background = `${background.replace(' transparent', '')}, ${background}`
         longhands.forEach(longhand =>
             expect(style[longhand]).toBe(
@@ -2331,7 +2331,7 @@ describe('box-shadow', () => {
         expect(style.boxShadow).toBe('0px 0px')
         expect(style.cssText).toBe('box-shadow: 0px 0px;')
 
-        // Repeated longhand values
+        // Coordinated value list
         style.boxShadow = `${shadow}, ${shadow}`
         longhands.forEach(longhand => expect(style[longhand]).toBe(`${initial(longhand)}, ${initial(longhand)}`))
         expect(style.boxShadow).toBe('currentcolor none, currentcolor none')
@@ -3439,7 +3439,7 @@ describe('mask', () => {
         expect(style.mask).toBe('none')
         expect(style.cssText).toBe('mask: none;')
 
-        // Repeated longhand values
+        // Coordinated value list
         style.mask = `${mask}, ${mask}`
         longhands.forEach(longhand =>
             expect(style[longhand]).toBe(shorthands.resetOnly.mask.includes(longhand)
@@ -4104,7 +4104,7 @@ describe('scroll-timeline', () => {
         expect(style.scrollTimeline).toBe('none')
         expect(style.cssText).toBe('scroll-timeline: none;')
 
-        // Repeated longhand values
+        // Coordinated value list
         style.scrollTimeline = `${timeline}, ${timeline}`
         longhands.forEach(longhand => expect(style[longhand]).toBe(`${initial(longhand)}, ${initial(longhand)}`))
         expect(style.scrollTimeline).toBe('none, none')
@@ -4283,7 +4283,7 @@ describe('text-decoration', () => {
 })
 describe('text-decoration-skip', () => {
     it.todo('parses longhand declarations from a shorthand value')
-    it.todo('serializes a shorthand value from the declarations of its longhands')
+    it.todo('serializes a shorthand value from the declarations for its longhands')
 })
 describe('text-spacing', () => {
 
@@ -4377,7 +4377,7 @@ describe('transition', () => {
         expect(style.transition).toBe('0s')
         expect(style.cssText).toBe('transition: 0s;')
 
-        // Repeated longhand values
+        // Coordinated value list
         style.transition = `${transition}, ${transition}`
         longhands.forEach(longhand => expect(style[longhand]).toBe(`${initial(longhand)}, ${initial(longhand)}`))
         expect(style.transition).toBe('0s, 0s')
@@ -4451,7 +4451,7 @@ describe('view-timeline', () => {
         expect(style.viewTimeline).toBe('none')
         expect(style.cssText).toBe('view-timeline: none;')
 
-        // Repeated longhand values
+        // Coordinated value list
         style.viewTimeline = `${timeline}, ${timeline}`
         longhands.forEach(longhand => expect(style[longhand]).toBe(`${initial(longhand)}, ${initial(longhand)}`))
         expect(style.viewTimeline).toBe('none, none')

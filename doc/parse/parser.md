@@ -46,7 +46,7 @@ But CSS productions can also be sensitive to parent or higher level productions:
   - `context: <production>`
   - `@context { <production> }`
 
-The *syntactic context* is any visible object (rule, declaration, function) surrounding a value, whereas the *semantic context* is an invisible wrapper. Both can change the syntax and interpretation of a value.
+The *syntactic context* is any visible object (rule, declaration, function) surrounding a value, whereas the *semantic context* is an invisible wrapper. Both can change the grammar of a value.
 
 ### Ambiguity
 

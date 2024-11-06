@@ -782,7 +782,7 @@ describe('<any-value>', () => {
         const invalid = [
             // One or more tokens
             [''],
-            // Invalid tokens
+            // Invalid token
             ['"bad\nstring"'],
             ['url(bad .url)'],
             [')'],
@@ -805,7 +805,7 @@ describe('<declaration-value>', () => {
         const invalid = [
             // One or more tokens
             [''],
-            // Invalid tokens
+            // Invalid token
             ['"bad\nstring"'],
             ['url(bad .url)'],
             [')'],
@@ -857,6 +857,7 @@ describe('<ident>', () => {
             '!identifier',
             '-1identifier',
             '-!identifier',
+            '--!identifier',
             // Invalid escape sequence (parse error)
             '\\\n',
             '-\\\n',
@@ -868,11 +869,11 @@ describe('<ident>', () => {
     })
     test('valid', () => {
         const valid = [
-            // Starts with identifier start code point
+            // Starts with identifier start code point(s)
             ['identifier'],
             ['·identifier'],
             ['_identifier'],
-            // Starts with escape sequence
+            // Starts with an escape sequence
             ['\\', '�'],
             ['\\-'],
             ['\\0', '�'],
@@ -888,128 +889,47 @@ describe('<ident>', () => {
             ['\\!identifier'],
             ['\\A9identifier', '\\©identifier'],
             ['\\©identifier'],
-            // Starts with -
+            // Starts with - followed by - or identifier start code point
             ['--'],
             ['-identifier'],
             ['-·identifier'],
             ['-_identifier'],
             ['-\\31identifier', '-\\31 identifier'],
-            // Contains identifier code points
+            // Only contains identifier code points and escape sequences
             ['identifier·'],
             ['identifier_'],
             ['identifier1'],
             ['identifier-'],
+            ['identifie\\r', 'identifier'],
+            // Case-sensitive
+            ['IDENTIFIER'],
         ]
         valid.forEach(([input, expected = input]) => expect(parse('<ident>', input)).toBe(expected))
     })
 })
 describe('keyword', () => {
     test('representation', () => {
-        expect(parse('solid', 'solid', false)).toMatchObject(keyword('solid'))
+        expect(parse('identifier', 'identifier', false)).toMatchObject(keyword('identifier'))
     })
     test('valid', () => {
-        expect(parse('solid', 'SOLId')).toBe('solid')
+        expect(parse('identifier', 'IDENTIFIER')).toBe('identifier')
     })
 })
 describe('<custom-ident>', () => {
     test('invalid', () => {
-        const invalid = [
-            // Invalid identifier (start) code point
-            '1identifier',
-            '!identifier',
-            '-1identifier',
-            '-!identifier',
-            // Invalid escape sequence (parse error)
-            '\\\n',
-            '-\\\n',
-            // Globally reserved
-            ...cssWideKeywords,
-            'DEFAULT',
-        ]
+        const invalid = [...cssWideKeywords, 'DEFAULT']
         invalid.forEach(input => expect(parse('<custom-ident>', input, false)).toBeNull())
     })
     test('representation', () => {
-        expect(parse('<custom-ident>', 'customIdentifier', false)).toMatchObject(customIdent('customIdentifier'))
-    })
-    test('valid', () => {
-        const valid = [
-            // Starts with identifier start code point
-            ['identifier'],
-            ['·identifier'],
-            ['_identifier'],
-            // Starts with escape sequence
-            ['\\', '�'],
-            ['\\-'],
-            ['\\0', '�'],
-            ['\\D800', '�'],
-            ['\\110000', '�'],
-            ['\\0000311', '\\31 1'],
-            ['\\31 1'],
-            ['\\31\\31', '\\31 1'],
-            ['\\Aidentifier', '\\a identifier'],
-            ['\\69 dentifier', 'identifier'],
-            ['\\identifier', 'identifier'],
-            ['\\21identifier', '\\!identifier'],
-            ['\\!identifier'],
-            ['\\A9identifier', '\\©identifier'],
-            ['\\©identifier'],
-            // Starts with -
-            ['--'],
-            ['-identifier'],
-            ['-·identifier'],
-            ['-_identifier'],
-            ['-\\31identifier', '-\\31 identifier'],
-            // Contains identifier code points
-            ['identifier·'],
-            ['identifier_'],
-            ['identifier1'],
-            ['identifier-'],
-            // Case-sensitive
-            ['PascalCase'],
-        ]
-        valid.forEach(([input, expected = input]) => expect(parse('<custom-ident>', input)).toBe(expected))
+        expect(parse('<custom-ident>', 'IDENTIFIER', false)).toMatchObject(customIdent('IDENTIFIER'))
     })
 })
 describe('<dashed-ident>', () => {
     test('invalid', () => {
-        const invalid = [
-            // Does not start with --
-            'identifier',
-            // Invalid identifier code point
-            '--identifier!',
-            // Invalid escape sequence (parse error)
-            '--identifier\\\n',
-        ]
-        invalid.forEach(input => expect(parse('<dashed-ident>', input, false)).toBeNull())
+        expect(parse('<dashed-ident>', '-custom-identifier', false)).toBeNull()
     })
     test('representation', () => {
-        expect(parse('<dashed-ident>', '--dashed-ident', false)).toMatchObject(dashedIdent('--dashed-ident'))
-    })
-    test('valid', () => {
-        const valid = [
-            // Contains identifier code points or escape sequences
-            ['--'],
-            ['--identifier·'],
-            ['--identifier_'],
-            ['--identifier1'],
-            ['--identifier-'],
-            ['--identifier\\', '--identifier�'],
-            ['--identifier\\0', '--identifier�'],
-            ['--identifier\\D800', '--identifier�'],
-            ['--identifier\\110000', '--identifier�'],
-            ['--identifier\\0000311', '--identifier11'],
-            ['--identifier\\31 1', '--identifier11'],
-            ['--identifier\\A', '--identifier\\a '],
-            ['--identifie\\72', '--identifier'],
-            ['--identifie\\r', '--identifier'],
-            ['--identifier\\21', '--identifier\\!'],
-            ['--identifier\\!'],
-            ['--identifier\\A9', '--identifier\\©'],
-            ['--identifier\\©'],
-            // Case-sensitive
-            ['--PascalCase'],
-        ]
-        valid.forEach(([input, expected = input]) => expect(parse('<dashed-ident>', input)).toBe(expected))
+        expect(parse('<dashed-ident>', '--custom-identifier', false)).toMatchObject(dashedIdent('--custom-identifier'))
     })
 })
 describe('<custom-property-name>', () => {
@@ -1017,8 +937,8 @@ describe('<custom-property-name>', () => {
         expect(parse('<custom-property-name>', '--', false)).toBeNull()
     })
     test('representation', () => {
-        expect(parse('<custom-property-name>', '--custom', false))
-            .toMatchObject(dashedIdent('--custom', ['<custom-property-name>']))
+        expect(parse('<custom-property-name>', '--dashed-identifier', false))
+            .toMatchObject(dashedIdent('--dashed-identifier', ['<custom-property-name>']))
     })
 })
 describe('<ndashdigit-ident>', () => {
@@ -1031,12 +951,7 @@ describe('<ndashdigit-ident>', () => {
         invalid.forEach(input => expect(parse('<ndashdigit-ident>', input, false)).toBeNull())
     })
     test('representation', () => {
-        const valid = [
-            ['n-1', identToken('n-1', ['<ndashdigit-ident>'])],
-            ['N-1', identToken('n-1', ['<ndashdigit-ident>'], 'N-1')],
-            ['n-11', identToken('n-11', ['<ndashdigit-ident>'])],
-        ]
-        valid.forEach(([input, expected]) => expect(parse('<ndashdigit-ident>', input, false)).toMatchObject(expected))
+        expect(parse('<ndashdigit-ident>', 'n-11', false)).toMatchObject(identToken('n-11', ['<ndashdigit-ident>']))
     })
 })
 describe('<dashndashdigit-ident>', () => {
@@ -1049,12 +964,8 @@ describe('<dashndashdigit-ident>', () => {
         invalid.forEach(input => expect(parse('<dashndashdigit-ident>', input, false)).toBeNull())
     })
     test('representation', () => {
-        const valid = [
-            ['-n-1', identToken('-n-1', ['<dashndashdigit-ident>'])],
-            ['-N-1', identToken('-n-1', ['<dashndashdigit-ident>'], '-N-1')],
-            ['-n-11', identToken('-n-11', ['<dashndashdigit-ident>'])],
-        ]
-        valid.forEach(([input, expected]) => expect(parse('<dashndashdigit-ident>', input, false)).toMatchObject(expected))
+        expect(parse('<dashndashdigit-ident>', '-n-11', false))
+            .toMatchObject(identToken('-n-11', ['<dashndashdigit-ident>']))
     })
 })
 describe('<string>', () => {
@@ -1162,12 +1073,8 @@ describe('<url>', () => {
 
 describe('<number>', () => {
     test('invalid', () => {
-        const invalid = [
-            '-1',
-            '1px',
-            'calc(1px)',
-        ]
-        invalid.forEach(input => expect(parse('<number [0,∞]>', input, false)).toBeNull())
+        expect(parse('<number [0,∞]>', '-1', false)).toBeNull()
+        expect(parse('<number [0,∞]>', '1px', false)).toBeNull()
     })
     test('representation', () => {
         expect(parse('<number>', '1', false)).toMatchObject(number(1))
@@ -1182,13 +1089,15 @@ describe('<number>', () => {
             ['.1', '0.1'],
             // Trailing 0
             ['0.10', '0.1'],
-            // https://github.com/w3c/csswg-drafts/issues/6471
+            // Precision
             ['1e-6', '0.000001'],
             ['1e-7', '0'],
             ['0.123456'],
             ['0.1234567', '0.123457'],
             ['1.234567'],
             ['1.2345678', '1.234568'],
+            // https://github.com/w3c/csswg-drafts/issues/6471
+            ['1234567'],
             // Priority over <length> in "either" combination type
             ['0', '0', '<length> | <number>'],
             ['0', '0', '<length> || <number>'],
@@ -1203,12 +1112,8 @@ describe('<number>', () => {
 })
 describe('<zero>', () => {
     test('invalid', () => {
-        const invalid = [
-            '1',
-            '0px',
-            'calc(0)',
-        ]
-        invalid.forEach(input => expect(parse('<zero>', input, false)).toBeNull())
+        expect(parse('<zero>', '1', false)).toBeNull()
+        expect(parse('<zero>', '0px', false)).toBeNull()
     })
     test('representation', () => {
         expect(parse('<zero>', '0', false)).toMatchObject(numberToken(0, ['<zero>']))
@@ -1229,7 +1134,6 @@ describe('<integer>', () => {
             '1.1',
             '1e-1',
             '1px',
-            'calc(1px)',
         ]
         invalid.forEach(input => expect(parse('<integer [0,∞]>', input, false)).toBeNull())
     })
@@ -1238,11 +1142,10 @@ describe('<integer>', () => {
     })
     test('valid', () => {
         const valid = [
-            // Scientific notation (https://github.com/w3c/csswg-drafts/issues/7289)
+            // https://github.com/w3c/csswg-drafts/issues/10238
             ['1.0', '1'],
             ['1e1', '10'],
             ['1e+1', '10'],
-            ['1234567'],
             // 8 bits signed integer (browser conformance)
             [`${MIN_INTEGER - 1}`, MIN_INTEGER],
             [`${MAX_INTEGER + 1}`, MAX_INTEGER],
@@ -1261,7 +1164,6 @@ describe('<integer>', () => {
 describe('<signless-integer>', () => {
     test('invalid', () => {
         const invalid = [
-            '/**/-1',
             '+1',
             '1.1',
             '1e-1',
@@ -1286,7 +1188,7 @@ describe('<signed-integer>', () => {
         invalid.forEach(input => expect(parse('<signed-integer>', input, false)).toBeNull())
     })
     test('representation', () => {
-        expect(parse('<signed-integer>', '/**/+1', false)).toMatchObject(numberToken(1, ['<signed-integer>'], '+1'))
+        expect(parse('<signed-integer>', '+1', false)).toMatchObject(numberToken(1, ['<signed-integer>']))
         expect(parse('<signed-integer>', '-1', false)).toMatchObject(numberToken(-1, ['<signed-integer>']))
     })
 })
@@ -1297,6 +1199,7 @@ describe('<dimension>', () => {
             '1!identifier',
             '1-1identifier',
             '1-!identifier',
+            '1--!identifier',
             // Invalid escape sequence (parse error)
             '1\\\n',
             '1-\\\n',
@@ -1308,11 +1211,19 @@ describe('<dimension>', () => {
     })
     test('valid', () => {
         const valid = [
-            // Starts with identifier start code point
+            // Scientific notation
+            ['1e1identifier', '10identifier'],
+            ['1e+1identifier', '10identifier'],
+            ['1e-1identifier', '0.1identifier'],
+            // Leading 0
+            ['.1identifier', '0.1identifier'],
+            // Trailing 0
+            ['0.10identifier', '0.1identifier'],
+            // The unit starts with identifier start code point(s)
             ['1identifier'],
             ['1·identifier'],
             ['1_identifier'],
-            // Starts with escape sequence
+            // The unit starts with an escape sequence
             ['1\\', '1�'],
             ['1\\-'],
             ['1\\0', '1�'],
@@ -1328,17 +1239,20 @@ describe('<dimension>', () => {
             ['1\\!identifier'],
             ['1\\A9identifier', '1\\©identifier'],
             ['1\\©identifier'],
-            // Starts with -
+            // The unit starts with - followed by - or identifier start code point
             ['1--'],
             ['1-identifier'],
             ['1-·identifier'],
             ['1-_identifier'],
             ['1-\\31identifier', '1-\\31 identifier'],
-            // Contains identifier code points
+            // The unit only contains identifier code points and escape sequences
             ['1identifier·'],
             ['1identifier_'],
             ['1identifier1'],
             ['1identifier-'],
+            ['1identifie\\r', '1identifier'],
+            // The unit is case-insensitive
+            ['1IDENTIFIER', '1identifier'],
         ]
         valid.forEach(([input, expected = input]) => expect(parse('<dimension>', input)).toBe(expected))
     })
@@ -1350,7 +1264,6 @@ describe('<angle>', () => {
             '1turn',
             '1',
             '1px',
-            'calc(1)',
         ]
         invalid.forEach(input => expect(parse('<angle [0,1deg]>', input, false)).toBeNull())
     })
@@ -1371,19 +1284,8 @@ describe('<angle>', () => {
         valid.forEach(([definition, input, expected]) => expect(parse(definition, input, false)).toMatchObject(expected))
     })
     test('valid', () => {
-        const valid = [
-            // Scientific notation
-            ['1e1deg', '10deg'],
-            ['1e+1deg', '10deg'],
-            ['1e-1deg', '0.1deg'],
-            // Leading 0
-            ['.1deg', '0.1deg'],
-            // Trailing 0
-            ['0.10deg', '0.1deg'],
-            // Case-insensitive
-            ['1DEg', '1deg'],
-        ]
-        valid.forEach(([input, expected]) => expect(parse('<angle [0,1turn]>', input)).toBe(expected))
+        expect(parse('<angle [0,1turn]>', '1turn')).toBe('1turn')
+        expect(parse('<angle [0,1turn]>', '360deg')).toBe('360deg')
     })
 })
 describe('<decibel>', () => {
@@ -1392,7 +1294,6 @@ describe('<decibel>', () => {
             '-1db',
             '1',
             '1px',
-            'calc(1)',
         ]
         invalid.forEach(input => expect(parse('<decibel [0,1db]>', input, false)).toBeNull())
     })
@@ -1400,19 +1301,7 @@ describe('<decibel>', () => {
         expect(parse('<decibel>', '1db', false)).toMatchObject(decibel(1))
     })
     test('valid', () => {
-        const valid = [
-            // Scientific notation
-            ['1e1db', '10db'],
-            ['1e+1db', '10db'],
-            ['1e-1db', '0.1db'],
-            // Leading 0
-            ['.1db', '0.1db'],
-            // Trailing 0
-            ['0.10db', '0.1db'],
-            // Case-insensitive
-            ['1Db', '1db'],
-        ]
-        valid.forEach(([input, expected]) => expect(parse('<decibel>', input)).toBe(expected))
+        expect(parse('<decibel [0,∞]>', '0db')).toBe('0db')
     })
 })
 describe('<flex>', () => {
@@ -1421,7 +1310,6 @@ describe('<flex>', () => {
             ['-1fr', '<flex>'],
             ['1'],
             ['1px'],
-            ['calc(1)'],
         ]
         invalid.forEach(([input, definition = '<flex [0,1fr]>']) => expect(parse(definition, input, false)).toBeNull())
     })
@@ -1429,19 +1317,7 @@ describe('<flex>', () => {
         expect(parse('<flex>', '1fr', false)).toMatchObject(flex(1))
     })
     test('valid', () => {
-        const valid = [
-            // Scientific notation
-            ['1e1fr', '10fr'],
-            ['1e+1fr', '10fr'],
-            ['1e-1fr', '0.1fr'],
-            // Leading 0
-            ['.1fr', '0.1fr'],
-            // Trailing 0
-            ['0.10fr', '0.1fr'],
-            // Case-insensitive
-            ['1Fr', '1fr'],
-        ]
-        valid.forEach(([input, expected]) => expect(parse('<flex>', input)).toBe(expected))
+        expect(parse('<flex [0,∞]>', '0fr')).toBe('0fr')
     })
 })
 describe('<frequency>', () => {
@@ -1451,7 +1327,6 @@ describe('<frequency>', () => {
             '1khz',
             '1',
             '1px',
-            'calc(1)',
         ]
         invalid.forEach(input => expect(parse('<frequency [0,1hz]>', input, false)).toBeNull())
     })
@@ -1459,30 +1334,19 @@ describe('<frequency>', () => {
         expect(parse('<frequency>', '1hz', false)).toMatchObject(frequency(1, 'hz'))
     })
     test('valid', () => {
-        const valid = [
-            // Scientific notation
-            ['1e1hz', '10hz'],
-            ['1e+1hz', '10hz'],
-            ['1e-1hz', '0.1hz'],
-            // Leading 0
-            ['.1hz', '0.1hz'],
-            // Trailing 0
-            ['0.10hz', '0.1hz'],
-            // Case-insensitive
-            ['1Hz', '1hz'],
-        ]
-        valid.forEach(([input, expected]) => expect(parse('<frequency [0,1khz]>', input)).toBe(expected))
+        expect(parse('<frequency [0,1khz]>', '1khz')).toBe('1khz')
+        expect(parse('<frequency [0,1khz]>', '1000hz')).toBe('1000hz')
     })
 })
 describe('<length>', () => {
     test('invalid', () => {
         const invalid = [
             '-1px',
+            '1in',
             '1',
             '1%',
-            'calc(1)',
         ]
-        invalid.forEach(input => expect(parse('<length [0,∞]>', input, false)).toBeNull())
+        invalid.forEach(input => expect(parse('<length [0,1px]>', input, false)).toBeNull())
     })
     test('representation', () => {
         expect(parse('<length>', '0', false)).toMatchObject({
@@ -1493,20 +1357,8 @@ describe('<length>', () => {
         expect(parse('<length>', '1px', false)).toMatchObject(length(1, 'px'))
     })
     test('valid', () => {
-        const valid = [
-            // Scientific notation
-            ['1e1px', '10px'],
-            ['1e+1px', '10px'],
-            ['1e-1px', '0.1px'],
-            // Leading 0
-            ['.1px', '0.1px'],
-            // Trailing 0
-            ['0.10px', '0.1px'],
-            // Case-insensitive
-            ['1Px', '1px'],
-            ['1Q', '1q'],
-        ]
-        valid.forEach(([input, expected]) => expect(parse('<length>', input)).toBe(expected))
+        expect(parse('<length [0,1in]>', '1in')).toBe('1in')
+        expect(parse('<length [0,1in]>', '96px')).toBe('96px')
     })
 })
 describe('<percentage>', () => {
@@ -1515,7 +1367,6 @@ describe('<percentage>', () => {
             '-1%',
             '0',
             '1px',
-            'calc(1)',
         ]
         invalid.forEach(input => expect(parse('<percentage [0,∞]>', input, false)).toBeNull())
     })
@@ -1533,7 +1384,7 @@ describe('<percentage>', () => {
             // Trailing 0
             ['0.10%', '0.1%'],
         ]
-        valid.forEach(([input, expected]) => expect(parse('<percentage>', input)).toBe(expected))
+        valid.forEach(([input, expected]) => expect(parse('<percentage [0,∞]>', input)).toBe(expected))
     })
 })
 describe('<length-percentage>', () => {
@@ -1549,8 +1400,8 @@ describe('<length-percentage>', () => {
         expect(parse('<length-percentage>', '1px', false)).toMatchObject(length(1, 'px', ['<length-percentage>']))
     })
     test('valid', () => {
-        expect(parse('<length-percentage>', '1px')).toBe('1px')
-        expect(parse('<length-percentage>', '1%')).toBe('1%')
+        expect(parse('<length-percentage [0,∞]>', '1px')).toBe('1px')
+        expect(parse('<length-percentage [0,∞]>', '1%')).toBe('1%')
     })
 })
 describe('<semitones>', () => {
@@ -1559,7 +1410,6 @@ describe('<semitones>', () => {
             '-1st',
             '1',
             '1px',
-            'calc(1)',
         ]
         invalid.forEach(input => expect(parse('<semitones [0,1st]>', input, false)).toBeNull())
     })
@@ -1567,19 +1417,7 @@ describe('<semitones>', () => {
         expect(parse('<semitones>', '1st', false)).toMatchObject(semitones(1))
     })
     test('valid', () => {
-        const valid = [
-            // Scientific notation
-            ['1e1st', '10st'],
-            ['1e+1st', '10st'],
-            ['1e-1st', '0.1st'],
-            // Leading 0
-            ['.1st', '0.1st'],
-            // Trailing 0
-            ['0.10st', '0.1st'],
-            // Case-insensitive
-            ['1St', '1st'],
-        ]
-        valid.forEach(([input, expected]) => expect(parse('<semitones>', input)).toBe(expected))
+        expect(parse('<semitones [0,∞]>', '1st')).toBe('1st')
     })
 })
 describe('<resolution>', () => {
@@ -1589,7 +1427,6 @@ describe('<resolution>', () => {
             ['1dpi'],
             ['1'],
             ['1px'],
-            ['calc(1)'],
         ]
         invalid.forEach(([input, definition = '<resolution [0,1dppx]>']) =>
             expect(parse(definition, input, false)).toBeNull())
@@ -1598,28 +1435,17 @@ describe('<resolution>', () => {
         expect(parse('<resolution>', '1dppx', false)).toMatchObject(resolution(1, 'dppx'))
     })
     test('valid', () => {
-        const valid = [
-            // Scientific notation
-            ['1e1dppx', '10dppx'],
-            ['1e+1dppx', '10dppx'],
-            ['1e-1dppx', '0.1dppx'],
-            // Leading 0
-            ['.1dppx', '0.1dppx'],
-            // Trailing 0
-            ['0.10dppx', '0.1dppx'],
-            // Case-insensitive
-            ['1DPpx', '1dppx'],
-        ]
-        valid.forEach(([input, expected]) => expect(parse('<resolution [0,1dpi]>', input)).toBe(expected))
+        expect(parse('<resolution [0,1dpi]>', '1dpi')).toBe('1dpi')
+        expect(parse('<resolution [0,1dpi]>', '96dppx')).toBe('96dppx')
     })
 })
 describe('<time>', () => {
     test('invalid', () => {
         const invalid = [
+            '-1ms',
             '1s',
             '1',
             '1px',
-            'calc(1)',
         ]
         invalid.forEach(input => expect(parse('<time [0,1ms]>', input, false)).toBeNull())
     })
@@ -1627,72 +1453,43 @@ describe('<time>', () => {
         expect(parse('<time>', '1s', false)).toMatchObject(time(1, 's'))
     })
     test('valid', () => {
-        const valid = [
-            // Scientific notation
-            ['1e1s', '10s'],
-            ['1e+1s', '10s'],
-            ['1e-1s', '0.1s'],
-            // Leading 0
-            ['.1s', '0.1s'],
-            // Trailing 0
-            ['0.10s', '0.1s'],
-            // Case-insensitive
-            ['1Ms', '1ms'],
-        ]
-        valid.forEach(([input, expected]) => expect(parse('<time [1ms,∞]>', input)).toBe(expected))
+        expect(parse('<time [0,1s]>', '1s')).toBe('1s')
+        expect(parse('<time [0,1s]>', '1000ms')).toBe('1000ms')
     })
 })
 describe('<n-dimension>', () => {
     test('invalid', () => {
-        const invalid = [
-            '1n-',
-            '1.1n',
-            'calc(1n)',
-        ]
-        invalid.forEach(input => expect(parse('<n-dimension>', input, false)).toBeNull())
+        expect(parse('<n-dimension>', '1n-', false)).toBeNull()
+        expect(parse('<n-dimension>', '1.1n', false)).toBeNull()
     })
     test('representation', () => {
         expect(parse('<n-dimension>', '1n', false)).toMatchObject(dimensionToken(1, 'n', ['<n-dimension>']))
-        expect(parse('<n-dimension>', '1N', false)).toMatchObject(dimensionToken(1, 'n', ['<n-dimension>'], '1N'))
     })
 })
 describe('<ndash-dimension>', () => {
     test('invalid', () => {
-        const invalid = [
-            '1n',
-            '1.1n-',
-            'calc(1n-)',
-        ]
-        invalid.forEach(input => expect(parse('<ndash-dimension>', input, false)).toBeNull())
+        expect(parse('<ndash-dimension>', '1n', false)).toBeNull()
+        expect(parse('<ndash-dimension>', '1.1n-', false)).toBeNull()
     })
     test('representation', () => {
         expect(parse('<ndash-dimension>', '1n-', false)).toMatchObject(dimensionToken(1, 'n-', ['<ndash-dimension>']))
-        expect(parse('<ndash-dimension>', '1N-', false)).toMatchObject(dimensionToken(1, 'n-', ['<ndash-dimension>'], '1N-'))
     })
 })
 describe('<ndashdigit-dimension>', () => {
     test('invalid', () => {
-        const invalid = [
-            '1n-',
-            '1.1n-1',
-            'calc(1n-1)',
-        ]
-        invalid.forEach(input => expect(parse('<ndashdigit-dimension>', input, false)).toBeNull())
+        expect(parse('<ndashdigit-dimension>', '1n-', false)).toBeNull()
+        expect(parse('<ndashdigit-dimension>', '1.1n-1', false)).toBeNull()
     })
     test('representation', () => {
-        const valid = [
-            ['1n-1', dimensionToken(1, 'n-1', ['<ndashdigit-dimension>'])],
-            ['1N-1', dimensionToken(1, 'n-1', ['<ndashdigit-dimension>'], '1N-1')],
-            ['1n-11', dimensionToken(1, 'n-11', ['<ndashdigit-dimension>'])],
-        ]
-        valid.forEach(([input, expected]) => expect(parse('<ndashdigit-dimension>', input, false)).toMatchObject(expected))
+        expect(parse('<ndashdigit-dimension>', '1n-11', false))
+            .toMatchObject(dimensionToken(1, 'n-11', ['<ndashdigit-dimension>']))
     })
 })
 
 describe('<calc()>', () => {
     test('invalid', () => {
         const invalid = [
-            // Whitespaces are required on both sides of `+` and `-`
+            // Whitespace required on both sides of `+` and `-`
             ['<number>', 'calc(1+ 1)'],
             ['<number>', 'calc(1 +1)'],
             ['<number>', 'calc(1- 1)'],
@@ -2656,14 +2453,7 @@ describe('<alpha-value>', () => {
         expect(parse('<alpha-value>', '1%', false)).toMatchObject(percentage(1, ['<alpha-value>']))
     })
     test('valid', () => {
-        const valid = [
-            // To number
-            ['50%', '0.5'],
-            // Clamped at computed value time
-            ['-1'],
-            ['2'],
-        ]
-        valid.forEach(([input, expected = input]) => expect(parse('<alpha-value>', input)).toBe(expected))
+        expect(parse('<alpha-value>', '50%')).toBe('0.5')
     })
 })
 describe('<an+b>', () => {
@@ -2725,7 +2515,8 @@ describe('<animateable-feature>', () => {
         invalid.forEach(input => expect(parse('<animateable-feature>', input, false)).toBeNull())
     })
     test('representation', () => {
-        expect(parse('<animateable-feature>', 'contents', false)).toMatchObject(keyword('contents', ['<animateable-feature>']))
+        expect(parse('<animateable-feature>', 'contents', false))
+            .toMatchObject(keyword('contents', ['<animateable-feature>']))
     })
 })
 describe('<arc-command>', () => {
@@ -2877,14 +2668,14 @@ describe('<brightness()>, <contrast()>, <grayscale()>, <invert()>, <opacity()>, 
 describe('<color>', () => {
     test('invalid', () => {
         const invalid = [
-            // Invalid <hex-color>
+            // <hex-color>
             '#ffz',
             '#1',
             '#12',
             '#12345',
             '#1234567',
             '#123456789',
-            // Relative color syntax
+            // Relative color
             'rgb(r 0 0)',
             'rgb(r, 0, 0)',
             'rgb(0, 0, 0, alpha)',
@@ -2965,7 +2756,7 @@ describe('<color>', () => {
             ['rgb(calc(101%) 0% 0% / calc(101%))', 'rgb(255, 0, 0)'],
             ['rgba(-1 calc(1em / 1px) 101% / 1)', 'rgb(0 calc(1em / 1px) 255)'],
             ['rgb(calc(1) sibling-index() progress(1, 0, 2))', 'rgb(1 sibling-index() 0.5)'],
-            // Relative color syntax
+            // Relative color
             ['rgb(from green alpha calc(r) calc(g * 1%) / calc(b + 1 + 1))', 'rgb(from green alpha calc(r) calc(1% * g) / calc(2 + b))'],
             ['rgba(from rgba(-1 256 0 / -1) -100% 200% 0% / 101%)', 'rgb(from rgb(-1 256 0 / 0) -255 510 0)'],
         ]
@@ -3015,7 +2806,7 @@ describe('<color>', () => {
             ['hsl(calc(540deg) 100% 50% / 101%)', 'rgb(0, 255, 255)'],
             ['hsla(-540 calc(1em / 1px) 101% / 1)', 'hsl(180 calc(1em / 1px) 100)'],
             ['hsl(calc(1) sibling-index() progress(1, 0, 2))', 'hsl(1 sibling-index() 0.5)'],
-            // Relative color syntax
+            // Relative color
             ['hsl(from green alpha calc(h) calc(s * 1%) / calc(l + 1 + 1))', 'hsl(from green alpha calc(h) calc(1% * s) / calc(2 + l))'],
             ['hsla(from hsla(540 -1 0 / -1) 540deg 101% 0% / 101%)', 'hsl(from hsl(180 -1 0 / 0) 180 101 0)'],
         ]
@@ -3061,7 +2852,7 @@ describe('<color>', () => {
             ['hwb(calc(540deg) 0% 0% / calc(101%))', 'rgb(0, 255, 255)'],
             ['hwb(-540 calc(1em / 1px) 101% / 1)', 'hwb(180 calc(1em / 1px) 100)'],
             ['hwb(calc(1) sibling-index() progress(1, 0, 2))', 'hwb(1 sibling-index() 0.5)'],
-            // Relative color syntax
+            // Relative color
             ['hwb(from green alpha calc(h) calc(w * 1%) / calc(b + 1 + 1))', 'hwb(from green alpha calc(h) calc(1% * w) / calc(2 + b))'],
             ['hwb(from hwb(540 -1 0 / -1) 540deg -1% 0% / 101%)', 'hwb(from hwb(180 -1 0 / 0) 180 -1 0)'],
         ]
@@ -3082,7 +2873,7 @@ describe('<color>', () => {
             ['lab(0.00000051 0.00000051 0 / 0.501)', 'lab(0.000001 0.000001 0 / 0.5)'],
             ['lab(0.0000001% 0.0000001% 0 / 49.9%)', 'lab(0 0 0 / 0.498)'],
             ['lab(0.00000051% 0.00000041% 0 / 50.1%)', 'lab(0.000001 0.000001 0 / 0.5)'],
-            // Relative color syntax
+            // Relative color
             ['lab(from green alpha calc(l) calc(a * 1%) / calc(b + 1 + 1))', 'lab(from green alpha calc(l) calc(1% * a) / calc(2 + b))'],
             ['lab(from lab(-1 0 0 / -1) 200% 100% 0% / 101%)', 'lab(from lab(-1 0 0 / 0) 200 125 0)'],
         ]
@@ -3103,7 +2894,7 @@ describe('<color>', () => {
             ['lch(0.00000051 0.00000051 0.00000051 / 0.501)', 'lch(0.000001 0.000001 0.000001 / 0.5)'],
             ['lch(0.0000001% 0.0000003% 0.0000001deg / 49.9%)', 'lch(0 0 0 / 0.498)'],
             ['lch(0.00000051% 0.00000041% 0.00000051deg / 50.1%)', 'lch(0.000001 0.000001 0.000001 / 0.5)'],
-            // Relative color syntax
+            // Relative color
             ['lch(from green alpha calc(l) calc(c * 1deg) / calc(h + 1 + 1))', 'lch(from green alpha calc(l) calc(1deg * c) / calc(2 + h))'],
             ['lch(from lch(-1 -1 540 / -1) 101% -100% 540deg / 101%)', 'lch(from lch(-1 -1 180 / 0) 101 -150 180)'],
         ]
@@ -3124,7 +2915,7 @@ describe('<color>', () => {
             ['oklab(0.00000051 0.00000051 0 / 0.501)', 'oklab(0.000001 0.000001 0 / 0.5)'],
             ['oklab(0.00001% 0.0001% 0 / 49.9%)', 'oklab(0 0 0 / 0.498)'],
             ['oklab(0.00005% 0.00013% 0 / 50.1%)', 'oklab(0.000001 0.000001 0 / 0.5)'],
-            // Relative color syntax
+            // Relative color
             ['oklab(from green alpha calc(l) calc(a * 1%) / calc(b + 1 + 1))', 'oklab(from green alpha calc(l) calc(1% * a) / calc(2 + b))'],
             ['oklab(from oklab(-1 0 0 / -1) 200% 100% 0% / 101%)', 'oklab(from oklab(-1 0 0 / 0) 2 0.4 0)'],
         ]
@@ -3145,7 +2936,7 @@ describe('<color>', () => {
             ['oklch(0.00000051 0.00000051 0.00000051 / 0.501)', 'oklch(0.000001 0.000001 0.000001 / 0.5)'],
             ['oklch(0.00001% 0.0001% 0.0000001deg / 49.9%)', 'oklch(0 0 0 / 0.498)'],
             ['oklch(0.00005% 0.00013% 0.00000051deg / 50.1%)', 'oklch(0.000001 0.000001 0.000001 / 0.5)'],
-            // Relative color syntax
+            // Relative color
             ['oklch(from green alpha calc(l) calc(c * 1deg) / calc(h + 1 + 1))', 'oklch(from green alpha calc(l) calc(1deg * c) / calc(2 + h))'],
             ['oklch(from oklch(-1 -1 540 / -1) 200% -100% 540deg / 101%)', 'oklch(from oklch(-1 -1 180 / 0) 2 -0.4 180)'],
         ]
@@ -3168,7 +2959,7 @@ describe('<color>', () => {
             ['color(srgb 0.00000051 0 0 / 0.501)', 'color(srgb 0.000001 0 0 / 0.5)'],
             ['color(srgb 0.00001% 0 0 / 49.9%)', 'color(srgb 0 0 0 / 0.498)'],
             ['color(srgb 0.00005% 0 0 / 50.1%)', 'color(srgb 0.000001 0 0 / 0.5)'],
-            // Relative color syntax
+            // Relative color
             ['color(from green srgb alpha calc(r) calc(g * 1%) / calc(b + 1 + 1))', 'color(from green srgb alpha calc(r) calc(1% * g) / calc(2 + b))'],
             ['color(from green xyz-d65 calc(alpha) calc(x) y / z)'],
             ['color(from green --profile calc(alpha) calc(channel-identifier))'],
@@ -3272,7 +3063,6 @@ describe('<counter>', () => {
 })
 describe('<counter-name>', () => {
     test('invalid', () => {
-        // Reserved keyword
         expect(parse('<counter-name>', 'NONE', false)).toBeNull()
     })
     test('representation', () => {
@@ -3436,10 +3226,11 @@ describe('<gradient>', () => {
     })
     test('valid', () => {
         const valid = [
+            // Simple
             ['conic-gradient(red)'],
             ['linear-gradient(red)'],
             ['radial-gradient(red)'],
-            // Repeating gradient
+            // Repeating
             ['repeating-conic-gradient(red)'],
             ['repeating-linear-gradient(red)'],
             ['repeating-radial-gradient(red)'],
@@ -3511,6 +3302,7 @@ describe('<id-selector>', () => {
             '#!identifier',
             '#-1identifier',
             '#-!identifier',
+            '#--!identifier',
             // Invalid escape sequence (parse error)
             '#\\\n',
             '#-\\\n',
@@ -3530,7 +3322,7 @@ describe('<id-selector>', () => {
             ['#identifier'],
             ['#·identifier'],
             ['#_identifier'],
-            // Starts with escape sequence
+            // Starts with an escape sequence
             ['#\\', '#�'],
             ['#\\-'],
             ['#\\0', '#�'],
@@ -3546,17 +3338,20 @@ describe('<id-selector>', () => {
             ['#\\!identifier'],
             ['#\\A9identifier', '#\\©identifier'],
             ['#\\©identifier'],
-            // Starts with -
+            // Starts with - followed by - or identifier start code point
             ['#--'],
             ['#-identifier'],
             ['#-·identifier'],
             ['#-_identifier'],
             ['#-\\31identifier', '#-\\31 identifier'],
-            // Contains identifier code points
+            // Only contains identifier code points and escape sequences
             ['#identifier·'],
             ['#identifier_'],
             ['#identifier1'],
             ['#identifier-'],
+            ['#identifie\\r', '#identifier'],
+            // Case-sensitive
+            ['#IDENTIFIER'],
         ]
         valid.forEach(([input, expected = input]) => expect(parse('<id-selector>', input)).toBe(expected))
     })
@@ -3589,7 +3384,7 @@ describe('<keyframe-selector>', () => {
     })
     test('valid', () => {
         const valid = [
-            // Normalize keyword to <percentage>
+            // To <percentage>
             ['from', '0%'],
             ['to', '100%'],
             // Element-dependent numeric substitution
@@ -3606,7 +3401,8 @@ describe('<keyframes-name>', () => {
         expect(parse('<keyframes-name>', 'NONE', false)).toBeNull()
     })
     test('representation', () => {
-        expect(parse('<keyframes-name>', 'animation', false)).toMatchObject(customIdent('animation', ['<keyframes-name>']))
+        expect(parse('<keyframes-name>', 'animation', false))
+            .toMatchObject(customIdent('animation', ['<keyframes-name>']))
     })
 })
 describe('<layer-name>', () => {
@@ -3615,7 +3411,7 @@ describe('<layer-name>', () => {
             // Invalid whitespace
             'prefix .name',
             'prefix. name',
-            // Invalid CSS-wide keyword
+            // Invalid reserved keyword
             ...cssWideKeywords,
         ]
         invalid.forEach(input => expect(parse('<layer-name>', input, false)).toBeNull())
@@ -3790,7 +3586,6 @@ describe('<opentype-tag>', () => {
 })
 describe('<page-selector-list>', () => {
     test('invalid', () => {
-        // Invalid whitespace
         expect(parse('<page-selector-list>', 'toc :left', false)).toBeNull()
         expect(parse('<page-selector-list>', 'toc: left', false)).toBeNull()
     })

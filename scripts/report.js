@@ -88,7 +88,7 @@ function tryParseDefinition(name, definition, context) {
 /**
  * Test parsing all property and type definitions from @webref/css.
  *
- * It reports syntax errors and duplicate definitions.
+ * It reports parse errors and duplicate definitions.
  */
 function testParseWebrefDefinitions() {
     return webref.listAll().then(specifications => {
@@ -121,7 +121,7 @@ function testParseWebrefDefinitions() {
  * Test parsing all property, descriptor, and type definitions from w3c/webref,
  * curated in scripts/definitions.js, and used in this library.
  *
- * It reports syntax errors, missing type definitions or parse functions.
+ * It reports parse errors, missing type definitions or parse functions.
  */
 function testParseCuratedDefinitions() {
     console.group('Errors in curated definitions')
