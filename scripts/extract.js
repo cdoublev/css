@@ -106,7 +106,6 @@ const replaced = {
         '<basic-shape>': '<basic-shape-rect> | <circle()> | <ellipse()> | <polygon()> | <path()> | <shape()>',
         '<counter-name>': '<custom-ident>',
         '<counter-style-name>': '<custom-ident>',
-        '<custom-highlight-name>': '<ident-token>',
         '<custom-ident>': '<ident>',
         '<custom-property-name>': '<dashed-ident>',
         '<dashed-ident>': '<custom-ident>',
