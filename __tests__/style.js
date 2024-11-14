@@ -38,7 +38,7 @@ install()
 
 const rules = `
     @font-face {}
-    @keyframes myAnimation { 0% {} }
+    @keyframes animation { 0% {} }
     @page { @top-left {} }
     @position-try --custom {}
 `
@@ -694,8 +694,8 @@ describe('arbitrary substitution', () => {
             ['var(--custom,,)'],
             ['var(--custom, 1 {})'],
             // Omitted component value
-            ['attr(name <string>)'],
-            ['attr(name <string>, "")', 'attr(name)'],
+            ['attr(name string)'],
+            ['attr(name string, "")', 'attr(name)'],
         ]
         valid.forEach(([input, expected = input]) => {
             style.opacity = input
@@ -1780,7 +1780,7 @@ describe('block-step', () => {
         const style = createStyleBlock()
 
         // Initial longhand values
-        style.blockStep = 'none margin auto up'
+        style.blockStep = 'none margin-box auto up'
         expect(style).toHaveLength(longhands.length)
         longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
         expect(style.blockStep).toBe('none')

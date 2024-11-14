@@ -102,6 +102,7 @@ const replaced = {
         '<absolute-size>': 'xx-small | x-small | small | medium | large | x-large | xx-large',
         '<age>': 'child | young | old',
         '<angle>': '<dimension>',
+        '<attr-unit>': `"%" | ${[...dimensions.values()].flatMap(dimension => dimension.units).join(' | ')}`,
         '<basic-shape>': '<basic-shape-rect> | <circle()> | <ellipse()> | <polygon()> | <path()> | <shape()>',
         '<counter-name>': '<custom-ident>',
         '<counter-style-name>': '<custom-ident>',
@@ -113,7 +114,6 @@ const replaced = {
         '<decibel>': '<dimension>',
         '<deprecated-color>': colors.deprecated.join(' | '),
         '<dimension>': '<dimension-token>',
-        '<dimension-unit>': `"%" | ${[...dimensions.values()].flatMap(dimension => dimension.units).join(' | ')}`,
         '<extension-name>': '<dashed-ident>',
         '<flex>': '<dimension>',
         '<frequency>': '<dimension>',
@@ -141,6 +141,7 @@ const replaced = {
         '<resolution>': '<dimension>',
         '<scope-end>': '<forgiving-selector-list>',
         '<scope-start>': '<forgiving-selector-list>',
+        '<scroll-button-direction>': 'up | down | left | right | block-start | block-end | inline-start | inline-end | prev | next',
         '<scroll-state-feature>': '<media-feature>',
         '<semitones>': '<dimension>',
         '<sibling-count()>': 'sibling-count()',
@@ -178,8 +179,6 @@ const replaced = {
         // https://github.com/w3c/csswg-drafts/pull/10131
         '<media-feature>': '<mf-plain> | <mf-boolean> | <mf-range>',
         '<media-in-parens>': '(<media-condition>) | (<media-feature>) | <general-enclosed>',
-        // https://github.com/w3c/csswg-drafts/issues/11121
-        '<mix()>': 'mix(<progress> , <whole-value> , <whole-value>) | mix(<progress> && of <keyframes-name>)',
         // https://github.com/w3c/csswg-drafts/issues/10797
         '<progress>': "[<calc-sum> | <'animation-timeline'>] && [by <easing-function>]?",
         // TODO: fix `value` of `<pseudo-page>`
@@ -223,6 +222,7 @@ const excluded = {
             'if()',
             'inherit()',
             'media-progress()',
+            'mix()',
             'progress()',
             'toggle()',
             'transform-mix()',
@@ -562,7 +562,7 @@ const excluded = {
             '<mask-source>',
         ],
         'css-values-5': [
-            // TODO: add support for `<boolean[<test>]`
+            // TODO: add support for `<boolean-expr[<test>]`
             '<if()>',
             '<if-condition>',
             '<if-test>',
@@ -616,6 +616,7 @@ const errors = {
         links: ['https://github.com/w3c/csswg-drafts/issues/8097'],
     },
     '@when': { cause: 'It is not yet supported.' },
+    '<boolean-expr[]>': { cause: 'It is not yet supported.' },
     '<box>': {
         cause: 'It is a generic type notation that is no longer used anywhere, and should not be exported.',
         links: [
@@ -623,6 +624,10 @@ const errors = {
             'https://github.com/w3c/csswg-drafts/commit/798ba91a41295c5d8e084ba7e93c4073e720b4f3',
             'https://github.com/w3c/csswg-drafts/commit/3a1c2a859a5e28a553f03757b45c237d9444680b',
         ],
+    },
+    '<dashed-function>': {
+        cause: 'It cannot be defined with the CSS value definition syntax yet.',
+        links: ['https://github.com/w3c/csswg-drafts/issues/10558'],
     },
     '<identifier>': { cause: 'It is equivalent to <ident>. Since most of CSS 2.2 is superseded, it is not worth requesting a change.' },
     '<palette-mix()>': { cause: 'It is extracted by w3c/reffy without its value definition, which is basically a problem with the definition markup.' },

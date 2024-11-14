@@ -1023,8 +1023,8 @@ describe('CSS grammar', () => {
                 @annotation {}
                 @top-left {}
                 0% {}
-                color: red;
-                --custom:hover {};
+                top: invalid;
+                bottom: {} var(--custom) !important;
 
                 /* valid */
                 @color-profile --profile {}
@@ -1044,7 +1044,11 @@ describe('CSS grammar', () => {
                 @starting-style {}
                 @supports (color: green) {}
                 @view-transition {}
-                style {}
+                style:hover {}
+                --custom:hover {};
+                BOTTOM: { var(--custom) };
+                right: 1px !important;
+                right: 2px;
             }
         `)
 
@@ -1069,9 +1073,12 @@ describe('CSS grammar', () => {
             CSSStyleRule,
         ]
 
-        expect(rule.cssRules).toHaveLength(valid.length)
-        valid.forEach((CSSRule, index) => expect(CSSRule.is(rule.cssRules[index])).toBeTruthy())
+        expect(rule.cssRules).toHaveLength(valid.length + 1)
+        valid.forEach((CSSRule, index) => expect(CSSRule.is(rule.cssRules[index + 1])).toBeTruthy())
         expect(rule.style).toBeUndefined()
+        expect(rule.cssRules[0].style.getPropertyValue('--custom')).toBe('hover {}')
+        expect(rule.cssRules[0].style.bottom).toBe('{var(--custom)}')
+        expect(rule.cssRules[0].style.right).toBe('1px')
     })
     it('ignores invalid contents in @starting-style', () => {
 
@@ -1391,7 +1398,6 @@ describe('CSS grammar', () => {
         `)
 
         const valid = [
-            CSSStyleRule,
             CSSContainerRule,
             CSSLayerBlockRule,
             CSSMediaRule,
@@ -1401,8 +1407,8 @@ describe('CSS grammar', () => {
             CSSStyleRule,
         ]
 
-        expect(rule.cssRules).toHaveLength(valid.length)
-        valid.forEach((CSSRule, index) => expect(CSSRule.is(rule.cssRules[index])).toBeTruthy())
+        expect(rule.cssRules).toHaveLength(valid.length + 1)
+        valid.forEach((CSSRule, index) => expect(CSSRule.is(rule.cssRules[index + 1])).toBeTruthy())
         expect(rule.cssRules[0].style).toHaveLength(3)
         expect(rule.cssRules[0].style.getPropertyValue('--custom')).toBe('hover {}')
         expect(rule.cssRules[0].style.bottom).toBe('{var(--custom)}')
@@ -2124,11 +2130,11 @@ describe('CSSPropertyRule', () => {
 describe('CSSScopeRule', () => {
     it('has all properties', () => {
 
-        const styleSheet = createStyleSheet('@scope (start) to (end) { style { child {} } }')
+        const styleSheet = createStyleSheet('@scope (start) to (end) { color: green; style { child {} } }')
         const { cssRules: [rule] } = styleSheet
 
         // CSSRule
-        expect(rule.cssText).toBe('@scope (start) to (end) { :scope style { & child {} } }')
+        expect(rule.cssText).toBe('@scope (start) to (end) { :scope { color: green; } :scope style { & child {} } }')
         expect(rule.parentRule).toBeNull()
         expect(rule.parentStyleSheet).toBe(styleSheet)
 
