@@ -2134,7 +2134,7 @@ describe('CSSScopeRule', () => {
         const { cssRules: [rule] } = styleSheet
 
         // CSSRule
-        expect(rule.cssText).toBe('@scope (start) to (end) { :scope { color: green; } :scope style { & child {} } }')
+        expect(rule.cssText).toBe('@scope (start) to (end) { :scope { color: green; } style { & child {} } }')
         expect(rule.parentRule).toBeNull()
         expect(rule.parentStyleSheet).toBe(styleSheet)
 
