@@ -305,10 +305,10 @@ describe('CSSRuleList.length', () => {
 })
 
 describe('CSSColorProfileRule', () => {
-    it('has all properties', () => {
+    test('properties', () => {
 
         const styleSheet = createStyleSheet('@color-profile --profile { src: url("profile.icc") }')
-        const { cssRules: [rule] } = styleSheet
+        const rule = styleSheet.cssRules[0]
 
         // CSSRule
         expect(rule.cssText).toBe('@color-profile --profile { src: url("profile.icc"); }')
@@ -323,13 +323,13 @@ describe('CSSColorProfileRule', () => {
     })
 })
 describe('CSSContainerRule', () => {
-    it('has all properties', () => {
+    test('properties', () => {
 
-        const styleSheet = createStyleSheet('@container layout (1px < width) { style {} }')
-        const { cssRules: [rule] } = styleSheet
+        const styleSheet = createStyleSheet('@container (1px < width) { style {} }')
+        const rule = styleSheet.cssRules[0]
 
         // CSSRule
-        expect(rule.cssText).toBe('@container layout (1px < width) { style {} }')
+        expect(rule.cssText).toBe('@container (1px < width) { style {} }')
         expect(rule.parentRule).toBeNull()
         expect(rule.parentStyleSheet).toBe(styleSheet)
 
@@ -337,14 +337,14 @@ describe('CSSContainerRule', () => {
         expect(CSSRuleList.is(rule.cssRules)).toBeTruthy()
 
         // CSSConditionRule
-        expect(rule.conditionText).toBe('layout (1px < width)')
+        expect(rule.conditionText).toBe('(1px < width)')
     })
 })
 describe('CSSCounterStyleRule', () => {
-    it('has all properties', () => {
+    test('properties', () => {
 
         let styleSheet = createStyleSheet('@counter-style counter { system: fixed 1; speak-as: auto }')
-        let { cssRules: [rule] } = styleSheet
+        let rule = styleSheet.cssRules[0]
 
         // CSSRule
         expect(rule.cssText).toBe('@counter-style counter { speak-as: auto; system: fixed; }')
@@ -457,10 +457,10 @@ describe('CSSCounterStyleRule', () => {
     })
 })
 describe('CSSFontFaceRule', () => {
-    it('has all properties', () => {
+    test('properties', () => {
 
         const styleSheet = createStyleSheet('@font-face { src: url(serif.woff2) }')
-        const { cssRules: [rule] } = styleSheet
+        const rule = styleSheet.cssRules[0]
 
         // CSSRule
         expect(rule.cssText).toBe('@font-face { src: url("serif.woff2"); }')
@@ -475,10 +475,10 @@ describe('CSSFontFaceRule', () => {
     })
 })
 describe('CSSFontFeatureValuesRule', () => {
-    it('has all properties', () => {
+    test('properties', () => {
 
         const styleSheet = createStyleSheet('@font-feature-values family { font-display: block }')
-        const { cssRules: [rule] } = styleSheet
+        const rule = styleSheet.cssRules[0]
 
         // CSSRule
         expect(rule.cssText).toBe('@font-feature-values family { font-display: block; }')
@@ -513,7 +513,7 @@ describe('CSSFontFeatureValuesRule', () => {
     })
 })
 describe('CSSFontPaletteValuesRule', () => {
-    it('has all properties', () => {
+    test('properties', () => {
 
         const styleSheet = createStyleSheet(`
             @font-palette-values --palette {
@@ -522,7 +522,7 @@ describe('CSSFontPaletteValuesRule', () => {
                 override-colors: 0 green;
             }
         `)
-        const { cssRules: [rule] } = styleSheet
+        const rule = styleSheet.cssRules[0]
 
         // CSSRule
         expect(rule.cssText).toBe('@font-palette-values --palette { base-palette: light; font-family: my-font; override-colors: 0 green; }')
@@ -536,10 +536,10 @@ describe('CSSFontPaletteValuesRule', () => {
     })
 })
 describe('CSSImportRule', () => {
-    it('has all properties', () => {
+    test('properties', () => {
 
         const styleSheet = createStyleSheet('@import "./global.css";', { media: 'all' })
-        const { cssRules: [rule] } = styleSheet
+        const rule = styleSheet.cssRules[0]
 
         // CSSRule
         expect(rule.cssText).toBe('@import url("./global.css");')
@@ -556,11 +556,11 @@ describe('CSSImportRule', () => {
     })
 })
 describe('CSSKeyframeRule', () => {
-    it('has all properties', () => {
+    test('properties', () => {
 
         const styleSheet = createStyleSheet('@keyframes animation { to { color: green } }')
-        const { cssRules: [parentRule] } = styleSheet
-        const { cssRules: [rule] } = parentRule
+        const parentRule = styleSheet.cssRules[0]
+        const rule = parentRule.cssRules[0]
 
         // CSSRule
         expect(rule.cssText).toBe('100% { color: green; }')
@@ -579,10 +579,10 @@ describe('CSSKeyframeRule', () => {
     })
 })
 describe('CSSKeyframesRule', () => {
-    it('has all properties', () => {
+    test('properties', () => {
 
-        const styleSheet = createStyleSheet('@keyframes animation { to {} }')
-        const { cssRules: [rule] } = styleSheet
+        const styleSheet = createStyleSheet('@keyframes animation { 100% {} }')
+        const rule = styleSheet.cssRules[0]
 
         // CSSRule
         expect(rule.cssText).toBe('@keyframes animation { 100% {} }')
@@ -599,10 +599,10 @@ describe('CSSKeyframesRule', () => {
         expect(rule.cssText).toBe('@keyframes \\a { 100% {} }')
         expect(() => rule.name = '').toThrow(SET_INVALID_NAME_ERROR)
     })
-    it('has all methods', () => {
+    test('methods', () => {
 
         const { cssRules: [rule] } = createStyleSheet('@keyframes animation {}')
-        const { cssRules: keyframes } = rule
+        const keyframes = rule.cssRules
 
         expect(keyframes).toHaveLength(0)
 
@@ -645,10 +645,10 @@ describe('CSSKeyframesRule', () => {
     })
 })
 describe('CSSLayerBlockRule', () => {
-    it('has all properties', () => {
+    test('properties', () => {
 
         const styleSheet = createStyleSheet('@layer reset { style {} }')
-        const { cssRules: [rule] } = styleSheet
+        const rule = styleSheet.cssRules[0]
 
         // CSSRule
         expect(rule.cssText).toBe('@layer reset { style {} }')
@@ -663,10 +663,10 @@ describe('CSSLayerBlockRule', () => {
     })
 })
 describe('CSSLayerStatementRule', () => {
-    it('has all properties', () => {
+    test('properties', () => {
 
         const styleSheet = createStyleSheet('@layer reset;')
-        const { cssRules: [rule] } = styleSheet
+        const rule = styleSheet.cssRules[0]
 
         // CSSRule
         expect(rule.cssText).toBe('@layer reset;')
@@ -678,11 +678,11 @@ describe('CSSLayerStatementRule', () => {
     })
 })
 describe('CSSMarginRule', () => {
-    it('has all properties', () => {
+    test('properties', () => {
 
         const styleSheet = createStyleSheet('@page { @top-left { color: green } }')
-        const { cssRules: [parentRule] } = styleSheet
-        const { cssRules: [rule] } = parentRule
+        const parentRule = styleSheet.cssRules[0]
+        const rule = parentRule.cssRules[0]
 
         // CSSRule
         expect(rule.cssText).toBe('@top-left { color: green; }')
@@ -697,10 +697,10 @@ describe('CSSMarginRule', () => {
     })
 })
 describe('CSSMediaRule', () => {
-    it('has all properties', () => {
+    test('properties', () => {
 
         const styleSheet = createStyleSheet('@media all { style {} }')
-        const { cssRules: [rule] } = styleSheet
+        const rule = styleSheet.cssRules[0]
 
         // CSSRule
         expect(rule.cssText).toBe('@media all { style {} }')
@@ -718,10 +718,10 @@ describe('CSSMediaRule', () => {
     })
 })
 describe('CSSNamespaceRule', () => {
-    it('has all properties', () => {
+    test('properties', () => {
 
         const styleSheet = createStyleSheet('@namespace svg "http://www.w3.org/2000/svg";')
-        const { cssRules: [rule] } = styleSheet
+        const rule = styleSheet.cssRules[0]
 
         // CSSRule
         expect(rule.cssText).toBe('@namespace svg url("http://www.w3.org/2000/svg");')
@@ -734,10 +734,10 @@ describe('CSSNamespaceRule', () => {
     })
 })
 describe('CSSPageRule', () => {
-    it('has all properties', () => {
+    test('properties', () => {
 
         const styleSheet = createStyleSheet('@page intro { color: green; @top-left {} }')
-        const { cssRules: [rule] } = styleSheet
+        const rule = styleSheet.cssRules[0]
 
         // CSSRule
         expect(rule.cssText).toBe('@page intro { color: green; @top-left {} }')
@@ -755,10 +755,10 @@ describe('CSSPageRule', () => {
     })
 })
 describe('CSSPositionTryRule', () => {
-    it('has all properties', () => {
+    test('properties', () => {
 
         const styleSheet = createStyleSheet('@position-try --position { top: 1px } }')
-        const { cssRules: [rule] } = styleSheet
+        const rule = styleSheet.cssRules[0]
 
         // CSSRule
         expect(rule.cssText).toBe('@position-try --position { top: 1px; }')
@@ -773,7 +773,7 @@ describe('CSSPositionTryRule', () => {
     })
 })
 describe('CSSPropertyRule', () => {
-    it('has all properties', () => {
+    test('properties', () => {
 
         const styleSheet = createStyleSheet(`
             @property --custom {
@@ -781,7 +781,7 @@ describe('CSSPropertyRule', () => {
                 inherits: true;
             }
         `)
-        const { cssRules: [rule] } = styleSheet
+        const rule = styleSheet.cssRules[0]
 
         // CSSRule
         expect(rule.cssText).toBe('@property --custom { syntax: "*"; inherits: true; }')
@@ -796,10 +796,10 @@ describe('CSSPropertyRule', () => {
     })
 })
 describe('CSSScopeRule', () => {
-    it('has all properties', () => {
+    test('properties', () => {
 
         const styleSheet = createStyleSheet('@scope (start) to (end) { color: green; style { child {} } }')
-        const { cssRules: [rule] } = styleSheet
+        const rule = styleSheet.cssRules[0]
 
         // CSSRule
         expect(rule.cssText).toBe('@scope (start) to (end) { :scope { color: green; } style { & child {} } }')
@@ -815,10 +815,10 @@ describe('CSSScopeRule', () => {
     })
 })
 describe('CSSStartingStyleRule', () => {
-    it('has all properties', () => {
+    test('properties', () => {
 
         const styleSheet = createStyleSheet('@starting-style { style {} }')
-        const { cssRules: [rule] } = styleSheet
+        const rule = styleSheet.cssRules[0]
 
         // CSSRule
         expect(rule.cssText).toBe('@starting-style { style {} }')
@@ -830,24 +830,25 @@ describe('CSSStartingStyleRule', () => {
     })
 })
 describe('CSSStyleRule', () => {
-    it('has all properties', () => {
+    test('properties', () => {
 
         const styleSheet = createStyleSheet(`
             style {
                 color: red;
-                & {
+                @media {
                     color: green;
                 }
             }
         `)
-        const { cssRules: [styleRule] } = styleSheet
-        const { cssRules: [nestedStyleRule] } = styleRule
+        const styleRule = styleSheet.cssRules[0]
+        const mediaRule = styleRule.cssRules[0]
+        const nestedStyleRule = mediaRule.cssRules[0]
 
         // CSSRule
-        expect(styleRule.cssText).toBe('style { color: red; & { color: green; } }')
+        expect(styleRule.cssText).toBe('style { color: red; @media { & { color: green; } } }')
         expect(nestedStyleRule.cssText).toBe('& { color: green; }')
         expect(styleRule.parentRule).toBeNull()
-        expect(nestedStyleRule.parentRule).toBe(styleRule)
+        expect(nestedStyleRule.parentRule).toBe(mediaRule)
         expect(styleRule.parentStyleSheet).toBe(styleSheet)
         expect(nestedStyleRule.parentStyleSheet).toBe(styleSheet)
 
@@ -872,9 +873,9 @@ describe('CSSStyleRule', () => {
         styleRule.style.color = ''
         nestedStyleRule.style.color = ''
 
-        expect(styleRule.cssText).toBe('parent { & child {} }')
+        expect(styleRule.cssText).toBe('parent { @media { & child {} } }')
     })
-    it('has all methods', () => {
+    test('methods', () => {
 
         const { cssRules: [rule] } = createStyleSheet('style {}')
         const { cssRules } = rule
@@ -912,10 +913,10 @@ describe('CSSStyleRule', () => {
     })
 })
 describe('CSSSupportsRule', () => {
-    it('has all properties', () => {
+    test('properties', () => {
 
         const styleSheet = createStyleSheet('@supports (color: green) { style {} }')
-        const { cssRules: [rule] } = styleSheet
+        const rule = styleSheet.cssRules[0]
 
         // CSSRule
         expect(rule.cssText).toBe('@supports (color: green) { style {} }')
@@ -930,10 +931,10 @@ describe('CSSSupportsRule', () => {
     })
 })
 describe('CSSViewTransitionRule', () => {
-    it('has all properties', () => {
+    test('properties', () => {
 
         const styleSheet = createStyleSheet('@view-transition { navigation: none; types: type-1 type-2 }')
-        const { cssRules: [rule] } = styleSheet
+        const rule = styleSheet.cssRules[0]
 
         // CSSRule
         expect(rule.cssText).toBe('@view-transition { navigation: none; types: type-1 type-2; }')
@@ -959,9 +960,9 @@ describe('CSSViewTransitionRule', () => {
  * than implementing a setter on CSSRule, but prevents shadowing the attribute.
  */
 test('Setting CSSRule.cssText does nothing', () => {
-    const { cssRules: [cssRule] } = createStyleSheet('style {}')
-    cssRule.cssText = 'override {}'
-    expect(cssRule.cssText).toBe('style {}')
+    const { cssRules: [rule] } = createStyleSheet('style {}')
+    rule.cssText = 'override {}'
+    expect(rule.cssText).toBe('style {}')
 })
 
 describe('CSS grammar', () => {
@@ -1141,7 +1142,7 @@ describe('CSS grammar', () => {
     test('@container - invalid and ignored contents', () => {
 
         const { cssRules: [rule] } = createStyleSheet(`
-            @CONTAINER layout (1px < width) {
+            @CONTAINER (1px < width) {
 
                 /* invalid */
                 @unknown {}

@@ -60,7 +60,7 @@ describe('CSS.registerProperty()', () => {
             { inherits: true, initialValue: 'var(--custom)', name: '--custom-5', syntax: '*' },
             { inherits: true, initialValue: 'first-valid(1px)', name: '--custom-6', syntax: '*' },
         ]
-        const { document: { _registeredPropertySet: register } } = globalThis
+        const register = globalThis.document._registeredPropertySet
         valid.forEach(property => {
             CSS.registerProperty(property)
             expect(register.some(definition => definition.name === property.name)).toBeTruthy()
