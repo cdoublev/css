@@ -304,6 +304,666 @@ describe('CSSRuleList.length', () => {
     })
 })
 
+describe('CSSColorProfileRule', () => {
+    it('has all properties', () => {
+
+        const styleSheet = createStyleSheet('@color-profile --profile { src: url("profile.icc") }')
+        const { cssRules: [rule] } = styleSheet
+
+        // CSSRule
+        expect(rule.cssText).toBe('@color-profile --profile { src: url("profile.icc"); }')
+        expect(rule.parentRule).toBeNull()
+        expect(rule.parentStyleSheet).toBe(styleSheet)
+
+        // CSSColorProfileRule
+        expect(rule.components).toBe('')
+        expect(rule.name).toBe('--profile')
+        expect(rule.src).toBe('url("profile.icc")')
+        expect(rule.renderingIntent).toBe('')
+    })
+})
+describe('CSSContainerRule', () => {
+    it('has all properties', () => {
+
+        const styleSheet = createStyleSheet('@container layout (1px < width) { style {} }')
+        const { cssRules: [rule] } = styleSheet
+
+        // CSSRule
+        expect(rule.cssText).toBe('@container layout (1px < width) { style {} }')
+        expect(rule.parentRule).toBeNull()
+        expect(rule.parentStyleSheet).toBe(styleSheet)
+
+        // CSSGroupingRule
+        expect(CSSRuleList.is(rule.cssRules)).toBeTruthy()
+
+        // CSSConditionRule
+        expect(rule.conditionText).toBe('layout (1px < width)')
+    })
+})
+describe('CSSCounterStyleRule', () => {
+    it('has all properties', () => {
+
+        let styleSheet = createStyleSheet('@counter-style counter { system: fixed 1; speak-as: auto }')
+        let { cssRules: [rule] } = styleSheet
+
+        // CSSRule
+        expect(rule.cssText).toBe('@counter-style counter { speak-as: auto; system: fixed; }')
+        expect(rule.parentRule).toBeNull()
+        expect(rule.parentStyleSheet).toBe(styleSheet)
+
+        // CSSCounterStyleRule
+        expect(rule.name).toBe('counter')
+        rule.name = 'decimal'
+        expect(rule.name).toBe('counter')
+        rule.name = ''
+        expect(rule.name).toBe('counter')
+        rule.name = '\n'
+        expect(rule.name).toBe('\\a')
+        rule.speakAs = 'none'
+        expect(rule.speakAs).toBe('auto')
+
+        // Fixed
+        rule.system = 'fixed 2'
+        expect(rule.system).toBe('fixed')
+        rule.symbols = 'one two'
+        expect(rule.symbols).toBe('one two')
+        rule.system = 'fixed 2'
+        expect(rule.system).toBe('fixed 2')
+        rule.symbols = 'one two'
+        expect(rule.symbols).toBe('one two')
+        rule.additiveSymbols = '1 one'
+        expect(rule.additiveSymbols).toBe('')
+        rule.system = 'numeric'
+        rule.system = 'additive'
+        rule.system = 'extends decimal'
+        expect(rule.system).toBe('fixed 2')
+
+        // Cyclic (or symbolic)
+        styleSheet = createStyleSheet('@counter-style counter {}')
+        rule = styleSheet.cssRules[0]
+        rule.system = 'cyclic'
+        expect(rule.system).toBe('')
+        rule.symbols = 'one'
+        expect(rule.symbols).toBe('one')
+        rule.system = 'cyclic'
+        expect(rule.system).toBe('cyclic')
+        rule.symbols = 'one two'
+        expect(rule.symbols).toBe('one two')
+        rule.system = 'numeric'
+        rule.system = 'fixed'
+        rule.system = 'extends decimal'
+        expect(rule.system).toBe('cyclic')
+
+        // Numeric (or alphabetic)
+        styleSheet = createStyleSheet('@counter-style counter {}')
+        rule = styleSheet.cssRules[0]
+        rule.system = 'numeric'
+        expect(rule.system).toBe('')
+        rule.symbols = 'one'
+        expect(rule.symbols).toBe('one')
+        rule.system = 'numeric'
+        expect(rule.system).toBe('')
+        rule.symbols = 'one two'
+        expect(rule.symbols).toBe('one two')
+        rule.system = 'numeric'
+        expect(rule.system).toBe('numeric')
+        rule.symbols = 'one'
+        expect(rule.symbols).toBe('one two')
+        rule.symbols = 'one two three'
+        expect(rule.symbols).toBe('one two three')
+        rule.system = 'cyclic'
+        rule.system = 'fixed'
+        rule.system = 'extends decimal'
+        expect(rule.system).toBe('numeric')
+
+        // Additive
+        styleSheet = createStyleSheet('@counter-style counter {}')
+        rule = styleSheet.cssRules[0]
+        rule.system = 'additive'
+        expect(rule.system).toBe('')
+        rule.additiveSymbols = '1 one'
+        expect(rule.additiveSymbols).toBe('1 one')
+        rule.system = 'additive'
+        expect(rule.system).toBe('additive')
+        rule.additiveSymbols = '2 two, 1 one'
+        expect(rule.additiveSymbols).toBe('2 two, 1 one')
+        rule.symbols = 'one two'
+        expect(rule.symbols).toBe('')
+        rule.system = 'cyclic'
+        rule.system = 'fixed'
+        rule.system = 'extends decimal'
+        expect(rule.system).toBe('additive')
+
+        // Extended counter style
+        styleSheet = createStyleSheet('@counter-style counter { symbols: one; additive-symbols: 1 one }')
+        rule = styleSheet.cssRules[0]
+        rule.system = 'extends decimal'
+        expect(rule.system).toBe('')
+        styleSheet = createStyleSheet('@counter-style counter {}')
+        rule = styleSheet.cssRules[0]
+        rule.system = 'extends decimal'
+        expect(rule.system).toBe('extends decimal')
+        rule.symbols = 'one'
+        expect(rule.symbols).toBe('')
+        rule.additiveSymbols = '1 one'
+        expect(rule.additiveSymbols).toBe('')
+        rule.system = 'extends circle'
+        expect(rule.system).toBe('extends circle')
+        rule.system = 'extends none'
+        rule.system = 'cyclic'
+        rule.system = 'additive'
+        rule.system = 'fixed'
+        expect(rule.system).toBe('extends circle')
+    })
+})
+describe('CSSFontFaceRule', () => {
+    it('has all properties', () => {
+
+        const styleSheet = createStyleSheet('@font-face { src: url(serif.woff2) }')
+        const { cssRules: [rule] } = styleSheet
+
+        // CSSRule
+        expect(rule.cssText).toBe('@font-face { src: url("serif.woff2"); }')
+        expect(rule.parentRule).toBeNull()
+        expect(rule.parentStyleSheet).toBe(styleSheet)
+
+        // CSSFontFaceRule
+        expect(CSSFontFaceDescriptors.is(rule.style)).toBeTruthy()
+        expect(rule.style).toHaveLength(1)
+        rule.style.removeProperty('src')
+        expect(rule.cssText).toBe('@font-face {}')
+    })
+})
+describe('CSSFontFeatureValuesRule', () => {
+    it('has all properties', () => {
+
+        const styleSheet = createStyleSheet('@font-feature-values family { font-display: block }')
+        const { cssRules: [rule] } = styleSheet
+
+        // CSSRule
+        expect(rule.cssText).toBe('@font-feature-values family { font-display: block; }')
+        expect(rule.parentRule).toBeNull()
+        expect(rule.parentStyleSheet).toBe(styleSheet)
+
+        // CSSFontFeatureValuesRule
+        expect(rule.fontFamily).toBe('family')
+
+        // CSSFontFeatureValuesMap
+        rule.styleset.set('double-W', 0)
+        expect(rule.styleset.get('double-W')).toEqual([0])
+        expect(rule.cssText).toBe('@font-feature-values family { font-display: block; @styleset { double-W: 0; } }')
+        rule.styleset.set('double-W', [0, 1])
+        expect(rule.styleset.get('double-W')).toEqual([0, 1])
+        expect(rule.cssText).toBe('@font-feature-values family { font-display: block; @styleset { double-W: 0 1; } }')
+        rule.styleset.delete('double-W')
+        expect(rule.cssText).toBe('@font-feature-values family { font-display: block; }')
+        expect(() => rule.annotation.set('boxed', [0, 1])).toThrow(INVALID_FONT_FEATURE_VALUE_ERROR)
+        expect(() => rule.annotation.set('boxed', [-1])).toThrow(INVALID_FONT_FEATURE_VALUE_ERROR)
+        expect(() => rule.characterVariant.set('alpha-2', [0, 1, 2])).toThrow(INVALID_FONT_FEATURE_VALUE_ERROR)
+        expect(() => rule.characterVariant.set('alpha-2', [-1, 0])).toThrow(INVALID_FONT_FEATURE_VALUE_ERROR)
+        expect(() => rule.characterVariant.set('alpha-2', [100, 0])).toThrow(INVALID_FONT_FEATURE_VALUE_ERROR)
+        expect(() => rule.ornaments.set('bullet', [0, 1])).toThrow(INVALID_FONT_FEATURE_VALUE_ERROR)
+        expect(() => rule.ornaments.set('bullet', [-1])).toThrow(INVALID_FONT_FEATURE_VALUE_ERROR)
+        expect(() => rule.styleset.set('double-W', [-1, 0])).toThrow(INVALID_FONT_FEATURE_VALUE_ERROR)
+        expect(() => rule.styleset.set('double-W', [21, 0])).toThrow(INVALID_FONT_FEATURE_VALUE_ERROR)
+        expect(() => rule.stylistic.set('alt-g', [0, 1])).toThrow(INVALID_FONT_FEATURE_VALUE_ERROR)
+        expect(() => rule.stylistic.set('alt-g', [-1])).toThrow(INVALID_FONT_FEATURE_VALUE_ERROR)
+        expect(() => rule.swash.set('cool', [0, 1])).toThrow(INVALID_FONT_FEATURE_VALUE_ERROR)
+        expect(() => rule.swash.set('cool', [-1])).toThrow(INVALID_FONT_FEATURE_VALUE_ERROR)
+    })
+})
+describe('CSSFontPaletteValuesRule', () => {
+    it('has all properties', () => {
+
+        const styleSheet = createStyleSheet(`
+            @font-palette-values --palette {
+                font-family: my-font;
+                base-palette: light;
+                override-colors: 0 green;
+            }
+        `)
+        const { cssRules: [rule] } = styleSheet
+
+        // CSSRule
+        expect(rule.cssText).toBe('@font-palette-values --palette { base-palette: light; font-family: my-font; override-colors: 0 green; }')
+        expect(rule.parentRule).toBeNull()
+        expect(rule.parentStyleSheet).toBe(styleSheet)
+
+        // CSSFontPaletteValuesRule
+        expect(rule.fontFamily).toBe('my-font')
+        expect(rule.basePalette).toBe('light')
+        expect(rule.overrideColors).toBe('0 green')
+    })
+})
+describe('CSSImportRule', () => {
+    it('has all properties', () => {
+
+        const styleSheet = createStyleSheet('@import "./global.css";', { media: 'all' })
+        const { cssRules: [rule] } = styleSheet
+
+        // CSSRule
+        expect(rule.cssText).toBe('@import url("./global.css");')
+        expect(rule.parentRule).toBeNull()
+        expect(rule.parentStyleSheet).toBe(styleSheet)
+
+        // CSSImportRule
+        expect(rule.href).toBe('./global.css')
+        // TODO: implement fetching a style sheet referenced by `@import`
+        // expect(CSSStyleSheet.is(rule.styleSheet)).toBeTruthy()
+        // expect(rule.styleSheet.ownerRule).toBe(rule)
+        // expect(rule.styleSheet.media).toBe(rule.media)
+        // expect(rule.styleSheet.parentStyleSheet).toBe(rule.parentStyleSheet)
+    })
+})
+describe('CSSKeyframeRule', () => {
+    it('has all properties', () => {
+
+        const styleSheet = createStyleSheet('@keyframes animation { to { color: green } }')
+        const { cssRules: [parentRule] } = styleSheet
+        const { cssRules: [rule] } = parentRule
+
+        // CSSRule
+        expect(rule.cssText).toBe('100% { color: green; }')
+        expect(rule.parentRule).toBe(parentRule)
+        expect(rule.parentStyleSheet).toBe(styleSheet)
+
+        // CSSKeyframeRule
+        expect(rule.keyText).toBe('100%')
+        rule.keyText = 'from'
+        expect(rule.keyText).toBe('0%')
+        expect(rule.cssText).toBe('0% { color: green; }')
+        expect(() => rule.keyText = '101%').toThrow(SET_INVALID_KEY_TEXT_ERROR)
+        expect(CSSKeyframeProperties.is(rule.style)).toBeTruthy()
+        rule.style.color = ''
+        expect(rule.cssText).toBe('0% {}')
+    })
+})
+describe('CSSKeyframesRule', () => {
+    it('has all properties', () => {
+
+        const styleSheet = createStyleSheet('@keyframes animation { to {} }')
+        const { cssRules: [rule] } = styleSheet
+
+        // CSSRule
+        expect(rule.cssText).toBe('@keyframes animation { 100% {} }')
+        expect(rule.parentRule).toBeNull()
+        expect(rule.parentStyleSheet).toBe(styleSheet)
+
+        // CSSKeyframesRule
+        expect(CSSRuleList.is(rule.cssRules)).toBeTruthy()
+        expect(rule).toHaveLength(1)
+        expect(rule[0]).toBe(rule.cssRules[0])
+        expect(rule.name).toBe('animation')
+        rule.name = '\n'
+        expect(rule.name).toBe('\\a')
+        expect(rule.cssText).toBe('@keyframes \\a { 100% {} }')
+        expect(() => rule.name = '').toThrow(SET_INVALID_NAME_ERROR)
+    })
+    it('has all methods', () => {
+
+        const { cssRules: [rule] } = createStyleSheet('@keyframes animation {}')
+        const { cssRules: keyframes } = rule
+
+        expect(keyframes).toHaveLength(0)
+
+        rule.appendRule('to { color: orange }')
+
+        expect(rule.findRule('to')).toBe(keyframes[0])
+        expect(rule.findRule('100%')).toBe(keyframes[0])
+        expect(keyframes).toHaveLength(1)
+        expect(keyframes[0].style.color).toBe('orange')
+        expect(() => rule.appendRule('invalid')).toThrow(INVALID_RULE_SYNTAX_ERROR)
+
+        rule.appendRule('to { color: green }')
+        const [, to] = keyframes
+
+        expect(keyframes).toHaveLength(2)
+        expect(to.style.color).toBe('green')
+        expect(rule.findRule('to')).toBe(to)
+
+        rule.deleteRule('to')
+
+        expect(keyframes).toHaveLength(1)
+        expect(to.parentRule).toBeNull()
+        expect(rule.findRule('to')).toBe(keyframes[0])
+
+        rule.appendRule('50%, 100% {}')
+
+        expect(keyframes).toHaveLength(2)
+        expect(rule.findRule('50%')).toBeNull()
+        expect(rule.findRule('100%, 50%')).toBeNull()
+        expect(rule.findRule('50%, 100%')).toBe(keyframes[1])
+        expect(rule.findRule('50%,100%')).toBe(keyframes[1])
+
+        rule.deleteRule('50%')
+
+        expect(keyframes).toHaveLength(2)
+
+        rule.deleteRule('50%, 100%')
+
+        expect(keyframes).toHaveLength(1)
+    })
+})
+describe('CSSLayerBlockRule', () => {
+    it('has all properties', () => {
+
+        const styleSheet = createStyleSheet('@layer reset { style {} }')
+        const { cssRules: [rule] } = styleSheet
+
+        // CSSRule
+        expect(rule.cssText).toBe('@layer reset { style {} }')
+        expect(rule.parentRule).toBeNull()
+        expect(rule.parentStyleSheet).toBe(styleSheet)
+
+        // CSSGroupingRule
+        expect(CSSRuleList.is(rule.cssRules)).toBeTruthy()
+
+        // CSSLayerBlockRule
+        expect(rule.name).toBe('reset')
+    })
+})
+describe('CSSLayerStatementRule', () => {
+    it('has all properties', () => {
+
+        const styleSheet = createStyleSheet('@layer reset;')
+        const { cssRules: [rule] } = styleSheet
+
+        // CSSRule
+        expect(rule.cssText).toBe('@layer reset;')
+        expect(rule.parentRule).toBeNull()
+        expect(rule.parentStyleSheet).toBe(styleSheet)
+
+        // CSSLayerStatementRule
+        expect(rule.nameList).toBe('reset')
+    })
+})
+describe('CSSMarginRule', () => {
+    it('has all properties', () => {
+
+        const styleSheet = createStyleSheet('@page { @top-left { color: green } }')
+        const { cssRules: [parentRule] } = styleSheet
+        const { cssRules: [rule] } = parentRule
+
+        // CSSRule
+        expect(rule.cssText).toBe('@top-left { color: green; }')
+        expect(rule.parentRule).toBe(parentRule)
+        expect(rule.parentStyleSheet).toBe(styleSheet)
+
+        // CSSMarginRule
+        expect(rule.name).toBe('top-left')
+        expect(CSSMarginDescriptors.is(rule.style)).toBeTruthy()
+        rule.style.color = ''
+        expect(rule.cssText).toBe('@top-left {}')
+    })
+})
+describe('CSSMediaRule', () => {
+    it('has all properties', () => {
+
+        const styleSheet = createStyleSheet('@media all { style {} }')
+        const { cssRules: [rule] } = styleSheet
+
+        // CSSRule
+        expect(rule.cssText).toBe('@media all { style {} }')
+        expect(rule.parentRule).toBeNull()
+        expect(rule.parentStyleSheet).toBe(styleSheet)
+
+        // CSSGroupingRule
+        expect(CSSRuleList.is(rule.cssRules)).toBeTruthy()
+
+        // CSSConditionRule
+        expect(rule.conditionText).toBe('all')
+
+        // CSSMediaRule
+        expect(MediaList.is(rule.media)).toBeTruthy()
+    })
+})
+describe('CSSNamespaceRule', () => {
+    it('has all properties', () => {
+
+        const styleSheet = createStyleSheet('@namespace svg "http://www.w3.org/2000/svg";')
+        const { cssRules: [rule] } = styleSheet
+
+        // CSSRule
+        expect(rule.cssText).toBe('@namespace svg url("http://www.w3.org/2000/svg");')
+        expect(rule.parentRule).toBeNull()
+        expect(rule.parentStyleSheet).toBe(styleSheet)
+
+        // CSSNamespaceRule
+        expect(rule.namespaceURI).toBe('http://www.w3.org/2000/svg')
+        expect(rule.prefix).toBe('svg')
+    })
+})
+describe('CSSPageRule', () => {
+    it('has all properties', () => {
+
+        const styleSheet = createStyleSheet('@page intro { color: green; @top-left {} }')
+        const { cssRules: [rule] } = styleSheet
+
+        // CSSRule
+        expect(rule.cssText).toBe('@page intro { color: green; @top-left {} }')
+        expect(rule.parentRule).toBeNull()
+        expect(rule.parentStyleSheet).toBe(styleSheet)
+
+        // CSSGroupingRule
+        expect(CSSRuleList.is(rule.cssRules)).toBeTruthy()
+
+        // CSSPageRule
+        expect(rule.selectorText).toBe('intro')
+        rule.selectorText = 'outro'
+        expect(rule.selectorText).toBe('outro')
+        expect(CSSPageDescriptors.is(rule.style)).toBeTruthy()
+    })
+})
+describe('CSSPositionTryRule', () => {
+    it('has all properties', () => {
+
+        const styleSheet = createStyleSheet('@position-try --position { top: 1px } }')
+        const { cssRules: [rule] } = styleSheet
+
+        // CSSRule
+        expect(rule.cssText).toBe('@position-try --position { top: 1px; }')
+        expect(rule.parentRule).toBeNull()
+        expect(rule.parentStyleSheet).toBe(styleSheet)
+
+        // CSSPositionTryRule
+        expect(rule.name).toBe('--position')
+        expect(CSSPositionTryDescriptors.is(rule.style)).toBeTruthy()
+        rule.style.top = ''
+        expect(rule.cssText).toBe('@position-try --position {}')
+    })
+})
+describe('CSSPropertyRule', () => {
+    it('has all properties', () => {
+
+        const styleSheet = createStyleSheet(`
+            @property --custom {
+                syntax: "*";
+                inherits: true;
+            }
+        `)
+        const { cssRules: [rule] } = styleSheet
+
+        // CSSRule
+        expect(rule.cssText).toBe('@property --custom { syntax: "*"; inherits: true; }')
+        expect(rule.parentRule).toBeNull()
+        expect(rule.parentStyleSheet).toBe(styleSheet)
+
+        // CSSPropertyRule
+        expect(rule.name).toBe('--custom')
+        expect(rule.syntax).toBe('"*"')
+        expect(rule.inherits).toBe('true')
+        expect(rule.initialValue).toBe('')
+    })
+})
+describe('CSSScopeRule', () => {
+    it('has all properties', () => {
+
+        const styleSheet = createStyleSheet('@scope (start) to (end) { color: green; style { child {} } }')
+        const { cssRules: [rule] } = styleSheet
+
+        // CSSRule
+        expect(rule.cssText).toBe('@scope (start) to (end) { :scope { color: green; } style { & child {} } }')
+        expect(rule.parentRule).toBeNull()
+        expect(rule.parentStyleSheet).toBe(styleSheet)
+
+        // CSSGroupingRule
+        expect(CSSRuleList.is(rule.cssRules)).toBeTruthy()
+
+        // CSSLayerBlockRule
+        expect(rule.end).toBe('end')
+        expect(rule.start).toBe('start')
+    })
+})
+describe('CSSStartingStyleRule', () => {
+    it('has all properties', () => {
+
+        const styleSheet = createStyleSheet('@starting-style { style {} }')
+        const { cssRules: [rule] } = styleSheet
+
+        // CSSRule
+        expect(rule.cssText).toBe('@starting-style { style {} }')
+        expect(rule.parentRule).toBeNull()
+        expect(rule.parentStyleSheet).toBe(styleSheet)
+
+        // CSSGroupingRule
+        expect(CSSRuleList.is(rule.cssRules)).toBeTruthy()
+    })
+})
+describe('CSSStyleRule', () => {
+    it('has all properties', () => {
+
+        const styleSheet = createStyleSheet(`
+            style {
+                color: red;
+                & {
+                    color: green;
+                }
+            }
+        `)
+        const { cssRules: [styleRule] } = styleSheet
+        const { cssRules: [nestedStyleRule] } = styleRule
+
+        // CSSRule
+        expect(styleRule.cssText).toBe('style { color: red; & { color: green; } }')
+        expect(nestedStyleRule.cssText).toBe('& { color: green; }')
+        expect(styleRule.parentRule).toBeNull()
+        expect(nestedStyleRule.parentRule).toBe(styleRule)
+        expect(styleRule.parentStyleSheet).toBe(styleSheet)
+        expect(nestedStyleRule.parentStyleSheet).toBe(styleSheet)
+
+        // CSSGroupingRule
+        expect(CSSRuleList.is(styleRule.cssRules)).toBeTruthy()
+        expect(CSSRuleList.is(nestedStyleRule.cssRules)).toBeTruthy()
+
+        // CSSStyleRule
+        expect(styleRule.selectorText).toBe('style')
+        expect(nestedStyleRule.selectorText).toBe('&')
+        expect(CSSStyleProperties.is(styleRule.style)).toBeTruthy()
+        expect(CSSStyleProperties.is(nestedStyleRule.style)).toBeTruthy()
+        expect(styleRule.style).toHaveLength(1)
+        expect(nestedStyleRule.style).toHaveLength(1)
+
+        styleRule.selectorText = 'parent'
+        nestedStyleRule.selectorText = 'child'
+
+        expect(styleRule.selectorText).toBe('parent')
+        expect(nestedStyleRule.selectorText).toBe('& child')
+
+        styleRule.style.color = ''
+        nestedStyleRule.style.color = ''
+
+        expect(styleRule.cssText).toBe('parent { & child {} }')
+    })
+    it('has all methods', () => {
+
+        const { cssRules: [rule] } = createStyleSheet('style {}')
+        const { cssRules } = rule
+
+        expect(cssRules).toHaveLength(0)
+
+        rule.insertRule('@media screen {}')
+
+        expect(() => rule.insertRule('style {}', -1)).toThrow(INVALID_RULE_INDEX_ERROR)
+        expect(() => rule.insertRule(' ')).toThrow(MISSING_RULE_ERROR)
+        expect(() => rule.insertRule('style {};')).toThrow(EXTRA_RULE_ERROR)
+        expect(() => rule.insertRule('style;')).toThrow(INVALID_RULE_SYNTAX_ERROR)
+        expect(() => rule.insertRule('@charset "utf-8";')).toThrow(UNKNOWN_RULE_ERROR)
+        expect(() => rule.insertRule('@import "./global.css";')).toThrow(UNKNOWN_RULE_ERROR)
+        expect(() => rule.insertRule('@media screen;')).toThrow('Missing rule block')
+
+        rule.insertRule('@media print {}')
+
+        expect(cssRules).toHaveLength(2)
+
+        rule.insertRule('@media all {}', 2)
+        const [mediaRule] = cssRules
+
+        expect(cssRules).toHaveLength(3)
+        expect(mediaRule.conditionText).toBe('print')
+        expect(cssRules[1].conditionText).toBe('screen')
+        expect(cssRules[2].conditionText).toBe('all')
+
+        rule.deleteRule(0)
+
+        expect(cssRules).toHaveLength(2)
+        expect(mediaRule.parentRule).toBeNull()
+        expect(cssRules[0].conditionText).toBe('screen')
+        expect(cssRules[1].conditionText).toBe('all')
+    })
+})
+describe('CSSSupportsRule', () => {
+    it('has all properties', () => {
+
+        const styleSheet = createStyleSheet('@supports (color: green) { style {} }')
+        const { cssRules: [rule] } = styleSheet
+
+        // CSSRule
+        expect(rule.cssText).toBe('@supports (color: green) { style {} }')
+        expect(rule.parentRule).toBeNull()
+        expect(rule.parentStyleSheet).toBe(styleSheet)
+
+        // CSSGroupingRule
+        expect(CSSRuleList.is(rule.cssRules)).toBeTruthy()
+
+        // CSSConditionRule
+        expect(rule.conditionText).toBe('(color: green)')
+    })
+})
+describe('CSSViewTransitionRule', () => {
+    it('has all properties', () => {
+
+        const styleSheet = createStyleSheet('@view-transition { navigation: none; types: type-1 type-2 }')
+        const { cssRules: [rule] } = styleSheet
+
+        // CSSRule
+        expect(rule.cssText).toBe('@view-transition { navigation: none; types: type-1 type-2; }')
+        expect(rule.parentRule).toBeNull()
+        expect(rule.parentStyleSheet).toBe(styleSheet)
+
+        // CSSViewTransitionRule
+        expect(rule.navigation).toBe('none')
+        expect(rule.types).toEqual(['type-1', 'type-2'])
+        expect(() => rule.types.push('type-3')).toThrow(TypeError)
+    })
+})
+
+/**
+ * @see {@link https://github.com/w3c/csswg-drafts/issues/8778}
+ *
+ * The specification wants the setter of CSSRule.cssText to do nothing, which
+ * requires implementing it in every CSSRule child class, as one cannot set a
+ * property when its getter is defined on the child class and its setter is
+ * defined on the parent class: in strict mode, it throws an error.
+ *
+ * Instead, CSSRule.cssText is defined as read-only, which has the same effect
+ * than implementing a setter on CSSRule, but prevents shadowing the attribute.
+ */
+test('Setting CSSRule.cssText does nothing', () => {
+    const { cssRules: [cssRule] } = createStyleSheet('style {}')
+    cssRule.cssText = 'override {}'
+    expect(cssRule.cssText).toBe('style {}')
+})
+
 describe('CSS grammar', () => {
     // Style sheet contents
     it('ignores invalid contents at the top-level of the style sheet', () => {
@@ -1634,664 +2294,4 @@ describe('CSS grammar', () => {
         expect(CSSKeyframesRule.is(keyframesRule)).toBeTruthy()
         expect(keyframesRule.cssText).toBe('@keyframes animation {}')
     })
-})
-
-describe('CSSColorProfileRule', () => {
-    it('has all properties', () => {
-
-        const styleSheet = createStyleSheet('@color-profile --profile { src: url("profile.icc") }')
-        const { cssRules: [rule] } = styleSheet
-
-        // CSSRule
-        expect(rule.cssText).toBe('@color-profile --profile { src: url("profile.icc"); }')
-        expect(rule.parentRule).toBeNull()
-        expect(rule.parentStyleSheet).toBe(styleSheet)
-
-        // CSSColorProfileRule
-        expect(rule.components).toBe('')
-        expect(rule.name).toBe('--profile')
-        expect(rule.src).toBe('url("profile.icc")')
-        expect(rule.renderingIntent).toBe('')
-    })
-})
-describe('CSSContainerRule', () => {
-    it('has all properties', () => {
-
-        const styleSheet = createStyleSheet('@container layout (1px < width) { style {} }')
-        const { cssRules: [rule] } = styleSheet
-
-        // CSSRule
-        expect(rule.cssText).toBe('@container layout (1px < width) { style {} }')
-        expect(rule.parentRule).toBeNull()
-        expect(rule.parentStyleSheet).toBe(styleSheet)
-
-        // CSSGroupingRule
-        expect(CSSRuleList.is(rule.cssRules)).toBeTruthy()
-
-        // CSSConditionRule
-        expect(rule.conditionText).toBe('layout (1px < width)')
-    })
-})
-describe('CSSCounterStyleRule', () => {
-    it('has all properties', () => {
-
-        let styleSheet = createStyleSheet('@counter-style counter { system: fixed 1; speak-as: auto }')
-        let { cssRules: [rule] } = styleSheet
-
-        // CSSRule
-        expect(rule.cssText).toBe('@counter-style counter { speak-as: auto; system: fixed; }')
-        expect(rule.parentRule).toBeNull()
-        expect(rule.parentStyleSheet).toBe(styleSheet)
-
-        // CSSCounterStyleRule
-        expect(rule.name).toBe('counter')
-        rule.name = 'decimal'
-        expect(rule.name).toBe('counter')
-        rule.name = ''
-        expect(rule.name).toBe('counter')
-        rule.name = '\n'
-        expect(rule.name).toBe('\\a')
-        rule.speakAs = 'none'
-        expect(rule.speakAs).toBe('auto')
-
-        // Fixed
-        rule.system = 'fixed 2'
-        expect(rule.system).toBe('fixed')
-        rule.symbols = 'one two'
-        expect(rule.symbols).toBe('one two')
-        rule.system = 'fixed 2'
-        expect(rule.system).toBe('fixed 2')
-        rule.symbols = 'one two'
-        expect(rule.symbols).toBe('one two')
-        rule.additiveSymbols = '1 one'
-        expect(rule.additiveSymbols).toBe('')
-        rule.system = 'numeric'
-        rule.system = 'additive'
-        rule.system = 'extends decimal'
-        expect(rule.system).toBe('fixed 2')
-
-        // Cyclic (or symbolic)
-        styleSheet = createStyleSheet('@counter-style counter {}')
-        rule = styleSheet.cssRules[0]
-        rule.system = 'cyclic'
-        expect(rule.system).toBe('')
-        rule.symbols = 'one'
-        expect(rule.symbols).toBe('one')
-        rule.system = 'cyclic'
-        expect(rule.system).toBe('cyclic')
-        rule.symbols = 'one two'
-        expect(rule.symbols).toBe('one two')
-        rule.system = 'numeric'
-        rule.system = 'fixed'
-        rule.system = 'extends decimal'
-        expect(rule.system).toBe('cyclic')
-
-        // Numeric (or alphabetic)
-        styleSheet = createStyleSheet('@counter-style counter {}')
-        rule = styleSheet.cssRules[0]
-        rule.system = 'numeric'
-        expect(rule.system).toBe('')
-        rule.symbols = 'one'
-        expect(rule.symbols).toBe('one')
-        rule.system = 'numeric'
-        expect(rule.system).toBe('')
-        rule.symbols = 'one two'
-        expect(rule.symbols).toBe('one two')
-        rule.system = 'numeric'
-        expect(rule.system).toBe('numeric')
-        rule.symbols = 'one'
-        expect(rule.symbols).toBe('one two')
-        rule.symbols = 'one two three'
-        expect(rule.symbols).toBe('one two three')
-        rule.system = 'cyclic'
-        rule.system = 'fixed'
-        rule.system = 'extends decimal'
-        expect(rule.system).toBe('numeric')
-
-        // Additive
-        styleSheet = createStyleSheet('@counter-style counter {}')
-        rule = styleSheet.cssRules[0]
-        rule.system = 'additive'
-        expect(rule.system).toBe('')
-        rule.additiveSymbols = '1 one'
-        expect(rule.additiveSymbols).toBe('1 one')
-        rule.system = 'additive'
-        expect(rule.system).toBe('additive')
-        rule.additiveSymbols = '2 two, 1 one'
-        expect(rule.additiveSymbols).toBe('2 two, 1 one')
-        rule.symbols = 'one two'
-        expect(rule.symbols).toBe('')
-        rule.system = 'cyclic'
-        rule.system = 'fixed'
-        rule.system = 'extends decimal'
-        expect(rule.system).toBe('additive')
-
-        // Extended counter style
-        styleSheet = createStyleSheet('@counter-style counter { symbols: one; additive-symbols: 1 one }')
-        rule = styleSheet.cssRules[0]
-        rule.system = 'extends decimal'
-        expect(rule.system).toBe('')
-        styleSheet = createStyleSheet('@counter-style counter {}')
-        rule = styleSheet.cssRules[0]
-        rule.system = 'extends decimal'
-        expect(rule.system).toBe('extends decimal')
-        rule.symbols = 'one'
-        expect(rule.symbols).toBe('')
-        rule.additiveSymbols = '1 one'
-        expect(rule.additiveSymbols).toBe('')
-        rule.system = 'extends circle'
-        expect(rule.system).toBe('extends circle')
-        rule.system = 'extends none'
-        rule.system = 'cyclic'
-        rule.system = 'additive'
-        rule.system = 'fixed'
-        expect(rule.system).toBe('extends circle')
-    })
-})
-describe('CSSFontFaceRule', () => {
-    it('has all properties', () => {
-
-        const styleSheet = createStyleSheet('@font-face { src: url(serif.woff2) }')
-        const { cssRules: [rule] } = styleSheet
-
-        // CSSRule
-        expect(rule.cssText).toBe('@font-face { src: url("serif.woff2"); }')
-        expect(rule.parentRule).toBeNull()
-        expect(rule.parentStyleSheet).toBe(styleSheet)
-
-        // CSSFontFaceRule
-        expect(CSSFontFaceDescriptors.is(rule.style)).toBeTruthy()
-        expect(rule.style).toHaveLength(1)
-        rule.style.removeProperty('src')
-        expect(rule.cssText).toBe('@font-face {}')
-    })
-})
-describe('CSSFontFeatureValuesRule', () => {
-    it('has all properties', () => {
-
-        const styleSheet = createStyleSheet('@font-feature-values family { font-display: block }')
-        const { cssRules: [rule] } = styleSheet
-
-        // CSSRule
-        expect(rule.cssText).toBe('@font-feature-values family { font-display: block; }')
-        expect(rule.parentRule).toBeNull()
-        expect(rule.parentStyleSheet).toBe(styleSheet)
-
-        // CSSFontFeatureValuesRule
-        expect(rule.fontFamily).toBe('family')
-
-        // CSSFontFeatureValuesMap
-        rule.styleset.set('double-W', 0)
-        expect(rule.styleset.get('double-W')).toEqual([0])
-        expect(rule.cssText).toBe('@font-feature-values family { font-display: block; @styleset { double-W: 0; } }')
-        rule.styleset.set('double-W', [0, 1])
-        expect(rule.styleset.get('double-W')).toEqual([0, 1])
-        expect(rule.cssText).toBe('@font-feature-values family { font-display: block; @styleset { double-W: 0 1; } }')
-        rule.styleset.delete('double-W')
-        expect(rule.cssText).toBe('@font-feature-values family { font-display: block; }')
-        expect(() => rule.annotation.set('boxed', [0, 1])).toThrow(INVALID_FONT_FEATURE_VALUE_ERROR)
-        expect(() => rule.annotation.set('boxed', [-1])).toThrow(INVALID_FONT_FEATURE_VALUE_ERROR)
-        expect(() => rule.characterVariant.set('alpha-2', [0, 1, 2])).toThrow(INVALID_FONT_FEATURE_VALUE_ERROR)
-        expect(() => rule.characterVariant.set('alpha-2', [-1, 0])).toThrow(INVALID_FONT_FEATURE_VALUE_ERROR)
-        expect(() => rule.characterVariant.set('alpha-2', [100, 0])).toThrow(INVALID_FONT_FEATURE_VALUE_ERROR)
-        expect(() => rule.ornaments.set('bullet', [0, 1])).toThrow(INVALID_FONT_FEATURE_VALUE_ERROR)
-        expect(() => rule.ornaments.set('bullet', [-1])).toThrow(INVALID_FONT_FEATURE_VALUE_ERROR)
-        expect(() => rule.styleset.set('double-W', [-1, 0])).toThrow(INVALID_FONT_FEATURE_VALUE_ERROR)
-        expect(() => rule.styleset.set('double-W', [21, 0])).toThrow(INVALID_FONT_FEATURE_VALUE_ERROR)
-        expect(() => rule.stylistic.set('alt-g', [0, 1])).toThrow(INVALID_FONT_FEATURE_VALUE_ERROR)
-        expect(() => rule.stylistic.set('alt-g', [-1])).toThrow(INVALID_FONT_FEATURE_VALUE_ERROR)
-        expect(() => rule.swash.set('cool', [0, 1])).toThrow(INVALID_FONT_FEATURE_VALUE_ERROR)
-        expect(() => rule.swash.set('cool', [-1])).toThrow(INVALID_FONT_FEATURE_VALUE_ERROR)
-    })
-})
-describe('CSSFontPaletteValuesRule', () => {
-    it('has all properties', () => {
-
-        const styleSheet = createStyleSheet(`
-            @font-palette-values --palette {
-                font-family: my-font;
-                base-palette: light;
-                override-colors: 0 green;
-            }
-        `)
-        const { cssRules: [rule] } = styleSheet
-
-        // CSSRule
-        expect(rule.cssText).toBe('@font-palette-values --palette { base-palette: light; font-family: my-font; override-colors: 0 green; }')
-        expect(rule.parentRule).toBeNull()
-        expect(rule.parentStyleSheet).toBe(styleSheet)
-
-        // CSSFontPaletteValuesRule
-        expect(rule.fontFamily).toBe('my-font')
-        expect(rule.basePalette).toBe('light')
-        expect(rule.overrideColors).toBe('0 green')
-    })
-})
-describe('CSSImportRule', () => {
-    it('has all properties', () => {
-
-        const styleSheet = createStyleSheet('@import "./global.css";', { media: 'all' })
-        const { cssRules: [rule] } = styleSheet
-
-        // CSSRule
-        expect(rule.cssText).toBe('@import url("./global.css");')
-        expect(rule.parentRule).toBeNull()
-        expect(rule.parentStyleSheet).toBe(styleSheet)
-
-        // CSSImportRule
-        expect(rule.href).toBe('./global.css')
-        // TODO: implement fetching a style sheet referenced by `@import`
-        // expect(CSSStyleSheet.is(rule.styleSheet)).toBeTruthy()
-        // expect(rule.styleSheet.ownerRule).toBe(rule)
-        // expect(rule.styleSheet.media).toBe(rule.media)
-        // expect(rule.styleSheet.parentStyleSheet).toBe(rule.parentStyleSheet)
-    })
-})
-describe('CSSKeyframeRule', () => {
-    it('has all properties', () => {
-
-        const styleSheet = createStyleSheet('@keyframes animation { to { color: green } }')
-        const { cssRules: [parentRule] } = styleSheet
-        const { cssRules: [rule] } = parentRule
-
-        // CSSRule
-        expect(rule.cssText).toBe('100% { color: green; }')
-        expect(rule.parentRule).toBe(parentRule)
-        expect(rule.parentStyleSheet).toBe(styleSheet)
-
-        // CSSKeyframeRule
-        expect(rule.keyText).toBe('100%')
-        rule.keyText = 'from'
-        expect(rule.keyText).toBe('0%')
-        expect(rule.cssText).toBe('0% { color: green; }')
-        expect(() => rule.keyText = '101%').toThrow(SET_INVALID_KEY_TEXT_ERROR)
-        expect(CSSKeyframeProperties.is(rule.style)).toBeTruthy()
-        rule.style.color = ''
-        expect(rule.cssText).toBe('0% {}')
-    })
-})
-describe('CSSKeyframesRule', () => {
-    it('has all properties', () => {
-
-        const styleSheet = createStyleSheet('@keyframes animation { to {} }')
-        const { cssRules: [rule] } = styleSheet
-
-        // CSSRule
-        expect(rule.cssText).toBe('@keyframes animation { 100% {} }')
-        expect(rule.parentRule).toBeNull()
-        expect(rule.parentStyleSheet).toBe(styleSheet)
-
-        // CSSKeyframesRule
-        expect(CSSRuleList.is(rule.cssRules)).toBeTruthy()
-        expect(rule).toHaveLength(1)
-        expect(rule[0]).toBe(rule.cssRules[0])
-        expect(rule.name).toBe('animation')
-        rule.name = '\n'
-        expect(rule.name).toBe('\\a')
-        expect(rule.cssText).toBe('@keyframes \\a { 100% {} }')
-        expect(() => rule.name = '').toThrow(SET_INVALID_NAME_ERROR)
-    })
-    it('has all methods', () => {
-
-        const { cssRules: [rule] } = createStyleSheet('@keyframes animation {}')
-        const { cssRules: keyframes } = rule
-
-        expect(keyframes).toHaveLength(0)
-
-        rule.appendRule('to { color: orange }')
-
-        expect(rule.findRule('to')).toBe(keyframes[0])
-        expect(rule.findRule('100%')).toBe(keyframes[0])
-        expect(keyframes).toHaveLength(1)
-        expect(keyframes[0].style.color).toBe('orange')
-        expect(() => rule.appendRule('invalid')).toThrow(INVALID_RULE_SYNTAX_ERROR)
-
-        rule.appendRule('to { color: green }')
-        const [, to] = keyframes
-
-        expect(keyframes).toHaveLength(2)
-        expect(to.style.color).toBe('green')
-        expect(rule.findRule('to')).toBe(to)
-
-        rule.deleteRule('to')
-
-        expect(keyframes).toHaveLength(1)
-        expect(to.parentRule).toBeNull()
-        expect(rule.findRule('to')).toBe(keyframes[0])
-
-        rule.appendRule('50%, 100% {}')
-
-        expect(keyframes).toHaveLength(2)
-        expect(rule.findRule('50%')).toBeNull()
-        expect(rule.findRule('100%, 50%')).toBeNull()
-        expect(rule.findRule('50%, 100%')).toBe(keyframes[1])
-        expect(rule.findRule('50%,100%')).toBe(keyframes[1])
-
-        rule.deleteRule('50%')
-
-        expect(keyframes).toHaveLength(2)
-
-        rule.deleteRule('50%, 100%')
-
-        expect(keyframes).toHaveLength(1)
-    })
-})
-describe('CSSLayerBlockRule', () => {
-    it('has all properties', () => {
-
-        const styleSheet = createStyleSheet('@layer reset { style {} }')
-        const { cssRules: [rule] } = styleSheet
-
-        // CSSRule
-        expect(rule.cssText).toBe('@layer reset { style {} }')
-        expect(rule.parentRule).toBeNull()
-        expect(rule.parentStyleSheet).toBe(styleSheet)
-
-        // CSSGroupingRule
-        expect(CSSRuleList.is(rule.cssRules)).toBeTruthy()
-
-        // CSSLayerBlockRule
-        expect(rule.name).toBe('reset')
-    })
-})
-describe('CSSLayerStatementRule', () => {
-    it('has all properties', () => {
-
-        const styleSheet = createStyleSheet('@layer reset;')
-        const { cssRules: [rule] } = styleSheet
-
-        // CSSRule
-        expect(rule.cssText).toBe('@layer reset;')
-        expect(rule.parentRule).toBeNull()
-        expect(rule.parentStyleSheet).toBe(styleSheet)
-
-        // CSSLayerStatementRule
-        expect(rule.nameList).toBe('reset')
-    })
-})
-describe('CSSMarginRule', () => {
-    it('has all properties', () => {
-
-        const styleSheet = createStyleSheet('@page { @top-left { color: green } }')
-        const { cssRules: [parentRule] } = styleSheet
-        const { cssRules: [rule] } = parentRule
-
-        // CSSRule
-        expect(rule.cssText).toBe('@top-left { color: green; }')
-        expect(rule.parentRule).toBe(parentRule)
-        expect(rule.parentStyleSheet).toBe(styleSheet)
-
-        // CSSMarginRule
-        expect(rule.name).toBe('top-left')
-        expect(CSSMarginDescriptors.is(rule.style)).toBeTruthy()
-        rule.style.color = ''
-        expect(rule.cssText).toBe('@top-left {}')
-    })
-})
-describe('CSSMediaRule', () => {
-    it('has all properties', () => {
-
-        const styleSheet = createStyleSheet('@media all { style {} }')
-        const { cssRules: [rule] } = styleSheet
-
-        // CSSRule
-        expect(rule.cssText).toBe('@media all { style {} }')
-        expect(rule.parentRule).toBeNull()
-        expect(rule.parentStyleSheet).toBe(styleSheet)
-
-        // CSSGroupingRule
-        expect(CSSRuleList.is(rule.cssRules)).toBeTruthy()
-
-        // CSSConditionRule
-        expect(rule.conditionText).toBe('all')
-
-        // CSSMediaRule
-        expect(MediaList.is(rule.media)).toBeTruthy()
-    })
-})
-describe('CSSNamespaceRule', () => {
-    it('has all properties', () => {
-
-        const styleSheet = createStyleSheet('@namespace svg "http://www.w3.org/2000/svg";')
-        const { cssRules: [rule] } = styleSheet
-
-        // CSSRule
-        expect(rule.cssText).toBe('@namespace svg url("http://www.w3.org/2000/svg");')
-        expect(rule.parentRule).toBeNull()
-        expect(rule.parentStyleSheet).toBe(styleSheet)
-
-        // CSSNamespaceRule
-        expect(rule.namespaceURI).toBe('http://www.w3.org/2000/svg')
-        expect(rule.prefix).toBe('svg')
-    })
-})
-describe('CSSPageRule', () => {
-    it('has all properties', () => {
-
-        const styleSheet = createStyleSheet('@page intro { color: green; @top-left {} }')
-        const { cssRules: [rule] } = styleSheet
-
-        // CSSRule
-        expect(rule.cssText).toBe('@page intro { color: green; @top-left {} }')
-        expect(rule.parentRule).toBeNull()
-        expect(rule.parentStyleSheet).toBe(styleSheet)
-
-        // CSSGroupingRule
-        expect(CSSRuleList.is(rule.cssRules)).toBeTruthy()
-
-        // CSSPageRule
-        expect(rule.selectorText).toBe('intro')
-        rule.selectorText = 'outro'
-        expect(rule.selectorText).toBe('outro')
-        expect(CSSPageDescriptors.is(rule.style)).toBeTruthy()
-    })
-})
-describe('CSSPositionTryRule', () => {
-    it('has all properties', () => {
-
-        const styleSheet = createStyleSheet('@position-try --position { top: 1px } }')
-        const { cssRules: [rule] } = styleSheet
-
-        // CSSRule
-        expect(rule.cssText).toBe('@position-try --position { top: 1px; }')
-        expect(rule.parentRule).toBeNull()
-        expect(rule.parentStyleSheet).toBe(styleSheet)
-
-        // CSSPositionTryRule
-        expect(rule.name).toBe('--position')
-        expect(CSSPositionTryDescriptors.is(rule.style)).toBeTruthy()
-        rule.style.top = ''
-        expect(rule.cssText).toBe('@position-try --position {}')
-    })
-})
-describe('CSSPropertyRule', () => {
-    it('has all properties', () => {
-
-        const styleSheet = createStyleSheet(`
-            @property --custom {
-                syntax: "*";
-                inherits: true;
-            }
-        `)
-        const { cssRules: [rule] } = styleSheet
-
-        // CSSRule
-        expect(rule.cssText).toBe('@property --custom { syntax: "*"; inherits: true; }')
-        expect(rule.parentRule).toBeNull()
-        expect(rule.parentStyleSheet).toBe(styleSheet)
-
-        // CSSPropertyRule
-        expect(rule.name).toBe('--custom')
-        expect(rule.syntax).toBe('"*"')
-        expect(rule.inherits).toBe('true')
-        expect(rule.initialValue).toBe('')
-    })
-})
-describe('CSSScopeRule', () => {
-    it('has all properties', () => {
-
-        const styleSheet = createStyleSheet('@scope (start) to (end) { color: green; style { child {} } }')
-        const { cssRules: [rule] } = styleSheet
-
-        // CSSRule
-        expect(rule.cssText).toBe('@scope (start) to (end) { :scope { color: green; } style { & child {} } }')
-        expect(rule.parentRule).toBeNull()
-        expect(rule.parentStyleSheet).toBe(styleSheet)
-
-        // CSSGroupingRule
-        expect(CSSRuleList.is(rule.cssRules)).toBeTruthy()
-
-        // CSSLayerBlockRule
-        expect(rule.end).toBe('end')
-        expect(rule.start).toBe('start')
-    })
-})
-describe('CSSStartingStyleRule', () => {
-    it('has all properties', () => {
-
-        const styleSheet = createStyleSheet('@starting-style { style {} }')
-        const { cssRules: [rule] } = styleSheet
-
-        // CSSRule
-        expect(rule.cssText).toBe('@starting-style { style {} }')
-        expect(rule.parentRule).toBeNull()
-        expect(rule.parentStyleSheet).toBe(styleSheet)
-
-        // CSSGroupingRule
-        expect(CSSRuleList.is(rule.cssRules)).toBeTruthy()
-    })
-})
-describe('CSSStyleRule', () => {
-    it('has all properties', () => {
-
-        const styleSheet = createStyleSheet(`
-            style {
-                color: red;
-                & {
-                    color: green;
-                }
-            }
-        `)
-        const { cssRules: [styleRule] } = styleSheet
-        const { cssRules: [nestedStyleRule] } = styleRule
-
-        // CSSRule
-        expect(styleRule.cssText).toBe('style { color: red; & { color: green; } }')
-        expect(nestedStyleRule.cssText).toBe('& { color: green; }')
-        expect(styleRule.parentRule).toBeNull()
-        expect(nestedStyleRule.parentRule).toBe(styleRule)
-        expect(styleRule.parentStyleSheet).toBe(styleSheet)
-        expect(nestedStyleRule.parentStyleSheet).toBe(styleSheet)
-
-        // CSSGroupingRule
-        expect(CSSRuleList.is(styleRule.cssRules)).toBeTruthy()
-        expect(CSSRuleList.is(nestedStyleRule.cssRules)).toBeTruthy()
-
-        // CSSStyleRule
-        expect(styleRule.selectorText).toBe('style')
-        expect(nestedStyleRule.selectorText).toBe('&')
-        expect(CSSStyleProperties.is(styleRule.style)).toBeTruthy()
-        expect(CSSStyleProperties.is(nestedStyleRule.style)).toBeTruthy()
-        expect(styleRule.style).toHaveLength(1)
-        expect(nestedStyleRule.style).toHaveLength(1)
-
-        styleRule.selectorText = 'parent'
-        nestedStyleRule.selectorText = 'child'
-
-        expect(styleRule.selectorText).toBe('parent')
-        expect(nestedStyleRule.selectorText).toBe('& child')
-
-        styleRule.style.color = ''
-        nestedStyleRule.style.color = ''
-
-        expect(styleRule.cssText).toBe('parent { & child {} }')
-    })
-    it('has all methods', () => {
-
-        const { cssRules: [rule] } = createStyleSheet('style {}')
-        const { cssRules } = rule
-
-        expect(cssRules).toHaveLength(0)
-
-        rule.insertRule('@media screen {}')
-
-        expect(() => rule.insertRule('style {}', -1)).toThrow(INVALID_RULE_INDEX_ERROR)
-        expect(() => rule.insertRule(' ')).toThrow(MISSING_RULE_ERROR)
-        expect(() => rule.insertRule('style {};')).toThrow(EXTRA_RULE_ERROR)
-        expect(() => rule.insertRule('style;')).toThrow(INVALID_RULE_SYNTAX_ERROR)
-        expect(() => rule.insertRule('@charset "utf-8";')).toThrow(UNKNOWN_RULE_ERROR)
-        expect(() => rule.insertRule('@import "./global.css";')).toThrow(UNKNOWN_RULE_ERROR)
-        expect(() => rule.insertRule('@media screen;')).toThrow('Missing rule block')
-
-        rule.insertRule('@media print {}')
-
-        expect(cssRules).toHaveLength(2)
-
-        rule.insertRule('@media all {}', 2)
-        const [mediaRule] = cssRules
-
-        expect(cssRules).toHaveLength(3)
-        expect(mediaRule.conditionText).toBe('print')
-        expect(cssRules[1].conditionText).toBe('screen')
-        expect(cssRules[2].conditionText).toBe('all')
-
-        rule.deleteRule(0)
-
-        expect(cssRules).toHaveLength(2)
-        expect(mediaRule.parentRule).toBeNull()
-        expect(cssRules[0].conditionText).toBe('screen')
-        expect(cssRules[1].conditionText).toBe('all')
-    })
-})
-describe('CSSSupportsRule', () => {
-    it('has all properties', () => {
-
-        const styleSheet = createStyleSheet('@supports (color: green) { style {} }')
-        const { cssRules: [rule] } = styleSheet
-
-        // CSSRule
-        expect(rule.cssText).toBe('@supports (color: green) { style {} }')
-        expect(rule.parentRule).toBeNull()
-        expect(rule.parentStyleSheet).toBe(styleSheet)
-
-        // CSSGroupingRule
-        expect(CSSRuleList.is(rule.cssRules)).toBeTruthy()
-
-        // CSSConditionRule
-        expect(rule.conditionText).toBe('(color: green)')
-    })
-})
-describe('CSSViewTransitionRule', () => {
-    it('has all properties', () => {
-
-        const styleSheet = createStyleSheet('@view-transition { navigation: none; types: type-1 type-2 }')
-        const { cssRules: [rule] } = styleSheet
-
-        // CSSRule
-        expect(rule.cssText).toBe('@view-transition { navigation: none; types: type-1 type-2; }')
-        expect(rule.parentRule).toBeNull()
-        expect(rule.parentStyleSheet).toBe(styleSheet)
-
-        // CSSViewTransitionRule
-        expect(rule.navigation).toBe('none')
-        expect(rule.types).toEqual(['type-1', 'type-2'])
-        expect(() => rule.types.push('type-3')).toThrow(TypeError)
-    })
-})
-
-/**
- * @see {@link https://github.com/w3c/csswg-drafts/issues/8778}
- *
- * The specification wants the setter of CSSRule.cssText to do nothing, which
- * requires implementing it in every CSSRule child class, as one cannot set a
- * property when its getter is defined on the child class and its setter is
- * defined on the parent class: in strict mode, it throws an error.
- *
- * Instead, CSSRule.cssText is defined as read-only, which has the same effect
- * than implementing a setter on CSSRule, but prevents shadowing the attribute.
- */
-test('Setting CSSRule.cssText does nothing', () => {
-    const { cssRules: [cssRule] } = createStyleSheet('style {}')
-    cssRule.cssText = 'override {}'
-    expect(cssRule.cssText).toBe('style {}')
 })
