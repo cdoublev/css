@@ -1332,6 +1332,9 @@ describe('CSS grammar', () => {
         expect(rule.basePalette).toBe('')
         expect(rule.fontFamily).toBe('my-font')
     })
+    test('@font-palette-values - missing declaration for font-family', () => {
+        expect(createStyleSheet('@font-palette-values --palette {}').cssRules).toHaveLength(0)
+    })
     test('@function - invalid and ignored contents', () => {
 
         const { cssRules: [rule] } = createStyleSheet(`
@@ -1666,6 +1669,66 @@ describe('CSS grammar', () => {
         expect(rule.initialValue).toBe('')
         expect(rule.inherits).toBe('true')
         expect(rule.syntax).toBe('"*"')
+    })
+    test('@property - missing declaration for inherits', () => {
+        expect(createStyleSheet('@property --custom { syntax: "*"; initial-value: 1; }').cssRules).toHaveLength(0)
+    })
+    test('@property - missing declaration for syntax', () => {
+        expect(createStyleSheet('@property --custom { inherits: true; initial-value: 1; }').cssRules).toHaveLength(0)
+    })
+    test('@property - invalid initial-value', () => {
+
+        const invalid = [
+            // Invalid syntax
+            ['', '<length>'],
+            ['1', '<length>'],
+            ['initial', '<length>'],
+            ['attr(name)', '<length>'],
+            ['env(name)', '<length>'],
+            ['random-item(--key, 1px)', '<length>'],
+            ['var(--custom)', '<length>'],
+            ['first-valid(1px)', '<length>'],
+            ['mix(0, 1px, 1px)', '<length>'],
+            ['toggle(1px)', '<length>'],
+            // Computationally dependent
+            ['1em', '<length>'],
+            ['calc(1em + 1px)', '<length>'],
+            ['translate(1em)', '<transform-function>'],
+            ['rgb(calc(1em / 1px) 0 0)', '<color>'],
+            // https://github.com/w3c/css-houdini-drafts/issues/1076
+            ['initial', '*'],
+        ]
+        const valid = [
+            // Empty value
+            ['', '*'],
+            [' ', '*'],
+            // Computationally independent
+            ['1in', '<length>'],
+            ['1%', '<length-percentage>'],
+            ['calc(1% + 1px)', '<length-percentage>'],
+            ['calc-mix(0, 1px, 1px)', '<length>'],
+            ['random(1px, 1px)', '<length>'],
+            ['calc(1px * sibling-index())', '<length>'],
+            ['translate(1px)', '<transform-function>'],
+            // Substitutions
+            ['env(name)', '*'],
+            ['var(--custom)', '*'],
+            ['first-valid(1px)', '*'],
+        ]
+        const cases = [invalid, valid]
+
+        cases.forEach((group, index) =>
+            group.forEach(([value, syntax]) => {
+                const styleSheet = createStyleSheet(`
+                    @property --custom {
+                        syntax: "${syntax}";
+                        initial-value: 1px;
+                        initial-value: ${value};
+                        inherits: true;
+                    }
+                `)
+                expect(styleSheet.cssRules).toHaveLength(index)
+            }))
     })
     test('@scope - invalid and ignored contents', () => {
 
@@ -2202,69 +2265,6 @@ describe('CSS grammar', () => {
         expect(rule.style.getPropertyValue('--custom')).toBe('hover {}')
         expect(rule.style.bottom).toBe('{var(--custom)}')
         expect(rule.style.right).toBe('1px')
-    })
-    test('@font-palette-values - missing declaration for font-family', () => {
-        expect(createStyleSheet('@font-palette-values --palette {}').cssRules).toHaveLength(0)
-    })
-    test('@property - missing declaration for inherits', () => {
-        expect(createStyleSheet('@property --custom { syntax: "*"; initial-value: 1; }').cssRules).toHaveLength(0)
-    })
-    test('@property - missing declaration for syntax', () => {
-        expect(createStyleSheet('@property --custom { inherits: true; initial-value: 1; }').cssRules).toHaveLength(0)
-    })
-    test('@property - invalid initial-value', () => {
-
-        const invalid = [
-            // Invalid syntax
-            ['', '<length>'],
-            ['1', '<length>'],
-            ['initial', '<length>'],
-            ['attr(name)', '<length>'],
-            ['env(name)', '<length>'],
-            ['random-item(--key, 1px)', '<length>'],
-            ['var(--custom)', '<length>'],
-            ['first-valid(1px)', '<length>'],
-            ['mix(0, 1px, 1px)', '<length>'],
-            ['toggle(1px)', '<length>'],
-            // Computationally dependent
-            ['1em', '<length>'],
-            ['calc(1em + 1px)', '<length>'],
-            ['translate(1em)', '<transform-function>'],
-            ['rgb(calc(1em / 1px) 0 0)', '<color>'],
-            // https://github.com/w3c/css-houdini-drafts/issues/1076
-            ['initial', '*'],
-        ]
-        const valid = [
-            // Empty value
-            ['', '*'],
-            [' ', '*'],
-            // Computationally independent
-            ['1in', '<length>'],
-            ['1%', '<length-percentage>'],
-            ['calc(1% + 1px)', '<length-percentage>'],
-            ['calc-mix(0, 1px, 1px)', '<length>'],
-            ['random(1px, 1px)', '<length>'],
-            ['calc(1px * sibling-index())', '<length>'],
-            ['translate(1px)', '<transform-function>'],
-            // Substitutions
-            ['env(name)', '*'],
-            ['var(--custom)', '*'],
-            ['first-valid(1px)', '*'],
-        ]
-        const cases = [invalid, valid]
-
-        cases.forEach((group, index) =>
-            group.forEach(([value, syntax]) => {
-                const styleSheet = createStyleSheet(`
-                    @property --custom {
-                        syntax: "${syntax}";
-                        initial-value: 1px;
-                        initial-value: ${value};
-                        inherits: true;
-                    }
-                `)
-                expect(styleSheet.cssRules).toHaveLength(index)
-            }))
     })
     test('style rule - invalid prelude containing an undeclared namespace prefix', () => {
 
