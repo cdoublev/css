@@ -966,7 +966,7 @@ test('Setting CSSRule.cssText does nothing', () => {
 
 describe('CSS grammar', () => {
     // Style sheet contents
-    it('ignores invalid contents at the top-level of the style sheet', () => {
+    test('top-level - invalid contents', () => {
 
         const { cssRules } = createStyleSheet(`
             /* invalid */
@@ -996,7 +996,7 @@ describe('CSS grammar', () => {
         expect(cssRules[1].cssText).toBe('style-2 {}')
         expect(cssRules[2].cssText).toBe('style-3 { --custom: ; }')
     })
-    it('ignores opening and ending HTML comment tokens at the top-level of the style sheet', () => {
+    test('top-level - opening and ending HTML comment tokens', () => {
 
         const { cssRules } = createStyleSheet(`
             <!-- style {} -->
@@ -1010,7 +1010,7 @@ describe('CSS grammar', () => {
         expect(cssRules).toHaveLength(2)
         expect(cssRules[1].style.color).toBe('green')
     })
-    it('ignores @import following any other non-ignored rule than @layer', () => {
+    test('top-level - ignored @import following any other non-ignored rule than @layer', () => {
 
         const { cssRules } = createStyleSheet(`
             @namespace svg "http://www.w3.org/2000/svg";
@@ -1020,7 +1020,7 @@ describe('CSS grammar', () => {
         expect(cssRules).toHaveLength(1)
         expect(CSSNamespaceRule.is(cssRules[0])).toBeTruthy()
     })
-    it('ignores @import following @layer interleaved after another @import', () => {
+    test('top-level - ignored @import following @layer interleaved after another @import', () => {
 
         const { cssRules } = createStyleSheet(`
             @import "./global.css";
@@ -1031,7 +1031,7 @@ describe('CSS grammar', () => {
         expect(cssRules).toHaveLength(2)
         expect(CSSLayerStatementRule.is(cssRules[1])).toBeTruthy()
     })
-    it('does not ignore @import following @layer or ignored rules', () => {
+    test('top-level - @import following @layer or ignored rules', () => {
 
         const { cssRules } = createStyleSheet(`
             @layer reset;
@@ -1043,7 +1043,7 @@ describe('CSS grammar', () => {
         expect(cssRules).toHaveLength(2)
         expect(CSSImportRule.is(cssRules[1])).toBeTruthy()
     })
-    it('does not ignore @import following ignored rules interleaved after another @import', () => {
+    test('top-level - @import following ignored rules interleaved after another @import', () => {
 
         const { cssRules } = createStyleSheet(`
             @import "./global.css";
@@ -1056,7 +1056,7 @@ describe('CSS grammar', () => {
         expect(cssRules).toHaveLength(2)
         expect(CSSImportRule.is(cssRules[1])).toBeTruthy()
     })
-    it('ignores @namespace following any other non-ignored rule than @import or @layer', () => {
+    test('top-level - ignored @namespace following any other non-ignored rule than @import or @layer', () => {
 
         const { cssRules } = createStyleSheet(`
             style {}
@@ -1066,7 +1066,7 @@ describe('CSS grammar', () => {
         expect(cssRules).toHaveLength(1)
         expect(CSSStyleRule.is(cssRules[0])).toBeTruthy()
     })
-    it('ignores @namespace following @layer interleaved after another @namespace', () => {
+    test('top-level - ignored @namespace following @layer interleaved after another @namespace', () => {
 
         const { cssRules } = createStyleSheet(`
             @namespace html "https://www.w3.org/1999/xhtml/";
@@ -1077,7 +1077,7 @@ describe('CSS grammar', () => {
         expect(cssRules).toHaveLength(2)
         expect(CSSLayerStatementRule.is(cssRules[1])).toBeTruthy()
     })
-    it('ignores @namespace following @layer interleaved after @import', () => {
+    test('top-level - ignored @namespace following @layer interleaved after @import', () => {
 
         const { cssRules } = createStyleSheet(`
             @import "./global.css";
@@ -1088,7 +1088,7 @@ describe('CSS grammar', () => {
         expect(cssRules).toHaveLength(2)
         expect(CSSLayerStatementRule.is(cssRules[1])).toBeTruthy()
     })
-    it('does not ignore @namespace following @import, @layer, or ignored rule(s)', () => {
+    test('top-level - @namespace following @import, @layer, or ignored rule(s)', () => {
 
         const { cssRules } = createStyleSheet(`
             @layer reset;
@@ -1100,7 +1100,7 @@ describe('CSS grammar', () => {
         expect(cssRules).toHaveLength(3)
         expect(CSSNamespaceRule.is(cssRules[2])).toBeTruthy()
     })
-    it('does not ignore @namespace following ignored rules interleaved after another @namespace', () => {
+    test('top-level - @namespace following ignored rules interleaved after another @namespace', () => {
 
         const { cssRules } = createStyleSheet(`
             @namespace html "https://www.w3.org/1999/xhtml/";
@@ -1114,7 +1114,7 @@ describe('CSS grammar', () => {
         expect(CSSNamespaceRule.is(cssRules[1])).toBeTruthy()
     })
     // Rule contents
-    it('ignores invalid contents in @color-profile', () => {
+    test('@color-profile - invalid and ignored contents', () => {
 
         const { cssRules: [rule] } = createStyleSheet(`
             @COLOR-PROFILE --profile {
@@ -1138,7 +1138,7 @@ describe('CSS grammar', () => {
         expect(rule.components).toBe('')
         expect(rule.src).toBe('url("profile.icc")')
     })
-    it('ignores invalid contents in @container', () => {
+    test('@container - invalid and ignored contents', () => {
 
         const { cssRules: [rule] } = createStyleSheet(`
             @CONTAINER layout (1px < width) {
@@ -1204,7 +1204,7 @@ describe('CSS grammar', () => {
         valid.forEach((CSSRule, index) => expect(CSSRule.is(rule.cssRules[index])).toBeTruthy())
         expect(rule.style).toBeUndefined()
     })
-    it('ignores invalid contents in @counter-style', () => {
+    test('@counter-style - invalid and ignored contents', () => {
 
         const { cssRules: [rule] } = createStyleSheet(`
             @COUNTER-STYLE counter {
@@ -1229,7 +1229,7 @@ describe('CSS grammar', () => {
         Object.keys(descriptors['@counter-style']).forEach(name =>
             expect(rule[cssPropertyToIDLAttribute(name)]).toBe(name === 'system' ? 'numeric' : ''))
     })
-    it('ignores invalid contents in @font-face', () => {
+    test('@font-face - invalid and ignored contents', () => {
 
         const { cssRules: [rule] } = createStyleSheet(`
             @FONT-FACE {
@@ -1254,7 +1254,7 @@ describe('CSS grammar', () => {
         expect(rule.style.fontStyle).toBe('')
         expect(rule.style.fontFamily).toBe('my-font')
     })
-    it('ignores invalid contents in @font-feature-values', () => {
+    test('@font-feature-values - invalid and ignored contents', () => {
 
         const { value: { rules } } = root.rules.find(rule => rule.name === '@font-feature-values')
         const { cssRules: [rule] } = createStyleSheet(`
@@ -1308,7 +1308,7 @@ describe('CSS grammar', () => {
             expect(CSSFontFeatureValuesMap.is(child)).toBeTruthy()
         })
     })
-    it('ignores invalid contents in @font-palette-values', () => {
+    test('@font-palette-values - invalid and ignored contents', () => {
 
         const { cssRules: [rule] } = createStyleSheet(`
             @FONT-PALETTE-VALUES --palette {
@@ -1332,7 +1332,7 @@ describe('CSS grammar', () => {
         expect(rule.basePalette).toBe('')
         expect(rule.fontFamily).toBe('my-font')
     })
-    it('ignores invalid contents in @function', () => {
+    test('@function - invalid and ignored contents', () => {
 
         const { cssRules: [rule] } = createStyleSheet(`
             @FUNCTION --name {
@@ -1389,7 +1389,7 @@ describe('CSS grammar', () => {
         // TODO: add support for `CSSNestedDeclarations`
         // expect(rule.cssText).toBe('@function --name { @container (1px < width) {} @media {} @supports (color: green) {} --custom: {} var(--custom); result: { var(--custom) } }')
     })
-    it('ignores invalid contents in @keyframes', () => {
+    test('@keyframes - invalid and ignored contents', () => {
 
         const { cssRules: [rule] } = createStyleSheet(`
             @KEYFRAMES animation {
@@ -1434,7 +1434,7 @@ describe('CSS grammar', () => {
         expect(CSSKeyframeRule.is(rule.cssRules[0])).toBeTruthy()
         expect(rule.style).toBeUndefined()
     })
-    it('ignores invalid contents in @layer', () => {
+    test('@layer - invalid and ignored contents', () => {
 
         const { cssRules: [rule] } = createStyleSheet(`
             @LAYER {
@@ -1500,7 +1500,7 @@ describe('CSS grammar', () => {
         valid.forEach((CSSRule, index) => expect(CSSRule.is(rule.cssRules[index])).toBeTruthy())
         expect(rule.style).toBeUndefined()
     })
-    it('ignores invalid contents in @media', () => {
+    test('@media - invalid and ignored contents', () => {
 
         const { cssRules: [rule] } = createStyleSheet(`
             @MEDIA {
@@ -1566,7 +1566,7 @@ describe('CSS grammar', () => {
         valid.forEach((CSSRule, index) => expect(CSSRule.is(rule.cssRules[index])).toBeTruthy())
         expect(rule.style).toBeUndefined()
     })
-    it('ignores invalid contents in @page', () => {
+    test('@page - invalid and ignored contents', () => {
 
         const { cssRules: [rule] } = createStyleSheet(`
             @PAGE {
@@ -1619,7 +1619,7 @@ describe('CSS grammar', () => {
         expect(rule.style.marginBottom).toBe('{var(--custom)}')
         expect(rule.style.marginRight).toBe('1px')
     })
-    it('ignores invalid contents in @position-try', () => {
+    test('@position-try - invalid and ignored contents', () => {
 
         const { cssRules: [rule] } = createStyleSheet(`
             @POSITION-TRY --position {
@@ -1640,7 +1640,7 @@ describe('CSS grammar', () => {
         expect(rule.style).toHaveLength(1)
         expect(rule.style.top).toBe('{var(--custom)}')
     })
-    it('ignores invalid contents in @property', () => {
+    test('@property - invalid and ignored contents', () => {
 
         const { cssRules: [rule] } = createStyleSheet(`
             @PROPERTY --custom {
@@ -1667,7 +1667,7 @@ describe('CSS grammar', () => {
         expect(rule.inherits).toBe('true')
         expect(rule.syntax).toBe('"*"')
     })
-    it('ignores invalid contents in @scope', () => {
+    test('@scope - invalid and ignored contents', () => {
 
         const { cssRules: [rule] } = createStyleSheet(`
             @SCOPE {
@@ -1740,7 +1740,7 @@ describe('CSS grammar', () => {
         expect(rule.cssRules[0].style.bottom).toBe('{var(--custom)}')
         expect(rule.cssRules[0].style.right).toBe('1px')
     })
-    it('ignores invalid contents in @starting-style', () => {
+    test('@starting-style - invalid and ignored contents', () => {
 
         const { cssRules: [rule] } = createStyleSheet(`
             @STARTING-STYLE {
@@ -1806,7 +1806,7 @@ describe('CSS grammar', () => {
         valid.forEach((CSSRule, index) => expect(CSSRule.is(rule.cssRules[index])).toBeTruthy())
         expect(rule.style).toBeUndefined()
     })
-    it('ignores invalid contents in @supports', () => {
+    test('@supports - invalid and ignored contents', () => {
 
         const { cssRules: [rule] } = createStyleSheet(`
             @SUPPORTS (COLOR: green) {
@@ -1872,7 +1872,7 @@ describe('CSS grammar', () => {
         valid.forEach((CSSRule, index) => expect(CSSRule.is(rule.cssRules[index])).toBeTruthy())
         expect(rule.style).toBeUndefined()
     })
-    it('ignores invalid contents in @view-transition', () => {
+    test('@view-transition - invalid and ignored contents', () => {
 
         const { cssRules: [rule] } = createStyleSheet(`
             @VIEW-TRANSITION {
@@ -1896,7 +1896,7 @@ describe('CSS grammar', () => {
         expect(rule.navigation).toBeUndefined()
         expect(rule.types).toEqual(['type'])
     })
-    it('ignores invalid contents in a rule nested in @font-feature-values', () => {
+    test('font feature value type rule - invalid and ignored contents', () => {
 
         const { cssRules: [rule] } = createStyleSheet(`
             @font-feature-values family {
@@ -1955,7 +1955,7 @@ describe('CSS grammar', () => {
 
         valid.forEach(([type, descriptor, value]) => expect(rule[type].get(descriptor)).toEqual(value))
     })
-    it('ignores invalid contents in a keyframe rule', () => {
+    test('keyframe rule - invalid and ignored contents', () => {
 
         const { cssRules: [{ cssRules: [rule] }] } = createStyleSheet(`
             @keyframes animation {
@@ -1982,7 +1982,7 @@ describe('CSS grammar', () => {
         expect(rule.style.bottom).toBe('{var(--custom)}')
         expect(rule.style.animationTimingFunction).toBe('ease')
     })
-    it('ignores invalid contents in a margin rule', () => {
+    test('margin rule - invalid and ignored contents', () => {
 
         const { cssRules: [{ cssRules: [rule] }] } = createStyleSheet(`
             @page {
@@ -2009,7 +2009,7 @@ describe('CSS grammar', () => {
         expect(rule.style.marginBottom).toBe('{var(--custom)}')
         expect(rule.style.marginRight).toBe('1px')
     })
-    it('ignores invalid contents in a nested group rule', () => {
+    test('nested group rule - invalid and ignored contents', () => {
 
         const { cssRules: [{ cssRules: [rule] }] } = createStyleSheet(`
             style {
@@ -2075,7 +2075,7 @@ describe('CSS grammar', () => {
         expect(rule.cssRules[0].style.right).toBe('1px')
         expect(rule.style).toBeUndefined()
     })
-    it('ignores invalid contents in a nested style rule', () => {
+    test('nested style rule - invalid and ignored contents', () => {
 
         const { cssRules: [{ cssRules: [rule] }] } = createStyleSheet(`
             style {
@@ -2140,7 +2140,7 @@ describe('CSS grammar', () => {
         expect(rule.style.bottom).toBe('{var(--custom)}')
         expect(rule.style.right).toBe('1px')
     })
-    it('ignores invalid contents in a style rule', () => {
+    test('style rule - invalid and ignored contents', () => {
 
         const { cssRules: [rule] } = createStyleSheet(`
             style {
@@ -2203,16 +2203,16 @@ describe('CSS grammar', () => {
         expect(rule.style.bottom).toBe('{var(--custom)}')
         expect(rule.style.right).toBe('1px')
     })
-    it('ignores @font-palette-values missing a declaration for font-family', () => {
+    test('@font-palette-values - missing declaration for font-family', () => {
         expect(createStyleSheet('@font-palette-values --palette {}').cssRules).toHaveLength(0)
     })
-    it('ignores @property missing a declaration for inherits', () => {
+    test('@property - missing declaration for inherits', () => {
         expect(createStyleSheet('@property --custom { syntax: "*"; initial-value: 1; }').cssRules).toHaveLength(0)
     })
-    it('ignores @property missing a declaration for syntax', () => {
+    test('@property - missing declaration for syntax', () => {
         expect(createStyleSheet('@property --custom { inherits: true; initial-value: 1; }').cssRules).toHaveLength(0)
     })
-    it('ignores @property with initial-value declared with an invalid value', () => {
+    test('@property - invalid initial-value', () => {
 
         const invalid = [
             // Invalid syntax
@@ -2266,7 +2266,7 @@ describe('CSS grammar', () => {
                 expect(styleSheet.cssRules).toHaveLength(index)
             }))
     })
-    it('ignores a style rule whose prelude includes an undeclared namespace prefix', () => {
+    test('style rule - invalid prelude containing an undeclared namespace prefix', () => {
 
         const input = `
             @namespace svg "http://www.w3.org/2000/svg";
@@ -2289,7 +2289,7 @@ describe('CSS grammar', () => {
         expect(style.fill).toBe('green')
     })
     // Legacy rules
-    it('parses a vendor prefixed rule', () => {
+    test('vendor prefixed rules', () => {
         const { cssRules: [keyframesRule] } = createStyleSheet('@-webkit-keyframes animation {}')
         expect(CSSKeyframesRule.is(keyframesRule)).toBeTruthy()
         expect(keyframesRule.cssText).toBe('@keyframes animation {}')
