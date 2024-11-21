@@ -552,7 +552,10 @@ describe('backtracking', () => {
         expect(parse('<angle-percentage>? <length-percentage>', 'calc(1%)')).toBe('calc(1%)')
     })
 })
-describe('optional whitespace', () => {
+describe('whitespaces', () => {
+    test('consecutive', () => {
+        expect(parse('a{2}', 'a /**/ /**/ /**/ a')).toBe('a a')
+    })
     test('omitted', () => {
         expect(parse('a a', 'a/**/a')).toBe('a a')
     })
@@ -797,7 +800,7 @@ describe('<any-value>', () => {
             .toMatchObject(list([identToken('any'), identToken('value')], ' ', ['<any-value>']))
     })
     test('valid', () => {
-        expect(parse('<any-value>', '  /**/  !1e0;  /**/  ')).toBe('! 1;')
+        expect(parse('<any-value>', '  /**/  !1/**/1e0;  /**/  ')).toBe('! 1 1;')
     })
 })
 describe('<declaration-value>', () => {
@@ -822,7 +825,7 @@ describe('<declaration-value>', () => {
             .toMatchObject(list([identToken('declaration'), identToken('value')], ' ', ['<declaration-value>']))
     })
     test('valid', () => {
-        expect(parse('<declaration-value>', '  /**/  1e0  /**/  ')).toBe('1')
+        expect(parse('<declaration-value>', '  /**/  1/**/1e0  /**/  ')).toBe('1 1')
         expect(parse('<declaration-value>', '" "')).toBe('" "')
     })
 })
@@ -841,8 +844,7 @@ describe('<declaration>', () => {
     })
     test('valid', () => {
         const valid = [
-            ['  /**/  opacity :1e0 !important  /**/  ', 'opacity: 1 !important'],
-            ['--custom:  /**/  1e0 !important  /**/  ', '--custom: 1e0 !important'],
+            ['  /**/  opacity :1/**/1e0 !important  /**/  ', 'opacity: 1 1 !important'],
             ['--custom:', '--custom: '],
         ]
         valid.forEach(([input, expected]) => expect(parse('<declaration>', input)).toBe(expected))
