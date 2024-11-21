@@ -796,11 +796,11 @@ describe('<any-value>', () => {
             expect(parse(definition, input, false)).toBeNull())
     })
     test('representation', () => {
-        expect(parse('<any-value>', 'any value', false))
-            .toMatchObject(list([identToken('any'), identToken('value')], ' ', ['<any-value>']))
+        const value = list([identToken('any'), delimiter(' '), identToken('value')], '', ['<any-value>'])
+        expect(parse('<any-value>', 'any value', false)).toMatchObject(value)
     })
     test('valid', () => {
-        expect(parse('<any-value>', '  /**/  !1/**/1e0;  /**/  ')).toBe('! 1 1;')
+        expect(parse('<any-value>', '  /**/  !1/**/1e0;  /**/  ')).toBe('!1 1;')
     })
 })
 describe('<declaration-value>', () => {
@@ -821,8 +821,8 @@ describe('<declaration-value>', () => {
             expect(parse(definition, input, false)).toBeNull())
     })
     test('representation', () => {
-        expect(parse('<declaration-value>', 'declaration value', false))
-            .toMatchObject(list([identToken('declaration'), identToken('value')], ' ', ['<declaration-value>']))
+        const value = list([identToken('declaration'), delimiter(' '), identToken('value')], '', ['<declaration-value>'])
+        expect(parse('<declaration-value>', 'declaration value', false)).toMatchObject(value)
     })
     test('valid', () => {
         expect(parse('<declaration-value>', '  /**/  1/**/1e0  /**/  ')).toBe('1 1')
@@ -839,12 +839,13 @@ describe('<declaration>', () => {
             important: true,
             name: 'color',
             types: ['<declaration>'],
-            value: list([identToken('green')]),
+            value: list([identToken('green')], ''),
         })
     })
     test('valid', () => {
         const valid = [
-            ['  /**/  opacity :1/**/1e0 !important  /**/  ', 'opacity: 1 1 !important'],
+            ['  /**/  opacity :!1/**/1e0 !important  /**/  ', 'opacity: !1 1 !important'],
+            ['--custom:  /**/  1e0 !important  /**/  ', '--custom: 1e0 !important'],
             ['--custom:', '--custom: '],
         ]
         valid.forEach(([input, expected]) => expect(parse('<declaration>', input)).toBe(expected))

@@ -686,10 +686,10 @@ describe('arbitrary substitution', () => {
             ['random-item(--key, random-item(--key, 1))'],
             ['var(--custom, var(--custom))'],
             // Serialize the list of tokens
-            ['  /**/  attr(  name, /**/ 1e0 /**/  ', 'attr(name, 1)'],
-            ['  /**/  env(  name, /**/ 1e0 /**/  ', 'env(name, 1)'],
-            ['  /**/  random-item(  --key, /**/ 1e0 /**/  ', 'random-item(--key, 1)'],
-            ['  /**/  var(  --custom, /**/ 1e0 /**/  ', 'var(--custom, 1)'],
+            ['  /**/ !1 1e0 attr(  name, /**/ 1e0 /**/  ', '!1 1 attr(name, 1)'],
+            ['  /**/ !1 1e0 env(  name, /**/ 1e0 /**/  ', '!1 1 env(name, 1)'],
+            ['  /**/ !1 1e0 random-item(  --key, /**/ 1e0 /**/  ', '!1 1 random-item(--key, 1)'],
+            ['  /**/ !1 1e0 var(  --custom, /**/ 1e0 /**/  ', '!1 1 var(--custom, 1)'],
             // Non-strict comma-containing production
             ['var(--custom,,)'],
             ['var(--custom, 1 {})'],
