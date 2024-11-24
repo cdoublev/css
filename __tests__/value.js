@@ -4249,8 +4249,8 @@ describe('<media-query-list>', () => {
         expect(parse('<media-query-list>', 'all', false, mediaQueryContext)).toMatchObject(mediaQueryList)
     })
     test('valid', () => {
-        expect(parse('<media-query-list>', ';, 1, (condition)', true, mediaQueryContext))
-            .toBe('not all, not all, (condition)')
+        expect(parse('<media-query-list>', ';, 1, (condition),', true, mediaQueryContext))
+            .toBe('not all, not all, (condition), not all')
         expect(parse('<media-query-list>', 'all and (condition)', true, mediaQueryContext))
             .toBe('(condition)')
     })
