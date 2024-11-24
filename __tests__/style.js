@@ -328,8 +328,15 @@ describe('CSSFontFaceDescriptors', () => {
         // Priority
         style.setProperty('font-weight', '1', 'important')
         expect(style.fontWeight).toBe('')
+        style.setProperty('size-adjust', '1px', 'important')
+        expect(style.sizeAdjust).toBe('')
 
         const invalid = [
+            // Cascade or element-dependent substitution
+            ['initial'],
+            ['inherit(--custom)'],
+            // Cascade-dependent substitution
+            ['var(--custom)'],
             // Element-dependent substitution
             ['attr(name)'],
             ['random-item(--key, 1)', 'random-item(--key, 1%)'],
@@ -337,12 +344,8 @@ describe('CSSFontFaceDescriptors', () => {
             ['toggle(1)', 'toggle(1%)'],
             ['calc-mix(0, 1, 1)', 'calc-mix(0, 1%, 1%)'],
             ['container-progress(aspect-ratio, 1, 1)', 'calc(1% * container-progress(aspect-ratio, 1, 1))'],
-            ['inherit(--custom)'],
             ['random(1, 1)', 'random(1%, 1%)'],
             ['sibling-count()', 'calc(1% * sibling-count())'],
-            // Cascade-dependent substitution
-            ['var(--custom)'],
-            ['initial'],
         ]
         invalid.forEach(([fontWeight, sizeAdjust = fontWeight]) => {
             style.fontWeight = fontWeight
@@ -430,6 +433,16 @@ describe('CSSKeyframeProperties', () => {
         style.fontWeight = 'calc(progress(1, 0, 1))'
         expect(style.fontWeight).toBe('calc(1)')
 
+        // Cascade or element-dependent substitution
+        style.fontWeight = 'initial'
+        expect(style.fontWeight).toBe('initial')
+        style.fontWeight = 'inherit(--custom)'
+        expect(style.fontWeight).toBe('inherit(--custom)')
+
+        // Cascade-dependent substitution
+        style.fontWeight = 'var(--custom)'
+        expect(style.fontWeight).toBe('var(--custom)')
+
         // Element-dependent substitution
         style.fontWeight = 'attr(name)'
         expect(style.fontWeight).toBe('attr(name)')
@@ -443,18 +456,10 @@ describe('CSSKeyframeProperties', () => {
         expect(style.fontWeight).toBe('calc-mix(0, 1, 1)')
         style.fontWeight = 'container-progress(aspect-ratio, 1, 1)'
         expect(style.fontWeight).toBe('container-progress(aspect-ratio, 1, 1)')
-        style.fontWeight = 'inherit(--custom)'
-        expect(style.fontWeight).toBe('inherit(--custom)')
         style.fontWeight = 'random(1, 1)'
         expect(style.fontWeight).toBe('random(1, 1)')
         style.fontWeight = 'sibling-count()'
         expect(style.fontWeight).toBe('sibling-count()')
-
-        // Cascade-dependent substitution
-        style.fontWeight = 'var(--custom)'
-        expect(style.fontWeight).toBe('var(--custom)')
-        style.fontWeight = 'initial'
-        expect(style.fontWeight).toBe('initial')
     })
 })
 describe('CSSMarginDescriptors', () => {
@@ -505,13 +510,15 @@ describe('CSSMarginDescriptors', () => {
         style.fontWeight = 'calc(progress(1, 0, 1))'
         expect(style.fontWeight).toBe('calc(1)')
 
-        // Cascade-dependent substitution
-        style.fontWeight = 'inherit(--custom)'
-        expect(style.fontWeight).toBe('inherit(--custom)')
-        style.fontWeight = 'var(--custom)'
-        expect(style.fontWeight).toBe('var(--custom)')
+        // Cascade or element-dependent substitution
         style.fontWeight = 'initial'
         expect(style.fontWeight).toBe('initial')
+        style.fontWeight = 'inherit(--custom)'
+        expect(style.fontWeight).toBe('inherit(--custom)')
+
+        // Cascade-dependent substitution
+        style.fontWeight = 'var(--custom)'
+        expect(style.fontWeight).toBe('var(--custom)')
     })
 })
 describe('CSSPageDescriptors', () => {
@@ -569,19 +576,21 @@ describe('CSSPageDescriptors', () => {
         expect(style.fontWeight).toBe('calc(1)')
         expect(style.size).toBe('calc(1px)')
 
-        // Cascade-dependent substitution
-        style.fontWeight = 'inherit(--custom)'
-        style.size = 'inherit(--custom)'
-        expect(style.fontWeight).toBe('inherit(--custom)')
-        expect(style.size).toBe('inherit(--custom)')
-        style.fontWeight = 'var(--custom)'
-        style.size = 'var(--custom)'
-        expect(style.fontWeight).toBe('var(--custom)')
-        expect(style.size).toBe('var(--custom)')
+        // Cascade or element-dependent substitution
         style.fontWeight = 'initial'
         style.size = 'initial'
         expect(style.fontWeight).toBe('initial')
         expect(style.size).toBe('initial')
+        style.fontWeight = 'inherit(--custom)'
+        style.size = 'inherit(--custom)'
+        expect(style.fontWeight).toBe('inherit(--custom)')
+        expect(style.size).toBe('inherit(--custom)')
+
+        // Cascade-dependent substitution
+        style.fontWeight = 'var(--custom)'
+        style.size = 'var(--custom)'
+        expect(style.fontWeight).toBe('var(--custom)')
+        expect(style.size).toBe('var(--custom)')
 
         // Specific serialization rule
         style.size = '1px 1px'
@@ -618,6 +627,16 @@ describe('CSSPositionTryDescriptors', () => {
         style.top = 'calc(1px * progress(1, 0, 1))'
         expect(style.top).toBe('calc(1px)')
 
+        // Cascade or element-dependent substitution
+        style.top = 'initial'
+        expect(style.top).toBe('initial')
+        style.top = 'inherit(--custom)'
+        expect(style.top).toBe('inherit(--custom)')
+
+        // Cascade-dependent substitution
+        style.top = 'var(--custom)'
+        expect(style.top).toBe('var(--custom)')
+
         // Element-dependent substitution
         style.top = 'attr(name)'
         expect(style.top).toBe('attr(name)')
@@ -635,14 +654,6 @@ describe('CSSPositionTryDescriptors', () => {
         expect(style.top).toBe('random(1px, 1px)')
         style.top = 'calc(1px * sibling-count())'
         expect(style.top).toBe('calc(1px * sibling-count())')
-
-        // Cascade-dependent substitution
-        style.top = 'inherit(--custom)'
-        expect(style.top).toBe('inherit(--custom)')
-        style.top = 'var(--custom)'
-        expect(style.top).toBe('var(--custom)')
-        style.top = 'initial'
-        expect(style.top).toBe('initial')
     })
 })
 

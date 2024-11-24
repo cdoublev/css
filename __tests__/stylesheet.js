@@ -18,43 +18,21 @@ const {
 const { SET_INVALID_KEY_TEXT_ERROR } = require('../lib/cssom/CSSKeyframeRule-impl.js')
 const { SET_INVALID_NAME_ERROR } = require('../lib/cssom/CSSKeyframesRule-impl.js')
 const { INVALID_FONT_FEATURE_VALUE_ERROR } = require('../lib/cssom/CSSFontFeatureValuesMap-impl.js')
-const { cssPropertyToIDLAttribute } = require('../lib/utils/string.js')
-const descriptors = require('../lib/descriptors/definitions.js')
-const root = require('../lib/rules/definitions.js')
 
 const {
-    CSSColorProfileRule,
-    CSSContainerRule,
-    CSSCounterStyleRule,
     CSSImportRule,
     CSSFontFaceDescriptors,
-    CSSFontFaceRule,
-    CSSFontFeatureValuesMap,
-    CSSFontFeatureValuesRule,
-    CSSFontPaletteValuesRule,
-    CSSFunctionRule,
     CSSKeyframeProperties,
-    CSSKeyframeRule,
     CSSKeyframesRule,
-    CSSLayerBlockRule,
     CSSLayerStatementRule,
     CSSMarginDescriptors,
-    CSSMarginRule,
-    CSSMediaRule,
     CSSNamespaceRule,
     CSSPageDescriptors,
-    CSSPageRule,
     CSSPositionTryDescriptors,
-    CSSPositionTryRule,
-    CSSPropertyRule,
     CSSRuleList,
-    CSSScopeRule,
-    CSSStartingStyleRule,
     CSSStyleProperties,
     CSSStyleRule,
     CSSStyleSheet,
-    CSSSupportsRule,
-    CSSViewTransitionRule,
     MediaList,
 } = cssom
 
@@ -307,17 +285,17 @@ describe('CSSRuleList.length', () => {
 describe('CSSColorProfileRule', () => {
     test('properties', () => {
 
-        const styleSheet = createStyleSheet('@color-profile --profile { src: url("profile.icc") }')
+        const styleSheet = createStyleSheet('@color-profile --name { src: url("profile.icc") }')
         const rule = styleSheet.cssRules[0]
 
         // CSSRule
-        expect(rule.cssText).toBe('@color-profile --profile { src: url("profile.icc"); }')
+        expect(rule.cssText).toBe('@color-profile --name { src: url("profile.icc"); }')
         expect(rule.parentRule).toBeNull()
         expect(rule.parentStyleSheet).toBe(styleSheet)
 
         // CSSColorProfileRule
         expect(rule.components).toBe('')
-        expect(rule.name).toBe('--profile')
+        expect(rule.name).toBe('--name')
         expect(rule.src).toBe('url("profile.icc")')
         expect(rule.renderingIntent).toBe('')
     })
@@ -325,11 +303,11 @@ describe('CSSColorProfileRule', () => {
 describe('CSSContainerRule', () => {
     test('properties', () => {
 
-        const styleSheet = createStyleSheet('@container (1px < width) { style {} }')
+        const styleSheet = createStyleSheet('@container name { style {} }')
         const rule = styleSheet.cssRules[0]
 
         // CSSRule
-        expect(rule.cssText).toBe('@container (1px < width) { style {} }')
+        expect(rule.cssText).toBe('@container name { style {} }')
         expect(rule.parentRule).toBeNull()
         expect(rule.parentStyleSheet).toBe(styleSheet)
 
@@ -337,26 +315,26 @@ describe('CSSContainerRule', () => {
         expect(CSSRuleList.is(rule.cssRules)).toBeTruthy()
 
         // CSSConditionRule
-        expect(rule.conditionText).toBe('(1px < width)')
+        expect(rule.conditionText).toBe('name')
     })
 })
 describe('CSSCounterStyleRule', () => {
     test('properties', () => {
 
-        let styleSheet = createStyleSheet('@counter-style counter { system: fixed 1; speak-as: auto }')
+        let styleSheet = createStyleSheet('@counter-style name { system: fixed 1; speak-as: auto }')
         let rule = styleSheet.cssRules[0]
 
         // CSSRule
-        expect(rule.cssText).toBe('@counter-style counter { speak-as: auto; system: fixed; }')
+        expect(rule.cssText).toBe('@counter-style name { speak-as: auto; system: fixed; }')
         expect(rule.parentRule).toBeNull()
         expect(rule.parentStyleSheet).toBe(styleSheet)
 
         // CSSCounterStyleRule
-        expect(rule.name).toBe('counter')
+        expect(rule.name).toBe('name')
         rule.name = 'decimal'
-        expect(rule.name).toBe('counter')
+        expect(rule.name).toBe('name')
         rule.name = ''
-        expect(rule.name).toBe('counter')
+        expect(rule.name).toBe('name')
         rule.name = '\n'
         expect(rule.name).toBe('\\a')
         rule.speakAs = 'none'
@@ -379,7 +357,7 @@ describe('CSSCounterStyleRule', () => {
         expect(rule.system).toBe('fixed 2')
 
         // Cyclic (or symbolic)
-        styleSheet = createStyleSheet('@counter-style counter {}')
+        styleSheet = createStyleSheet('@counter-style name {}')
         rule = styleSheet.cssRules[0]
         rule.system = 'cyclic'
         expect(rule.system).toBe('')
@@ -395,7 +373,7 @@ describe('CSSCounterStyleRule', () => {
         expect(rule.system).toBe('cyclic')
 
         // Numeric (or alphabetic)
-        styleSheet = createStyleSheet('@counter-style counter {}')
+        styleSheet = createStyleSheet('@counter-style name {}')
         rule = styleSheet.cssRules[0]
         rule.system = 'numeric'
         expect(rule.system).toBe('')
@@ -417,7 +395,7 @@ describe('CSSCounterStyleRule', () => {
         expect(rule.system).toBe('numeric')
 
         // Additive
-        styleSheet = createStyleSheet('@counter-style counter {}')
+        styleSheet = createStyleSheet('@counter-style name {}')
         rule = styleSheet.cssRules[0]
         rule.system = 'additive'
         expect(rule.system).toBe('')
@@ -435,11 +413,11 @@ describe('CSSCounterStyleRule', () => {
         expect(rule.system).toBe('additive')
 
         // Extended counter style
-        styleSheet = createStyleSheet('@counter-style counter { symbols: one; additive-symbols: 1 one }')
+        styleSheet = createStyleSheet('@counter-style name { symbols: one; additive-symbols: 1 one }')
         rule = styleSheet.cssRules[0]
         rule.system = 'extends decimal'
         expect(rule.system).toBe('')
-        styleSheet = createStyleSheet('@counter-style counter {}')
+        styleSheet = createStyleSheet('@counter-style name {}')
         rule = styleSheet.cssRules[0]
         rule.system = 'extends decimal'
         expect(rule.system).toBe('extends decimal')
@@ -477,26 +455,26 @@ describe('CSSFontFaceRule', () => {
 describe('CSSFontFeatureValuesRule', () => {
     test('properties', () => {
 
-        const styleSheet = createStyleSheet('@font-feature-values family { font-display: block }')
+        const styleSheet = createStyleSheet('@font-feature-values name { font-display: block }')
         const rule = styleSheet.cssRules[0]
 
         // CSSRule
-        expect(rule.cssText).toBe('@font-feature-values family { font-display: block; }')
+        expect(rule.cssText).toBe('@font-feature-values name { font-display: block; }')
         expect(rule.parentRule).toBeNull()
         expect(rule.parentStyleSheet).toBe(styleSheet)
 
         // CSSFontFeatureValuesRule
-        expect(rule.fontFamily).toBe('family')
+        expect(rule.fontFamily).toBe('name')
 
         // CSSFontFeatureValuesMap
         rule.styleset.set('double-W', 0)
         expect(rule.styleset.get('double-W')).toEqual([0])
-        expect(rule.cssText).toBe('@font-feature-values family { font-display: block; @styleset { double-W: 0; } }')
+        expect(rule.cssText).toBe('@font-feature-values name { font-display: block; @styleset { double-W: 0; } }')
         rule.styleset.set('double-W', [0, 1])
         expect(rule.styleset.get('double-W')).toEqual([0, 1])
-        expect(rule.cssText).toBe('@font-feature-values family { font-display: block; @styleset { double-W: 0 1; } }')
+        expect(rule.cssText).toBe('@font-feature-values name { font-display: block; @styleset { double-W: 0 1; } }')
         rule.styleset.delete('double-W')
-        expect(rule.cssText).toBe('@font-feature-values family { font-display: block; }')
+        expect(rule.cssText).toBe('@font-feature-values name { font-display: block; }')
         expect(() => rule.annotation.set('boxed', [0, 1])).toThrow(INVALID_FONT_FEATURE_VALUE_ERROR)
         expect(() => rule.annotation.set('boxed', [-1])).toThrow(INVALID_FONT_FEATURE_VALUE_ERROR)
         expect(() => rule.characterVariant.set('alpha-2', [0, 1, 2])).toThrow(INVALID_FONT_FEATURE_VALUE_ERROR)
@@ -516,8 +494,8 @@ describe('CSSFontPaletteValuesRule', () => {
     test('properties', () => {
 
         const styleSheet = createStyleSheet(`
-            @font-palette-values --palette {
-                font-family: my-font;
+            @font-palette-values --name {
+                font-family: name;
                 base-palette: light;
                 override-colors: 0 green;
             }
@@ -525,12 +503,12 @@ describe('CSSFontPaletteValuesRule', () => {
         const rule = styleSheet.cssRules[0]
 
         // CSSRule
-        expect(rule.cssText).toBe('@font-palette-values --palette { base-palette: light; font-family: my-font; override-colors: 0 green; }')
+        expect(rule.cssText).toBe('@font-palette-values --name { base-palette: light; font-family: name; override-colors: 0 green; }')
         expect(rule.parentRule).toBeNull()
         expect(rule.parentStyleSheet).toBe(styleSheet)
 
         // CSSFontPaletteValuesRule
-        expect(rule.fontFamily).toBe('my-font')
+        expect(rule.fontFamily).toBe('name')
         expect(rule.basePalette).toBe('light')
         expect(rule.overrideColors).toBe('0 green')
     })
@@ -558,7 +536,7 @@ describe('CSSImportRule', () => {
 describe('CSSKeyframeRule', () => {
     test('properties', () => {
 
-        const styleSheet = createStyleSheet('@keyframes animation { to { color: green } }')
+        const styleSheet = createStyleSheet('@keyframes name { to { color: green } }')
         const parentRule = styleSheet.cssRules[0]
         const rule = parentRule.cssRules[0]
 
@@ -581,11 +559,11 @@ describe('CSSKeyframeRule', () => {
 describe('CSSKeyframesRule', () => {
     test('properties', () => {
 
-        const styleSheet = createStyleSheet('@keyframes animation { 100% {} }')
+        const styleSheet = createStyleSheet('@keyframes name { 100% {} }')
         const rule = styleSheet.cssRules[0]
 
         // CSSRule
-        expect(rule.cssText).toBe('@keyframes animation { 100% {} }')
+        expect(rule.cssText).toBe('@keyframes name { 100% {} }')
         expect(rule.parentRule).toBeNull()
         expect(rule.parentStyleSheet).toBe(styleSheet)
 
@@ -593,7 +571,7 @@ describe('CSSKeyframesRule', () => {
         expect(CSSRuleList.is(rule.cssRules)).toBeTruthy()
         expect(rule).toHaveLength(1)
         expect(rule[0]).toBe(rule.cssRules[0])
-        expect(rule.name).toBe('animation')
+        expect(rule.name).toBe('name')
         rule.name = '\n'
         expect(rule.name).toBe('\\a')
         expect(rule.cssText).toBe('@keyframes \\a { 100% {} }')
@@ -601,7 +579,7 @@ describe('CSSKeyframesRule', () => {
     })
     test('methods', () => {
 
-        const { cssRules: [rule] } = createStyleSheet('@keyframes animation {}')
+        const { cssRules: [rule] } = createStyleSheet('@keyframes name {}')
         const keyframes = rule.cssRules
 
         expect(keyframes).toHaveLength(0)
@@ -647,11 +625,11 @@ describe('CSSKeyframesRule', () => {
 describe('CSSLayerBlockRule', () => {
     test('properties', () => {
 
-        const styleSheet = createStyleSheet('@layer reset { style {} }')
+        const styleSheet = createStyleSheet('@layer name { style {} }')
         const rule = styleSheet.cssRules[0]
 
         // CSSRule
-        expect(rule.cssText).toBe('@layer reset { style {} }')
+        expect(rule.cssText).toBe('@layer name { style {} }')
         expect(rule.parentRule).toBeNull()
         expect(rule.parentStyleSheet).toBe(styleSheet)
 
@@ -659,22 +637,22 @@ describe('CSSLayerBlockRule', () => {
         expect(CSSRuleList.is(rule.cssRules)).toBeTruthy()
 
         // CSSLayerBlockRule
-        expect(rule.name).toBe('reset')
+        expect(rule.name).toBe('name')
     })
 })
 describe('CSSLayerStatementRule', () => {
     test('properties', () => {
 
-        const styleSheet = createStyleSheet('@layer reset;')
+        const styleSheet = createStyleSheet('@layer name;')
         const rule = styleSheet.cssRules[0]
 
         // CSSRule
-        expect(rule.cssText).toBe('@layer reset;')
+        expect(rule.cssText).toBe('@layer name;')
         expect(rule.parentRule).toBeNull()
         expect(rule.parentStyleSheet).toBe(styleSheet)
 
         // CSSLayerStatementRule
-        expect(rule.nameList).toBe('reset')
+        expect(rule.nameList).toBe('name')
     })
 })
 describe('CSSMarginRule', () => {
@@ -757,39 +735,34 @@ describe('CSSPageRule', () => {
 describe('CSSPositionTryRule', () => {
     test('properties', () => {
 
-        const styleSheet = createStyleSheet('@position-try --position { top: 1px } }')
+        const styleSheet = createStyleSheet('@position-try --name { top: 1px } }')
         const rule = styleSheet.cssRules[0]
 
         // CSSRule
-        expect(rule.cssText).toBe('@position-try --position { top: 1px; }')
+        expect(rule.cssText).toBe('@position-try --name { top: 1px; }')
         expect(rule.parentRule).toBeNull()
         expect(rule.parentStyleSheet).toBe(styleSheet)
 
         // CSSPositionTryRule
-        expect(rule.name).toBe('--position')
+        expect(rule.name).toBe('--name')
         expect(CSSPositionTryDescriptors.is(rule.style)).toBeTruthy()
         rule.style.top = ''
-        expect(rule.cssText).toBe('@position-try --position {}')
+        expect(rule.cssText).toBe('@position-try --name {}')
     })
 })
 describe('CSSPropertyRule', () => {
     test('properties', () => {
 
-        const styleSheet = createStyleSheet(`
-            @property --custom {
-                syntax: "*";
-                inherits: true;
-            }
-        `)
+        const styleSheet = createStyleSheet('@property --name { syntax: "*"; inherits: true }')
         const rule = styleSheet.cssRules[0]
 
         // CSSRule
-        expect(rule.cssText).toBe('@property --custom { syntax: "*"; inherits: true; }')
+        expect(rule.cssText).toBe('@property --name { syntax: "*"; inherits: true; }')
         expect(rule.parentRule).toBeNull()
         expect(rule.parentStyleSheet).toBe(styleSheet)
 
         // CSSPropertyRule
-        expect(rule.name).toBe('--custom')
+        expect(rule.name).toBe('--name')
         expect(rule.syntax).toBe('"*"')
         expect(rule.inherits).toBe('true')
         expect(rule.initialValue).toBe('')
@@ -952,12 +925,12 @@ describe('CSSViewTransitionRule', () => {
  * @see {@link https://github.com/w3c/csswg-drafts/issues/8778}
  *
  * The specification wants the setter of CSSRule.cssText to do nothing, which
- * requires implementing it in every CSSRule child class, as one cannot set a
- * property when its getter is defined on the child class and its setter is
- * defined on the parent class: in strict mode, it throws an error.
+ * requires implementing it in every CSSRule subclass, since a property cannot
+ * be set when its setter is defined on the parent class and its getter on the
+ * subclass: in strict mode, this throws an error.
  *
- * Instead, CSSRule.cssText is defined as read-only, which has the same effect
- * than implementing a setter on CSSRule, but prevents shadowing the attribute.
+ * Instead, CSSRule.cssText is defined as read-only, which produces the expected
+ * behavior, but throw an error in strict mode.
  */
 test('Setting CSSRule.cssText does nothing', () => {
     const { cssRules: [rule] } = createStyleSheet('style {}')
@@ -970,23 +943,22 @@ describe('CSS grammar', () => {
     test('top-level - invalid contents', () => {
 
         const { cssRules } = createStyleSheet(`
-            /* invalid */
-            @unknown {}
-            @unknown;
+            @charset "utf-8";
+
             @namespace svg "http://www.w3.org/2000/svg" {}
             @media;
             style; {}
-            @annotation {}
-            @charset "utf-8";
-            @top-left {}
-            0% {}
+
             color: red; {}
             --custom:hover {}
 
-            /* invalid before valid */
+            @annotation {}
+            @top-left {}
+            0% {}
+
             @invalid } style {}
-            style-1 { @layer reset }
-            @invalid } @layer reset;
+            style-1 { @layer name }
+            @invalid } @layer name;
             style-2 { style }
             invalid } style {}
             style-3 { --custom:
@@ -1025,7 +997,7 @@ describe('CSS grammar', () => {
 
         const { cssRules } = createStyleSheet(`
             @import "./global.css";
-            @layer reset;
+            @layer name;
             @import "./page.css";
         `)
 
@@ -1035,7 +1007,7 @@ describe('CSS grammar', () => {
     test('top-level - @import following @layer or ignored rules', () => {
 
         const { cssRules } = createStyleSheet(`
-            @layer reset;
+            @layer name;
             @charset "utf-8";
             @namespace <bad-string-or-url>;
             @import "./global.css";
@@ -1071,7 +1043,7 @@ describe('CSS grammar', () => {
 
         const { cssRules } = createStyleSheet(`
             @namespace html "https://www.w3.org/1999/xhtml/";
-            @layer reset;
+            @layer name;
             @namespace svg "http://www.w3.org/2000/svg";
         `)
 
@@ -1082,7 +1054,7 @@ describe('CSS grammar', () => {
 
         const { cssRules } = createStyleSheet(`
             @import "./global.css";
-            @layer reset;
+            @layer name;
             @namespace svg "http://www.w3.org/2000/svg";
         `)
 
@@ -1092,7 +1064,7 @@ describe('CSS grammar', () => {
     test('top-level - @namespace following @import, @layer, or ignored rule(s)', () => {
 
         const { cssRules } = createStyleSheet(`
-            @layer reset;
+            @layer name;
             @import "./global.css";
             @charset "utf-8";
             @namespace svg "http://www.w3.org/2000/svg";
@@ -1115,569 +1087,586 @@ describe('CSS grammar', () => {
         expect(CSSNamespaceRule.is(cssRules[1])).toBeTruthy()
     })
     // Rule contents
-    test('@color-profile - invalid and ignored contents', () => {
+    test('@color-profile - invalid block contents', () => {
+        const sheet = createStyleSheet(`
+            @color-profile --name {
 
-        const { cssRules: [rule] } = createStyleSheet(`
-            @COLOR-PROFILE --profile {
-
-                /* invalid */
                 style {}
-                color: red;
-                components: none;
-                --custom: value;
-                components: var(--custom);
-                src: url("profile-important.icc") !important;
-
-                /* valid */
-                SRC: url("profile.icc");
-            }
-        `)
-
-        expect(rule.cssRules).toBeUndefined()
-        expect(rule.style).toBeUndefined()
-        expect(rule.color).toBeUndefined()
-        expect(rule.components).toBe('')
-        expect(rule.src).toBe('url("profile.icc")')
-    })
-    test('@container - invalid and ignored contents', () => {
-
-        const { cssRules: [rule] } = createStyleSheet(`
-            @CONTAINER (1px < width) {
-
-                /* invalid */
-                @unknown {}
-                @unknown;
-                @media;
-                style;
-                @charset "utf-8";
-                @import "./global.css";
-                @namespace svg "http://www.w3.org/2000/svg";
-                @annotation {}
-                @top-left {}
-                0% {}
                 color: red;
                 --custom:hover {};
 
-                /* valid */
-                @color-profile --profile {}
-                @container (1px < width) {}
-                @counter-style counter {}
-                @font-face {}
-                @font-feature-values family {}
-                @font-palette-values --palette { font-family: my-font }
-                @function --name {}
-                @keyframes animation {}
-                @layer reset;
-                @media {}
-                @page {}
-                @position-try --position {}
-                @property --custom { syntax: "*"; inherits: false }
-                @scope {}
-                @starting-style {}
-                @supports (color: green) {}
-                @view-transition {}
-                style {}
+                components: env(name) {};
+                components: {} env(name);
+                components: none;
+                components: inherit(--custom);
+                components: var(--custom);
+                components: attr(name);
+                components: toggle(name);
+                components: name !important;
+
+                src: url("profile.icc");
             }
         `)
-
-        const valid = [
-            CSSColorProfileRule,
-            CSSContainerRule,
-            CSSCounterStyleRule,
-            CSSFontFaceRule,
-            CSSFontFeatureValuesRule,
-            CSSFontPaletteValuesRule,
-            CSSFunctionRule,
-            CSSKeyframesRule,
-            CSSLayerStatementRule,
-            CSSMediaRule,
-            CSSPageRule,
-            CSSPositionTryRule,
-            CSSPropertyRule,
-            CSSScopeRule,
-            CSSStartingStyleRule,
-            CSSSupportsRule,
-            CSSViewTransitionRule,
-            CSSStyleRule,
-        ]
-
-        expect(rule.cssRules).toHaveLength(valid.length)
-        valid.forEach((CSSRule, index) => expect(CSSRule.is(rule.cssRules[index])).toBeTruthy())
-        expect(rule.style).toBeUndefined()
+        expect(sheet.cssRules[0].cssText).toBe('@color-profile --name { src: url("profile.icc"); }')
     })
-    test('@counter-style - invalid and ignored contents', () => {
-
-        const { cssRules: [rule] } = createStyleSheet(`
-            @COUNTER-STYLE counter {
-
-                /* invalid */
-                style {}
-                color: red;
-                additive-symbols: 1 one, 2 two;
-                range: 1 0;
-                --custom: value;
-                additive-symbols: var(--custom);
-                system: cyclic !important;
-
-                /* valid */
-                SYSTEM: numeric;
-            }
-        `)
-
-        expect(rule.cssRules).toBeUndefined()
-        expect(rule.style).toBeUndefined()
-        expect(rule.color).toBeUndefined()
-        Object.keys(descriptors['@counter-style']).forEach(name =>
-            expect(rule[cssPropertyToIDLAttribute(name)]).toBe(name === 'system' ? 'numeric' : ''))
+    test('@color-profile - valid block contents', () => {
+        const input = '@COLOR-PROFILE --name { COMPONENTS: { env(name) }; src: first-valid(url("profile.icc")); }'
+        const sheet = createStyleSheet(input)
+        expect(sheet.cssRules[0].cssText).toBe(input.toLowerCase())
     })
-    test('@font-face - invalid and ignored contents', () => {
+    test('@container - invalid block contents', () => {
+        const sheet = createStyleSheet(`
+            @container name {
 
-        const { cssRules: [rule] } = createStyleSheet(`
-            @FONT-FACE {
-
-                /* invalid */
-                style {}
-                color: red;
-                src: invalid;
-                --custom: value;
-                font-style: var(--custom);
-                font-family: my-important-font !important;
-
-                /* valid */
-                FONT-FAMILY: my-font;
-            }
-        `)
-
-        expect(rule.cssRules).toBeUndefined()
-        expect(rule.style).toHaveLength(1)
-        expect(rule.style.color).toBeUndefined()
-        expect(rule.style.getPropertyValue('--custom')).toBe('')
-        expect(rule.style.fontStyle).toBe('')
-        expect(rule.style.fontFamily).toBe('my-font')
-    })
-    test('@font-feature-values - invalid and ignored contents', () => {
-
-        const { value: { rules } } = root.rules.find(rule => rule.name === '@font-feature-values')
-        const { cssRules: [rule] } = createStyleSheet(`
-            @FONT-FEATURE-VALUES family {
-
-                /* valid */
-                ${rules.map(rule => `${rule.name.toUpperCase()} {}`).join(' ')}
-                FONT-DISPLAY: block;
-
-                /* invalid */
-                @unknown {}
-                @unknown;
                 @media;
                 style;
+
                 @charset "utf-8";
                 @import "./global.css";
                 @namespace svg "http://www.w3.org/2000/svg";
                 @annotation {}
-                @color-profile --profile {}
-                @container (1px < width) {}
-                @counter-style counter {}
-                @font-face {}
-                @font-feature-values family {}
-                @font-palette-values --palette { font-family: my-font }
-                @function --name {}
-                @keyframes animation {}
-                @layer reset;
-                @media {}
-                @page {}
-                @position-try --position {}
-                @property --custom { syntax: "*"; inherits: false }
                 @top-left {}
-                @scope {}
-                @starting-style {}
-                @supports (color: red) {}
-                @view-transition {}
                 0% {}
-                style {}
+
                 color: red;
-                --custom: value;
-                font-display: var(--custom);
-                font-display: auto !important;
+                --custom:hover {};
+
+                @media {}
             }
         `)
+        expect(sheet.cssRules[0].cssText).toBe('@container name { @media {} }')
+    })
+    test('@container - valid block contents', () => {
+        const rules = [
+            '@color-profile --name {}',
+            '@container name {}',
+            '@counter-style name {}',
+            '@font-face {}',
+            '@font-feature-values name {}',
+            '@font-palette-values --name { font-family: name; }',
+            '@function --name {}',
+            '@keyframes name {}',
+            '@layer name;',
+            '@media {}',
+            '@page {}',
+            '@position-try --name {}',
+            '@property --name { syntax: "*"; inherits: false; }',
+            '@scope {}',
+            '@starting-style {}',
+            '@supports (color: green) {}',
+            '@view-transition {}',
+            'style:hover {}',
+        ]
+        const input = `@CONTAINER name { ${rules.join(' ')} }`
+        const sheet = createStyleSheet(input)
+        expect(sheet.cssRules[0].cssText).toBe(input.toLowerCase())
+    })
+    test('@counter-style - invalid block contents', () => {
+        const { cssRules: [rule1, rule2] } = createStyleSheet(`
+            @counter-style name-one {
 
-        expect(rule.cssRules).toBeUndefined()
-        expect(rule.style).toBeUndefined()
-        expect(rule.fontFamily).toBe('family')
-        rules.forEach(definition => {
-            const child = rule[cssPropertyToIDLAttribute(definition.name.slice(1))]
-            expect(CSSFontFeatureValuesMap.is(child)).toBeTruthy()
+                style {}
+                color: red;
+                --custom:hover {};
+
+                pad: env(name) {};
+                pad: {} env(name);
+                pad: initial;
+                pad: inherit(--custom);
+                pad: var(--custom);
+                pad: attr(name);
+                pad: toggle(symbolic);
+                pad: calc-mix(0, 1, 1) ' ';
+                pad: container-progress(aspect-ratio, 1, 1) ' ';
+                pad: 1 ' ' !important;
+                range: 1 0;
+
+                system: numeric;
+            }
+            @counter-style name-two {
+                system: numeric;
+                additive-symbols: 1 one, 2 two;
+            }
+        `)
+        expect(rule1.cssText).toBe('@counter-style name-one { system: numeric; }')
+        expect(rule2.cssText).toBe('@counter-style name-two { system: numeric; }')
+    })
+    test('@counter-style - valid block contents', () => {
+        const input = '@COUNTER-STYLE name { PAD: { env(name) }; system: first-valid(numeric); }'
+        const sheet = createStyleSheet(input)
+        expect(sheet.cssRules[0].cssText).toBe(input.toLowerCase())
+    })
+    test('@font-face - invalid block contents', () => {
+        const sheet = createStyleSheet(`
+            @font-face {
+
+                style {}
+                color: red;
+                --custom:hover {};
+
+                font-weight: env(name) {};
+                size-adjust: {} env(name);
+                font-weight: initial;
+                size-adjust: initial;
+                font-weight: inherit(--custom);
+                size-adjust: inherit(--custom);
+                font-weight: var(--custom);
+                size-adjust: var(--custom);
+                font-weight: attr(name);
+                size-adjust: attr(name);
+                font-weight: toggle(1);
+                size-adjust: toggle(1%);
+                font-weight: calc-mix(0, 1, 1);
+                size-adjust: calc-mix(0, 1%, 1%);
+                font-weight: container-progress(aspect-ratio, 1, 1);
+                size-adjust: calc(1% * container-progress(aspect-ratio, 1, 1));
+                font-weight: 1 !important;
+                size-adjust: 1px !important;
+
+                font-family: name;
+            }
+        `)
+        expect(sheet.cssRules[0].cssText).toBe('@font-face { font-family: name; }')
+    })
+    test('@font-face - valid block contents', () => {
+        const declarations = [
+            'FONT-WEIGHT: { env(name) }',
+            'SIZE-ADJUST: { env(name) }',
+            'font-weight: first-valid(1)',
+            'size-adjust: first-valid(1%)',
+        ]
+        declarations.forEach(declaration => {
+            const input = `@FONT-FACE { ${declaration}; }`
+            const sheet = createStyleSheet(input)
+            expect(sheet.cssRules[0].cssText).toBe(input.toLowerCase())
         })
     })
-    test('@font-palette-values - invalid and ignored contents', () => {
+    test('@font-feature-values - invalid block contents', () => {
+        const sheet = createStyleSheet(`
+            @font-feature-values name {
 
-        const { cssRules: [rule] } = createStyleSheet(`
-            @FONT-PALETTE-VALUES --palette {
+                @media;
+                style;
 
-                /* invalid */
-                style {}
+                @charset "utf-8";
+                @import "./global.css";
+                @namespace svg "http://www.w3.org/2000/svg";
+                @annotation {}
+                @color-profile --name {}
+                @container name {}
+                @counter-style name {}
+                @font-face {}
+                @font-feature-values name {}
+                @font-palette-values --name { font-family: name; }
+                @function --name {}
+                @keyframes name {}
+                @layer name;
+                @media {}
+                @page {}
+                @position-try --name {}
+                @property --name { syntax: "*"; inherits: false; }
+                @scope {}
+                @starting-style {}
+                @supports (color: green) {}
+                @top-left {}
+                @view-transition {}
+                style:hover {}
+                0% {}
+
                 color: red;
-                base-palette: invalid;
-                --custom: value;
-                base-palette: var(--custom);
-                font-family: my-important-font !important;
+                --custom:hover {};
 
-                /* valid */
-                FONT-FAMILY: my-font;
+                font-display: env(name) {};
+                font-display: {} env(name);
+                font-display: initial;
+                font-display: inherit(--custom);
+                font-display: var(--custom);
+                font-display: attr(name);
+                font-display: toggle(name);
+                font-display: swap !important;
+
+                font-display: block;
             }
         `)
-
-        expect(rule.cssRules).toBeUndefined()
-        expect(rule.style).toBeUndefined()
-        expect(rule.color).toBeUndefined()
-        expect(rule.basePalette).toBe('')
-        expect(rule.fontFamily).toBe('my-font')
+        expect(sheet.cssRules[0].cssText).toBe('@font-feature-values name { font-display: block; }')
+    })
+    test('@font-feature-values - valid block contents', () => {
+        const declarations = [
+            'FONT-DISPLAY: { env(name) }',
+            'font-display: first-valid(block)',
+        ]
+        declarations.forEach(declaration => {
+            const input = `@FONT-FEATURE-VALUES name { ${declaration}; }`
+            const sheet = createStyleSheet(input)
+            expect(sheet.cssRules[0].cssText).toBe(input.toLowerCase())
+        })
     })
     test('@font-palette-values - missing declaration for font-family', () => {
-        expect(createStyleSheet('@font-palette-values --palette {}').cssRules).toHaveLength(0)
+        expect(createStyleSheet('@font-palette-values --name {}').cssRules).toHaveLength(0)
     })
-    test('@function - invalid and ignored contents', () => {
+    test('@font-palette-values - invalid block contents', () => {
+        const sheet = createStyleSheet(`
+            @font-palette-values --name {
 
-        const { cssRules: [rule] } = createStyleSheet(`
-            @FUNCTION --name {
+                style {}
+                color: red;
+                --custom:hover {};
 
-                /* invalid */
-                @unknown {}
-                @unknown;
+                base-palette: env(name) {};
+                base-palette: {} env(name);
+                base-palette: initial;
+                base-palette: inherit(--custom);
+                base-palette: var(--custom);
+                base-palette: attr(name);
+                base-palette: toggle(1);
+                base-palette: calc-mix(0, 1, 1);
+                base-palette: container-progress(aspect-ratio, 1, 1);
+                base-palette: 1 !important;
+
+                font-family: name;
+            }
+        `)
+        expect(sheet.cssRules[0].cssText).toBe('@font-palette-values --name { font-family: name; }')
+    })
+    test('@font-palette-values - valid block contents', () => {
+        const input = '@FONT-PALETTE-VALUES --name { BASE-PALETTE: { env(name) }; font-family: first-valid(name); }'
+        const sheet = createStyleSheet(input)
+        expect(sheet.cssRules[0].cssText).toBe(input.toLowerCase())
+    })
+    test('@function - invalid block contents', () => {
+        const sheet = createStyleSheet(`
+            @function --name {
+
                 @media;
                 style;
+
                 @charset "utf-8";
                 @import "./global.css";
                 @namespace svg "http://www.w3.org/2000/svg";
                 @annotation {}
-                @color-profile --profile {}
-                @counter-style counter {}
+                @color-profile --name {}
+                @counter-style name {}
                 @font-face {}
-                @font-feature-values family {}
-                @font-palette-values --palette { font-family: my-font }
+                @font-feature-values name {}
+                @font-palette-values --name { font-family: name }
                 @function --name {}
-                @keyframes animation {}
-                @layer reset;
+                @keyframes name {}
+                @layer name;
                 @page {}
-                @position-try --position {}
-                @property --custom { syntax: "*"; inherits: false }
+                @position-try --name {}
+                @property --name { syntax: "*"; inherits: false }
                 @top-left {}
                 @scope {}
                 @starting-style {}
                 @view-transition {}
                 0% {}
                 style {}
+
                 color: red;
-                result: 0 !important;
 
-                /* valid */
-                @container (1px < width) {}
+                result: env(name) {};
+                result: {} env(name);
+                result: 1 !important;
+
                 @media {}
-                @supports (color: green) {}
-                --custom: {} var(--custom);
-                RESULT: { var(--custom) };
-
-                /* invalid */
-                result: {} var(--custom);
             }
         `)
-
-        const valid = [
-            CSSContainerRule,
-            CSSMediaRule,
-            CSSSupportsRule,
-        ]
-
-        expect(rule.cssRules).toHaveLength(valid.length)
-        valid.forEach((CSSRule, index) => expect(CSSRule.is(rule.cssRules[index])).toBeTruthy())
-        // TODO: add support for `CSSNestedDeclarations`
-        // expect(rule.cssText).toBe('@function --name { @container (1px < width) {} @media {} @supports (color: green) {} --custom: {} var(--custom); result: { var(--custom) } }')
+        expect(sheet.cssRules[0].cssText).toBe('@function --name { @media {} }')
     })
-    test('@keyframes - invalid and ignored contents', () => {
+    test('@function - valid block contents', () => {
+        const contents = [
+            '@container name {}',
+            '@media {}',
+            '@supports (color: green) {}',
+            // TODO: add support for CSSNestedDeclarationsRule
+            // '--custom: {} var(--custom);',
+            // 'RESULT: { env(name) };',
+        ]
+        const input = `@FUNCTION --name { ${contents.join(' ')} }`
+        const sheet = createStyleSheet(input)
+        expect(sheet.cssRules[0].cssText).toBe(input.toLowerCase())
+    })
+    test('@keyframes - invalid block contents', () => {
+        const sheet = createStyleSheet(`
+            @keyframes name {
 
-        const { cssRules: [rule] } = createStyleSheet(`
-            @KEYFRAMES animation {
-
-                /* invalid */
-                @unknown {}
-                @unknown;
                 @media;
                 style;
+
                 @charset "utf-8";
                 @import "./global.css";
                 @namespace svg "http://www.w3.org/2000/svg";
                 @annotation {}
-                @color-profile --profile {}
-                @container (1px < width) {}
-                @counter-style counter {}
+                @color-profile --name {}
+                @container name {}
+                @counter-style name {}
                 @font-face {}
-                @font-feature-values family {}
-                @font-palette-values --palette { font-family: my-font }
+                @font-feature-values name {}
+                @font-palette-values --name { font-family: name }
                 @function --name {}
-                @keyframes animation {}
-                @layer reset;
+                @keyframes name {}
+                @layer name;
                 @media {}
                 @page {}
-                @position-try --position {}
-                @property --custom { syntax: "*"; inherits: false }
+                @position-try --name {}
+                @property --name { syntax: "*"; inherits: false }
                 @top-left {}
                 @scope {}
                 @starting-style {}
                 @supports (color: red) {}
                 @view-transition {}
                 style {}
+
                 color: red;
                 --custom:hover {};
 
-                /* valid */
-                FROM {}
+                0% {}
             }
         `)
-
-        expect(rule.cssRules).toHaveLength(1)
-        expect(CSSKeyframeRule.is(rule.cssRules[0])).toBeTruthy()
-        expect(rule.style).toBeUndefined()
+        expect(sheet.cssRules[0].cssText).toBe('@keyframes name { 0% {} }')
     })
-    test('@layer - invalid and ignored contents', () => {
+    test('@keyframes - valid block contents', () => {
+        const sheet = createStyleSheet('@KEYFRAMES name { FROM {} }')
+        expect(sheet.cssRules[0].cssText).toBe('@keyframes name { 0% {} }')
+    })
+    test('@layer - invalid block contents', () => {
+        const sheet = createStyleSheet(`
+            @layer {
 
-        const { cssRules: [rule] } = createStyleSheet(`
-            @LAYER {
-
-                /* invalid */
-                @unknown {}
-                @unknown;
                 @media;
                 style;
+
                 @charset "utf-8";
                 @import "./global.css";
                 @namespace svg "http://www.w3.org/2000/svg";
                 @annotation {}
                 @top-left {}
                 0% {}
+
                 color: red;
                 --custom:hover {};
 
-                /* valid */
-                @color-profile --profile {}
-                @container (1px < width) {}
-                @counter-style counter {}
-                @font-face {}
-                @font-feature-values family {}
-                @font-palette-values --palette { font-family: my-font }
-                @function --name {}
-                @keyframes animation {}
-                @layer reset;
                 @media {}
-                @page {}
-                @position-try --position {}
-                @property --custom { syntax: "*"; inherits: false }
-                @scope {}
-                @starting-style {}
-                @supports (color: green) {}
-                @view-transition {}
-                style {}
             }
         `)
-
-        const valid = [
-            CSSColorProfileRule,
-            CSSContainerRule,
-            CSSCounterStyleRule,
-            CSSFontFaceRule,
-            CSSFontFeatureValuesRule,
-            CSSFontPaletteValuesRule,
-            CSSFunctionRule,
-            CSSKeyframesRule,
-            CSSLayerStatementRule,
-            CSSMediaRule,
-            CSSPageRule,
-            CSSPositionTryRule,
-            CSSPropertyRule,
-            CSSScopeRule,
-            CSSStartingStyleRule,
-            CSSSupportsRule,
-            CSSViewTransitionRule,
-            CSSStyleRule,
-        ]
-
-        expect(rule.cssRules).toHaveLength(valid.length)
-        valid.forEach((CSSRule, index) => expect(CSSRule.is(rule.cssRules[index])).toBeTruthy())
-        expect(rule.style).toBeUndefined()
+        expect(sheet.cssRules[0].cssText).toBe('@layer { @media {} }')
     })
-    test('@media - invalid and ignored contents', () => {
+    test('@layer - valid block contents', () => {
+        const rules = [
+            '@color-profile --name {}',
+            '@container name {}',
+            '@counter-style name {}',
+            '@font-face {}',
+            '@font-feature-values name {}',
+            '@font-palette-values --name { font-family: name; }',
+            '@function --name {}',
+            '@keyframes name {}',
+            '@layer name;',
+            '@media {}',
+            '@page {}',
+            '@position-try --name {}',
+            '@property --name { syntax: "*"; inherits: false; }',
+            '@scope {}',
+            '@starting-style {}',
+            '@supports (color: green) {}',
+            '@view-transition {}',
+            'style:hover {}',
+        ]
+        const input = `@LAYER { ${rules.join(' ')} }`
+        const sheet = createStyleSheet(input)
+        expect(sheet.cssRules[0].cssText).toBe(input.toLowerCase())
+    })
+    test('@media - invalid block contents', () => {
+        const sheet = createStyleSheet(`
+            @media {
 
-        const { cssRules: [rule] } = createStyleSheet(`
-            @MEDIA {
-
-                /* invalid */
-                @unknown {}
-                @unknown;
                 @media;
                 style;
+
                 @charset "utf-8";
                 @import "./global.css";
                 @namespace svg "http://www.w3.org/2000/svg";
                 @annotation {}
                 @top-left {}
                 0% {}
+
                 color: red;
                 --custom:hover {};
 
-                /* valid */
-                @color-profile --profile {}
-                @container (1px < width) {}
-                @counter-style counter {}
-                @font-face {}
-                @font-feature-values family {}
-                @font-palette-values --palette { font-family: my-font }
-                @function --name {}
-                @keyframes animation {}
-                @layer reset;
                 @media {}
-                @page {}
-                @position-try --position {}
-                @property --custom { syntax: "*"; inherits: false }
-                @scope {}
-                @starting-style {}
-                @supports (color: green) {}
-                @view-transition {}
-                style {}
             }
         `)
-
-        const valid = [
-            CSSColorProfileRule,
-            CSSContainerRule,
-            CSSCounterStyleRule,
-            CSSFontFaceRule,
-            CSSFontFeatureValuesRule,
-            CSSFontPaletteValuesRule,
-            CSSFunctionRule,
-            CSSKeyframesRule,
-            CSSLayerStatementRule,
-            CSSMediaRule,
-            CSSPageRule,
-            CSSPositionTryRule,
-            CSSPropertyRule,
-            CSSScopeRule,
-            CSSStartingStyleRule,
-            CSSSupportsRule,
-            CSSViewTransitionRule,
-            CSSStyleRule,
-        ]
-
-        expect(rule.cssRules).toHaveLength(valid.length)
-        valid.forEach((CSSRule, index) => expect(CSSRule.is(rule.cssRules[index])).toBeTruthy())
-        expect(rule.style).toBeUndefined()
+        expect(sheet.cssRules[0].cssText).toBe('@media { @media {} }')
     })
-    test('@page - invalid and ignored contents', () => {
+    test('@media - valid block contents', () => {
+        const rules = [
+            '@color-profile --name {}',
+            '@container name {}',
+            '@counter-style name {}',
+            '@font-face {}',
+            '@font-feature-values name {}',
+            '@font-palette-values --name { font-family: name; }',
+            '@function --name {}',
+            '@keyframes name {}',
+            '@layer name;',
+            '@media {}',
+            '@page {}',
+            '@position-try --name {}',
+            '@property --name { syntax: "*"; inherits: false; }',
+            '@scope {}',
+            '@starting-style {}',
+            '@supports (color: green) {}',
+            '@view-transition {}',
+            'style:hover {}',
+        ]
+        const input = `@MEDIA { ${rules.join(' ')} }`
+        const sheet = createStyleSheet(input)
+        expect(sheet.cssRules[0].cssText).toBe(input.toLowerCase())
+    })
+    test('@page - invalid block contents', () => {
+        const sheet = createStyleSheet(`
+            @page {
 
-        const { cssRules: [rule] } = createStyleSheet(`
-            @PAGE {
-
-                /* invalid */
-                @unknown {}
-                @unknown;
                 @media;
                 style;
+
                 @charset "utf-8";
                 @import "./global.css";
                 @namespace svg "http://www.w3.org/2000/svg";
                 @annotation {}
-                @color-profile --profile {}
-                @container (1px < width) {}
-                @counter-style counter {}
+                @color-profile --name {}
+                @container name {}
+                @counter-style name {}
                 @font-face {}
-                @font-feature-values family {}
-                @font-palette-values --palette { font-family: my-font }
+                @font-feature-values name {}
+                @font-palette-values --name { font-family: name }
                 @function --name {}
-                @keyframes animation {}
-                @layer reset;
+                @keyframes name {}
+                @layer name;
                 @media {}
                 @page {}
-                @position-try --position {}
-                @property --custom { syntax: "*"; inherits: false }
+                @position-try --name {}
+                @property --name { syntax: "*"; inherits: false }
                 @scope {}
                 @starting-style {}
                 @supports (color: red) {}
                 @view-transition {}
                 0% {}
-                style {}
+                style:hover {}
+
                 top: 1px;
-                margin-top: invalid;
-                margin-bottom: {} var(--custom) !important;
 
-                /* valid */
-                @TOP-LEFT {}
-                --custom: {} var(--custom);
-                MARGIN-BOTTOM: { var(--custom) };
-                margin-right: 1px !important;
-                margin-right: 2px;
+                margin-top: env(name) {};
+                margin-top: {} env(name);
+                margin-top: attr(name);
+                margin-top: toggle(1px);
+                margin-top: calc-mix(0, 1px, 1px);
+                margin-top: calc(1px * container-progress(aspect-ratio, 1, 1));
+
+                @top-left {}
             }
         `)
-
-        expect(rule.cssRules).toHaveLength(1)
-        expect(CSSMarginRule.is(rule.cssRules[0])).toBeTruthy()
-        expect(rule.style).toHaveLength(3)
-        expect(rule.style.getPropertyValue('--custom')).toBe('{} var(--custom)')
-        expect(rule.style.marginBottom).toBe('{var(--custom)}')
-        expect(rule.style.marginRight).toBe('1px')
+        expect(sheet.cssRules[0].cssText).toBe('@page { @top-left {} }')
     })
-    test('@position-try - invalid and ignored contents', () => {
+    test('@page - valid block contents', () => {
+        const contents = [
+            '@top-left {}',
+            '--custom: {} var(--custom);',
+            'MARGIN-TOP: { env(name) };',
+            'SIZE: { env(name) };',
+            'margin-top: first-valid(1px);',
+            'size: first-valid(1px);',
+            'margin-top: initial;',
+            'size: initial;',
+            'margin-top: inherit(--custom);',
+            'size: inherit(--custom);',
+            'margin-top: var(--custom);',
+            'size: var(--custom);',
+            'margin-top: 1px !important;',
+            'size: 1px !important;',
+        ]
+        contents.forEach(content => {
+            const input = `@PAGE { ${content} }`
+            const sheet = createStyleSheet(input)
+            expect(sheet.cssRules[0].cssText).toBe(input.toLowerCase())
+        })
+    })
+    test('@position-try - invalid block contents', () => {
+        const sheet = createStyleSheet(`
+            @position-try --name {
 
-        const { cssRules: [rule] } = createStyleSheet(`
-            @POSITION-TRY --position {
-
-                /* invalid */
                 style {}
                 color: red;
-                bottom: invalid;
-                --custom: value;
-                top: {} var(--custom) !important;
+                --custom:hover {};
 
-                /* valid */
-                TOP: { var(--custom) }; */
+                top: env(name) {};
+                top: {} env(name);
+                top: 1px !important;
+
+                bottom: 1px;
             }
         `)
-
-        expect(rule.cssRules).toBeUndefined()
-        expect(rule.style).toHaveLength(1)
-        expect(rule.style.top).toBe('{var(--custom)}')
+        expect(sheet.cssRules[0].cssText).toBe('@position-try --name { bottom: 1px; }')
     })
-    test('@property - invalid and ignored contents', () => {
-
-        const { cssRules: [rule] } = createStyleSheet(`
-            @PROPERTY --custom {
-
-                /* valid */
-                inherits: true;
-                SYNTAX: "*";
-
-                /* invalid */
-                style {}
-                color: red;
-                inherits: invalid;
-                --custom: value;
-                inherits: var(--custom);
-                syntax: "initial";
-                syntax: "<number>" !important;
-            }
-        `)
-
-        expect(rule.cssRules).toBeUndefined()
-        expect(rule.style).toBeUndefined()
-        expect(rule.color).toBeUndefined()
-        expect(rule.initialValue).toBe('')
-        expect(rule.inherits).toBe('true')
-        expect(rule.syntax).toBe('"*"')
+    test('@position-try - valid block contents', () => {
+        const declarations = [
+            'TOP: { env(name) }',
+            'top: first-valid(1px)',
+            'top: initial',
+            'top: inherit(--custom)',
+            'top: var(--custom)',
+            'top: attr(name)',
+            'top: toggle(1px)',
+            'top: calc-mix(0, 1px, 1px)',
+            'top: calc(1px * container-progress(aspect-ratio, 1, 1))',
+        ]
+        declarations.forEach(declaration => {
+            const input = `@POSITION-TRY --name { ${declaration}; }`
+            const sheet = createStyleSheet(input)
+            expect(sheet.cssRules[0].cssText).toBe(input.toLowerCase())
+        })
     })
     test('@property - missing declaration for inherits', () => {
-        expect(createStyleSheet('@property --custom { syntax: "*"; initial-value: 1; }').cssRules).toHaveLength(0)
+        expect(createStyleSheet('@property --name { syntax: "*"; initial-value: 1; }').cssRules).toHaveLength(0)
     })
     test('@property - missing declaration for syntax', () => {
-        expect(createStyleSheet('@property --custom { inherits: true; initial-value: 1; }').cssRules).toHaveLength(0)
+        expect(createStyleSheet('@property --name { inherits: true; initial-value: 1; }').cssRules).toHaveLength(0)
     })
-    test('@property - invalid initial-value', () => {
+    test('@property - invalid block contents', () => {
+        const sheet = createStyleSheet(`
+            @property --name {
+
+                syntax: "*";
+                inherits: true;
+
+                style {}
+                color: red;
+                --custom:hover {};
+
+                inherits: env(name) {};
+                inherits: {} env(name);
+                inherits: initial;
+                inherits: inherit(--custom);
+                inherits: var(--custom);
+                inherits: attr(name);
+                inherits: false !important;
+                syntax: "initial";
+            }
+        `)
+        expect(sheet.cssRules[0].cssText).toBe('@property --name { syntax: "*"; inherits: true; }')
+    })
+    test('@property - valid block contents', () => {
+        const declarations = [
+            'INHERITS: { env(name) }',
+            'inherits: first-valid(false)',
+        ]
+        declarations.forEach(declaration => {
+            const input = `@PROPERTY --name { syntax: "*"; ${declaration}; }`
+            const sheet = createStyleSheet(input)
+            expect(sheet.cssRules[0].cssText).toBe(input.toLowerCase())
+        })
+    })
+    test('@property - invalid and valid initial-value', () => {
 
         const invalid = [
             // Invalid syntax
@@ -1721,7 +1710,7 @@ describe('CSS grammar', () => {
         cases.forEach((group, index) =>
             group.forEach(([value, syntax]) => {
                 const styleSheet = createStyleSheet(`
-                    @property --custom {
+                    @property --name {
                         syntax: "${syntax}";
                         initial-value: 1px;
                         initial-value: ${value};
@@ -1731,541 +1720,478 @@ describe('CSS grammar', () => {
                 expect(styleSheet.cssRules).toHaveLength(index)
             }))
     })
-    test('@scope - invalid and ignored contents', () => {
+    test('@scope - invalid block contents', () => {
+        const sheet = createStyleSheet(`
+            @scope {
 
-        const { cssRules: [rule] } = createStyleSheet(`
-            @SCOPE {
-
-                /* invalid */
-                @unknown {}
-                @unknown;
                 @media;
                 style;
+
                 @charset "utf-8";
                 @import "./global.css";
                 @namespace svg "http://www.w3.org/2000/svg";
                 @annotation {}
                 @top-left {}
                 0% {}
-                top: invalid;
-                bottom: {} var(--custom) !important;
 
-                /* valid */
-                @color-profile --profile {}
-                @container (1px < width) {}
-                @counter-style counter {}
-                @font-face {}
-                @font-feature-values family {}
-                @font-palette-values --palette { font-family: my-font }
-                @function --name {}
-                @keyframes animation {}
-                @layer reset;
+                top: env(name) {};
+                top: {} env(name);
+
                 @media {}
-                @page {}
-                @position-try --position {}
-                @property --custom { syntax: "*"; inherits: false }
-                @scope {}
-                @starting-style {}
-                @supports (color: green) {}
-                @view-transition {}
-                style:hover {}
-                --custom:hover {};
-                BOTTOM: { var(--custom) };
-                right: 1px !important;
-                right: 2px;
             }
         `)
-
-        const valid = [
-            CSSColorProfileRule,
-            CSSContainerRule,
-            CSSCounterStyleRule,
-            CSSFontFaceRule,
-            CSSFontFeatureValuesRule,
-            CSSFontPaletteValuesRule,
-            CSSFunctionRule,
-            CSSKeyframesRule,
-            CSSLayerStatementRule,
-            CSSMediaRule,
-            CSSPageRule,
-            CSSPositionTryRule,
-            CSSPropertyRule,
-            CSSScopeRule,
-            CSSStartingStyleRule,
-            CSSSupportsRule,
-            CSSViewTransitionRule,
-            CSSStyleRule,
-        ]
-
-        expect(rule.cssRules).toHaveLength(valid.length + 1)
-        valid.forEach((CSSRule, index) => expect(CSSRule.is(rule.cssRules[index + 1])).toBeTruthy())
-        expect(rule.style).toBeUndefined()
-        expect(rule.cssRules[0].style.getPropertyValue('--custom')).toBe('hover {}')
-        expect(rule.cssRules[0].style.bottom).toBe('{var(--custom)}')
-        expect(rule.cssRules[0].style.right).toBe('1px')
+        expect(sheet.cssRules[0].cssText).toBe('@scope { @media {} }')
     })
-    test('@starting-style - invalid and ignored contents', () => {
+    test('@scope - valid block contents', () => {
 
-        const { cssRules: [rule] } = createStyleSheet(`
-            @STARTING-STYLE {
+        const rules = [
+            '@color-profile --name {}',
+            '@container name {}',
+            '@counter-style name {}',
+            '@font-face {}',
+            '@font-feature-values name {}',
+            '@font-palette-values --name { font-family: name; }',
+            '@function --name {}',
+            '@keyframes name {}',
+            '@layer name;',
+            '@media {}',
+            '@page {}',
+            '@position-try --name {}',
+            '@property --name { syntax: "*"; inherits: false; }',
+            '@scope {}',
+            '@starting-style {}',
+            '@supports (color: green) {}',
+            '@view-transition {}',
+            'style:hover {}',
+        ]
+        const input = `@SCOPE { ${rules.join(' ')} }`
+        const sheet = createStyleSheet(input)
 
-                /* invalid */
-                @unknown {}
-                @unknown;
+        expect(sheet.cssRules[0].cssText).toBe(input.toLowerCase())
+
+        const declarations = [
+            '--custom: hover {}',
+            'TOP: { env(name) }',
+            'top: first-valid(1px)',
+            'top: initial',
+            'top: inherit(--custom)',
+            'top: var(--custom)',
+            'top: attr(name)',
+            'top: toggle(1px)',
+            'top: calc-mix(0, 1px, 1px)',
+            'top: calc(1px * container-progress(aspect-ratio, 1, 1))',
+            'top: 1px !important',
+        ]
+        declarations.forEach(declaration => {
+            // TODO: add support for CSSNestedDeclarationsRule
+            const input = `@SCOPE { :scope { ${declaration}; } }`
+            const sheet = createStyleSheet(input)
+            expect(sheet.cssRules[0].cssText).toBe(input.toLowerCase())
+        })
+    })
+    test('@starting-style - invalid block contents', () => {
+        const sheet = createStyleSheet(`
+            @starting-style {
+
                 @media;
                 style;
+
                 @charset "utf-8";
                 @import "./global.css";
                 @namespace svg "http://www.w3.org/2000/svg";
                 @annotation {}
                 @top-left {}
                 0% {}
+
                 color: red;
                 --custom:hover {};
 
-                /* valid */
-                @color-profile --profile {}
-                @container (1px < width) {}
-                @counter-style counter {}
-                @font-face {}
-                @font-feature-values family {}
-                @font-palette-values --palette { font-family: my-font }
-                @function --name {}
-                @keyframes animation {}
-                @layer reset;
                 @media {}
-                @page {}
-                @position-try --position {}
-                @property --custom { syntax: "*"; inherits: false }
-                @scope {}
-                @starting-style {}
-                @supports (color: green) {}
-                @view-transition {}
-                style {}
             }
         `)
-
-        const valid = [
-            CSSColorProfileRule,
-            CSSContainerRule,
-            CSSCounterStyleRule,
-            CSSFontFaceRule,
-            CSSFontFeatureValuesRule,
-            CSSFontPaletteValuesRule,
-            CSSFunctionRule,
-            CSSKeyframesRule,
-            CSSLayerStatementRule,
-            CSSMediaRule,
-            CSSPageRule,
-            CSSPositionTryRule,
-            CSSPropertyRule,
-            CSSScopeRule,
-            CSSStartingStyleRule,
-            CSSSupportsRule,
-            CSSViewTransitionRule,
-            CSSStyleRule,
-        ]
-
-        expect(rule.cssRules).toHaveLength(valid.length)
-        valid.forEach((CSSRule, index) => expect(CSSRule.is(rule.cssRules[index])).toBeTruthy())
-        expect(rule.style).toBeUndefined()
+        expect(sheet.cssRules[0].cssText).toBe('@starting-style { @media {} }')
     })
-    test('@supports - invalid and ignored contents', () => {
+    test('@starting-style - valid block contents', () => {
+        const rules = [
+            '@color-profile --name {}',
+            '@container name {}',
+            '@counter-style name {}',
+            '@font-face {}',
+            '@font-feature-values name {}',
+            '@font-palette-values --name { font-family: name; }',
+            '@function --name {}',
+            '@keyframes name {}',
+            '@layer name;',
+            '@media {}',
+            '@page {}',
+            '@position-try --name {}',
+            '@property --name { syntax: "*"; inherits: false; }',
+            '@scope {}',
+            '@starting-style {}',
+            '@supports (color: green) {}',
+            '@view-transition {}',
+            'style:hover {}',
+        ]
+        const input = `@STARTING-STYLE { ${rules.join(' ')} }`
+        const sheet = createStyleSheet(input)
+        expect(sheet.cssRules[0].cssText).toBe(input.toLowerCase())
+    })
+    test('@supports - invalid block contents', () => {
+        const sheet = createStyleSheet(`
+            @supports (color: green) {
 
-        const { cssRules: [rule] } = createStyleSheet(`
-            @SUPPORTS (COLOR: green) {
-
-                /* invalid */
-                @unknown {}
-                @unknown;
                 @media;
                 style;
+
                 @charset "utf-8";
                 @import "./global.css";
                 @namespace svg "http://www.w3.org/2000/svg";
                 @annotation {}
                 @top-left {}
                 0% {}
+
                 color: red;
                 --custom:hover {};
 
-                /* valid */
-                @color-profile --profile {}
-                @container (1px < width) {}
-                @counter-style counter {}
-                @font-face {}
-                @font-feature-values family {}
-                @font-palette-values --palette { font-family: my-font }
-                @function --name {}
-                @keyframes animation {}
-                @layer reset;
                 @media {}
-                @page {}
-                @position-try --position {}
-                @property --custom { syntax: "*"; inherits: false }
-                @scope {}
-                @starting-style {}
-                @supports (color: green) {}
-                @view-transition {}
-                style {}
             }
         `)
-
-        const valid = [
-            CSSColorProfileRule,
-            CSSContainerRule,
-            CSSCounterStyleRule,
-            CSSFontFaceRule,
-            CSSFontFeatureValuesRule,
-            CSSFontPaletteValuesRule,
-            CSSFunctionRule,
-            CSSKeyframesRule,
-            CSSLayerStatementRule,
-            CSSMediaRule,
-            CSSPageRule,
-            CSSPositionTryRule,
-            CSSPropertyRule,
-            CSSScopeRule,
-            CSSStartingStyleRule,
-            CSSSupportsRule,
-            CSSViewTransitionRule,
-            CSSStyleRule,
-        ]
-
-        expect(rule.cssRules).toHaveLength(valid.length)
-        valid.forEach((CSSRule, index) => expect(CSSRule.is(rule.cssRules[index])).toBeTruthy())
-        expect(rule.style).toBeUndefined()
+        expect(sheet.cssRules[0].cssText).toBe('@supports (color: green) { @media {} }')
     })
-    test('@view-transition - invalid and ignored contents', () => {
+    test('@supports - valid block contents', () => {
+        const rules = [
+            '@color-profile --name {}',
+            '@container name {}',
+            '@counter-style name {}',
+            '@font-face {}',
+            '@font-feature-values name {}',
+            '@font-palette-values --name { font-family: name; }',
+            '@function --name {}',
+            '@keyframes name {}',
+            '@layer name;',
+            '@media {}',
+            '@page {}',
+            '@position-try --name {}',
+            '@property --name { syntax: "*"; inherits: false; }',
+            '@scope {}',
+            '@starting-style {}',
+            '@supports (color: green) {}',
+            '@view-transition {}',
+            'style:hover {}',
+        ]
+        const input = `@SUPPORTS (color-green) { ${rules.join(' ')} }`
+        const sheet = createStyleSheet(input)
+        expect(sheet.cssRules[0].cssText).toBe(input.toLowerCase())
+    })
+    test('@view-transition - invalid block contents', () => {
+        const sheet = createStyleSheet(`
+            @view-transition {
 
-        const { cssRules: [rule] } = createStyleSheet(`
-            @VIEW-TRANSITION {
-
-                /* invalid */
                 style {}
                 color: red;
-                navigation: invalid;
-                --custom: value;
-                navigation: var(--custom);
-                types: important-type !important;
+                --custom:hover {};
 
-                /* valid */
-                TYPES: type;
+                types: env(name) {};
+                types: {} env(name);
+                types: initial;
+                types: inherit(--custom);
+                types: var(--custom);
+                types: attr(name);
+                types: toggle(name);
+                types: name !important;
+
+                navigation: auto;
             }
         `)
-
-        expect(rule.cssRules).toBeUndefined()
-        expect(rule.style).toBeUndefined()
-        expect(rule.color).toBeUndefined()
-        expect(rule.navigation).toBeUndefined()
-        expect(rule.types).toEqual(['type'])
+        expect(sheet.cssRules[0].cssText).toBe('@view-transition { navigation: auto; }')
     })
-    test('font feature value type rule - invalid and ignored contents', () => {
+    test('@view-transition - valid block contents', () => {
+        const declarations = [
+            'NAVIGATION: { env(name) }',
+            'navigation: first-valid(auto)',
+        ]
+        declarations.forEach(declaration => {
+            const input = `@VIEW-TRANSITION { ${declaration}; }`
+            const sheet = createStyleSheet(input)
+            expect(sheet.cssRules[0].cssText).toBe(input.toLowerCase())
+        })
+    })
+    test('font feature value type rule - invalid block contents', () => {
+        const sheet = createStyleSheet(`
+            @font-feature-values name {
+                @ANNOTATION {
 
-        const { cssRules: [rule] } = createStyleSheet(`
-            @font-feature-values family {
-                @annotation {
-
-                    /* invalid */
                     style {}
+                    color: red;
+                    --custom:hover {};
+
+                    name: env(name) {};
+                    name: {} env(name);
+                    name: initial;
+                    name: inherit(--custom);
                     name: var(--custom);
-                    name: invalid;
+                    name: attr(name);
+                    name: toggle(name);
+                    name: calc-mix(0, 1, 1) 1;
+                    name: container-progress(aspect-ratio, 1, 1) 1;
                     name: 0 !important;
 
-                    /* valid */
-                    name: 1;
-
-                    /* invalid */
                     name: -1;
                     name: 1 2;
                 }
                 @character-variant {
-                    name:   1 2;
                     name:  -1 2;
                     name: 100 1;
                     name: 1 2 3;
                 }
                 @ornaments {
-                    name:  1;
                     name: -1;
                     name:  1 2;
                 }
                 @styleset {
-                    name:  1 2 3 4 5;
                     name: -1 2 3 4 5;
                     name: 21 2 3 4 5;
                 }
                 @stylistic {
-                    name:  1;
                     name: -1;
                     name:  1 2;
                 }
                 @swash {
-                    name:  1;
                     name: -1;
                     name:  1 2;
                 }
             }
         `)
-
-        const valid = [
-            ['annotation', 'name', [1]],
-            ['characterVariant', 'name', [1, 2]],
-            ['ornaments', 'name', [1]],
-            ['styleset', 'name', [1, 2, 3, 4, 5]],
-            ['stylistic', 'name', [1]],
-            ['swash', 'name', [1]],
-        ]
-
-        valid.forEach(([type, descriptor, value]) => expect(rule[type].get(descriptor)).toEqual(value))
+        expect(sheet.cssRules[0].cssText).toBe('@font-feature-values name {}')
     })
-    test('keyframe rule - invalid and ignored contents', () => {
-
-        const { cssRules: [{ cssRules: [rule] }] } = createStyleSheet(`
-            @keyframes animation {
+    test('font feature value type rule - valid block contents', () => {
+        const contents = [
+            '@ANNOTATION { name: 1; }',
+            '@character-variant { name: 1 2; }',
+            '@ornaments { name: 1; }',
+            '@styleset { name: 1 2 3 4 5; }',
+            '@stylistic { name: 1; }',
+            '@swash { name: 1; }',
+        ]
+        const input = `@font-feature-values name { ${contents.join(' ')} }`
+        const sheet = createStyleSheet(input)
+        expect(sheet.cssRules[0].cssText).toBe(input.toLowerCase())
+    })
+    test('keyframe rule - invalid block contents', () => {
+        const sheet = createStyleSheet(`
+            @keyframes name {
                 0% {
 
-                    /* invalid */
                     style {}
                     animation-delay: 1s;
-                    right: invalid;
-                    top: {} var(--custom);
-                    animation-timing-function: linear !important;
 
-                    /* valid */
-                    --custom: {} var(--custom);
-                    bottom: { var(--custom) };
-                    ANIMATION-TIMING-FUNCTION: ease;
+                    top: env(name) {};
+                    top: {} env(name);
+                    top: 1px !important;
+
+                    animation-timing-function: linear;
                 }
             }
         `)
-
-        expect(rule.cssRules).toBeUndefined()
-        expect(rule.style).toHaveLength(3)
-        expect(rule.style.getPropertyValue('--custom')).toBe('{} var(--custom)')
-        expect(rule.style.bottom).toBe('{var(--custom)}')
-        expect(rule.style.animationTimingFunction).toBe('ease')
+        expect(sheet.cssRules[0].cssText).toBe('@keyframes name { 0% { animation-timing-function: linear; } }')
     })
-    test('margin rule - invalid and ignored contents', () => {
-
-        const { cssRules: [{ cssRules: [rule] }] } = createStyleSheet(`
+    test('keyframes rule - valid block contents', () => {
+        const declarations = [
+            '--custom: {} var(--custom)',
+            'TOP: { env(name) }',
+            'top: first-valid(1px)',
+            'top: initial',
+            'top: inherit(--custom)',
+            'top: var(--custom)',
+            'top: attr(name)',
+            'top: toggle(1px)',
+            'top: calc-mix(0, 1px, 1px)',
+            'top: calc(1px * container-progress(aspect-ratio, 1, 1))',
+        ]
+        declarations.forEach(declaration => {
+            const input = `@keyframes name { 0% { ${declaration}; } }`
+            const sheet = createStyleSheet(input)
+            expect(sheet.cssRules[0].cssText).toBe(input.toLowerCase())
+        })
+    })
+    test('margin rule - invalid block contents', () => {
+        const sheet = createStyleSheet(`
             @page {
                 @top-left {
 
-                    /* invalid */
                     style {}
                     top: 1px;
-                    margin-top: invalid;
-                    margin-bottom: {} var(--custom) !important;
 
-                    /* valid */
-                    --custom: {} var(--custom);
-                    MARGIN-BOTTOM: { var(--custom) };
-                    margin-right: 1px !important;
-                    margin-right: 2px;
+                    margin-top: env(name) {};
+                    margin-top: {} env(name);
+                    margin-top: attr(name);
+                    margin-top: toggle(1px);
+                    margin-top: calc-mix(0, 1px, 1px);
+                    margin-top: calc(1px * container-progress(aspect-ratio, 1px, 1px));
+
+                    margin-bottom: 1px;
                 }
             }
         `)
-
-        expect(rule.cssRules).toBeUndefined()
-        expect(rule.style).toHaveLength(3)
-        expect(rule.style.getPropertyValue('--custom')).toBe('{} var(--custom)')
-        expect(rule.style.marginBottom).toBe('{var(--custom)}')
-        expect(rule.style.marginRight).toBe('1px')
+        expect(sheet.cssRules[0].cssText).toBe('@page { @top-left { margin-bottom: 1px; } }')
     })
-    test('nested group rule - invalid and ignored contents', () => {
-
-        const { cssRules: [{ cssRules: [rule] }] } = createStyleSheet(`
+    test('margin rule - valid block contents', () => {
+        const declarations = [
+            '--custom: {} var(--custom)',
+            'MARGIN-TOP: { env(name) }',
+            'margin-top: first-valid(1px)',
+            'margin-top: initial',
+            'margin-top: inherit(--custom)',
+            'margin-top: var(--custom)',
+        ]
+        declarations.forEach(declaration => {
+            const input = `@page { @TOP-LEFT { ${declaration}; } }`
+            const sheet = createStyleSheet(input)
+            expect(sheet.cssRules[0].cssText).toBe(input.toLowerCase())
+        })
+    })
+    test('nested group rule - invalid block contents', () => {
+        const sheet = createStyleSheet(`
             style {
                 @media {
 
-                    /* invalid */
-                    @unknown {}
-                    @unknown;
                     @media;
                     style;
+
                     @charset "utf-8";
                     @import "./global.css";
                     @namespace svg "http://www.w3.org/2000/svg";
                     @annotation {}
-                    @color-profile --profile {}
-                    @counter-style counter {}
+                    @color-profile --name {}
+                    @counter-style name {}
                     @font-face {}
-                    @font-feature-values family {}
-                    @font-palette-values --palette { font-family: my-font }
+                    @font-feature-values name {}
+                    @font-palette-values --name { font-family: name }
                     @function --name {}
-                    @keyframes animation {}
-                    @layer reset;
+                    @keyframes name {}
+                    @layer name;
                     @page {}
-                    @position-try --position {}
-                    @property --custom { syntax: "*"; inherits: false }
+                    @position-try --name {}
+                    @property --name { syntax: "*"; inherits: false }
                     @top-left {}
                     @view-transition {}
                     0% {}
-                    top: invalid;
-                    bottom: {} var(--custom) !important;
 
-                    /* valid */
-                    @container (1px < width) {}
-                    @layer {}
+                    top: env(name) {};
+                    top: {} env(name);
+
                     @media {}
-                    @scope {}
-                    @starting-style {}
-                    @supports (color: green) {}
-                    style:hover {}
-                    --custom:hover {};
-                    BOTTOM: { var(--custom) };
-                    right: 1px !important;
-                    right: 2px;
                 }
             }
         `)
-
-        const valid = [
-            CSSContainerRule,
-            CSSLayerBlockRule,
-            CSSMediaRule,
-            CSSScopeRule,
-            CSSStartingStyleRule,
-            CSSSupportsRule,
-            CSSStyleRule,
-        ]
-
-        expect(rule.cssRules).toHaveLength(valid.length + 1)
-        valid.forEach((CSSRule, index) => expect(CSSRule.is(rule.cssRules[index + 1])).toBeTruthy())
-        expect(rule.cssRules[0].style).toHaveLength(3)
-        expect(rule.cssRules[0].style.getPropertyValue('--custom')).toBe('hover {}')
-        expect(rule.cssRules[0].style.bottom).toBe('{var(--custom)}')
-        expect(rule.cssRules[0].style.right).toBe('1px')
-        expect(rule.style).toBeUndefined()
+        expect(sheet.cssRules[0].cssText).toBe('style { @media { @media {} } }')
     })
-    test('nested style rule - invalid and ignored contents', () => {
+    test('nested group rule - valid block contents', () => {
 
-        const { cssRules: [{ cssRules: [rule] }] } = createStyleSheet(`
+        const rules = [
+            '@container name {}',
+            '@layer {}',
+            '@media {}',
+            '@scope {}',
+            '@starting-style {}',
+            '@supports (color: green) {}',
+            '& style:hover {}',
+        ]
+        const input = `style { @media { ${rules.join(' ')} } }`
+        const sheet = createStyleSheet(input)
+
+        expect(sheet.cssRules[0].cssText).toBe(input.toLowerCase())
+
+        const declarations = [
+            '--custom: hover {}',
+            'TOP: { env(name) }',
+            'top: first-valid(1px)',
+            'top: initial',
+            'top: inherit(--custom)',
+            'top: var(--custom)',
+            'top: attr(name)',
+            'top: toggle(1px)',
+            'top: calc-mix(0, 1px, 1px)',
+            'top: calc(1px * container-progress(aspect-ratio, 1, 1))',
+            'top: 1px !important',
+        ]
+        declarations.forEach(declaration => {
+            const input = `style { @MEDIA { & { ${declaration}; } } }`
+            const sheet = createStyleSheet(input)
+            expect(sheet.cssRules[0].cssText).toBe(input.toLowerCase())
+        })
+    })
+    test('nested style rule - invalid block contents', () => {
+
+        const sheet = createStyleSheet(`
             style {
                 & {
 
-                    /* invalid */
-                    @unknown {}
-                    @unknown;
                     @media;
                     style;
+
                     @charset "utf-8";
                     @import "./global.css";
                     @namespace svg "http://www.w3.org/2000/svg";
                     @annotation {}
-                    @color-profile --profile {}
-                    @counter-style counter {}
+                    @color-profile --name {}
+                    @counter-style name {}
                     @font-face {}
-                    @font-feature-values family {}
-                    @font-palette-values --palette { font-family: my-font }
+                    @font-feature-values name {}
+                    @font-palette-values --name { font-family: name }
                     @function --name {}
-                    @keyframes animation {}
-                    @layer reset;
+                    @keyframes name {}
+                    @layer name;
                     @page {}
-                    @position-try --position {}
-                    @property --custom { syntax: "*"; inherits: false }
+                    @position-try --name {}
+                    @property --name { syntax: "*"; inherits: false }
                     @top-left {}
                     @view-transition {}
                     0% {}
-                    top: invalid;
-                    bottom: {} var(--custom) !important;
 
-                    /* valid */
-                    @container (1px < width) {}
-                    @layer {}
+                    top: env(name) {};
+                    top: {} env(name);
+
                     @media {}
-                    @scope {}
-                    @starting-style {}
-                    @supports (color: green) {}
-                    style:hover {}
-                    --custom:hover {};
-                    BOTTOM: { var(--custom) };
-                    right: 1px !important;
-                    right: 2px;
                 }
             }
         `)
-
-        const valid = [
-            CSSContainerRule,
-            CSSLayerBlockRule,
-            CSSMediaRule,
-            CSSScopeRule,
-            CSSStartingStyleRule,
-            CSSSupportsRule,
-            CSSStyleRule,
-        ]
-
-        expect(rule.cssRules).toHaveLength(valid.length)
-        valid.forEach((CSSRule, index) => expect(CSSRule.is(rule.cssRules[index])).toBeTruthy())
-        expect(rule.style).toHaveLength(3)
-        expect(rule.style.getPropertyValue('--custom')).toBe('hover {}')
-        expect(rule.style.bottom).toBe('{var(--custom)}')
-        expect(rule.style.right).toBe('1px')
+        expect(sheet.cssRules[0].cssText).toBe('style { & { @media {} } }')
     })
-    test('style rule - invalid and ignored contents', () => {
+    test('nested style rule - valid block contents', () => {
 
-        const { cssRules: [rule] } = createStyleSheet(`
-            style {
-
-                /* invalid */
-                @unknown {}
-                @unknown;
-                @media;
-                style;
-                @charset "utf-8";
-                @import "./global.css";
-                @namespace svg "http://www.w3.org/2000/svg";
-                @annotation {}
-                @color-profile --profile {}
-                @counter-style counter {}
-                @font-face {}
-                @font-feature-values family {}
-                @font-palette-values --palette { font-family: my-font }
-                @function --name {}
-                @keyframes animation {}
-                @layer reset;
-                @page {}
-                @position-try --position {}
-                @property --custom { syntax: "*"; inherits: false }
-                @top-left {}
-                @view-transition {}
-                0% {}
-                top: invalid;
-                bottom: {} var(--custom) !important;
-
-                /* valid */
-                @container (1px < width) {}
-                @layer {}
-                @media {}
-                @scope {}
-                @starting-style {}
-                @supports (color: green) {}
-                style:hover {}
-                --custom:hover {};
-                BOTTOM: { var(--custom) };
-                right: 1px !important;
-                right: 2px;
-            }
-        `)
-
-        const valid = [
-            CSSContainerRule,
-            CSSLayerBlockRule,
-            CSSMediaRule,
-            CSSScopeRule,
-            CSSStartingStyleRule,
-            CSSSupportsRule,
-            CSSStyleRule,
+        const rules = [
+            '@container name {}',
+            '@layer {}',
+            '@media {}',
+            '@scope {}',
+            '@starting-style {}',
+            '@supports (color: green) {}',
+            '& style:hover {}',
         ]
+        const input = `style { & { ${rules.join(' ')} } }`
+        const sheet = createStyleSheet(input)
 
-        expect(rule.cssRules).toHaveLength(valid.length)
-        valid.forEach((CSSRule, index) => expect(CSSRule.is(rule.cssRules[index])).toBeTruthy())
-        expect(rule.style).toHaveLength(3)
-        expect(rule.style.getPropertyValue('--custom')).toBe('hover {}')
-        expect(rule.style.bottom).toBe('{var(--custom)}')
-        expect(rule.style.right).toBe('1px')
+        expect(sheet.cssRules[0].cssText).toBe(input.toLowerCase())
+
+        const declarations = [
+            '--custom: hover {}',
+            'TOP: { env(name) }',
+            'top: first-valid(1px)',
+            'top: initial',
+            'top: inherit(--custom)',
+            'top: var(--custom)',
+            'top: attr(name)',
+            'top: toggle(1px)',
+            'top: calc-mix(0, 1px, 1px)',
+            'top: calc(1px * container-progress(aspect-ratio, 1, 1))',
+            'top: 1px !important',
+        ]
+        declarations.forEach(declaration => {
+            const input = `style { & { ${declaration}; } }`
+            const sheet = createStyleSheet(input)
+            expect(sheet.cssRules[0].cssText).toBe(input.toLowerCase())
+        })
     })
     test('style rule - invalid prelude containing an undeclared namespace prefix', () => {
 
@@ -2289,10 +2215,80 @@ describe('CSS grammar', () => {
         expect(selectorText).toBe('svg|rect')
         expect(style.fill).toBe('green')
     })
+    test('style rule - invalid block contents', () => {
+
+        const sheet = createStyleSheet(`
+            style {
+
+                @media;
+                style;
+
+                @charset "utf-8";
+                @import "./global.css";
+                @namespace svg "http://www.w3.org/2000/svg";
+                @annotation {}
+                @color-profile --name {}
+                @counter-style name {}
+                @font-face {}
+                @font-feature-values name {}
+                @font-palette-values --name { font-family: name }
+                @function --name {}
+                @keyframes name {}
+                @layer name;
+                @page {}
+                @position-try --name {}
+                @property --name { syntax: "*"; inherits: false }
+                @top-left {}
+                @view-transition {}
+                0% {}
+
+                top: env(name) {};
+                top: {} env(name);
+
+                @media {}
+            }
+        `)
+        expect(sheet.cssRules[0].cssText).toBe('style { @media {} }')
+    })
+    test('style rule - valid block contents', () => {
+
+        const rules = [
+            '@container name {}',
+            '@layer {}',
+            '@media {}',
+            '@scope {}',
+            '@starting-style {}',
+            '@supports (color: green) {}',
+            '& style:hover {}',
+        ]
+        const input = `style { ${rules.join(' ')} }`
+        const sheet = createStyleSheet(input)
+
+        expect(sheet.cssRules[0].cssText).toBe(input.toLowerCase())
+
+        const declarations = [
+            '--custom: hover {}',
+            'TOP: { env(name) }',
+            'top: first-valid(1px)',
+            'top: initial',
+            'top: inherit(--custom)',
+            'top: var(--custom)',
+            'top: attr(name)',
+            'top: toggle(1px)',
+            'top: calc-mix(0, 1px, 1px)',
+            'top: calc(1px * container-progress(aspect-ratio, 1, 1))',
+            'top: 1px !important',
+        ]
+        declarations.forEach(declaration => {
+            const input = `style { ${declaration}; }`
+            const sheet = createStyleSheet(input)
+            expect(sheet.cssRules[0].cssText).toBe(input.toLowerCase())
+        })
+    })
     // Legacy rules
     test('vendor prefixed rules', () => {
-        const { cssRules: [keyframesRule] } = createStyleSheet('@-webkit-keyframes animation {}')
+        const { cssRules: [keyframesRule] } = createStyleSheet('@-webkit-keyframes name {}')
         expect(CSSKeyframesRule.is(keyframesRule)).toBeTruthy()
-        expect(keyframesRule.cssText).toBe('@keyframes animation {}')
+        expect(keyframesRule.cssText).toBe('@keyframes name {}')
     })
 })
