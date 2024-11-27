@@ -24,7 +24,7 @@ A token is defined in CSS Syntax with the following properties:
 
 A component value is the same object than the consumed token, except a function or simple block, whose `value` is a list of component values. A function also has a `name` and a simple block has an `associatedToken`, which are both `String`.
 
-A component value must expose its token type in order to be matched against a token type. Some production rules include token types:
+A component value must expose its token type in order to be matched against a token production. Some production rules include token productions:
 
   - `<function-token>`
     - `<general-enclosed>`
@@ -52,15 +52,13 @@ All component values are represented as plain objects exposing token and CSS typ
 
 A `<percentage-token>` can also be considered as a dimension (cf. [#7381](https://github.com/w3c/csswg-drafts/issues/7381)), therefore it also has `unit`, to simplify parsing and serializing.
 
-In CSS Syntax, `<number-token>` and `<dimension-token>` are defined with a `type` that is either `integer` or `number`, and `<*-integer>` and `<*-dimension>` are defined as a `<number-token>` whose `type` is `integer`, noting that the `type` of any number specified with `.` or the scientific notation is currently defined as `number` (even `1.0` or `1e1`).
+In CSS Syntax:
 
-In this library, `<*-integer>` and `<*-dimension>` are parsed by matching a corresponding token whose `value` is an integer, which means `<number-token>` and `<dimension-token>` do not have `type`, and `nth-child(1e1)` or `nth-child(1e1n)` are valid if not otherwise discarded when validating the result from parsing `<an-b>`.
+  - `<number-token>` and `<dimension-token>` are defined with a `type` that is either `integer` or `number`
+  - `<*-integer>` and `<*-dimension>` (produced by `<an+b>`) match `<number-token>` and `<dimension-token>` whose `type` is `integer`
+  - `type` is `number` when the value is specified with `.` or the scientific notation (even `1.0` or `1e1`)
 
----
-
-Conceptually, a function or a simple block represent a name for a function, opening and closing block tokens, one or more component values. They could be represented either as a list with properties, as an object whose `value` property represents the component value(s), or both at the same time.
-
-Also, one may expect to get a list of component values from parsing a list of component values, even when the grammar represents a single component value.
+In this library, `<number-token>` and `<dimension-token>` do not have `type` and `<integer>`, `<*-integer>`, `<*-dimension>`, match a corresponding token whose `value` is an integer, which means `nth-child(1e1)` or `nth-child(1e1n)` should be discarded.
 
 ## Declaration and rule
 

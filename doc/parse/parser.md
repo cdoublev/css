@@ -3,13 +3,14 @@
 
 The parser entry points normalize the input into a token stream before any specific processing and parsing against a CSS grammar defined in:
 
-  - [CSS Syntax](https://drafts.csswg.org/css-syntax-3/#rule-defs), with the productions of rule block value types, defined with an algorithm that consumes declarations and rules from the token stream, and requires validating them in the context
-  - [CSS Value](https://drafts.csswg.org/css-values-4/#value-defs), with the productions of CSS basic data types, defined with their corresponding token, and other productions used in many CSS values
+  - [CSS Syntax](https://drafts.csswg.org/css-syntax-3/#rule-defs), with the CSS rule block value types, defined with an algorithm that consumes declarations and rules from the token stream, and validates them in the context
+  - [CSS Value](https://drafts.csswg.org/css-values-4/#value-defs), with the CSS basic data types, defined with their corresponding token, and other CSS types used in many CSS values
   - other CSS specifications, with productions usually defined with a value definition and possibly specific rules written in prose, sometimes with an algorithm
 
 There are many established tools like Lex + Yacc or ANTLR that take a grammar defined with production rules as input, and return a parser as output, which is often as efficient as any handwritten parser. Then why implement a CSS parser?
 
 This document introduces some concepts of the formal language theory before defining the specific requirements of a CSS parser, and providing an overview of the parser in this library.
+
 
 ## Theory
 
@@ -33,6 +34,7 @@ How a production rule is applied depends on the traversal order. When following 
 
 An **abstract syntax tree** is the result of simplifying the parse tree in order to be semantically interpreted or compiled by another program (eg. the HTML document renderer or a CSS processing tool).
 
+
 ### Context
 
 Some grammars are said to be **context-sensitive** or **context-free**.
@@ -48,6 +50,7 @@ But CSS productions can also be sensitive to parent or higher level productions:
 
 The *syntactic context* is any visible object (rule, declaration, function) surrounding a value, whereas the *semantic context* is an invisible wrapper. Both can change the grammar of a value.
 
+
 ### Ambiguity
 
 An **ambiguity** exists when there are multiple derivations for the same input.
@@ -59,6 +62,7 @@ As in math operations, left associativity is usually expected for parsing progra
 For grammars that remain ambiguous, a priority must be decided, either ahead of time (statically), with the first, last, or longest match priority, or at parse time (dynamically), depending on the context.
 
 Detecting ambiguities is non-trivial when symbols can be combined in any order or multiplied a varying number of times. Generating a LL/LR (Left to right, Leftmost/Rightmost derivation) parser from a grammar is the only guarantee that it is unambiguous.
+
 
 ### Automaton
 
@@ -91,11 +95,14 @@ All regular grammars can be parsed with a Push-Down Automaton, which is said to 
 
 A language is said to be finite if there is no recursion in its grammar, which is different than an infinite number of repetitions. The CSS grammar includes some recursions but it defines a limit for both recursion and repetition.
 
+
 ### State of the art
 
 WIP
 
+
 ## Requirements
+
 
 ### Backtracking
 
@@ -115,42 +122,42 @@ Similarly, backtracking is useless when a function or simple block value failed 
 
 The only way to short-circuit recursive parse functions and immediately abort parsing, is to throw an error and catch it in a main parse function. However, error boundaries are needed to resume parsing at a higher level.
 
+
 ### Parsing flow
 
 To [parse a CSS style sheet](https://drafts.csswg.org/css-syntax-3/#parse-a-css-stylesheet), the parser must *consume a stylesheet's contents* as objects (rules) from the token stream. Similarly, to [parse a CSS rule](https://drafts.csswg.org/cssom-1/#parse-a-css-rule), it must consume a rule as an object.
 
 But [`@page`](https://drafts.csswg.org/css-page-3/#syntax-page-selector), a top-level rule defined since CSS 1, must be parsed with *parse something according to a CSS grammar*, which runs first *parse a list of component values*, which does not expect a high-level object.
 
-What a rule's value definition like `@page <page-selector-list> { <declaration-at-rule-list> }` represents is unclear because of this problem. It could be either:
+Similarly as for a function or a simple block, `@page <page-selector-list> { <declaration-rule-list> }` does not represent a list of tokens but an object whose `name`, `prelude`, `value`, match the corresponding part of this value definition.
 
-  1. an `<at-keyword-token>` representing `@page`, followed by tokens matching `<page-selector-list>`, `<{-token>`, tokens resulting from parsing `<declaration-at-rule-list>`, and `<}-token>`
-  2. a single object whose `name`, `prelude`, and `value`, match the corresponding parts of the value definition, similarly as for a function `name` and `value`
-
-To parse `<declaration-at-rule-list>` and other [`<block-contents>` subtypes](https://drafts.csswg.org/css-syntax-3/#typedef-block-contents), the parser must *consume a block’s contents* (rules and declarations), which requires filtering out invalid contents in the context, which means any qualified rule, and any at-rule or declaration that is not accepted in `@page` or that does not match the corresponding grammar.
+To parse `<declaration-rule-list>` and other [`<block-contents>` subtypes](https://drafts.csswg.org/css-syntax-3/#typedef-block-contents), the parser must *consume a block’s contents* (rules and declarations), which requires filtering contents invalid in the context, which means any qualified rule, and any at-rule or declaration that is not accepted in `@page` or that does not match the corresponding grammar.
 
 The parser must not only be able to parse a grammar by matching a value definition, but also by validating the result against a specific rule, removing or replacing invalid parts, etc.
 
 For example, to parse `<media-query-list>` in `@media`, `<forgiving-selector-list>` in a style rule, or `<font-src-list>` in `@font-face`, the parser must *parse a comma-separated list according to a CSS grammar*, which matches each list of component values resulting from *parse a comma-separated list of component values* against `<media-query>`, `<complex-real-selector>`, `<font-src>`, respectively, or returns an empty list.
 
-CSSOM implicitly requires creating a `CSSRule` before validating its order but neither CSSOM or CSS Syntax prescribe when to create `CSSStyleSheet` or `CSSRule`, before or after parsing it againt its grammar.
+CSSOM implicitly requires creating a `CSSRule` before validating its order but neither CSSOM or CSS Syntax requires creating `CSSStyleSheet` or `CSSRule` before or after parsing it againt its grammar.
+
 
 ### Context
 
-As a reminder, the semantic context is represented by sibling and parent productions, and the syntactic context is represented by the productions of higher level functions, declaration, rules.
+As a reminder, the semantic context is represented by sibling and parent productions, and the syntactic context is represented by the higher level objects: functions, declaration, rules.
 
 When `@media` and `@supports` are nested in a style rule, their block value does not accept the same rules. This raises the question of how to represent and access context.
 
-Looking first at how to access a higher level CSS rule value, definition, or both, it can be achieved by ensuring the parser keeps track of them. But when using `CSSRule.insertRule()`, they would be missing.
-
-Therefore the initial context must be initialized with the existing CSSOM tree.
-
-**Note:** having the whole CSSOM tree allows any namespace prefix to be validated while parsing, by resolving namespaces declared in top-level `@namespace`, which explains that `*` and null are the only valid namespace prefixes allowed in `Element.querySelector[All]()`, because this interface does not allow resolving declared namespaces.
+Looking first at how to access a parent CSS rule value, definition, or both, it can be achieved by ensuring the parser records them. But they would be missing when using `CSSRule.insertRule()`, so the initial context must be initialized with the existing CSSOM tree.
 
 A CSS rule definition must define:
 
   - the CSS rules allowed or excluded in its block value
   - the properties/descriptors that can or cannot be declared in its block value
   - whether declarations cascade
+  - whether it applies to elements
+
+The grammar can be extended depending on the context. CSS-wide keywords, arbitrary and whole value substitutions, are not part of a specific property grammar but are accepted for any property, and for descriptors in some contexts. Similarly, some numeric substitutions are only valid in contexts applying to an element.
+
+`Element.style`, `Element.sizes`, `CanvasTextDrawingStyles.font`, `CSSFontFeatureValuesMap.set()`, etc, use parser entry points that take a grammar but no context. However, since CSS Syntax often requires validating values *"in the context"*, it is implicitly required, and the `grammar` argument can remain specific to the given value. It cannot represent a style rule by default, since none of the above interfaces are associated to a style rule.
 
 Reading the semantic context may require traversing the tree from bottom to top. Such requirement is related to the well-known time and space trade off: storing a reference of a parent node in child nodes takes space but traversing a tree takes time. Other trade-offs exist between a static tree path, coupled with the grammar and exposed to the slightest change, and a functional search, whose time complexity could be slightly greater.
 
@@ -168,16 +175,22 @@ There are many semantic rules that can only be applied after matching the value 
 
 All numeric values can be replaced with a math function. This can be achieved with `replace(node)` returning the result from parsing the alternative grammar.
 
+
 ## Implementation
 
 ### Data model
 
+
 #### Nodes
+
 
 #### Trees
 
+
 ### Processing model
 
+
 #### Entry points
+
 
 #### State machine

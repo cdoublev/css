@@ -1,12 +1,12 @@
 
 # Serializing CSS
 
-The procedure to [*serialize a CSS rule*](https://drafts.csswg.org/cssom-1/#serialize-a-css-rule) is rather explicit for prelude and descriptor serialization, therefore this document only focuses on property serialization, which depends on the interface:
+The procedure to [*serialize a CSS rule*](https://drafts.csswg.org/cssom-1/#serialize-a-css-rule) is rather explicit so this document focuses on serializing property values, which depends on the interface:
 
   - `Element.style`, `CSSRule.style`, `CSSRule.cssText`: the declared value
-  - `getComputedStyle()` or the `Computed` tab of browser development tools: the resolved value
+  - `getComputedStyle()`: the resolved value
 
-`Element.style` and all `CSSRule.style` and `HTMLStyleElement.style` in the document can have different declaration values applying to the same `Element` for the same property. CSS cascade defines how to resolve a *cascaded value* from these declared values, and other values at later processing stages:
+`Element.style` and each `CSSRule.style` and `HTMLStyleElement.style` in the document can hold a declaration value for the same property and `Element`. CSS cascade defines how to resolve a *cascaded value* and other values at later processing stages:
 
   - *authored value*: the input value used to set the property
   - [declared value](https://drafts.csswg.org/css-cascade-5/#declared): *each property declaration applied to an element contributes a declared value for that property*
@@ -17,9 +17,10 @@ The procedure to [*serialize a CSS rule*](https://drafts.csswg.org/cssom-1/#seri
   - [used value](https://drafts.csswg.org/css-cascade-5/#used): *the result of taking the computed value and completing any remaining calculations to make it the absolute theoretical value*
   - [actual value](https://drafts.csswg.org/css-cascade-5/#actual): *the used value after any such [user agent dependent] adjustments have been made*
 
-The declared value may serialize to a slightly different value than the authored value, according to the general serialization principles, and because the lexical parser does not keep minor details like trailing decimal 0, character case, etc.
+The declared value may serialize to a slightly different value than the authored value, according to the general serialization principles, and because the lexical parser does not keep minor details like trailing decimal 0, unit character case, etc.
 
-The computed and later value may serialize to the same value than the declared value, or a value closer to its absolute equivalent, computed using data that may not be available when parsing the declared value, like property values declared for an ancestor `Element` or the viewport size.
+The computed and later value may serialize to the same value than the declared value, or a value closer to its absolute equivalent, computed using data that may not be available while parsing the declared value, like property values declared for an ancestor `Element` or the size of the block container.
+
 
 ## General principles
 
@@ -32,16 +33,17 @@ The first principle means that the representation resulting from parsing an inpu
 
 The second principle means sorting component values in the canonical order defined by the grammar and removing component values that can be omitted.
 
+
 ## Implementation
 
 CSS values are currently represented either as a `List` or a plain object, with a `types` property.
 
-*Serialize a CSS value* accepts a single longhand declaration, or a list of declarations for a shorthand that must be reduced into a single declaration. Then the declaration value is represented as a list (plain array) of CSS component values (step 2), simplified according to the shortest-serialization principle.
+*Serialize a CSS value* accepts a single longhand declaration, or a list of declarations for a shorthand that must be reduced into a single declaration. Then the declaration value is represented as a list (plain array) of CSS component values (step 2), simplified according to the shortest serialization principle.
 
-`serializeCSSComponentValueList()` is a custom abstraction of steps 3 to 5 that serialize the list without considering its `types`, and that can be used by other serialization functions:
+`serializeCSSComponentValueList()` is a custom abstraction of steps 4 to 5 that can be used by other specific serialization functions and serializes the provided list without considering its `types` and using its `separator` (default: whitespace), whereas `serializeCSSComponentValue()` is the implementation of *serialize a CSS component value*, and run any specific serialization function according to its `types`:
 
   > 3. Remove any `<whitespace-token>`s from components.
   > 4. Replace each component value in components with the result of invoking *serialize a CSS component value*.
   > 5. Join the items of components into a single string, inserting `" "` (U+0020 SPACE) between each pair of items unless the second item is a `","` (U+002C COMMA). Return the result.
 
-`serializeCSSComponentValue()`, the implementation of *serialize a CSS component value*, does not expect a value without `types`.
+Step 3 is skipped since `<whitespace-token>`s are already removed from the representation of all productions but arbitrary ones (this could otherwise prevent validating a parent production like `<whole-value>`), which are represented with a `List` whose `separator` is an empty string.

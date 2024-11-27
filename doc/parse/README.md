@@ -17,6 +17,7 @@ The output can be a list of component values, a declaration, a `CSSRule`, a `CSS
 
 Let's introduce the CSS grammar and look at parsing a declaration specified with `Element.style.setProperty()`, before sketching a complete picture by looking at parsing a style sheet.
 
+
 ## CSS grammar
 
 The CSS grammar is structred on three levels: lexic, syntax, and semantics. Lexic and syntax define the structure of a value while semantics define its contextual meaning. For example, `opacity: red` is a valid `<declaration>` but its value is invalid according to its name.
@@ -33,13 +34,14 @@ The following list introduces the different levels of CSS structures:
     - name: component value
     - value: list of component values
 
-The input list of tokens (CSS lexical units) may be transformed into a declaration, a rule, or a collection of them (style sheet and rule block), before validating them in the context (style sheet or parent rule) and parsing their contents (rule prelude and block value, declaration value) against the corresponding grammar, recursively.
+The input list of tokens (CSS lexical units) may be transformed into a declaration, a rule, or a collection of them (style sheet and rule block), before validating it in the context (style sheet or parent rule) and parsing its contents (the declaration value or the rule prelude and block value) against the corresponding grammar, recursively.
 
-Style sheet and rule block values are represented with one of the few productions that is not defined with a value definition:
+The style sheet and rule block values are represented with one of the few productions that are not defined with a value definition:
 
   - `<rule-list>`, `<qualified-rule-list>`, `<at-rule-list>`, accept qualified and/or at-rules allowed by the context
   - `<declaration-rule-list>` accept at-rules and `<declaration>` for properties/descriptors allowed by the context
   - `<declaration-list>` accept `<declaration>`s for properties/descriptors allowed by the context
+
 
 ## Parsing a declaration
 
@@ -51,7 +53,7 @@ A declaration for a property can appear in the prelude (as a feature or style qu
 
 **Aside**
 
-In CSSOM, `CSSStyleDeclaration` is named a *CSS declaration block* because it originally represented the block value of a style rule, which previously could only contain a list of declarations. But some at-rules introduced later were also assigned a `CSSStyleDeclaration` as an interface with their descriptor declarations. Assigning a CSS rule to `Element.style` or `Element.style.cssText` does not cause a parse error. However, it is currently ignored:
+In CSSOM, `CSSStyleDeclaration` is named a *CSS declaration block* because it originally represented the block value of a style rule, which previously could only contain a list of declarations. But the CSSOM representation of some at-rules introduced later has also been defined with a `CSSStyleDeclaration` storing their declarations. Assigning a CSS rule to `Element.style` or `Element.style.cssText` does not cause a parse error. However, it is currently ignored:
 
 ```html
 <!-- `text` is rendered with a `green` color -->
@@ -62,17 +64,11 @@ In CSSOM, `CSSStyleDeclaration` is named a *CSS declaration block* because it or
 
 [`Element.style.setProperty(property, value)`](https://drafts.csswg.org/cssom-1/#dom-cssstyledeclaration-setproperty) must store a CSS declaration for `property` in `Element.style` (step 8 or 9), whose value is a list of component values resulting from *parse a CSS value* with the input string `value` (step 5).
 
-*CSS value* is not defined in any CSS specification but it is assumed to be any value that can be parsed as a list of component values.
+*CSS value* is not defined in any CSS specification but is assumed to be any value that can be parsed as a list of component values.
 
-[CSS declaration](https://drafts.csswg.org/cssom-1/#css-declaration):
+[CSS declaration](https://drafts.csswg.org/css-syntax-3/#declaration):
 
-  > A CSS declaration is an abstract concept that is not exposed as an object in the DOM. A CSS declaration has the following associated properties:
-  >
-  > - **property name:** the property name of the declaration
-  > - **value:** the value of the declaration represented as a list of component values
-  > - **important flag:** either set or unset, can be changed
-
-**Note:** this definition should use *property or descriptor name* instead of *property name*.
+  > A declaration has a name which is a string, a value consisting of a list of component values, and an `important` flag which is initially unset.
 
 [Component value](https://drafts.csswg.org/css-syntax-3/#component-value):
 
@@ -80,13 +76,15 @@ In CSSOM, `CSSStyleDeclaration` is named a *CSS declaration block* because it or
 
 Reading [*parse a CSS value*](https://drafts.csswg.org/cssom-1/#parse-a-css-value) and subjacent procedures in CSSOM and CSS Syntax, a CSS declaration value is a list of component values nearly identical to the list of tokens resulting from normalizing (tokenizing) the input string `value`.
 
-Component values are either preserved tokens or are consumed to create a function, simple block, declaration, or rule. To match a property defined with `rgb()`, the list must therefore include a component value whose `name` is `rgb` and whose `value` is a list of component values matching the definition of its arguments:
+Tokens are either preserved as "primitive" component values, or consumed into structured ones, a function or simple block, or into declarations and rules. To match a property defined with `rgb()`, the list must therefore include a component value whose `name` is `rgb` and whose `value` is a list of component values matching the definition of its arguments:
 
-  > To consume a function:
+  > To consume a function from a token stream `input`:
   >
-  > Create a function with its name equal to the value of the current input token and with its value initially set to an empty list. [...]
+  > Assert: The next token is a `<function-token>`.
+  >
+  > Consume a token from `input`, and let `function` be a new function with its name equal the returned token’s value, and a value set to an empty list.
 
-`CSSStyleDeclaration` does not store CSS declarations for shorthands. The result from parsing an input representing a shorthand value must be expanded to a CSS declaration for each of its longhands. CSSOM is [rather hand-wavy](https://github.com/w3c/csswg-drafts/issues/6451) about this expansion in the procedure for `CSSStyleDeclaration.setProperty()` and `CSSStyleDeclaration.cssText`.
+`CSSStyleDeclaration` does not store CSS declarations for shorthands. The result from parsing a shorthand value must be expanded to a CSS declaration for each of its longhands. CSSOM is [rather hand-wavy](https://github.com/w3c/csswg-drafts/issues/6451) about this in the procedure for `CSSStyleDeclaration.setProperty()` and `CSSStyleDeclaration.cssText`.
 
 ---
 
@@ -94,9 +92,9 @@ This quick overview raises a fundamental question about the result of *parse a C
 
 Their respective steps, *match `list` against the grammar for the property `property` in the CSS specification*, and *let `parsed declaration` be the result of parsing `declaration` according to the appropriate CSS specifications*, are not further defined, but both must imply these processings:
 
-  - matching the list of component values against a value definition, applying any specific rules for `property` or the productions in its value definition
-  - matching the list of component values against CSS-wide keywords or other whole property substitutions
   - searching for an arbitrary substitution in the list of component values
+  - matching the list of component values against a value definition, applying any specific rules for `property` or the productions in its value definition
+  - matching the list of component values against CSS-wide keywords and other declaration value substitutions
 
 [*Serialize a CSS value*](https://drafts.csswg.org/cssom-1/#serialize-a-css-value) only enforces idempotence, ie. `assert.equal(serialize(parse(input)), serialize(parse(serialize(parse(input)))))`, but some production rules make it hard to only store the original input, like math functions and `<an+b>`, which require to be parsed into specific representations. Furthermore, component value(s) must be associated the matched productions in some way, to later apply any specific serialization rule.
 
@@ -110,6 +108,7 @@ To overcome these challenges, this library defines the following requirements fo
 
 ² Omitted values exist in value definitions containing a multiplier allowing zero or more occurrences, or a combination of `||` separated symbols.
 
+
 ## Parsing a style sheet
 
 CSS Syntax defines entry points and algorithms to use to produce a `CSSStyleSheet`:
@@ -122,7 +121,7 @@ CSS Syntax defines entry points and algorithms to use to produce a `CSSStyleShee
   >
   > The input to the CSS parsing process consists of a stream of Unicode code points, which is passed through a tokenization stage followed by a tree construction stage. The output is a `CSSStyleSheet` object.
 
-Each *parse* procedure from CSS Syntax is named a *parser entry point* and runs a corresponding *consume* procedure that is named a *parser algorithm*.
+Each *parse* procedure from CSS Syntax is named a *parser entry point* and runs a corresponding *consume* procedure named a *parser algorithm*.
 
   > [5.4. Parser Entry Points](https://drafts.csswg.org/css-syntax-3/#parser-entry-points)
   >
@@ -138,9 +137,9 @@ Each *parse* procedure from CSS Syntax is named a *parser entry point* and runs 
   >
   > [...]
 
-Entry points can receive a string, tokens, or component values, and output the expected structure: a component value, a declaration, a rule, or a list of them. They are not intended to be used at an intermediate step of the recursive parsing process, since some algorithms construct high-level objects that are not a string, tokens, or component values.
+Entry points can receive a string, tokens, or component values, and output the expected structure: a component value, a declaration, a rule, or a list of them. They are not intended to be used at an intermediate step of the recursive parsing process, since some algorithms output high-level objects that are not a string, tokens, or component values.
 
-Algorithms for a declaration and a rule may have to validate the consumed content in the context.
+Algorithms for a rule and a declaration require validating them in the context against their grammar:
 
   > The CSS parser is agnostic as to the contents of blocks — they’re all parsed with the same algorithm [...].
   >
@@ -154,27 +153,22 @@ If the grammar of a rule or a property or descriptor value cannot be resolved in
 
 Some rules like `@charset`, `@import`, `@namespace`, `@layer`, also define the order in which they must appear.
 
-However, CSS Syntax does not prescribe when and how construct CSSOM trees.
+However, CSS Syntax does not prescribe when and how to construct the CSSOM representation.
 
 Parsing a style sheet must run recursively from its top to bottom level, which allows constructing the CSSOM tree in parallel, noting that a `CSSStyleSheet` will never be discarded, or with a second traversal, to avoid discarding `CSSRule`s and cancelling any processing, like fetching a style sheet referenced by a `CSSImportRule`.
-
-Each entry point can be executed or merged with a corresponding *parse a CSS* function completing its procedure with parsing consumed content(s) against the appropriate grammars(s) for the context, and constructing a CSSOM object.
 
 ---
 
 Other productions require a specific processing.
 
-`<declaration-value>` and `<any-value>` are used in the value definition of arbitrary substitutions, the prelude of style rules, `@supports`, `@media`, `@contain`, and of `initial-value` in `@property`.
+`<declaration-value>` and `<any-value>` are used in the value definition of custom properties, `@property/initial-value`, substitution functions, and container/media/support queries.
 
   > The `<declaration-value>` production matches any sequence of one or more tokens, so long as the sequence does not contain `<bad-string-token>`, `<bad-url-token>`, unmatched `<)-token>`, `<]-token>`, or `<}-token>`, or top-level `<semicolon-token>` tokens or `<delim-token>` tokens with a value of `!`. It represents the entirety of what a valid declaration can have as its value.
   >
   > The `<any-value>` production is identical to `<declaration-value>`, but also allows top-level `<semicolon-token>` tokens and `<delim-token>` tokens with a value of `!`. It represents the entirety of what valid CSS can be in any context.
 
-`<declaration>` is used in the value definition of the prelude of `@supports` or `@contain` (in a feature or style query).
+`<declaration>` is used in the value definition of feature and style queries.
 
-  > A CSS processor is considered to support a declaration (consisting of a property and value) if it accepts that declaration (rather than discarding it as a parse error) within a style rule. If a processor does not implement, with a usable level of support, the value given, then it must not accept the declaration or claim support for it.
-
-  > The syntax of a `<style-feature>` is the same as for a declaration [...].
 
 ### Constructing the CSSOM tree
 
