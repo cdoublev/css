@@ -697,10 +697,10 @@ describe('arbitrary substitution', () => {
             ['random-item(--key, random-item(--key, 1))'],
             ['var(--custom, var(--custom))'],
             // Serialize the list of tokens
-            ['  /**/ !1 1e0 attr(  name, /**/ 1e0 /**/  ', '!1 1 attr(name, 1)'],
-            ['  /**/ !1 1e0 env(  name, /**/ 1e0 /**/  ', '!1 1 env(name, 1)'],
-            ['  /**/ !1 1e0 random-item(  --key, /**/ 1e0 /**/  ', '!1 1 random-item(--key, 1)'],
-            ['  /**/ !1 1e0 var(  --custom, /**/ 1e0 /**/  ', '!1 1 var(--custom, 1)'],
+            ['  /**/ !1/**/1e0 attr(  name, /**/ 1e0 /**/  ', '!1 1 attr(name, 1)'],
+            ['  /**/ !1/**/1e0 env(  name, /**/ 1e0 /**/  ', '!1 1 env(name, 1)'],
+            ['  /**/ !1/**/1e0 random-item(  --key, /**/ 1e0 /**/  ', '!1 1 random-item(--key, 1)'],
+            ['  /**/ !1/**/1e0 var(  --custom, /**/ 1e0 /**/  ', '!1 1 var(--custom, 1)'],
             // Non-strict comma-containing production
             ['var(--custom,,)'],
             ['var(--custom, 1 {})'],
@@ -772,7 +772,10 @@ describe('--*', () => {
             // Whitespaces and comments
             [''],
             ['  /**/  ', ''],
-            ['  /**/  Red  ,  (  orange  /**/  )  ,  green  /**/  ', 'Red  ,  (  orange  /**/  )  ,  green'],
+            [
+                '  /**/  Red  ,  (  orange  /**/  )  ,  green  /**/  ! /**/ important',
+                'Red  ,  (  orange  /**/  )  ,  green !important',
+            ],
             // Substitution
             ['var(  --PROPerty, /**/ 1e0 /**/  )  ', 'var(  --PROPerty, /**/ 1e0 /**/  )'],
             ['mix(0,/**/, 1e0 )  ', 'mix(0,/**/, 1e0 )'],
@@ -781,7 +784,7 @@ describe('--*', () => {
         ]
         valid.forEach(([input, expected = input]) => {
             style.cssText = `--custom: ${input}`
-            expect(style.getPropertyValue('--custom')).toBe(expected)
+            expect(style.getPropertyValue('--custom')).toBe(expected.replace(' !important', ''))
             expect(style.cssText).toBe(`--custom: ${expected};`)
         })
     })

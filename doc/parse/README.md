@@ -161,7 +161,7 @@ Parsing a style sheet must run recursively from its top to bottom level, which a
 
 Other productions require a specific processing.
 
-`<declaration-value>` and `<any-value>` are used in the value definition of custom properties, `@property/initial-value`, substitution functions, and container/media/support queries.
+`<declaration-value>` and `<any-value>` are used in the value definition of custom properties, `@property/initial-value`, substitution functions, container/media/support queries, and pseudo selectors.
 
   > The `<declaration-value>` production matches any sequence of one or more tokens, so long as the sequence does not contain `<bad-string-token>`, `<bad-url-token>`, unmatched `<)-token>`, `<]-token>`, or `<}-token>`, or top-level `<semicolon-token>` tokens or `<delim-token>` tokens with a value of `!`. It represents the entirety of what a valid declaration can have as its value.
   >

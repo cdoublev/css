@@ -784,16 +784,15 @@ describe('<any-value>', () => {
     test('invalid', () => {
         const invalid = [
             // One or more tokens
-            [''],
+            '',
             // Invalid token
-            ['"bad\nstring"'],
-            ['url(bad .url)'],
-            [')'],
-            [']'],
-            ['}'],
+            '"bad\nstring"',
+            'url(bad .url)',
+            ']',
+            ')',
+            '}',
         ]
-        invalid.forEach(([input, definition = '<any-value>']) =>
-            expect(parse(definition, input, false)).toBeNull())
+        invalid.forEach(input => expect(parse('<any-value>', input, false)).toBeNull())
     })
     test('representation', () => {
         const value = list([identToken('any'), delimiter(' '), identToken('value')], '', ['<any-value>'])
@@ -807,32 +806,44 @@ describe('<declaration-value>', () => {
     test('invalid', () => {
         const invalid = [
             // One or more tokens
-            [''],
+            '',
             // Invalid token
-            ['"bad\nstring"'],
-            ['url(bad .url)'],
-            [')'],
-            [']'],
-            ['}'],
-            [';'],
-            ['!'],
+            '"bad\nstring"',
+            'url(bad .url)',
+            ']',
+            ')',
+            '}',
+            ';',
+            '!',
         ]
-        invalid.forEach(([input, definition = '<declaration-value>']) =>
-            expect(parse(definition, input, false)).toBeNull())
+        invalid.forEach(input => expect(parse('<declaration-value>', input, false)).toBeNull())
     })
     test('representation', () => {
         const value = list([identToken('declaration'), delimiter(' '), identToken('value')], '', ['<declaration-value>'])
         expect(parse('<declaration-value>', 'declaration value', false)).toMatchObject(value)
     })
     test('valid', () => {
+        expect(parse('<declaration-value>', 'positioned {} var(1)')).toBe('positioned {} var(1)')
         expect(parse('<declaration-value>', '  /**/  1/**/1e0  /**/  ')).toBe('1 1')
-        expect(parse('<declaration-value>', '" "')).toBe('" "')
     })
 })
 describe('<declaration>', () => {
     test('invalid', () => {
-        expect(parse('<declaration>', 'color red', false)).toBeNull()
-        expect(parse('<declaration>', 'color: red;', false)).toBeNull()
+        const invalid = [
+            // Invalid structure
+            'color red',
+            'color: red;',
+            // Invalid value
+            'color: var(--custom) {}',
+            'color: {} var(--custom)',
+            '--custom: "bad\nstring"',
+            '--custom: url(bad .url)',
+            '--custom: ]',
+            '--custom: )',
+            '--custom: }',
+            '--custom: !',
+        ]
+        invalid.forEach(input => expect(parse('<declaration>', input, false)).toBeNull())
     })
     test('representation', () => {
         expect(parse('<declaration>', 'color: green !important', false)).toMatchObject({
@@ -844,8 +855,9 @@ describe('<declaration>', () => {
     })
     test('valid', () => {
         const valid = [
-            ['  /**/  opacity :!1/**/1e0 !important  /**/  ', 'opacity: !1 1 !important'],
-            ['--custom:  /**/  1e0 !important  /**/  ', '--custom: 1e0 !important'],
+            ['  /**/  unknown :/1/**/1e0 var(1) ! /**/ important  /**/  ', 'unknown: /1 1 var(1) !important'],
+            ['unknown: {} !important', 'unknown: {} !important'],
+            ['--custom:  /**/  {} 1e0 {} !important  /**/  ', '--custom: {} 1e0 {} !important'],
             ['--custom:', '--custom: '],
         ]
         valid.forEach(([input, expected]) => expect(parse('<declaration>', input)).toBe(expected))
@@ -1009,14 +1021,14 @@ describe('<string>', () => {
 describe('<url>', () => {
     test('invalid', () => {
         const invalid = [
-            'url(inval id.url)',
-            'url(inval\nid.url)',
-            'url(inval\tid.url)',
-            'url(inval"id.url)',
-            "url(inval'id.url)",
-            'url(inval(id.url)',
-            'url(inval\u0001id.url)',
-            'url(inval\\\nid.url)',
+            'url(bad .url)',
+            'url(bad\n.url)',
+            'url(bad\t.url)',
+            'url(bad".url)',
+            "url(bad'.url)",
+            'url(bad(.url)',
+            'url(bad\u0001.url)',
+            'url(bad\\\n.url)',
         ]
         invalid.forEach(input => expect(parse('<url>', input, false)).toBeNull())
     })
