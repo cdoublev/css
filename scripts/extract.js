@@ -56,6 +56,10 @@ const initial = {
 }
 const replaced = {
     descriptors: {
+        '@font-face': {
+            // https://github.com/w3c/csswg-drafts/issues/8835
+            'unicode-range': { value: '<urange>#' },
+        },
         '@property': {
             // https://github.com/w3c/webref/issues/707
             'initial-value': { initial: '' },
@@ -449,10 +453,6 @@ const excluded = {
         'css-ui': [
             // Prefer SVG
             'pointer-events',
-        ],
-        'mathml-core': [
-            // https://github.com/w3c/mathml-core/issues/246
-            'text-transform',
         ],
     },
     rules: {},
