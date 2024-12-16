@@ -6,7 +6,6 @@
  *   - `serialized` to the result from serializing `parsed`
  */
 const { addQuotes, logError, tab } = require('../lib/utils/string.js')
-const { createContext } = require('../lib/utils/context.js')
 const descriptors = require('../lib/descriptors/definitions.js')
 const fs = require('node:fs/promises')
 const { isOmitted } = require('../lib/utils/value.js')
@@ -15,8 +14,6 @@ const path = require('node:path')
 const properties = require('../lib/properties/definitions.js')
 const { serializeCSSValue } = require('../lib/serialize.js')
 const shorthands = require('../lib/properties/shorthands.js')
-
-const styleRuleContext = createContext({ parentStyleSheet: {}, types: ['@style'] })
 
 /**
  * @param {string[]} types
@@ -115,7 +112,7 @@ function serializePropertyDefinitions(properties) {
                 string += `${tab(2)}group: ${addQuotes(group)},\n`
             }
             if (initial !== undefined) {
-                const [parsed, serialized] = getInitialValue(property, initial, styleRuleContext, 3)
+                const [parsed, serialized] = getInitialValue(property, initial, undefined, 3)
                 string += `${tab(2)}initial: {\n`
                 string += `${tab(3)}parsed: ${parsed},\n`
                 string += `${tab(3)}serialized: ${addQuotes(serialized)},\n`
@@ -135,12 +132,11 @@ function serializePropertyDefinitions(properties) {
 function serializeDescriptorDefinitions(descriptors) {
     return Object.entries(descriptors).reduce(
         (string, [rule, definitions]) => {
-            const context = createContext({ parentStyleSheet: {}, types: [rule] })
             string += `${tab(1)}${addQuotes(rule)}: {\n`
             Object.entries(definitions).forEach(([descriptor, { initial, type, value }]) => {
                 string += `${tab(2)}${addQuotes(descriptor)}: {\n`
                 if (initial !== undefined) {
-                    const [parsed, serialized] = getInitialValue(descriptor, initial, context, 4)
+                    const [parsed, serialized] = getInitialValue(descriptor, initial, rule, 4)
                     string += `${tab(3)}initial: {\n`
                     string += `${tab(4)}parsed: ${parsed},\n`
                     string += `${tab(4)}serialized: ${addQuotes(serialized)},\n`

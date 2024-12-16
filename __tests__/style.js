@@ -25,7 +25,7 @@ const whiteSpace = require('../lib/values/white-space.js')
  * @param {object} [privateData]
  * @returns {CSSStyleDeclaration}
  */
-function createStyleBlock(privateData = {}) {
+function createStyleBlock(privateData = { parentRule: styleRule }) {
     return CSSStyleProperties.create(globalThis, undefined, privateData)
 }
 
@@ -41,9 +41,10 @@ const rules = `
     @keyframes animation { 0% {} }
     @page { @top-left {} }
     @position-try --custom {}
+    style {}
 `
 const styleSheet = CSSStyleSheet.createImpl(globalThis, undefined, { rules })
-const { _rules: [fontFaceRule, keyframesRule, pageRule, positionTryRule] } = styleSheet
+const { _rules: [fontFaceRule, keyframesRule, pageRule, positionTryRule, styleRule] } = styleSheet
 const { _rules: [keyframeRule] } = keyframesRule
 const { _rules: [marginRule] } = pageRule
 

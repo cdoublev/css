@@ -26,20 +26,19 @@ const {
     time,
 } = require('../lib/values/value.js')
 const { cssom, install } = require('../lib/index.js')
+const { createContext, parseCSSGrammar } = require('../lib/parse/parser.js')
 const { toDegrees, toRadians } = require('../lib/utils/math.js')
-const { createContext } = require('../lib/utils/context.js')
 const { keywords: cssWideKeywords } = require('../lib/values/substitutions.js')
-const { parseCSSGrammar } = require('../lib/parse/parser.js')
 const { serializeCSSComponentValue } = require('../lib/serialize.js')
 
 /**
  * @param {string} definition
  * @param {string} value
  * @param {boolean} [serialize]
- * @param {object} [context]
+ * @param {object|string} [context]
  * @returns {object|object[]|string|null}
  */
-function parse(definition, value, serialize = true, context = createContext(styleRule)) {
+function parse(definition, value, serialize = true, context = styleRule) {
     value = parseCSSGrammar(value, definition, context)
     if (serialize) {
         if (value) {
@@ -63,10 +62,6 @@ const rules = `
 `
 const styleSheet = cssom.CSSStyleSheet.createImpl(globalThis, undefined, { rules })
 const { _rules: [,, styleRule, containerRule, { _rules: [keyframeRule] }, mediaRule, supportsRule] } = styleSheet
-const containerContext = createContext(containerRule)
-const keyframeContext = createContext(keyframeRule)
-const mediaQueryContext = createContext(mediaRule)
-const supportsContext = createContext(supportsRule)
 
 const a = keyword('a')
 const b = keyword('b')
@@ -850,17 +845,14 @@ describe('<declaration>', () => {
             important: true,
             name: 'color',
             types: ['<declaration>'],
-            value: list([identToken('green')], ''),
+            value: keyword('green', ['<named-color>', '<color-base>', '<color>', 'color']),
         })
     })
     test('valid', () => {
-        const valid = [
-            ['  /**/  unknown :/1/**/1e0 var(1) ! /**/ important  /**/  ', 'unknown: /1 1 var(1) !important'],
-            ['unknown: {} !important', 'unknown: {} !important'],
-            ['--custom:  /**/  {} 1e0 {} !important  /**/  ', '--custom: {} 1e0 {} !important'],
-            ['--custom:', '--custom: '],
-        ]
-        valid.forEach(([input, expected]) => expect(parse('<declaration>', input)).toBe(expected))
+        expect(parse('<declaration>', '--custom:  /**/  {} 1e0 {} !important  /**/  '))
+            .toBe('--custom: {} 1e0 {} !important')
+        expect(parse('<declaration>', '--custom:'))
+            .toBe('--custom: ')
     })
 })
 
@@ -3394,7 +3386,7 @@ describe('<image-set()>', () => {
 })
 describe('<keyframe-selector>', () => {
     test('representation', () => {
-        expect(parse('<keyframe-selector>', '0%', false, keyframeContext))
+        expect(parse('<keyframe-selector>', '0%', false, keyframeRule))
             .toMatchObject(percentage(0, ['<keyframe-selector>']))
     })
     test('valid', () => {
@@ -3408,7 +3400,7 @@ describe('<keyframe-selector>', () => {
             ['calc(1% * sibling-index())', 'calc(1% * sibling-index())'],
         ]
         valid.forEach(([input, expected]) =>
-            expect(parse('<keyframe-selector>', input, true, keyframeContext)).toBe(expected))
+            expect(parse('<keyframe-selector>', input, true, keyframeRule)).toBe(expected))
     })
 })
 describe('<keyframes-name>', () => {
@@ -3488,32 +3480,32 @@ describe('<mf-comparison>', () => {
 })
 describe('<mf-boolean>', () => {
     test('invalid', () => {
-        expect(parse('<mf-boolean>', 'min-orientation', false, mediaQueryContext)).toBeNull()
-        expect(parse('<mf-boolean>', 'min-width', false, mediaQueryContext)).toBeNull()
+        expect(parse('<mf-boolean>', 'min-orientation', false, mediaRule)).toBeNull()
+        expect(parse('<mf-boolean>', 'min-width', false, mediaRule)).toBeNull()
     })
     test('representation', () => {
-        expect(parse('<mf-boolean>', 'width', false, mediaQueryContext))
+        expect(parse('<mf-boolean>', 'width', false, mediaRule))
             .toMatchObject(ident('width', ['<mf-name>', '<mf-boolean>']))
     })
     test('valid', () => {
-        expect(parse('<mf-boolean>', 'orientation', true, mediaQueryContext)).toBe('orientation')
+        expect(parse('<mf-boolean>', 'orientation', true, mediaRule)).toBe('orientation')
     })
 })
 describe('<mf-name>', () => {
     test('invalid', () => {
-        expect(parse('<mf-name>', 'color', false, containerContext)).toBeNull()
-        expect(parse('<mf-name>', 'inline-size', false, mediaQueryContext)).toBeNull()
+        expect(parse('<mf-name>', 'color', false, containerRule)).toBeNull()
+        expect(parse('<mf-name>', 'inline-size', false, mediaRule)).toBeNull()
     })
     test('representation', () => {
-        expect(parse('<mf-name>', 'width', false, mediaQueryContext)).toMatchObject(ident('width', ['<mf-name>']))
+        expect(parse('<mf-name>', 'width', false, mediaRule)).toMatchObject(ident('width', ['<mf-name>']))
     })
     test('valid', () => {
         const valid = [
-            ['COLOR', 'color', mediaQueryContext],
-            ['inline-size', 'inline-size', containerContext],
-            ['-webkit-device-pixel-ratio', 'resolution', mediaQueryContext],
-            ['-webkit-min-device-pixel-ratio', 'min-resolution', mediaQueryContext],
-            ['-webkit-max-device-pixel-ratio', 'max-resolution', mediaQueryContext],
+            ['COLOR', 'color', mediaRule],
+            ['inline-size', 'inline-size', containerRule],
+            ['-webkit-device-pixel-ratio', 'resolution', mediaRule],
+            ['-webkit-min-device-pixel-ratio', 'min-resolution', mediaRule],
+            ['-webkit-max-device-pixel-ratio', 'max-resolution', mediaRule],
         ]
         valid.forEach(([input, expected, context]) => expect(parse('<mf-name>', input, true, context)).toBe(expected))
     })
@@ -3528,13 +3520,13 @@ describe('<mf-plain>', () => {
             'width: random(1px, 1px)',
             'width: calc(1px * sibling-index())',
         ]
-        invalid.forEach(input => expect(parse('<mf-plain>', input, false, mediaQueryContext)).toBeNull())
+        invalid.forEach(input => expect(parse('<mf-plain>', input, false, mediaRule)).toBeNull())
     })
     test('representation', () => {
         const name = ident('width', ['<mf-name>'])
         const value = length(1, 'px', ['<mf-value>'])
-        expect(parse('<mf-plain>', 'width: 1px', false, mediaQueryContext))
-            .toMatchObject(list([name, delimiter(':'), value], ' ', ['<mf-plain>']))
+        const feature = list([name, delimiter(':'), value], ' ', ['<mf-plain>'])
+        expect(parse('<mf-plain>', 'width: 1px', false, mediaRule)).toMatchObject(feature)
     })
     test('valid', () => {
         const valid = [
@@ -3544,7 +3536,7 @@ describe('<mf-plain>', () => {
             ['width: calc(1px * 1)', 'width: calc(1px)'],
             ['aspect-ratio: 1', 'aspect-ratio: 1 / 1'],
         ]
-        valid.forEach(([input, expected]) => expect(parse('<mf-plain>', input, true, mediaQueryContext)).toBe(expected))
+        valid.forEach(([input, expected]) => expect(parse('<mf-plain>', input, true, mediaRule)).toBe(expected))
     })
 })
 describe('<mf-range>', () => {
@@ -3565,14 +3557,14 @@ describe('<mf-range>', () => {
             'width < random(1px, 1px)',
             'width < calc(1px * sibling-index())',
         ]
-        invalid.forEach(input => expect(parse('<mf-range>', input, false, mediaQueryContext)).toBeNull())
+        invalid.forEach(input => expect(parse('<mf-range>', input, false, mediaRule)).toBeNull())
     })
     test('representation', () => {
         const name = ident('width', ['<mf-name>'])
         const comparator = delimiter('=', ['<mf-eq>', '<mf-comparison>'])
         const value = length(1, 'px', ['<mf-value>'])
-        expect(parse('<mf-range>', 'width = 1px', false, mediaQueryContext))
-            .toMatchObject(list([name, comparator, value], ' ', ['<mf-range>']))
+        const range = list([name, comparator, value], ' ', ['<mf-range>'])
+        expect(parse('<mf-range>', 'width = 1px', false, mediaRule)).toMatchObject(range)
     })
     test('valid', () => {
         const valid = [
@@ -3580,8 +3572,7 @@ describe('<mf-range>', () => {
             ['width < calc(1px * 1)', 'width < calc(1px)'],
             ['0 < aspect-ratio < 1', '0 / 1 < aspect-ratio < 1 / 1'],
         ]
-        valid.forEach(([input, expected]) =>
-            expect(parse('<mf-range>', input, true, mediaQueryContext)).toBe(expected))
+        valid.forEach(([input, expected]) => expect(parse('<mf-range>', input, true, mediaRule)).toBe(expected))
     })
 })
 describe('<opentype-tag>', () => {
@@ -3782,9 +3773,7 @@ describe('<size-feature>', () => {
             'width < random(1px, 1px)',
             'width < calc(1px * sibling-index())',
         ]
-        valid.forEach(input => {
-            expect(parse('<size-feature>', input, true, containerContext)).toBe(input)
-        })
+        valid.forEach(input => expect(parse('<size-feature>', input, true, containerRule)).toBe(input))
     })
 })
 describe('<skew()>', () => {
@@ -3848,11 +3837,11 @@ describe('<string()>', () => {
 })
 describe('<style-feature>', () => {
     test('invalid', () => {
-        expect(parse('<style-feature>', 'width: revert', false, containerContext)).toBeNull()
-        expect(parse('<style-feature>', 'width: revert-layer', false, containerContext)).toBeNull()
+        expect(parse('<style-feature>', 'width: revert', false, containerRule)).toBeNull()
+        expect(parse('<style-feature>', 'width: revert-layer', false, containerRule)).toBeNull()
     })
     test('representation', () => {
-        expect(parse('<style-feature>', 'color: green !important', false, containerContext)).toMatchObject({
+        expect(parse('<style-feature>', 'color: green !important', false, containerRule)).toMatchObject({
             important: true,
             name: 'color',
             types: ['<declaration>', '<style-feature>'],
@@ -3876,7 +3865,7 @@ describe('<style-feature>', () => {
             'width: initial',
             'width: var(--custom)',
         ]
-        valid.forEach(input => expect(parse('<style-feature>', input, true, containerContext)).toBe(input))
+        valid.forEach(input => expect(parse('<style-feature>', input, true, containerRule)).toBe(input))
     })
 })
 describe('<syntax-string>', () => {
@@ -3903,8 +3892,8 @@ describe('<syntax-component>', () => {
 })
 describe('<supports-decl>', () => {
     test('invalid', () => {
-        expect(parse('<supports-decl>', '(unknown: initial)', false, supportsContext)).toBeNull()
-        expect(parse('<supports-decl>', '(color: invalid)', false, supportsContext)).toBeNull()
+        expect(parse('<supports-decl>', '(unknown: initial)', false, supportsRule)).toBeNull()
+        expect(parse('<supports-decl>', '(color: invalid)', false, supportsRule)).toBeNull()
     })
     test('representation', () => {
         const declaration = {
@@ -3918,7 +3907,7 @@ describe('<supports-decl>', () => {
             types: ['<simple-block>', '<supports-decl>'],
             value: declaration,
         }
-        expect(parse('<supports-decl>', '(color: green)', false, supportsContext)).toMatchObject(block)
+        expect(parse('<supports-decl>', '(color: green)', false, supportsRule)).toMatchObject(block)
     })
     test('valid', () => {
         const valid = [
@@ -3937,7 +3926,7 @@ describe('<supports-decl>', () => {
             '(width: initial)',
             '(width: var(--custom))',
         ]
-        valid.forEach(input => expect(parse('<supports-decl>', input, true, supportsContext)).toBe(input))
+        valid.forEach(input => expect(parse('<supports-decl>', input, true, supportsRule)).toBe(input))
     })
 })
 describe('<supports-feature>', () => {
@@ -3947,10 +3936,10 @@ describe('<supports-feature>', () => {
             'selector(:is(:not))',
             'selector(::webkit-unknown)',
         ]
-        invalid.forEach(input => expect(parse('<supports-feature>', input, false, supportsContext)).toBeNull())
+        invalid.forEach(input => expect(parse('<supports-feature>', input, false, supportsRule)).toBeNull())
     })
     test('representation', () => {
-        expect(parse('<supports-feature>', '(color: green)', false, supportsContext)).toMatchObject({
+        expect(parse('<supports-feature>', '(color: green)', false, supportsRule)).toMatchObject({
             associatedToken: '(',
             types: ['<simple-block>', '<supports-decl>', '<supports-feature>'],
             value: {
@@ -4258,12 +4247,12 @@ describe('<media-query-list>', () => {
         const mediaQuery = list([omitted, mediaType, omitted], ' ', ['<media-query>'])
         const mediaQueryList = list([mediaQuery], ',', ['<media-query-list>'])
 
-        expect(parse('<media-query-list>', 'all', false, mediaQueryContext)).toMatchObject(mediaQueryList)
+        expect(parse('<media-query-list>', 'all', false, mediaRule)).toMatchObject(mediaQueryList)
     })
     test('valid', () => {
-        expect(parse('<media-query-list>', ';, 1, (condition),', true, mediaQueryContext))
+        expect(parse('<media-query-list>', ';, 1, (condition),', true, mediaRule))
             .toBe('not all, not all, (condition), not all')
-        expect(parse('<media-query-list>', 'all and (condition)', true, mediaQueryContext))
+        expect(parse('<media-query-list>', 'all and (condition)', true, mediaRule))
             .toBe('(condition)')
     })
 })

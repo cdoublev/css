@@ -6,7 +6,7 @@ JavaScript implementation of CSS.
 ## Usage
 
 ```js
-const { cssom, install } = require('@cdoublev/css')
+const { cssom, install, parser: { parseCSSGrammar, parseCSSStyleSheet } } = require('@cdoublev/css')
 
 /**
  * install() expects a window-like global object (default: globalThis) with
@@ -14,12 +14,18 @@ const { cssom, install } = require('@cdoublev/css')
  */
 install(/*myGlobalObject*/)
 
-// Create a CSSStyleSheet
+// Parse a style sheet and get a (non-constructed) CSSStyleSheet
+const stylesheet = parseCSSStyleSheet('style {}')
+
+// Create a (constructed) CSSStyleSheet
 const styleSheet = new /*myGlobalObject.*/CSSStyleSheet()
 
 // Create a CSSStyleSheet or CSSStyleDeclaration wrapper
 const stylesheet = cssom.CSSStyleSheet.create(myGlobalObject, undefined, privateProperties)
 const style = cssom.CSSStyleDeclaration.create(myGlobalObject, undefined, privateProperties)
+
+// Parse a value according to a CSS grammar
+const value = parseCSSGrammar('(width < 30rem), (orientation: portrait)', '<media-query-list>')
 ```
 
 The `webidl2js` wrappers are intended to implement:

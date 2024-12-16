@@ -1,19 +1,15 @@
 
 const { cssom, install } = require('../lib/index.js')
 // Do not import CSSOM implementations before the above import
-const {
-    ACCESS_THIRD_PARTY_STYLESHEET_ERROR,
-    INSERT_INVALID_IMPORT_ERROR,
-    UPDATE_LOCKED_STYLESHEET_ERROR,
-} = require('../lib/cssom/CSSStyleSheet-impl.js')
+const { ACCESS_THIRD_PARTY_STYLESHEET_ERROR, UPDATE_LOCKED_STYLESHEET_ERROR } = require('../lib/cssom/CSSStyleSheet-impl.js')
 const {
     EXTRA_RULE_ERROR,
+    INSERT_INVALID_IMPORT_ERROR,
     INVALID_NAMESPACE_STATE_ERROR,
     INVALID_RULE_INDEX_ERROR,
     INVALID_RULE_POSITION_ERROR,
     INVALID_RULE_SYNTAX_ERROR,
     MISSING_RULE_ERROR,
-    UNKNOWN_RULE_ERROR,
 } = require('../lib/parse/parser.js')
 const { SET_INVALID_KEY_TEXT_ERROR } = require('../lib/cssom/CSSKeyframeRule-impl.js')
 const { SET_INVALID_NAME_ERROR } = require('../lib/cssom/CSSKeyframesRule-impl.js')
@@ -139,9 +135,9 @@ describe('CSSStyleSheet.insertRule(), CSSStyleSheet.deleteRule()', () => {
     })
     it('throws an error when trying to insert an invalid rule according to the CSS grammar', () => {
         const styleSheet = createStyleSheet()
-        expect(() => styleSheet.insertRule('@charset "utf-8";')).toThrow(UNKNOWN_RULE_ERROR)
-        expect(() => styleSheet.insertRule('@top-left {}')).toThrow(UNKNOWN_RULE_ERROR)
-        expect(() => styleSheet.insertRule('@media screen;')).toThrow('Missing rule block')
+        expect(() => styleSheet.insertRule('@charset "utf-8";')).toThrow(INVALID_RULE_SYNTAX_ERROR)
+        expect(() => styleSheet.insertRule('@top-left {}')).toThrow(INVALID_RULE_SYNTAX_ERROR)
+        expect(() => styleSheet.insertRule('@media;')).toThrow(INVALID_RULE_SYNTAX_ERROR)
     })
     it('throws an error when trying to insert any other rule than @import or @layer before @import', () => {
         const styleSheet = createStyleSheet('@import "./global.css";')
@@ -861,9 +857,9 @@ describe('CSSStyleRule', () => {
         expect(() => rule.insertRule(' ')).toThrow(MISSING_RULE_ERROR)
         expect(() => rule.insertRule('style {};')).toThrow(EXTRA_RULE_ERROR)
         expect(() => rule.insertRule('style;')).toThrow(INVALID_RULE_SYNTAX_ERROR)
-        expect(() => rule.insertRule('@charset "utf-8";')).toThrow(UNKNOWN_RULE_ERROR)
-        expect(() => rule.insertRule('@import "./global.css";')).toThrow(UNKNOWN_RULE_ERROR)
-        expect(() => rule.insertRule('@media screen;')).toThrow('Missing rule block')
+        expect(() => rule.insertRule('@charset "utf-8";')).toThrow(INVALID_RULE_SYNTAX_ERROR)
+        expect(() => rule.insertRule('@import "./global.css";')).toThrow(INVALID_RULE_SYNTAX_ERROR)
+        expect(() => rule.insertRule('@media screen;')).toThrow(INVALID_RULE_SYNTAX_ERROR)
 
         rule.insertRule('@media print {}')
 
@@ -1879,7 +1875,7 @@ describe('CSS grammar', () => {
             '@view-transition {}',
             'style:hover {}',
         ]
-        const input = `@SUPPORTS (color-green) { ${rules.join(' ')} }`
+        const input = `@SUPPORTS (color: green) { ${rules.join(' ')} }`
         const sheet = createStyleSheet(input)
         expect(sheet.cssRules[0].cssText).toBe(input.toLowerCase())
     })
