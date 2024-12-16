@@ -790,6 +790,15 @@ describe('--*', () => {
         })
     })
 })
+describe('alignment-baseline', () => {
+    test('valid', () => {
+        const style = createStyleBlock()
+        style.alignmentBaseline = 'text-before-edge'
+        expect(style.alignmentBaseline).toBe('text-top')
+        style.alignmentBaseline = 'text-after-edge'
+        expect(style.alignmentBaseline).toBe('text-bottom')
+    })
+})
 describe('animation-range-start, animation-range-end', () => {
     test('valid', () => {
         const style = createStyleBlock()
@@ -4420,6 +4429,11 @@ describe('vertical-align', () => {
     test('shorthand expansion', () => {
 
         const style = createStyleBlock()
+
+        // Invalid alignment-baseline value aliases
+        style.verticalAlign = 'text-before-edge'
+        style.verticalAlign = 'text-after-edge'
+        expect(style).toHaveLength(0)
 
         // Initial longhand values (not all longhands can be explicitly declared)
         style.verticalAlign = 'baseline 0'
