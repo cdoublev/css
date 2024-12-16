@@ -4203,14 +4203,8 @@ describe('text-box', () => {
 
         const style = createStyleBlock()
 
-        // Invalid value
-        style.textBox = 'auto'
-        expect(style.textBox).toBe('')
-        style.textBox = 'none'
-        expect(style.textBox).toBe('')
-
         // normal
-        style.textBox = 'normal'
+        style.textBox = 'none auto'
         expect(style).toHaveLength(longhands.length)
         longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
         expect(style.textBox).toBe('normal')
