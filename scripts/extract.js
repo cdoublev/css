@@ -163,10 +163,8 @@ const replaced = {
         '<url-modifier>': '<request-url-modifier> | <ident> | <function>',
         '<url-set>': '<image-set()>',
         '<zero>': '<number-token>',
-        // https://github.com/w3c/csswg-drafts/issues/10697
-        '<arc-command>': 'arc [<by-to> <coordinate-pair> && of <length-percentage>{1,2} && <arc-sweep>? && <arc-size>? && [rotate <angle>]?]',
-        '<curve-command>': 'curve [<by-to> <coordinate-pair> && [using <coordinate-pair>{1,2}]?]',
-        '<smooth-command>': 'smooth [<by-to> <coordinate-pair> && [using <coordinate-pair>]?]',
+        // https://github.com/w3c/csswg-drafts/issues/11368
+        '<arc-command>': 'arc [<command-end-point> && of <length-percentage>{1,2} && <arc-sweep>? && <arc-size>? && [rotate <angle>]?]',
         // https://github.com/w3c/csswg-drafts/issues/8346, https://github.com/w3c/csswg-drafts/pull/8367#issuecomment-1408147460, https://github.com/w3c/csswg-drafts/issues/9729, https://github.com/w3c/csswg-drafts/issues/10833
         '<angular-color-hint>': '<angle-percentage> | <zero>',
         '<color-stop-angle>': '[<angle-percentage> | <zero>]{1,2}',

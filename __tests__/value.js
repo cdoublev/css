@@ -2530,12 +2530,13 @@ describe('<arc-command>', () => {
     test('representation', () => {
 
         const arc = keyword('arc')
-        const by = keyword('by', ['<by-to>'])
+        const by = keyword('by')
         const zero = length(0, 'px', ['<length-percentage>'])
         const coordinate = list([zero, zero], ' ', ['<coordinate-pair>'])
         const of = keyword('of')
         const radii = list([zero])
-        const parameters = list([list([by, coordinate]), list([of, radii]), omitted, omitted, omitted])
+        const endpoint = list([by, coordinate], ' ', ['<command-end-point>'])
+        const parameters = list([endpoint, list([of, radii]), omitted, omitted, omitted])
         const command = list([arc, parameters], ' ', ['<arc-command>'])
 
         expect(parse('<arc-command>', 'arc by 0px 0px of 0px', false)).toMatchObject(command)
@@ -3677,6 +3678,19 @@ describe('<ratio>', () => {
         expect(parse('<ratio>', '1 / 1')).toBe('1 / 1')
     })
 })
+describe('<relative-control-point>', () => {
+    test('representation', () => {
+
+        const zero = length(0, 'px', ['<length-percentage>'])
+        const coordinate = list([zero, zero], ' ', ['<coordinate-pair>'])
+        const point = list([coordinate, omitted], ' ', ['<relative-control-point>'])
+
+        expect(parse('<relative-control-point>', '0px 0px', false)).toMatchObject(point)
+    })
+    test('valid', () => {
+        expect(parse('<relative-control-point>', '0px 0px from start')).toBe('0px 0px')
+    })
+})
 describe('<repeat-style>', () => {
     test('representation', () => {
         expect(parse('<repeat-style>', 'repeat-x', false)).toMatchObject(keyword('repeat-x', ['<repeat-style>']))
@@ -3747,8 +3761,9 @@ describe('<shape()>', () => {
         const zero = length(0, 'px', ['<length-percentage>'])
         const coordinate = list([zero, zero], ' ', ['<coordinate-pair>'])
         const move = keyword('move')
-        const by = keyword('by', ['<by-to>'])
-        const commands = list([list([move, by, coordinate], ' ', ['<move-command>', '<shape-command>'])], ',')
+        const by = keyword('by')
+        const endpoint = list([by, coordinate], ' ', ['<command-end-point>'])
+        const commands = list([list([move, endpoint], ' ', ['<move-command>', '<shape-command>'])], ',')
         const value = list([omitted, from, coordinate, comma, commands])
 
         expect(parse('<shape()>', 'shape(from 0px 0px, move by 0px 0px)', false)).toMatchObject({
@@ -3971,21 +3986,6 @@ describe('<symbols()>', () => {
     })
     test('valid', () => {
         expect(parse('<symbols()>', 'symbols(symbolic "a")')).toBe('symbols("a")')
-    })
-})
-describe('<text-edge>', () => {
-    test('representation', () => {
-        expect(parse('<text-edge>', 'text', false))
-            .toMatchObject(list([keyword('text'), omitted], ' ', ['<text-edge>']))
-    })
-    test('valid', () => {
-        const valid = [
-            'text text',
-            'cap text',
-            'ideographic ideographic',
-            'ideographic-ink ideographic-ink',
-        ]
-        valid.forEach(input => expect(parse('<text-edge>', input)).toBe(input.split(' ')[0]))
     })
 })
 describe('<translate()>', () => {
