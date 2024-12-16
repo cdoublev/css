@@ -3837,8 +3837,12 @@ describe('<string()>', () => {
 })
 describe('<style-feature>', () => {
     test('invalid', () => {
-        expect(parse('<style-feature>', 'width: revert', false, containerRule)).toBeNull()
-        expect(parse('<style-feature>', 'width: revert-layer', false, containerRule)).toBeNull()
+        const invalid = [
+            'unknown',
+            'width: revert',
+            'width: revert-layer',
+        ]
+        invalid.forEach(input => expect(parse('<style-feature>', input, false, containerRule)).toBeNull())
     })
     test('representation', () => {
         expect(parse('<style-feature>', 'color: green !important', false, containerRule)).toMatchObject({
@@ -3850,6 +3854,8 @@ describe('<style-feature>', () => {
     })
     test('valid', () => {
         const valid = [
+            // Standard property name
+            'color',
             // Custom property
             '--custom: fn(  /**/  1e0  /**/  )',
             // Dependency-free substitution
