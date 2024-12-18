@@ -2108,7 +2108,7 @@ describe('CSS grammar', () => {
     test('nested group rule - valid block contents', () => {
 
         const rules = [
-            '@container name {}',
+            '@CONTAINER name {}',
             '@layer {}',
             '@media {}',
             '@scope {}',
