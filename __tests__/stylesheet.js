@@ -880,6 +880,29 @@ describe('CSSStyleRule', () => {
         expect(cssRules[0].conditionText).toBe('screen')
         expect(cssRules[1].conditionText).toBe('all')
     })
+    test('nested in nested group rules ', () => {
+
+        const nestedGroupRules = [
+            '@container name',
+            '@layer',
+            '@media',
+            '@scope',
+            '@starting-style',
+            '@supports (color: green)',
+        ]
+        const styleSheet = createStyleSheet(`style { ${nestedGroupRules.map(rule => `${rule} { color: green }`).join(' ')}`)
+        const styleRule = styleSheet.cssRules[0]
+
+        expect(styleRule.cssText).toBe(`style { ${nestedGroupRules.map(rule => `${rule} { ${rule === '@scope' ? ':scope' : '&'} { color: green; } }`).join(' ')} }`)
+
+        styleRule.selectorText = 'parent'
+        for (const { cssRules: [nestedStyleRule] } of styleRule.cssRules) {
+            nestedStyleRule.selectorText = 'child'
+            nestedStyleRule.style.color = ''
+        }
+
+        expect(styleRule.cssText).toBe(`parent { ${nestedGroupRules.map(rule => `${rule} { ${rule === '@scope' ? 'child' : '& child'} {} }`).join(' ')} }`)
+    })
 })
 describe('CSSSupportsRule', () => {
     test('properties', () => {
