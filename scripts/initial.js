@@ -158,7 +158,7 @@ function serializeDescriptorDefinitions(descriptors) {
  */
 function serializeDefinitions() {
     const dependency = "const { list, omitted } = require('../values/value.js')"
-    const header = `\n// Generated from ${__filename}\n\n${dependency}\n\nmodule.exports = {\n`
+    const header = `\n${dependency}\n\nmodule.exports = {\n`
     return Promise.all([
         fs.writeFile(
             path.resolve(__dirname, '../lib/descriptors/definitions.js'),

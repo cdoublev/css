@@ -1001,7 +1001,7 @@ function addRules(definitions = [], key) {
  */
 function build(specifications) {
 
-    const header = `\n// Generated from ${__filename}\n\nmodule.exports = {\n`
+    const header = '\nmodule.exports = {\n'
 
     Object.entries(specifications).forEach(([key, { atrules, properties, selectors, values }]) => {
         if (excluded.specifications.includes(key)) {
