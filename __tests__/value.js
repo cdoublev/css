@@ -50,8 +50,11 @@ function parse(definition, value, serialize = true, context = styleRule) {
 }
 
 install()
+globalThis.document = { href: 'https://github.com/cdoublev/' }
 
-const rules = `
+const styleSheet = cssom.CSSStyleSheet.createImpl(globalThis, [{ media: '' }])
+
+styleSheet.replaceSync(`
     @namespace html "https://www.w3.org/1999/xhtml/";
     @namespace svg "http://www.w3.org/2000/svg";
     style {}
@@ -59,9 +62,10 @@ const rules = `
     @keyframes animation { 0% {} }
     @media {}
     @supports (width: 1px) {}
-`
-const styleSheet = cssom.CSSStyleSheet.createImpl(globalThis, undefined, { rules })
-const { _rules: [,, styleRule, containerRule, { _rules: [keyframeRule] }, mediaRule, supportsRule] } = styleSheet
+`)
+
+const { cssRules: { _rules: [,, styleRule, containerRule, keyframesRule, mediaRule, supportsRule] } } = styleSheet
+const { cssRules: { _rules: [keyframeRule] } } = keyframesRule
 
 const a = keyword('a')
 const b = keyword('b')

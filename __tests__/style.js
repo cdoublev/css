@@ -35,18 +35,21 @@ function initial(property) {
 }
 
 install()
+globalThis.document = { href: 'https://github.com/cdoublev/' }
 
-const rules = `
+const styleSheet = CSSStyleSheet.createImpl(globalThis, [{ media: '' }])
+
+styleSheet.replaceSync(`
     @font-face {}
     @keyframes animation { 0% {} }
     @page { @top-left {} }
     @position-try --custom {}
     style {}
-`
-const styleSheet = CSSStyleSheet.createImpl(globalThis, undefined, { rules })
-const { _rules: [fontFaceRule, keyframesRule, pageRule, positionTryRule, styleRule] } = styleSheet
-const { _rules: [keyframeRule] } = keyframesRule
-const { _rules: [marginRule] } = pageRule
+`)
+
+const { cssRules: { _rules: [fontFaceRule, keyframesRule, pageRule, positionTryRule, styleRule] } } = styleSheet
+const { cssRules: { _rules: [keyframeRule] } } = keyframesRule
+const { cssRules: { _rules: [marginRule] } } = pageRule
 
 describe('CSSStyleDeclaration', () => {
     it('has all properties and methods', () => {
