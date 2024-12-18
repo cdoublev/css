@@ -112,7 +112,7 @@ function serializePropertyDefinitions(properties) {
                 string += `${tab(2)}group: ${addQuotes(group)},\n`
             }
             if (initial !== undefined) {
-                const [parsed, serialized] = getInitialValue(property, initial, undefined, 3)
+                const [parsed, serialized] = getInitialValue(property, initial, '@style', 3)
                 string += `${tab(2)}initial: {\n`
                 string += `${tab(3)}parsed: ${parsed},\n`
                 string += `${tab(3)}serialized: ${addQuotes(serialized)},\n`
