@@ -443,8 +443,7 @@ describe('CSSFontFaceRule', () => {
 
         // CSSFontFaceRule
         expect(CSSFontFaceDescriptors.is(rule.style)).toBeTruthy()
-        expect(rule.style).toHaveLength(1)
-        rule.style.removeProperty('src')
+        rule.style.src = ''
         expect(rule.cssText).toBe('@font-face {}')
     })
 })
@@ -707,6 +706,36 @@ describe('CSSNamespaceRule', () => {
         expect(rule.prefix).toBe('svg')
     })
 })
+describe('CSSNestedDeclarations', () => {
+    test('properties', () => {
+
+        const styleSheet = createStyleSheet(`
+            style {
+                @container name { color: green; }
+                @layer { color: green; }
+                @media { color: green; }
+                @scope { color: green; }
+                @starting-style { color: green; }
+                @supports (color: green) { color: green; }
+            }
+        `)
+
+        for (const parentRule of styleSheet.cssRules[0].cssRules) {
+
+            const nestedDeclarations = parentRule.cssRules[0]
+
+            // CSSRule
+            expect(nestedDeclarations.cssText).toBe('color: green;')
+            expect(nestedDeclarations.parentRule).toBe(parentRule)
+            expect(nestedDeclarations.parentStyleSheet).toBe(styleSheet)
+
+            // CSSNestedDeclarations
+            // https://github.com/w3c/csswg-drafts/issues/11272
+            // expect(CSSStyleProperties.is(nestedDeclarations.style)).toBeTruthy()
+            expect(nestedDeclarations.style).toHaveLength(1)
+        }
+    })
+})
 describe('CSSPageRule', () => {
     test('properties', () => {
 
@@ -726,6 +755,8 @@ describe('CSSPageRule', () => {
         rule.selectorText = 'outro'
         expect(rule.selectorText).toBe('outro')
         expect(CSSPageDescriptors.is(rule.style)).toBeTruthy()
+        rule.style.color = ''
+        expect(rule.cssText).toBe('@page outro { @top-left {} }')
     })
 })
 describe('CSSPositionTryRule', () => {
@@ -767,11 +798,11 @@ describe('CSSPropertyRule', () => {
 describe('CSSScopeRule', () => {
     test('properties', () => {
 
-        const styleSheet = createStyleSheet('@scope (start) to (end) { color: green; style { child {} } }')
+        const styleSheet = createStyleSheet('@scope (start) to (end) { color: green; style {} }')
         const rule = styleSheet.cssRules[0]
 
         // CSSRule
-        expect(rule.cssText).toBe('@scope (start) to (end) { :scope { color: green; } style { & child {} } }')
+        expect(rule.cssText).toBe('@scope (start) to (end) { color: green; style {} }')
         expect(rule.parentRule).toBeNull()
         expect(rule.parentStyleSheet).toBe(styleSheet)
 
@@ -803,46 +834,52 @@ describe('CSSStyleRule', () => {
 
         const styleSheet = createStyleSheet(`
             style {
-                color: red;
-                @media {
-                    color: green;
+                color: orange;
+                @scope {
+                    scoped {
+                        nested {}
+                    }
                 }
+                nested {}
+                color: green;
             }
         `)
         const styleRule = styleSheet.cssRules[0]
-        const mediaRule = styleRule.cssRules[0]
-        const nestedStyleRule = mediaRule.cssRules[0]
+        const { cssRules: [scopeRule, nestedStyleRule] } = styleRule
+        const scopedStyleRule = scopeRule.cssRules[0]
 
         // CSSRule
-        expect(styleRule.cssText).toBe('style { color: red; @media { & { color: green; } } }')
-        expect(nestedStyleRule.cssText).toBe('& { color: green; }')
+        expect(styleRule.cssText).toBe('style { color: orange; @scope { scoped { & nested {} } } & nested {} color: green; }')
+        expect(scopedStyleRule.cssText).toBe('scoped { & nested {} }')
+        expect(nestedStyleRule.cssText).toBe('& nested {}')
         expect(styleRule.parentRule).toBeNull()
-        expect(nestedStyleRule.parentRule).toBe(mediaRule)
+        expect(scopedStyleRule.parentRule).toBe(scopeRule)
+        expect(nestedStyleRule.parentRule).toBe(styleRule)
         expect(styleRule.parentStyleSheet).toBe(styleSheet)
+        expect(scopedStyleRule.parentStyleSheet).toBe(styleSheet)
         expect(nestedStyleRule.parentStyleSheet).toBe(styleSheet)
 
         // CSSGroupingRule
         expect(CSSRuleList.is(styleRule.cssRules)).toBeTruthy()
+        expect(CSSRuleList.is(scopedStyleRule.cssRules)).toBeTruthy()
         expect(CSSRuleList.is(nestedStyleRule.cssRules)).toBeTruthy()
 
         // CSSStyleRule
         expect(styleRule.selectorText).toBe('style')
-        expect(nestedStyleRule.selectorText).toBe('&')
+        expect(scopedStyleRule.selectorText).toBe('scoped')
+        expect(nestedStyleRule.selectorText).toBe('& nested')
+        styleRule.selectorText = 'parent'
+        scopedStyleRule.selectorText = 'scoped-parent'
+        nestedStyleRule.selectorText = 'child'
+        expect(styleRule.selectorText).toBe('parent')
+        expect(scopedStyleRule.selectorText).toBe('scoped-parent')
+        expect(nestedStyleRule.selectorText).toBe('& child')
         expect(CSSStyleProperties.is(styleRule.style)).toBeTruthy()
+        expect(CSSStyleProperties.is(scopedStyleRule.style)).toBeTruthy()
         expect(CSSStyleProperties.is(nestedStyleRule.style)).toBeTruthy()
         expect(styleRule.style).toHaveLength(1)
-        expect(nestedStyleRule.style).toHaveLength(1)
-
-        styleRule.selectorText = 'parent'
-        nestedStyleRule.selectorText = 'child'
-
-        expect(styleRule.selectorText).toBe('parent')
-        expect(nestedStyleRule.selectorText).toBe('& child')
-
-        styleRule.style.color = ''
-        nestedStyleRule.style.color = ''
-
-        expect(styleRule.cssText).toBe('parent { @media { & child {} } }')
+        expect(scopedStyleRule.style).toHaveLength(0)
+        expect(nestedStyleRule.style).toHaveLength(0)
     })
     test('methods', () => {
 
@@ -879,29 +916,6 @@ describe('CSSStyleRule', () => {
         expect(mediaRule.parentRule).toBeNull()
         expect(cssRules[0].conditionText).toBe('screen')
         expect(cssRules[1].conditionText).toBe('all')
-    })
-    test('nested in nested group rules ', () => {
-
-        const nestedGroupRules = [
-            '@container name',
-            '@layer',
-            '@media',
-            '@scope',
-            '@starting-style',
-            '@supports (color: green)',
-        ]
-        const styleSheet = createStyleSheet(`style { ${nestedGroupRules.map(rule => `${rule} { color: green }`).join(' ')}`)
-        const styleRule = styleSheet.cssRules[0]
-
-        expect(styleRule.cssText).toBe(`style { ${nestedGroupRules.map(rule => `${rule} { ${rule === '@scope' ? ':scope' : '&'} { color: green; } }`).join(' ')} }`)
-
-        styleRule.selectorText = 'parent'
-        for (const { cssRules: [nestedStyleRule] } of styleRule.cssRules) {
-            nestedStyleRule.selectorText = 'child'
-            nestedStyleRule.style.color = ''
-        }
-
-        expect(styleRule.cssText).toBe(`parent { ${nestedGroupRules.map(rule => `${rule} { ${rule === '@scope' ? 'child' : '& child'} {} }`).join(' ')} }`)
     })
 })
 describe('CSSSupportsRule', () => {
@@ -1107,7 +1121,7 @@ describe('CSS grammar', () => {
     })
     // Rule contents
     test('@color-profile - invalid block contents', () => {
-        const sheet = createStyleSheet(`
+        const styleSheet = createStyleSheet(`
             @color-profile --name {
 
                 style {}
@@ -1126,15 +1140,15 @@ describe('CSS grammar', () => {
                 src: url("profile.icc");
             }
         `)
-        expect(sheet.cssRules[0].cssText).toBe('@color-profile --name { src: url("profile.icc"); }')
+        expect(styleSheet.cssRules[0].cssText).toBe('@color-profile --name { src: url("profile.icc"); }')
     })
     test('@color-profile - valid block contents', () => {
         const input = '@COLOR-PROFILE --name { COMPONENTS: { env(name) }; src: first-valid(url("profile.icc")); }'
-        const sheet = createStyleSheet(input)
-        expect(sheet.cssRules[0].cssText).toBe(input.toLowerCase())
+        const styleSheet = createStyleSheet(input)
+        expect(styleSheet.cssRules[0].cssText).toBe(input.toLowerCase())
     })
     test('@container - invalid block contents', () => {
-        const sheet = createStyleSheet(`
+        const styleSheet = createStyleSheet(`
             @container name {
 
                 @media;
@@ -1153,7 +1167,7 @@ describe('CSS grammar', () => {
                 @media {}
             }
         `)
-        expect(sheet.cssRules[0].cssText).toBe('@container name { @media {} }')
+        expect(styleSheet.cssRules[0].cssText).toBe('@container name { @media {} }')
     })
     test('@container - valid block contents', () => {
         const rules = [
@@ -1177,8 +1191,8 @@ describe('CSS grammar', () => {
             'style:hover {}',
         ]
         const input = `@CONTAINER name { ${rules.join(' ')} }`
-        const sheet = createStyleSheet(input)
-        expect(sheet.cssRules[0].cssText).toBe(input.toLowerCase())
+        const styleSheet = createStyleSheet(input)
+        expect(styleSheet.cssRules[0].cssText).toBe(input.toLowerCase())
     })
     test('@counter-style - invalid block contents', () => {
         const { cssRules: [rule1, rule2] } = createStyleSheet(`
@@ -1212,11 +1226,11 @@ describe('CSS grammar', () => {
     })
     test('@counter-style - valid block contents', () => {
         const input = '@COUNTER-STYLE name { PAD: { env(name) }; system: first-valid(numeric); }'
-        const sheet = createStyleSheet(input)
-        expect(sheet.cssRules[0].cssText).toBe(input.toLowerCase())
+        const styleSheet = createStyleSheet(input)
+        expect(styleSheet.cssRules[0].cssText).toBe(input.toLowerCase())
     })
     test('@font-face - invalid block contents', () => {
-        const sheet = createStyleSheet(`
+        const styleSheet = createStyleSheet(`
             @font-face {
 
                 style {}
@@ -1245,7 +1259,7 @@ describe('CSS grammar', () => {
                 font-family: name;
             }
         `)
-        expect(sheet.cssRules[0].cssText).toBe('@font-face { font-family: name; }')
+        expect(styleSheet.cssRules[0].cssText).toBe('@font-face { font-family: name; }')
     })
     test('@font-face - valid block contents', () => {
         const declarations = [
@@ -1256,12 +1270,12 @@ describe('CSS grammar', () => {
         ]
         declarations.forEach(declaration => {
             const input = `@FONT-FACE { ${declaration}; }`
-            const sheet = createStyleSheet(input)
-            expect(sheet.cssRules[0].cssText).toBe(input.toLowerCase())
+            const styleSheet = createStyleSheet(input)
+            expect(styleSheet.cssRules[0].cssText).toBe(input.toLowerCase())
         })
     })
     test('@font-feature-values - invalid block contents', () => {
-        const sheet = createStyleSheet(`
+        const styleSheet = createStyleSheet(`
             @font-feature-values name {
 
                 @media;
@@ -1270,7 +1284,6 @@ describe('CSS grammar', () => {
                 @charset "utf-8";
                 @import "./global.css";
                 @namespace svg "http://www.w3.org/2000/svg";
-                @annotation {}
                 @color-profile --name {}
                 @container name {}
                 @counter-style name {}
@@ -1307,24 +1320,37 @@ describe('CSS grammar', () => {
                 font-display: block;
             }
         `)
-        expect(sheet.cssRules[0].cssText).toBe('@font-feature-values name { font-display: block; }')
+        expect(styleSheet.cssRules[0].cssText).toBe('@font-feature-values name { font-display: block; }')
     })
     test('@font-feature-values - valid block contents', () => {
+
+        const rules = [
+            '@annotation { boxed: 0; }',
+            '@character-variant { alpha-2: 0 1; }',
+            '@ornaments { bullet: 0; }',
+            '@styleset { double-W: 0 1 2; }',
+            '@stylistic { alt-g: 0; }',
+            '@swash { cool: 0; }',
+        ]
+        const input = `@FONT-FEATURE-VALUES name { ${rules.join(' ')} }`
+        const styleSheet = createStyleSheet(input)
+        expect(styleSheet.cssRules[0].cssText).toBe(input.toLowerCase())
+
         const declarations = [
             'FONT-DISPLAY: { env(name) }',
             'font-display: first-valid(block)',
         ]
         declarations.forEach(declaration => {
             const input = `@FONT-FEATURE-VALUES name { ${declaration}; }`
-            const sheet = createStyleSheet(input)
-            expect(sheet.cssRules[0].cssText).toBe(input.toLowerCase())
+            const styleSheet = createStyleSheet(input)
+            expect(styleSheet.cssRules[0].cssText).toBe(input.toLowerCase())
         })
     })
     test('@font-palette-values - missing declaration for font-family', () => {
         expect(createStyleSheet('@font-palette-values --name {}').cssRules).toHaveLength(0)
     })
     test('@font-palette-values - invalid block contents', () => {
-        const sheet = createStyleSheet(`
+        const styleSheet = createStyleSheet(`
             @font-palette-values --name {
 
                 style {}
@@ -1345,15 +1371,15 @@ describe('CSS grammar', () => {
                 font-family: name;
             }
         `)
-        expect(sheet.cssRules[0].cssText).toBe('@font-palette-values --name { font-family: name; }')
+        expect(styleSheet.cssRules[0].cssText).toBe('@font-palette-values --name { font-family: name; }')
     })
     test('@font-palette-values - valid block contents', () => {
         const input = '@FONT-PALETTE-VALUES --name { BASE-PALETTE: { env(name) }; font-family: first-valid(name); }'
-        const sheet = createStyleSheet(input)
-        expect(sheet.cssRules[0].cssText).toBe(input.toLowerCase())
+        const styleSheet = createStyleSheet(input)
+        expect(styleSheet.cssRules[0].cssText).toBe(input.toLowerCase())
     })
     test('@function - invalid block contents', () => {
-        const sheet = createStyleSheet(`
+        const styleSheet = createStyleSheet(`
             @function --name {
 
                 @media;
@@ -1390,23 +1416,22 @@ describe('CSS grammar', () => {
                 @media {}
             }
         `)
-        expect(sheet.cssRules[0].cssText).toBe('@function --name { @media {} }')
+        expect(styleSheet.cssRules[0].cssText).toBe('@function --name { @media {} }')
     })
     test('@function - valid block contents', () => {
         const contents = [
             '@container name {}',
             '@media {}',
             '@supports (color: green) {}',
-            // TODO: add support for CSSNestedDeclarationsRule
-            // '--custom: {} var(--custom);',
-            // 'RESULT: { env(name) };',
+            '--custom: {} var(--custom);',
+            'RESULT: { env(name) };',
         ]
         const input = `@FUNCTION --name { ${contents.join(' ')} }`
-        const sheet = createStyleSheet(input)
-        expect(sheet.cssRules[0].cssText).toBe(input.toLowerCase())
+        const styleSheet = createStyleSheet(input)
+        expect(styleSheet.cssRules[0].cssText).toBe(input.toLowerCase())
     })
     test('@keyframes - invalid block contents', () => {
-        const sheet = createStyleSheet(`
+        const styleSheet = createStyleSheet(`
             @keyframes name {
 
                 @media;
@@ -1442,14 +1467,14 @@ describe('CSS grammar', () => {
                 0% {}
             }
         `)
-        expect(sheet.cssRules[0].cssText).toBe('@keyframes name { 0% {} }')
+        expect(styleSheet.cssRules[0].cssText).toBe('@keyframes name { 0% {} }')
     })
     test('@keyframes - valid block contents', () => {
-        const sheet = createStyleSheet('@KEYFRAMES name { FROM {} }')
-        expect(sheet.cssRules[0].cssText).toBe('@keyframes name { 0% {} }')
+        const styleSheet = createStyleSheet('@KEYFRAMES name { 0% {} }')
+        expect(styleSheet.cssRules[0].cssText).toBe('@keyframes name { 0% {} }')
     })
     test('@layer - invalid block contents', () => {
-        const sheet = createStyleSheet(`
+        const styleSheet = createStyleSheet(`
             @layer {
 
                 @media;
@@ -1468,7 +1493,7 @@ describe('CSS grammar', () => {
                 @media {}
             }
         `)
-        expect(sheet.cssRules[0].cssText).toBe('@layer { @media {} }')
+        expect(styleSheet.cssRules[0].cssText).toBe('@layer { @media {} }')
     })
     test('@layer - valid block contents', () => {
         const rules = [
@@ -1492,11 +1517,11 @@ describe('CSS grammar', () => {
             'style:hover {}',
         ]
         const input = `@LAYER { ${rules.join(' ')} }`
-        const sheet = createStyleSheet(input)
-        expect(sheet.cssRules[0].cssText).toBe(input.toLowerCase())
+        const styleSheet = createStyleSheet(input)
+        expect(styleSheet.cssRules[0].cssText).toBe(input.toLowerCase())
     })
     test('@media - invalid block contents', () => {
-        const sheet = createStyleSheet(`
+        const styleSheet = createStyleSheet(`
             @media {
 
                 @media;
@@ -1515,7 +1540,7 @@ describe('CSS grammar', () => {
                 @media {}
             }
         `)
-        expect(sheet.cssRules[0].cssText).toBe('@media { @media {} }')
+        expect(styleSheet.cssRules[0].cssText).toBe('@media { @media {} }')
     })
     test('@media - valid block contents', () => {
         const rules = [
@@ -1539,11 +1564,11 @@ describe('CSS grammar', () => {
             'style:hover {}',
         ]
         const input = `@MEDIA { ${rules.join(' ')} }`
-        const sheet = createStyleSheet(input)
-        expect(sheet.cssRules[0].cssText).toBe(input.toLowerCase())
+        const styleSheet = createStyleSheet(input)
+        expect(styleSheet.cssRules[0].cssText).toBe(input.toLowerCase())
     })
     test('@page - invalid block contents', () => {
-        const sheet = createStyleSheet(`
+        const styleSheet = createStyleSheet(`
             @page {
 
                 @media;
@@ -1585,7 +1610,7 @@ describe('CSS grammar', () => {
                 @top-left {}
             }
         `)
-        expect(sheet.cssRules[0].cssText).toBe('@page { @top-left {} }')
+        expect(styleSheet.cssRules[0].cssText).toBe('@page { @top-left {} }')
     })
     test('@page - valid block contents', () => {
         const contents = [
@@ -1606,12 +1631,12 @@ describe('CSS grammar', () => {
         ]
         contents.forEach(content => {
             const input = `@PAGE { ${content} }`
-            const sheet = createStyleSheet(input)
-            expect(sheet.cssRules[0].cssText).toBe(input.toLowerCase())
+            const styleSheet = createStyleSheet(input)
+            expect(styleSheet.cssRules[0].cssText).toBe(input.toLowerCase())
         })
     })
     test('@position-try - invalid block contents', () => {
-        const sheet = createStyleSheet(`
+        const styleSheet = createStyleSheet(`
             @position-try --name {
 
                 style {}
@@ -1625,7 +1650,7 @@ describe('CSS grammar', () => {
                 bottom: 1px;
             }
         `)
-        expect(sheet.cssRules[0].cssText).toBe('@position-try --name { bottom: 1px; }')
+        expect(styleSheet.cssRules[0].cssText).toBe('@position-try --name { bottom: 1px; }')
     })
     test('@position-try - valid block contents', () => {
         const declarations = [
@@ -1641,8 +1666,8 @@ describe('CSS grammar', () => {
         ]
         declarations.forEach(declaration => {
             const input = `@POSITION-TRY --name { ${declaration}; }`
-            const sheet = createStyleSheet(input)
-            expect(sheet.cssRules[0].cssText).toBe(input.toLowerCase())
+            const styleSheet = createStyleSheet(input)
+            expect(styleSheet.cssRules[0].cssText).toBe(input.toLowerCase())
         })
     })
     test('@property - missing declaration for inherits', () => {
@@ -1652,7 +1677,7 @@ describe('CSS grammar', () => {
         expect(createStyleSheet('@property --name { inherits: true; initial-value: 1; }').cssRules).toHaveLength(0)
     })
     test('@property - invalid block contents', () => {
-        const sheet = createStyleSheet(`
+        const styleSheet = createStyleSheet(`
             @property --name {
 
                 syntax: "*";
@@ -1672,7 +1697,7 @@ describe('CSS grammar', () => {
                 syntax: "initial";
             }
         `)
-        expect(sheet.cssRules[0].cssText).toBe('@property --name { syntax: "*"; inherits: true; }')
+        expect(styleSheet.cssRules[0].cssText).toBe('@property --name { syntax: "*"; inherits: true; }')
     })
     test('@property - valid block contents', () => {
         const declarations = [
@@ -1681,8 +1706,8 @@ describe('CSS grammar', () => {
         ]
         declarations.forEach(declaration => {
             const input = `@PROPERTY --name { syntax: "*"; ${declaration}; }`
-            const sheet = createStyleSheet(input)
-            expect(sheet.cssRules[0].cssText).toBe(input.toLowerCase())
+            const styleSheet = createStyleSheet(input)
+            expect(styleSheet.cssRules[0].cssText).toBe(input.toLowerCase())
         })
     })
     test('@property - invalid and valid initial-value', () => {
@@ -1740,7 +1765,7 @@ describe('CSS grammar', () => {
             }))
     })
     test('@scope - invalid block contents', () => {
-        const sheet = createStyleSheet(`
+        const styleSheet = createStyleSheet(`
             @scope {
 
                 @media;
@@ -1759,7 +1784,7 @@ describe('CSS grammar', () => {
                 @media {}
             }
         `)
-        expect(sheet.cssRules[0].cssText).toBe('@scope { @media {} }')
+        expect(styleSheet.cssRules[0].cssText).toBe('@scope { @media {} }')
     })
     test('@scope - valid block contents', () => {
 
@@ -1784,9 +1809,9 @@ describe('CSS grammar', () => {
             'style:hover {}',
         ]
         const input = `@SCOPE { ${rules.join(' ')} }`
-        const sheet = createStyleSheet(input)
+        const styleSheet = createStyleSheet(input)
 
-        expect(sheet.cssRules[0].cssText).toBe(input.toLowerCase())
+        expect(styleSheet.cssRules[0].cssText).toBe(input.toLowerCase())
 
         const declarations = [
             '--custom: hover {}',
@@ -1802,14 +1827,13 @@ describe('CSS grammar', () => {
             'top: 1px !important',
         ]
         declarations.forEach(declaration => {
-            // TODO: add support for CSSNestedDeclarationsRule
-            const input = `@SCOPE { :scope { ${declaration}; } }`
-            const sheet = createStyleSheet(input)
-            expect(sheet.cssRules[0].cssText).toBe(input.toLowerCase())
+            const input = `@SCOPE { ${declaration}; }`
+            const styleSheet = createStyleSheet(input)
+            expect(styleSheet.cssRules[0].cssText).toBe(input.toLowerCase())
         })
     })
     test('@starting-style - invalid block contents', () => {
-        const sheet = createStyleSheet(`
+        const styleSheet = createStyleSheet(`
             @starting-style {
 
                 @media;
@@ -1828,7 +1852,7 @@ describe('CSS grammar', () => {
                 @media {}
             }
         `)
-        expect(sheet.cssRules[0].cssText).toBe('@starting-style { @media {} }')
+        expect(styleSheet.cssRules[0].cssText).toBe('@starting-style { @media {} }')
     })
     test('@starting-style - valid block contents', () => {
         const rules = [
@@ -1852,11 +1876,11 @@ describe('CSS grammar', () => {
             'style:hover {}',
         ]
         const input = `@STARTING-STYLE { ${rules.join(' ')} }`
-        const sheet = createStyleSheet(input)
-        expect(sheet.cssRules[0].cssText).toBe(input.toLowerCase())
+        const styleSheet = createStyleSheet(input)
+        expect(styleSheet.cssRules[0].cssText).toBe(input.toLowerCase())
     })
     test('@supports - invalid block contents', () => {
-        const sheet = createStyleSheet(`
+        const styleSheet = createStyleSheet(`
             @supports (color: green) {
 
                 @media;
@@ -1875,7 +1899,7 @@ describe('CSS grammar', () => {
                 @media {}
             }
         `)
-        expect(sheet.cssRules[0].cssText).toBe('@supports (color: green) { @media {} }')
+        expect(styleSheet.cssRules[0].cssText).toBe('@supports (color: green) { @media {} }')
     })
     test('@supports - valid block contents', () => {
         const rules = [
@@ -1899,11 +1923,11 @@ describe('CSS grammar', () => {
             'style:hover {}',
         ]
         const input = `@SUPPORTS (color: green) { ${rules.join(' ')} }`
-        const sheet = createStyleSheet(input)
-        expect(sheet.cssRules[0].cssText).toBe(input.toLowerCase())
+        const styleSheet = createStyleSheet(input)
+        expect(styleSheet.cssRules[0].cssText).toBe(input.toLowerCase())
     })
     test('@view-transition - invalid block contents', () => {
-        const sheet = createStyleSheet(`
+        const styleSheet = createStyleSheet(`
             @view-transition {
 
                 style {}
@@ -1922,7 +1946,7 @@ describe('CSS grammar', () => {
                 navigation: auto;
             }
         `)
-        expect(sheet.cssRules[0].cssText).toBe('@view-transition { navigation: auto; }')
+        expect(styleSheet.cssRules[0].cssText).toBe('@view-transition { navigation: auto; }')
     })
     test('@view-transition - valid block contents', () => {
         const declarations = [
@@ -1931,12 +1955,12 @@ describe('CSS grammar', () => {
         ]
         declarations.forEach(declaration => {
             const input = `@VIEW-TRANSITION { ${declaration}; }`
-            const sheet = createStyleSheet(input)
-            expect(sheet.cssRules[0].cssText).toBe(input.toLowerCase())
+            const styleSheet = createStyleSheet(input)
+            expect(styleSheet.cssRules[0].cssText).toBe(input.toLowerCase())
         })
     })
     test('font feature value type rule - invalid block contents', () => {
-        const sheet = createStyleSheet(`
+        const styleSheet = createStyleSheet(`
             @font-feature-values name {
                 @ANNOTATION {
 
@@ -1981,7 +2005,7 @@ describe('CSS grammar', () => {
                 }
             }
         `)
-        expect(sheet.cssRules[0].cssText).toBe('@font-feature-values name {}')
+        expect(styleSheet.cssRules[0].cssText).toBe('@font-feature-values name {}')
     })
     test('font feature value type rule - valid block contents', () => {
         const contents = [
@@ -1993,13 +2017,13 @@ describe('CSS grammar', () => {
             '@swash { name: 1; }',
         ]
         const input = `@font-feature-values name { ${contents.join(' ')} }`
-        const sheet = createStyleSheet(input)
-        expect(sheet.cssRules[0].cssText).toBe(input.toLowerCase())
+        const styleSheet = createStyleSheet(input)
+        expect(styleSheet.cssRules[0].cssText).toBe(input.toLowerCase())
     })
     test('keyframe rule - invalid block contents', () => {
-        const sheet = createStyleSheet(`
+        const styleSheet = createStyleSheet(`
             @keyframes name {
-                0% {
+                FROM {
 
                     style {}
                     animation-delay: 1s;
@@ -2012,9 +2036,9 @@ describe('CSS grammar', () => {
                 }
             }
         `)
-        expect(sheet.cssRules[0].cssText).toBe('@keyframes name { 0% { animation-timing-function: linear; } }')
+        expect(styleSheet.cssRules[0].cssText).toBe('@keyframes name { 0% { animation-timing-function: linear; } }')
     })
-    test('keyframes rule - valid block contents', () => {
+    test('keyframe rule - valid block contents', () => {
         const declarations = [
             '--custom: {} var(--custom)',
             'TOP: { env(name) }',
@@ -2028,13 +2052,12 @@ describe('CSS grammar', () => {
             'top: calc(1px * container-progress(aspect-ratio, 1, 1))',
         ]
         declarations.forEach(declaration => {
-            const input = `@keyframes name { 0% { ${declaration}; } }`
-            const sheet = createStyleSheet(input)
-            expect(sheet.cssRules[0].cssText).toBe(input.toLowerCase())
+            const styleSheet = createStyleSheet(`@keyframes name { FROM { ${declaration}; } }`)
+            expect(styleSheet.cssRules[0].cssText).toBe(`@keyframes name { 0% { ${declaration.toLowerCase()}; } }`)
         })
     })
     test('margin rule - invalid block contents', () => {
-        const sheet = createStyleSheet(`
+        const styleSheet = createStyleSheet(`
             @page {
                 @top-left {
 
@@ -2052,7 +2075,7 @@ describe('CSS grammar', () => {
                 }
             }
         `)
-        expect(sheet.cssRules[0].cssText).toBe('@page { @top-left { margin-bottom: 1px; } }')
+        expect(styleSheet.cssRules[0].cssText).toBe('@page { @top-left { margin-bottom: 1px; } }')
     })
     test('margin rule - valid block contents', () => {
         const declarations = [
@@ -2065,12 +2088,12 @@ describe('CSS grammar', () => {
         ]
         declarations.forEach(declaration => {
             const input = `@page { @TOP-LEFT { ${declaration}; } }`
-            const sheet = createStyleSheet(input)
-            expect(sheet.cssRules[0].cssText).toBe(input.toLowerCase())
+            const styleSheet = createStyleSheet(input)
+            expect(styleSheet.cssRules[0].cssText).toBe(input.toLowerCase())
         })
     })
     test('nested group rule - invalid block contents', () => {
-        const sheet = createStyleSheet(`
+        const styleSheet = createStyleSheet(`
             style {
                 @media {
 
@@ -2103,7 +2126,7 @@ describe('CSS grammar', () => {
                 }
             }
         `)
-        expect(sheet.cssRules[0].cssText).toBe('style { @media { @media {} } }')
+        expect(styleSheet.cssRules[0].cssText).toBe('style { @media { @media {} } }')
     })
     test('nested group rule - valid block contents', () => {
 
@@ -2117,9 +2140,9 @@ describe('CSS grammar', () => {
             '& style:hover {}',
         ]
         const input = `style { @media { ${rules.join(' ')} } }`
-        const sheet = createStyleSheet(input)
+        const styleSheet = createStyleSheet(input)
 
-        expect(sheet.cssRules[0].cssText).toBe(input.toLowerCase())
+        expect(styleSheet.cssRules[0].cssText).toBe(input.toLowerCase())
 
         const declarations = [
             '--custom: hover {}',
@@ -2135,14 +2158,13 @@ describe('CSS grammar', () => {
             'top: 1px !important',
         ]
         declarations.forEach(declaration => {
-            const input = `style { @MEDIA { & { ${declaration}; } } }`
-            const sheet = createStyleSheet(input)
-            expect(sheet.cssRules[0].cssText).toBe(input.toLowerCase())
+            const input = `style { @media { & { ${declaration}; } } }`
+            const styleSheet = createStyleSheet(input)
+            expect(styleSheet.cssRules[0].cssText).toBe(input.toLowerCase())
         })
     })
     test('nested style rule - invalid block contents', () => {
-
-        const sheet = createStyleSheet(`
+        const styleSheet = createStyleSheet(`
             style {
                 & {
 
@@ -2175,12 +2197,12 @@ describe('CSS grammar', () => {
                 }
             }
         `)
-        expect(sheet.cssRules[0].cssText).toBe('style { & { @media {} } }')
+        expect(styleSheet.cssRules[0].cssText).toBe('style { & { @media {} } }')
     })
     test('nested style rule - valid block contents', () => {
 
         const rules = [
-            '@container name {}',
+            '@CONTAINER name {}',
             '@layer {}',
             '@media {}',
             '@scope {}',
@@ -2189,9 +2211,9 @@ describe('CSS grammar', () => {
             '& style:hover {}',
         ]
         const input = `style { & { ${rules.join(' ')} } }`
-        const sheet = createStyleSheet(input)
+        const styleSheet = createStyleSheet(input)
 
-        expect(sheet.cssRules[0].cssText).toBe(input.toLowerCase())
+        expect(styleSheet.cssRules[0].cssText).toBe(input.toLowerCase())
 
         const declarations = [
             '--custom: hover {}',
@@ -2208,9 +2230,21 @@ describe('CSS grammar', () => {
         ]
         declarations.forEach(declaration => {
             const input = `style { & { ${declaration}; } }`
-            const sheet = createStyleSheet(input)
-            expect(sheet.cssRules[0].cssText).toBe(input.toLowerCase())
+            const styleSheet = createStyleSheet(input)
+            expect(styleSheet.cssRules[0].cssText).toBe(input.toLowerCase())
         })
+    })
+    test('nested style rule - invalid contents between valid declarations', () => {
+        const styleSheet = createStyleSheet(`
+            style {
+                color: orange;
+                @media;
+                . {}
+                --custom: { var(1) };
+                color: green;
+            }
+        `)
+        expect(styleSheet.cssRules[0].cssText).toBe('style { color: green; }')
     })
     test('style rule - invalid prelude containing an undeclared namespace prefix', () => {
 
@@ -2235,8 +2269,7 @@ describe('CSS grammar', () => {
         expect(style.fill).toBe('green')
     })
     test('style rule - invalid block contents', () => {
-
-        const sheet = createStyleSheet(`
+        const styleSheet = createStyleSheet(`
             style {
 
                 @media;
@@ -2267,12 +2300,12 @@ describe('CSS grammar', () => {
                 @media {}
             }
         `)
-        expect(sheet.cssRules[0].cssText).toBe('style { @media {} }')
+        expect(styleSheet.cssRules[0].cssText).toBe('style { @media {} }')
     })
     test('style rule - valid block contents', () => {
 
         const rules = [
-            '@container name {}',
+            '@CONTAINER name {}',
             '@layer {}',
             '@media {}',
             '@scope {}',
@@ -2281,9 +2314,9 @@ describe('CSS grammar', () => {
             '& style:hover {}',
         ]
         const input = `style { ${rules.join(' ')} }`
-        const sheet = createStyleSheet(input)
+        const styleSheet = createStyleSheet(input)
 
-        expect(sheet.cssRules[0].cssText).toBe(input.toLowerCase())
+        expect(styleSheet.cssRules[0].cssText).toBe(input.toLowerCase())
 
         const declarations = [
             '--custom: hover {}',
@@ -2300,8 +2333,8 @@ describe('CSS grammar', () => {
         ]
         declarations.forEach(declaration => {
             const input = `style { ${declaration}; }`
-            const sheet = createStyleSheet(input)
-            expect(sheet.cssRules[0].cssText).toBe(input.toLowerCase())
+            const styleSheet = createStyleSheet(input)
+            expect(styleSheet.cssRules[0].cssText).toBe(input.toLowerCase())
         })
     })
     // Legacy rules
