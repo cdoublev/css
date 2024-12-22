@@ -30,7 +30,6 @@
     "build:definitions": "npm run build:definitions:extract && npm run build:definitions:initial",
     "build:definitions:extract": "node ./scripts/extract.js",
     "build:definitions:initial": "node ./scripts/initial.js",
-    "build:definitions:report": "node ./scripts/report.js",
     "build:interface": "node ./scripts/interface.js",
     "lint": "eslint",
     "prepare": "npm run build:interface",
