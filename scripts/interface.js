@@ -1,46 +1,24 @@
 /**
- * This script generates Web IDL definitions of interfaces inheriting from
- * CSSStyleDeclaration with their attributes for descriptors and properties of
- * the corresponding rule.
+ * This script generates the Web IDL definitions of the interfaces inheriting
+ * from CSSStyleDeclaration:
+ *
+ *   - ./lib/cssom/CSSFontFaceDescriptors.webidl
+ *   - ./lib/cssom/CSSKeyframeProperties.webidl
+ *   - ./lib/cssom/CSSMarginDescriptors.webidl
+ *   - ./lib/cssom/CSSPageDescriptors.webidl
+ *   - ./lib/cssom/CSSPositionTryDescriptors.webidl
+ *   - ./lib/cssom/CSSStyleProperties.webidl
+ *
+ * Then it generates the wrapper classes from all lib/cssom/*.webidl.
  */
 const Transformer = require('webidl2js')
 const compatibility = require('../lib/compatibility.js')
 const { cssPropertyToIDLAttribute } = require('../lib/utils/string.js')
-const fs = require('node:fs')
+const fs = require('node:fs/promises')
 const path = require('node:path')
 const { rules } = require('../lib/rules/definitions.js')
 
-const targetDir = path.resolve(__dirname, '../lib/cssom')
-
-const transformer = new Transformer({
-    implSuffix: '-impl',
-    /**
-     * TODO: implement support for `[CEReactions]`
-     *
-    processCEReactions(code) {
-        const preSteps = this.addImport("jsdom/custom-elements.js", "ceReactionsPreSteps");
-        const postSteps = this.addImport("jsdom/custom-elements.js", "ceReactionsPostSteps");
-        return `
-            ${preSteps}(globalObject);
-            try {
-                ${code}
-            } finally {
-                ${postSteps}(globalObject);
-            }
-        `;
-    },
-    */
-    processReflect(idl, implName) {
-        const reflectStyle = idl.extAttrs.find(extAttr => extAttr.name === 'ReflectStyle')
-        if (reflectStyle?.rhs?.type !== 'string') {
-            throw new Error(`Internal error: Invalid [ReflectStyle] for attribute ${idl.name}`)
-        }
-        return {
-            get: `return ${implName}.getPropertyValue(${reflectStyle.rhs.value});`,
-            set: `${implName}.setProperty(${reflectStyle.rhs.value}, V);`,
-        }
-    },
-})
+const targetDir = path.join(__dirname, '..', 'lib', 'cssom')
 
 /**
  * @param {string} name
@@ -48,40 +26,28 @@ const transformer = new Transformer({
  * @param {string[]} [extensions]
  */
 function createStyleDeclarationChildInterface(name, attributes, extensions = []) {
-
-    // This should be natively supported by WebIDL2JS's Transformer: https://github.com/jsdom/webidl2js/issues/188
-    const stream = fs.createWriteStream(path.resolve(targetDir, `${name}.webidl`))
-
-    stream.write('[Exposed=Window]\n')
-    stream.write(`interface ${name} : CSSStyleDeclaration {\n`)
-    stream.write('\t// https://drafts.csswg.org/cssom-1/#dom-cssstyledeclaration-camel_cased_attribute\n')
+    let content = '[Exposed=Window]\n'
+    content += `interface ${name} : CSSStyleDeclaration {\n`
+    content += '\t// https://drafts.csswg.org/cssom-1/#dom-cssstyledeclaration-camel_cased_attribute\n'
     for (const attribute of attributes) {
         const camelCasedAttribute = cssPropertyToIDLAttribute(attribute)
         const prelude = [...extensions, `ReflectStyle="${attribute}"`]
-        stream.write(`\t[${prelude}] attribute [LegacyNullToEmptyString] CSSOMString _${camelCasedAttribute};\n`)
+        content += `\t[${prelude}] attribute [LegacyNullToEmptyString] CSSOMString _${camelCasedAttribute};\n`
     }
-    stream.write('\t// https://drafts.csswg.org/cssom-1/#dom-cssstyledeclaration-webkit_cased_attribute\n')
+    content += '\t// https://drafts.csswg.org/cssom-1/#dom-cssstyledeclaration-webkit_cased_attribute\n'
     for (const attribute of attributes.filter(name => name.startsWith('-webkit'))) {
         const webkitCasedAttribute = cssPropertyToIDLAttribute(attribute, true)
         const prelude = [...extensions, `ReflectStyle="${attribute}"`]
-        stream.write(`\t[${prelude}] attribute [LegacyNullToEmptyString] CSSOMString _${webkitCasedAttribute};\n`)
+        content += `\t[${prelude}] attribute [LegacyNullToEmptyString] CSSOMString _${webkitCasedAttribute};\n`
     }
-    stream.write('\t// https://drafts.csswg.org/cssom-1/#dom-cssstyledeclaration-dashed_attribute\n')
+    content += '\t// https://drafts.csswg.org/cssom-1/#dom-cssstyledeclaration-dashed_attribute\n'
     for (const attribute of attributes) {
         if (!attribute.includes('-')) continue
         const prelude = [...extensions, `ReflectStyle="${attribute}"`]
-        stream.write(`\t[${prelude}] attribute [LegacyNullToEmptyString] CSSOMString ${attribute};\n`)
+        content += `\t[${prelude}] attribute [LegacyNullToEmptyString] CSSOMString ${attribute};\n`
     }
-    stream.end('};\n')
-
-    stream.on('finish', () => {
-        transformer.addSource(targetDir, targetDir)
-        transformer
-            .generate(targetDir)
-            .catch(error => {
-                throw error
-            })
-    })
+    content += '};\n'
+    return fs.writeFile(path.join(targetDir, `${name}.webidl`), content)
 }
 
 /**
@@ -116,16 +82,65 @@ function getRuleAttributes({ name, value: { descriptors, properties } }) {
     return attributes
 }
 
-const fontFaceRule = rules.find(rule => rule.name === '@font-face')
-const keyframeRule = rules.find(rule => rule.name === '@keyframes').value.rules.find(rule => rule.name === '@keyframe')
-const pageRule = rules.find(rule => rule.name === '@page')
-const marginRule = pageRule.value.rules.find(rule => rule.name === '@margin')
-const styleRule = rules.find(rule => rule.name === '@style')
-const positionTryRule = rules.find(rule => rule.name === '@position-try')
+function buildDefinitions() {
 
-createStyleDeclarationChildInterface('CSSFontFaceDescriptors', getRuleAttributes(fontFaceRule))
-createStyleDeclarationChildInterface('CSSKeyframeProperties', getRuleAttributes(keyframeRule))
-createStyleDeclarationChildInterface('CSSMarginDescriptors', getRuleAttributes(marginRule))
-createStyleDeclarationChildInterface('CSSPageDescriptors', getRuleAttributes(pageRule))
-createStyleDeclarationChildInterface('CSSPositionTryDescriptors', getRuleAttributes(positionTryRule))
-createStyleDeclarationChildInterface('CSSStyleProperties', getRuleAttributes(styleRule), ['CEReactions'])
+    const fontFaceRule = rules.find(rule => rule.name === '@font-face')
+    const keyframeRule = rules.find(rule => rule.name === '@keyframes').value.rules.find(rule => rule.name === '@keyframe')
+    const pageRule = rules.find(rule => rule.name === '@page')
+    const marginRule = pageRule.value.rules.find(rule => rule.name === '@margin')
+    const styleRule = rules.find(rule => rule.name === '@style')
+    const positionTryRule = rules.find(rule => rule.name === '@position-try')
+
+    return Promise.all([
+        createStyleDeclarationChildInterface('CSSFontFaceDescriptors', getRuleAttributes(fontFaceRule)),
+        createStyleDeclarationChildInterface('CSSKeyframeProperties', getRuleAttributes(keyframeRule)),
+        createStyleDeclarationChildInterface('CSSMarginDescriptors', getRuleAttributes(marginRule)),
+        createStyleDeclarationChildInterface('CSSPageDescriptors', getRuleAttributes(pageRule)),
+        createStyleDeclarationChildInterface('CSSPositionTryDescriptors', getRuleAttributes(positionTryRule)),
+        createStyleDeclarationChildInterface('CSSStyleProperties', getRuleAttributes(styleRule), ['CEReactions']),
+    ])
+}
+
+function buildInterfaces() {
+
+    const transformer = new Transformer({
+        implSuffix: '-impl',
+        /**
+         * TODO: implement support for `[CEReactions]`
+         *
+        processCEReactions(code) {
+            const preSteps = this.addImport("jsdom/custom-elements.js", "ceReactionsPreSteps");
+            const postSteps = this.addImport("jsdom/custom-elements.js", "ceReactionsPostSteps");
+            return `
+                ${preSteps}(globalObject);
+                try {
+                    ${code}
+                } finally {
+                    ${postSteps}(globalObject);
+                }
+            `;
+        },
+        */
+        processReflect(idl, implName) {
+            const reflectStyle = idl.extAttrs.find(extAttr => extAttr.name === 'ReflectStyle')
+            if (reflectStyle?.rhs?.type !== 'string') {
+                throw new Error(`Internal error: Invalid [ReflectStyle] for attribute ${idl.name}`)
+            }
+            return {
+                get: `return ${implName}.getPropertyValue(${reflectStyle.rhs.value});`,
+                set: `${implName}.setProperty(${reflectStyle.rhs.value}, V);`,
+            }
+        },
+    })
+
+    transformer.addSource(targetDir, targetDir)
+
+    return transformer.generate(targetDir)
+}
+
+buildDefinitions()
+    .then(buildInterfaces)
+    .catch(error => {
+        console.log('Please report this issue: https://github.com/cdoublev/css/issues/new')
+        throw error
+    })
