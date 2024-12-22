@@ -13,7 +13,6 @@
  *   - ./lib/values/pseudos.js
  */
 const { addQuotes, tab } = require('../lib/utils/string.js')
-const { join, resolve } = require('node:path')
 const arbitrary = require('../lib/parse/arbitrary.js')
 const blocks = require('../lib/values/blocks.js')
 const colors = require('../lib/values/colors.js')
@@ -23,6 +22,7 @@ const forgiving = require('../lib/values/forgiving.js')
 const fs = require('node:fs/promises')
 const logical = require('../lib/properties/logical.js')
 const parseDefinition = require('../lib/parse/definition.js')
+const path = require('node:path')
 const pseudos = require('../lib/values/pseudos.js')
 const { rules } = require('../lib/rules/definitions.js')
 const { serializeDefinition } = require('../lib/serialize.js')
@@ -1001,8 +1001,6 @@ function addRules(definitions = [], key) {
  */
 function build(specifications) {
 
-    const header = `\n// Generated from ${__filename}\n\nmodule.exports = {\n`
-
     Object.entries(specifications).forEach(([key, { atrules, properties, selectors, values }]) => {
         if (excluded.specifications.includes(key)) {
             return
@@ -1017,14 +1015,14 @@ function build(specifications) {
 
     return Promise.all([
         fs.writeFile(
-            resolve(join(__dirname, '..', 'lib', 'descriptors', 'definitions.js')),
-            `${header}${serializeDescriptors(descriptors.sort(sortByName))}}\n`),
+            path.join(__dirname, '..', 'lib', 'descriptors', 'definitions.js'),
+            `\nmodule.exports = {\n${serializeDescriptors(descriptors.sort(sortByName))}}\n`),
         fs.writeFile(
-            resolve(join(__dirname, '..', 'lib', 'properties', 'definitions.js')),
-            `${header}${serializeProperties(properties.sort(sortByName))}}\n`),
+            path.join(__dirname, '..', 'lib', 'properties', 'definitions.js'),
+            `\nmodule.exports = {\n${serializeProperties(properties.sort(sortByName))}}\n`),
         fs.writeFile(
-            resolve(join(__dirname, '..', 'lib', 'values', 'definitions.js')),
-            `${header}${serializeTypes(types.sort(sortByName))}}\n`),
+            path.join(__dirname, '..', 'lib', 'values', 'definitions.js'),
+            `\nmodule.exports = {\n${serializeTypes(types.sort(sortByName))}}\n`),
     ])
 }
 
