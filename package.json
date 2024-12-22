@@ -33,7 +33,7 @@
     "build:definitions:report": "node ./scripts/report.js",
     "build:interface": "node ./scripts/interface.js",
     "lint": "eslint",
-    "prepare": "npm run build:interface && npm run build:definitions",
+    "prepare": "npm run build:interface",
     "safe-publish": "npm run lint && npm run test && npm publish",
     "test": "jest",
     "test:inspect": "node --inspect-brk=0.0.0.0:9222 ./node_modules/.bin/jest --runInBand --watchAll -b",
