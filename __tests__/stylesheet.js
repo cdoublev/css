@@ -2337,10 +2337,14 @@ describe('CSS grammar', () => {
             expect(styleSheet.cssRules[0].cssText).toBe(input.toLowerCase())
         })
     })
-    // Legacy rules
-    test('vendor prefixed rules', () => {
+    // Legacy names
+    test('legacy rule name', () => {
         const { cssRules: [keyframesRule] } = createStyleSheet('@-webkit-keyframes name {}')
         expect(CSSKeyframesRule.is(keyframesRule)).toBeTruthy()
         expect(keyframesRule.cssText).toBe('@keyframes name {}')
+    })
+    test('legacy property name', () => {
+        const styleSheet = createStyleSheet('style { -webkit-order: 1; }')
+        expect(styleSheet.cssRules[0].cssText).toBe('style { order: 1; }')
     })
 })
