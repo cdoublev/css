@@ -1128,6 +1128,12 @@ describe('CSS grammar', () => {
                 color: red;
                 --custom:hover {};
 
+                components: "\n env(name);
+                components: url(bad .url) env(name);
+                components: ] env(name);
+                components: ) env(name);
+                components: ! env(name);
+                components: !important env(name);
                 components: env(name) {};
                 components: {} env(name);
                 components: none;
@@ -1202,6 +1208,12 @@ describe('CSS grammar', () => {
                 color: red;
                 --custom:hover {};
 
+                pad: "\n env(name);
+                pad: url(bad .url) env(name);
+                pad: ] env(name);
+                pad: ) env(name);
+                pad: ! env(name);
+                pad: !important env(name);
                 pad: env(name) {};
                 pad: {} env(name);
                 pad: initial;
@@ -1237,6 +1249,12 @@ describe('CSS grammar', () => {
                 color: red;
                 --custom:hover {};
 
+                font-weight: "\n env(name);
+                size-adjust: url(bad .url) env(name);
+                font-weight: ] env(name);
+                size-adjust: ) env(name);
+                font-weight: ! env(name);
+                size-adjust: !important env(name);
                 font-weight: env(name) {};
                 size-adjust: {} env(name);
                 font-weight: initial;
@@ -1299,7 +1317,7 @@ describe('CSS grammar', () => {
                 @property --name { syntax: "*"; inherits: false; }
                 @scope {}
                 @starting-style {}
-                @supports (color: green) {}
+                @supports (color: red) {}
                 @top-left {}
                 @view-transition {}
                 style:hover {}
@@ -1308,6 +1326,12 @@ describe('CSS grammar', () => {
                 color: red;
                 --custom:hover {};
 
+                font-display: "\n env(name);
+                font-display: url(bad .url) env(name);
+                font-display: ] env(name);
+                font-display: ) env(name);
+                font-display: ! env(name);
+                font-display: !important env(name);
                 font-display: env(name) {};
                 font-display: {} env(name);
                 font-display: initial;
@@ -1357,6 +1381,12 @@ describe('CSS grammar', () => {
                 color: red;
                 --custom:hover {};
 
+                base-palette: "\n env(name);
+                base-palette: url(bad .url) env(name);
+                base-palette: ] env(name);
+                base-palette: ) env(name);
+                base-palette: ! env(name);
+                base-palette: !important env(name);
                 base-palette: env(name) {};
                 base-palette: {} env(name);
                 base-palette: initial;
@@ -1409,6 +1439,12 @@ describe('CSS grammar', () => {
 
                 color: red;
 
+                result: "\n env(name);
+                result: url(bad .url) env(name);
+                result: ] env(name);
+                result: ) env(name);
+                result: ! env(name);
+                result: !important env(name);
                 result: env(name) {};
                 result: {} env(name);
                 result: 1 !important;
@@ -1600,6 +1636,12 @@ describe('CSS grammar', () => {
 
                 top: 1px;
 
+                margin-top: "\n env(name);
+                margin-top: url(bad .url) env(name);
+                margin-top: ] env(name);
+                margin-top: ) env(name);
+                margin-top: ! env(name);
+                margin-top: !important env(name);
                 margin-top: env(name) {};
                 margin-top: {} env(name);
                 margin-top: attr(name);
@@ -1643,6 +1685,12 @@ describe('CSS grammar', () => {
                 color: red;
                 --custom:hover {};
 
+                top: "\n env(name);
+                top: url(bad .url) env(name);
+                top: ] env(name);
+                top: ) env(name);
+                top: ! env(name);
+                top: !important env(name);
                 top: env(name) {};
                 top: {} env(name);
                 top: 1px !important;
@@ -1687,6 +1735,12 @@ describe('CSS grammar', () => {
                 color: red;
                 --custom:hover {};
 
+                inherits: "\n env(name);
+                inherits: url(bad .url) env(name);
+                inherits: ] env(name);
+                inherits: ) env(name);
+                inherits: ! env(name);
+                inherits: !important env(name);
                 inherits: env(name) {};
                 inherits: {} env(name);
                 inherits: initial;
@@ -1778,6 +1832,12 @@ describe('CSS grammar', () => {
                 @top-left {}
                 0% {}
 
+                top: "\n env(name);
+                top: url(bad .url) env(name);
+                top: ] env(name);
+                top: ) env(name);
+                top: ! env(name);
+                top: !important env(name);
                 top: env(name) {};
                 top: {} env(name);
 
@@ -1934,6 +1994,12 @@ describe('CSS grammar', () => {
                 color: red;
                 --custom:hover {};
 
+                types: "\n env(name);
+                types: url(bad .url) env(name);
+                types: ] env(name);
+                types: ) env(name);
+                types: ! env(name);
+                types: !important env(name);
                 types: env(name) {};
                 types: {} env(name);
                 types: initial;
@@ -1968,6 +2034,12 @@ describe('CSS grammar', () => {
                     color: red;
                     --custom:hover {};
 
+                    name: "\n env(name);
+                    name: url(bad .url) env(name);
+                    name: ] env(name);
+                    name: ) env(name);
+                    name: ! env(name);
+                    name: !important env(name);
                     name: env(name) {};
                     name: {} env(name);
                     name: initial;
@@ -2028,6 +2100,12 @@ describe('CSS grammar', () => {
                     style {}
                     animation-delay: 1s;
 
+                    top: "\n env(name);
+                    top: url(bad .url) env(name);
+                    top: ] env(name);
+                    top: ) env(name);
+                    top: ! env(name);
+                    top: !important env(name);
                     top: env(name) {};
                     top: {} env(name);
                     top: 1px !important;
@@ -2064,6 +2142,12 @@ describe('CSS grammar', () => {
                     style {}
                     top: 1px;
 
+                    margin-top: "\n env(name);
+                    margin-top: url(bad .url) env(name);
+                    margin-top: ] env(name);
+                    margin-top: ) env(name);
+                    margin-top: ! env(name);
+                    margin-top: !important env(name);
                     margin-top: env(name) {};
                     margin-top: {} env(name);
                     margin-top: attr(name);
@@ -2119,6 +2203,12 @@ describe('CSS grammar', () => {
                     @view-transition {}
                     0% {}
 
+                    top: "\n env(name);
+                    top: url(bad .url) env(name);
+                    top: ] env(name);
+                    top: ) env(name);
+                    top: ! env(name);
+                    top: !important env(name);
                     top: env(name) {};
                     top: {} env(name);
 
@@ -2190,6 +2280,12 @@ describe('CSS grammar', () => {
                     @view-transition {}
                     0% {}
 
+                    top: "\n env(name);
+                    top: url(bad .url) env(name);
+                    top: ] env(name);
+                    top: ) env(name);
+                    top: ! env(name);
+                    top: !important env(name);
                     top: env(name) {};
                     top: {} env(name);
 
@@ -2294,6 +2390,12 @@ describe('CSS grammar', () => {
                 @view-transition {}
                 0% {}
 
+                top: "\n env(name);
+                top: url(bad .url) env(name);
+                top: ] env(name);
+                top: ) env(name);
+                top: ! env(name);
+                top: !important env(name);
                 top: env(name) {};
                 top: {} env(name);
 
