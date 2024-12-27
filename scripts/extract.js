@@ -708,7 +708,7 @@ function findRule(type, rules = [], depth = 1) {
     if (depth < 3) {
         for (const rule of rules) {
             const { name, names, value } = rule
-            if (name === type || name === `${type}-block` || name === `${type}-statement` || names?.includes(type)) {
+            if (name === type || names?.includes(type)) {
                 return rule
             }
             if (value) {
