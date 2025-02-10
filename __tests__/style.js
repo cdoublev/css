@@ -729,6 +729,7 @@ describe('<whole-value>', () => {
             ['toggle(0) 0', 'margin'],
             ['toggle(first-valid(0) 0)', 'margin'],
             // Invalid <whole-value> argument for the property
+            ['first-valid(first-valid(invalid))', 'color'],
             ['mix(0, mix(0, invalid, red), red)', 'color'],
             ['toggle(invalid)', 'color'],
             // mix() for non-animatable property
@@ -759,8 +760,6 @@ describe('<whole-value>', () => {
             ['mix(0, 1, 1) 1', 'mix(0, 1, 1) 1', '--custom'],
             ['toggle(1) 1', 'toggle(1) 1', '--custom'],
             ['toggle(toggle(1))', 'toggle(toggle(1))', '--custom'],
-            // <first-valid()> arguments are not validated at parse time
-            ['first-valid(first-valid(invalid))', 'first-valid(first-valid(invalid))', 'opacity'],
         ]
         valid.forEach(([input, expected, property]) => {
             style.setProperty(property, input)
