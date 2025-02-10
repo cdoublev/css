@@ -43,14 +43,14 @@
   },
   "devDependencies": {
     "@cdoublev/eslint-config": "^0.11.0",
-    "@stylistic/eslint-plugin-js": "^2.0.0",
+    "@stylistic/eslint-plugin-js": "^3.0.0",
     "eslint": "^9.0.0",
     "eslint-plugin-jest": "^28.0.0",
     "eslint-plugin-node": "^11.0.0",
     "globals": "^15.0.0",
     "jest": "^29.0.0",
     "jest-junit": "^16.0.0",
-    "webref": "w3c/webref#400f1cf83ba7079e61b256e9749daa7736ea5bfe"
+    "webref": "w3c/webref#42a885bf313750006fbace0a1e06d4eaaba97201"
   },
   "publishConfig": {
     "access": "public"

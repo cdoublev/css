@@ -73,6 +73,16 @@ const replaced = {
         'border-end-start-radius': { initial: '0' },
         'border-start-end-radius': { initial: '0' },
         'border-start-start-radius': { initial: '0' },
+        // https://github.com/w3c/csswg-drafts/issues/11650
+        'corner-block-end-shape': { value: '<corner-shape-value>{1,2}' },
+        'corner-block-start-shape': { value: '<corner-shape-value>{1,2}' },
+        'corner-bottom-shape': { value: '<corner-shape-value>{1,2}' },
+        'corner-inline-end-shape': { value: '<corner-shape-value>{1,2}' },
+        'corner-inline-start-shape': { value: '<corner-shape-value>{1,2}' },
+        'corner-left-shape': { value: '<corner-shape-value>{1,2}' },
+        'corner-right-shape': { value: '<corner-shape-value>{1,2}' },
+        'corner-shape': { value: '<corner-shape-value>{1,4}' },
+        'corner-top-shape': { value: '<corner-shape-value>{1,2}' },
         // TODO: fix `value` of `clip`
         'clip': { value: 'rect([<length> | auto]{4} | [<length> | auto]#{4}) | auto' },
         // TODO: fix `value` of `copy-into`
@@ -163,8 +173,6 @@ const replaced = {
         '<url-modifier>': '<request-url-modifier> | <ident> | <function>',
         '<url-set>': '<image-set()>',
         '<zero>': '<number-token>',
-        // https://github.com/w3c/csswg-drafts/issues/11368
-        '<arc-command>': 'arc [<command-end-point> && of <length-percentage>{1,2} && <arc-sweep>? && <arc-size>? && [rotate <angle>]?]',
         // https://github.com/w3c/csswg-drafts/issues/8346, https://github.com/w3c/csswg-drafts/pull/8367#issuecomment-1408147460, https://github.com/w3c/csswg-drafts/issues/9729, https://github.com/w3c/csswg-drafts/issues/10833
         '<angular-color-hint>': '<angle-percentage> | <zero>',
         '<color-stop-angle>': '[<angle-percentage> | <zero>]{1,2}',
@@ -172,6 +180,8 @@ const replaced = {
         '<linear-gradient-syntax>': '[[<angle> | <zero> | to <side-or-corner>] || <color-interpolation-method>]? , <color-stop-list>',
         '<radial-gradient-syntax>': '[[[<radial-shape> || <radial-size>]? [at <position>]?]! || <color-interpolation-method>]? , <color-stop-list>',
         '<radial-size>': 'closest-corner | farthest-corner | <radial-radius>{1,2}',
+        // https://github.com/speced/bikeshed/issues/3011
+        '<corner-shape-value>': 'round | scoop | bevel | notch | straight | squircle | superellipse(<number [0,∞]> | infinity)',
         // https://github.com/w3c/csswg-drafts/issues/7016
         '<general-enclosed>': '<function> | (<any-value>?)',
         '<pseudo-class-selector>': ': <ident> | : <function>',
@@ -471,6 +481,7 @@ const excluded = {
         'css-color-6',
         'css-color-hdr',
         'css-conditional-values',
+        'css-gaps',
         'css-grid-3',
         'webvtt',
         // Prefer SVG 2
@@ -615,7 +626,7 @@ const errors = {
     '@when': { cause: 'It is not yet supported.' },
     '<boolean-expr[]>': { cause: 'It is not yet supported.' },
     '<box>': {
-        cause: 'It is a generic type notation that is no longer used anywhere, and should not be exported.',
+        cause: 'It is a generic type that is not used anywhere, and should not be exported.',
         links: [
             'https://github.com/w3c/csswg-drafts/commit/7dc439c83df8bd34885f74689f8cbc7dff77b5e0',
             'https://github.com/w3c/csswg-drafts/commit/798ba91a41295c5d8e084ba7e93c4073e720b4f3',
@@ -628,6 +639,10 @@ const errors = {
     },
     '<identifier>': { cause: 'It is equivalent to <ident>. Since most of CSS 2.2 is superseded, it is not worth requesting a change.' },
     '<palette-mix()>': { cause: 'It is extracted by w3c/reffy without its value definition, which is basically a problem with the definition markup.' },
+    '<repeat()>': {
+        cause: 'It is a generic type whose production rule is incorrectly defined, that is not used anywhere, and should not be exported.',
+        links: ['https://github.com/w3c/csswg-drafts/issues/11385'],
+    },
     '<unicode-range-token>': {
         cause: 'It is intended to replace <urange> but there are ongoing problems with consuming this token therefore it is not yet implemented.',
         links: ['https://github.com/w3c/csswg-drafts/issues/8835'],

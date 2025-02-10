@@ -2540,8 +2540,8 @@ describe('<arc-command>', () => {
         const of = keyword('of')
         const radii = list([zero])
         const endpoint = list([by, coordinate], ' ', ['<command-end-point>'])
-        const parameters = list([endpoint, list([of, radii]), omitted, omitted, omitted])
-        const command = list([arc, parameters], ' ', ['<arc-command>'])
+        const parameters = list([list([of, radii]), omitted, omitted, omitted])
+        const command = list([arc, endpoint, parameters], ' ', ['<arc-command>'])
 
         expect(parse('<arc-command>', 'arc by 0px 0px of 0px', false)).toMatchObject(command)
     })
@@ -3094,17 +3094,6 @@ describe('<counter-style-name>', () => {
         const context = { ...createContext(styleRule), declaration: { definition: { name: 'any-property' } } }
         expect(parse('<counter-style-name>', 'DECIMAL', true, context)).toBe('decimal')
         expect(parse('<counter-style-name>', 'NAME')).toBe('NAME')
-    })
-})
-describe('<function-dependency-list>, <function-parameter-list>', () => {
-    test('invalid', () => {
-        expect(parse('<function-dependency-list>', '--name, --name', false)).toBeNull()
-    })
-    test('representation', () => {
-        const name = dashedIdent('--name', ['<custom-property-name>'])
-        const parameter = list([name, omitted, omitted], ' ', ['<function-parameter>'])
-        const parameters = list([parameter], ',', ['<function-dependency-list>'])
-        expect(parse('<function-dependency-list>', '--name', false)).toMatchObject(parameters)
     })
 })
 describe('<drop-shadow()>', () => {

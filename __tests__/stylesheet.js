@@ -1408,6 +1408,10 @@ describe('CSS grammar', () => {
         const styleSheet = createStyleSheet(input)
         expect(styleSheet.cssRules[0].cssText).toBe(input.toLowerCase())
     })
+    test('@function - invalid prelude', () => {
+        const styleSheet = createStyleSheet('@function --name(--parameter, --parameter) {}')
+        expect(styleSheet.cssRules).toHaveLength(0)
+    })
     test('@function - invalid block contents', () => {
         const styleSheet = createStyleSheet(`
             @function --name {

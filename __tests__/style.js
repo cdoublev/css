@@ -802,7 +802,7 @@ describe('alignment-baseline', () => {
         expect(style.alignmentBaseline).toBe('text-bottom')
     })
 })
-describe('animation-range-start, animation-range-end', () => {
+describe('animation-range-start, animation-range-end, animation-trigger-exit-range-end, animation-trigger-exit-range-start, animation-trigger-range-end, animation-trigger-range-start', () => {
     test('valid', () => {
         const style = createStyleBlock()
         style.animationRangeStart = 'entry 0%'
@@ -1544,7 +1544,7 @@ describe('animation', () => {
         // Different lengths of longhand values
         style.animationName = 'none, none'
         expect(style.animation).toBe('')
-        expect(style.cssText).toBe('animation-duration: auto; animation-timing-function: ease; animation-delay: 0s; animation-iteration-count: 1; animation-direction: normal; animation-fill-mode: none; animation-play-state: running; animation-name: none, none; animation-timeline: auto; animation-range: normal;')
+        expect(style.cssText).toBe('animation-duration: auto; animation-timing-function: ease; animation-delay: 0s; animation-iteration-count: 1; animation-direction: normal; animation-fill-mode: none; animation-play-state: running; animation-name: none, none; animation-timeline: auto; animation-range: normal; animation-trigger: once;')
     })
 })
 describe('animation-range', () => {
@@ -1598,16 +1598,278 @@ describe('animation-range', () => {
         expect(style.animationRange).toBe('')
         expect(style.cssText).toBe('animation-range-start: normal, normal; animation-range-end: normal;')
 
-        // Shared <timeline-range-name>
+        // Same <timeline-range-name>
         style.animationRangeStart = 'entry'
         style.animationRangeEnd = 'entry'
         expect(style.animationRange).toBe('entry')
         expect(style.cssText).toBe('animation-range: entry;')
 
+        // Different <timeline-range-name>
+        style.animationRangeEnd = 'normal'
+        expect(style.animationRange).toBe('entry normal')
+        expect(style.cssText).toBe('animation-range: entry normal;')
+
         // Ambiguous <length-percentage>
         style.animationRangeEnd = '100%'
         expect(style.animationRange).toBe('entry 0% 100%')
         expect(style.cssText).toBe('animation-range: entry 0% 100%;')
+    })
+})
+describe('animation-trigger', () => {
+
+    const longhands = shorthands.get('animation-trigger')
+
+    test('shorthand expansion', () => {
+
+        const style = createStyleBlock()
+
+        // Initial longhand values (not all longhands can be explicitly declared)
+        style.animationTrigger = 'once auto'
+        expect(style).toHaveLength(longhands.length)
+        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
+        expect(style.animationTrigger).toBe('once')
+        expect(style.cssText).toBe('animation-trigger: once;')
+        style.animationTrigger = 'once --timeline normal normal'
+        longhands.forEach(longhand =>
+            expect(style[longhand])
+                .toBe(longhand === 'animation-trigger-timeline'
+                    ? '--timeline'
+                    : initial(longhand)))
+        expect(style.animationTrigger).toBe('--timeline')
+        expect(style.cssText).toBe('animation-trigger: --timeline;')
+
+        // Missing longhand values
+        style.animationTrigger = 'once'
+        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
+        expect(style.animationTrigger).toBe('once')
+        expect(style.cssText).toBe('animation-trigger: once;')
+        style.animationTrigger = 'none'
+        longhands.forEach(longhand =>
+            expect(style[longhand])
+                .toBe(longhand === 'animation-trigger-timeline'
+                    ? 'none'
+                    : initial(longhand)))
+        expect(style.animationTrigger).toBe('none')
+        expect(style.cssText).toBe('animation-trigger: none;')
+        style.animationTrigger = '--timeline entry'
+        longhands.forEach(longhand => {
+            if (longhand === 'animation-trigger-timeline') {
+                expect(style[longhand]).toBe('--timeline')
+            } else if (longhand.includes('trigger-range')) {
+                expect(style[longhand]).toBe('entry')
+            } else {
+                expect(style[longhand]).toBe(initial(longhand))
+            }
+        })
+        expect(style.animationTrigger).toBe('--timeline entry')
+        expect(style.cssText).toBe('animation-trigger: --timeline entry;')
+        style.animationTrigger = '--timeline 10%'
+        longhands.forEach(longhand => {
+            if (longhand === 'animation-trigger-timeline') {
+                expect(style[longhand]).toBe('--timeline')
+            } else if (longhand === 'animation-trigger-range-start') {
+                expect(style[longhand]).toBe('10%')
+            } else {
+                expect(style[longhand]).toBe(initial(longhand))
+            }
+        })
+        expect(style.animationTrigger).toBe('--timeline 10%')
+        expect(style.cssText).toBe('animation-trigger: --timeline 10%;')
+        style.animationTrigger = '--timeline normal normal entry'
+        longhands.forEach(longhand => {
+            if (longhand === 'animation-trigger-timeline') {
+                expect(style[longhand]).toBe('--timeline')
+            } else if (longhand.includes('trigger-exit-range')) {
+                expect(style[longhand]).toBe('entry')
+            } else {
+                expect(style[longhand]).toBe(initial(longhand))
+            }
+        })
+        expect(style.animationTrigger).toBe('--timeline normal normal entry')
+        expect(style.cssText).toBe('animation-trigger: --timeline normal normal entry;')
+        style.animationTrigger = '--timeline normal normal 10%'
+        longhands.forEach(longhand => {
+            if (longhand === 'animation-trigger-timeline') {
+                expect(style[longhand]).toBe('--timeline')
+            } else if (longhand === 'animation-trigger-exit-range-start') {
+                expect(style[longhand]).toBe('10%')
+            } else {
+                expect(style[longhand]).toBe(initial(longhand))
+            }
+        })
+        expect(style.animationTrigger).toBe('--timeline normal normal 10%')
+        expect(style.cssText).toBe('animation-trigger: --timeline normal normal 10%;')
+
+        // Coordinated value list
+        style.animationTrigger = 'once, once'
+        longhands.forEach(longhand => expect(style[longhand]).toBe(`${initial(longhand)}, ${initial(longhand)}`))
+        expect(style.animationTrigger).toBe('once, once')
+        expect(style.cssText).toBe('animation-trigger: once, once;')
+    })
+    test('shorthand reification', () => {
+
+        const style = createStyleBlock()
+
+        // Initial longhand values
+        longhands.forEach(longhand => style[longhand] = initial(longhand))
+        expect(style.animationTrigger).toBe('once')
+        expect(style.cssText).toBe('animation-trigger: once;')
+
+        // Different lengths of longhand values
+        style.animationTriggerType = 'once, once'
+        expect(style.animationTrigger).toBe('')
+        expect(style.cssText).toBe('animation-trigger-type: once, once; animation-trigger-timeline: auto; animation-trigger-range: normal; animation-trigger-exit-range: auto;')
+        style.animationTriggerType = 'once'
+
+        // Ranges cannot be specified when the timeline is `auto` or `none`
+        style.animationTriggerRange = 'entry'
+        expect(style.animationTrigger).toBe('')
+        expect(style.cssText).toBe('animation-trigger-type: once; animation-trigger-timeline: auto; animation-trigger-range: entry; animation-trigger-exit-range: auto;')
+        style.animationTriggerRange = 'normal'
+
+        // Omitted range end values
+        style.animationTrigger = '--timeline entry 0% entry 100%'
+        expect(style.animationTrigger).toBe('--timeline entry')
+
+        // Range values cannot be omitted when there are non-initial range values on the right
+        style.animationTrigger = '--timeline normal 1%'
+        expect(style.animationTrigger).toBe('--timeline normal 1%'/* auto normal*/)
+    })
+})
+describe('animation-trigger-exit-range', () => {
+
+    const longhands = shorthands.get('animation-trigger-exit-range')
+
+    test('shorthand expansion', () => {
+
+        const style = createStyleBlock()
+
+        // Initial longhand values
+        style.animationTriggerExitRange = 'auto auto'
+        expect(style).toHaveLength(longhands.length)
+        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
+        expect(style.animationTriggerExitRange).toBe('auto')
+        expect(style.cssText).toBe('animation-trigger-exit-range: auto;')
+
+        // Missing longhand values
+        const values = [
+            ['auto'],
+            ['0%', '0%', 'auto'],
+            ['entry'],
+            ['entry 10%', 'entry 10%', 'entry'],
+            ['10% entry', '10%', 'entry'],
+        ]
+        values.forEach(([shorthand, start = shorthand, end = shorthand]) => {
+            style.animationTriggerExitRange = shorthand
+            expect(style.animationTriggerExitRangeStart).toBe(start)
+            expect(style.animationTriggerExitRangeEnd).toBe(end)
+            expect(style.animationTriggerExitRange).toBe(shorthand)
+            expect(style.cssText).toBe(`animation-trigger-exit-range: ${shorthand};`)
+        })
+
+        // Coordinated value list
+        style.animationTriggerExitRange = 'auto, auto'
+        longhands.forEach(longhand => expect(style[longhand]).toBe(`${initial(longhand)}, ${initial(longhand)}`))
+        expect(style.animationTriggerExitRange).toBe('auto, auto')
+        expect(style.cssText).toBe('animation-trigger-exit-range: auto, auto;')
+    })
+    test('shorthand reification', () => {
+
+        const style = createStyleBlock()
+
+        // Initial longhand values
+        longhands.forEach(longhand => style[longhand] = initial(longhand))
+        expect(style.animationTriggerExitRange).toBe('auto')
+        expect(style.cssText).toBe('animation-trigger-exit-range: auto;')
+
+        // Different lengths of longhand values
+        style.animationTriggerExitRangeStart = 'auto, auto'
+        expect(style.animationTriggerExitRange).toBe('')
+        expect(style.cssText).toBe('animation-trigger-exit-range-start: auto, auto; animation-trigger-exit-range-end: auto;')
+
+        // Same <timeline-range-name>
+        style.animationTriggerExitRangeStart = 'entry'
+        style.animationTriggerExitRangeEnd = 'entry'
+        expect(style.animationTriggerExitRange).toBe('entry')
+        expect(style.cssText).toBe('animation-trigger-exit-range: entry;')
+
+        // Different <timeline-range-name>
+        style.animationTriggerExitRangeEnd = 'normal'
+        expect(style.animationTriggerExitRange).toBe('entry normal')
+        expect(style.cssText).toBe('animation-trigger-exit-range: entry normal;')
+
+        // Ambiguous <length-percentage>
+        style.animationTriggerExitRangeEnd = '100%'
+        expect(style.animationTriggerExitRange).toBe('entry 0% 100%')
+        expect(style.cssText).toBe('animation-trigger-exit-range: entry 0% 100%;')
+    })
+})
+describe('animation-trigger-range', () => {
+
+    const longhands = shorthands.get('animation-trigger-range')
+
+    test('shorthand expansion', () => {
+
+        const style = createStyleBlock()
+
+        // Initial longhand values
+        style.animationTriggerRange = 'normal normal'
+        expect(style).toHaveLength(longhands.length)
+        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
+        expect(style.animationTriggerRange).toBe('normal')
+        expect(style.cssText).toBe('animation-trigger-range: normal;')
+
+        // Missing longhand values
+        const values = [
+            ['normal'],
+            ['0%', '0%', 'normal'],
+            ['entry'],
+            ['entry 10%', 'entry 10%', 'entry'],
+            ['10% entry', '10%', 'entry'],
+        ]
+        values.forEach(([shorthand, start = shorthand, end = shorthand]) => {
+            style.animationTriggerRange = shorthand
+            expect(style.animationTriggerRangeStart).toBe(start)
+            expect(style.animationTriggerRangeEnd).toBe(end)
+            expect(style.animationTriggerRange).toBe(shorthand)
+            expect(style.cssText).toBe(`animation-trigger-range: ${shorthand};`)
+        })
+
+        // Coordinated value list
+        style.animationTriggerRange = 'normal, normal'
+        longhands.forEach(longhand => expect(style[longhand]).toBe(`${initial(longhand)}, ${initial(longhand)}`))
+        expect(style.animationTriggerRange).toBe('normal, normal')
+        expect(style.cssText).toBe('animation-trigger-range: normal, normal;')
+    })
+    test('shorthand reification', () => {
+
+        const style = createStyleBlock()
+
+        // Initial longhand values
+        longhands.forEach(longhand => style[longhand] = initial(longhand))
+        expect(style.animationTriggerRange).toBe('normal')
+        expect(style.cssText).toBe('animation-trigger-range: normal;')
+
+        // Different lengths of longhand values
+        style.animationTriggerRangeStart = 'normal, normal'
+        expect(style.animationTriggerRange).toBe('')
+        expect(style.cssText).toBe('animation-trigger-range-start: normal, normal; animation-trigger-range-end: normal;')
+
+        // Same <timeline-range-name>
+        style.animationTriggerRangeStart = 'entry'
+        style.animationTriggerRangeEnd = 'entry'
+        expect(style.animationTriggerRange).toBe('entry')
+        expect(style.cssText).toBe('animation-trigger-range: entry;')
+
+        // Different <timeline-range-name>
+        style.animationTriggerRangeEnd = 'normal'
+        expect(style.animationTriggerRange).toBe('entry normal')
+        expect(style.cssText).toBe('animation-trigger-range: entry normal;')
+
+        // Ambiguous <length-percentage>
+        style.animationTriggerRangeEnd = '100%'
+        expect(style.animationTriggerRange).toBe('entry 0% 100%')
+        expect(style.cssText).toBe('animation-trigger-range: entry 0% 100%;')
     })
 })
 describe('background', () => {
@@ -1690,17 +1952,26 @@ describe('background', () => {
         // background-origin background-clip
         style.background = 'padding-box content-box'
         longhands.forEach(longhand =>
-            expect(style[longhand]).toBe(longhand === 'background-clip' ? 'content-box' : initial(longhand)))
+            expect(style[longhand])
+                .toBe(longhand === 'background-clip'
+                    ? 'content-box'
+                    : initial(longhand)))
         expect(style.background).toBe('content-box')
         expect(style.cssText).toBe('background: content-box;')
         style.background = 'padding-box'
         longhands.forEach(longhand =>
-            expect(style[longhand]).toBe(longhand === 'background-clip' ? 'padding-box' : initial(longhand)))
+            expect(style[longhand])
+                .toBe(longhand === 'background-clip'
+                    ? 'padding-box'
+                    : initial(longhand)))
         expect(style.background).toBe('padding-box')
         expect(style.cssText).toBe('background: padding-box;')
         style.background = 'border-box border-box'
         longhands.forEach(longhand =>
-            expect(style[longhand]).toBe(longhand === 'background-origin' ? 'border-box' : initial(longhand)))
+            expect(style[longhand])
+                .toBe(longhand === 'background-origin'
+                    ? 'border-box'
+                    : initial(longhand)))
         expect(style.background).toBe('border-box')
         expect(style.cssText).toBe('background: border-box;')
     })
@@ -2343,18 +2614,20 @@ describe('box-shadow', () => {
         // Missing longhand values
         style.boxShadow = 'none'
         expect(style).toHaveLength(longhands.length)
-        longhands.forEach(longhand => expect(style[longhand])
-            .toBe(longhand === 'box-shadow-color'
-                ? 'transparent'
-                : initial(longhand)))
+        longhands.forEach(longhand =>
+            expect(style[longhand])
+                .toBe(longhand === 'box-shadow-color'
+                    ? 'transparent'
+                    : initial(longhand)))
         expect(style.boxShadow).toBe('none')
         expect(style.cssText).toBe('box-shadow: none;')
         style.boxShadow = '0px 0px'
         expect(style).toHaveLength(longhands.length)
-        longhands.forEach(longhand => expect(style[longhand])
-            .toBe(longhand === 'box-shadow-offset'
-                ? '0px 0px'
-                : initial(longhand)))
+        longhands.forEach(longhand =>
+            expect(style[longhand])
+                .toBe(longhand === 'box-shadow-offset'
+                    ? '0px 0px'
+                    : initial(longhand)))
         expect(style.boxShadow).toBe('0px 0px')
         expect(style.cssText).toBe('box-shadow: 0px 0px;')
 
@@ -2534,38 +2807,35 @@ describe('container', () => {
         expect(style.cssText).toBe('container: none;')
     })
 })
-describe('corners', () => {
+describe('corner-shape', () => {
 
-    const longhands = shorthands.get('corners')
+    const longhands = shorthands.get('corner-shape')
 
     test('shorthand expansion', () => {
 
         const style = createStyleBlock()
 
         // Initial longhand values
-        style.corners = 'round 0'
+        style.cornerShape = 'round round round round'
         expect(style).toHaveLength(longhands.length)
         longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.corners).toBe('round')
-        expect(style.cssText).toBe('corners: round;')
+        expect(style.cornerShape).toBe('round')
+        expect(style.cssText).toBe('corner-shape: round;')
 
         // Missing longhand values
-        style.corners = 'angle'
-        longhands.forEach(longhand =>
-            expect(style[longhand])
-                .toBe(longhand === 'corner-shape'
-                    ? 'angle'
-                    : initial(longhand)))
-        expect(style.corners).toBe('angle')
-        expect(style.cssText).toBe('corners: angle;')
-        style.corners = '1px'
-        longhands.forEach(longhand =>
-            expect(style[longhand])
-                .toBe(longhand === 'corner-shape'
-                    ? initial(longhand)
-                    : '1px'))
-        expect(style.corners).toBe('1px')
-        expect(style.cssText).toBe('corners: 1px;')
+        const values = ['round', 'scoop', 'bevel']
+        style.cornerShape = 'round'
+        longhands.forEach(longhand => expect(style[longhand]).toBe('round'))
+        expect(style.cornerShape).toBe('round')
+        expect(style.cssText).toBe('corner-shape: round;')
+        style.cornerShape = 'round scoop'
+        longhands.forEach((longhand, i) => expect(style[longhand]).toBe(values[i % 2]))
+        expect(style.cornerShape).toBe('round scoop')
+        expect(style.cssText).toBe('corner-shape: round scoop;')
+        style.cornerShape = 'round scoop bevel'
+        longhands.forEach((longhand, i) => expect(style[longhand]).toBe(values[i === 3 ? 1 : i]))
+        expect(style.cornerShape).toBe('round scoop bevel')
+        expect(style.cssText).toBe('corner-shape: round scoop bevel;')
     })
     test('shorthand reification', () => {
 
@@ -2573,8 +2843,39 @@ describe('corners', () => {
 
         // Initial longhand values
         longhands.forEach(longhand => style[longhand] = initial(longhand))
-        expect(style.corners).toBe('round')
-        expect(style.cssText).toBe('corners: round;')
+        expect(style.cornerShape).toBe('round')
+        expect(style.cssText).toBe('corner-shape: round;')
+    })
+})
+describe('corner-block-end-shape, corner-bottom-shape, corner-block-start-shape, corner-inline-end-shape, corner-inline-start-shape, corner-left-shape, corner-right-shape, corner-top-shape', () => {
+
+    const longhands = shorthands.get('corner-block-end-shape')
+
+    test('shorthand expansion', () => {
+
+        const style = createStyleBlock()
+
+        // Initial longhand values
+        style.cornerBlockEndShape = 'round round'
+        expect(style).toHaveLength(longhands.length)
+        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
+        expect(style.cornerBlockEndShape).toBe('round')
+        expect(style.cssText).toBe('corner-block-end-shape: round;')
+
+        // Missing longhand values
+        style.cornerBlockEndShape = 'round'
+        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
+        expect(style.cornerBlockEndShape).toBe('round')
+        expect(style.cssText).toBe('corner-block-end-shape: round;')
+    })
+    test('shorthand reification', () => {
+
+        const style = createStyleBlock()
+
+        // Initial longhand values
+        longhands.forEach(longhand => style[longhand] = initial(longhand))
+        expect(style.cornerBlockEndShape).toBe('round')
+        expect(style.cssText).toBe('corner-block-end-shape: round;')
     })
 })
 describe('cue, pause, rest', () => {
