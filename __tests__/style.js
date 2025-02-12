@@ -375,8 +375,8 @@ describe('CSSFontFaceDescriptors', () => {
         expect(style.sizeAdjust).toBe('env(name, attr(name))')
         style.fontWeight = 'first-valid(1)'
         style.sizeAdjust = 'first-valid(1%)'
-        expect(style.fontWeight).toBe('first-valid(1)')
-        expect(style.sizeAdjust).toBe('first-valid(1%)')
+        expect(style.fontWeight).toBe('1')
+        expect(style.sizeAdjust).toBe('1%')
         style.fontWeight = 'calc(progress(1, 0, 1))'
         style.sizeAdjust = 'calc(1% * progress(1, 0, 1))'
         expect(style.fontWeight).toBe('calc(1)')
@@ -433,7 +433,7 @@ describe('CSSKeyframeProperties', () => {
         style.fontWeight = 'env(name)'
         expect(style.fontWeight).toBe('env(name)')
         style.fontWeight = 'first-valid(1)'
-        expect(style.fontWeight).toBe('first-valid(1)')
+        expect(style.fontWeight).toBe('1')
         style.fontWeight = 'calc(progress(1, 0, 1))'
         expect(style.fontWeight).toBe('calc(1)')
 
@@ -510,7 +510,7 @@ describe('CSSMarginDescriptors', () => {
         style.fontWeight = 'env(name)'
         expect(style.fontWeight).toBe('env(name)')
         style.fontWeight = 'first-valid(1)'
-        expect(style.fontWeight).toBe('first-valid(1)')
+        expect(style.fontWeight).toBe('1')
         style.fontWeight = 'calc(progress(1, 0, 1))'
         expect(style.fontWeight).toBe('calc(1)')
 
@@ -573,8 +573,8 @@ describe('CSSPageDescriptors', () => {
         expect(style.size).toBe('env(name, attr(name))')
         style.fontWeight = 'first-valid(1)'
         style.size = 'first-valid(1px)'
-        expect(style.fontWeight).toBe('first-valid(1)')
-        expect(style.size).toBe('first-valid(1px)')
+        expect(style.fontWeight).toBe('1')
+        expect(style.size).toBe('1px')
         style.fontWeight = 'calc(progress(1, 0, 1))'
         style.size = 'calc(1px * progress(1, 0, 1))'
         expect(style.fontWeight).toBe('calc(1)')
@@ -627,7 +627,7 @@ describe('CSSPositionTryDescriptors', () => {
         style.top = 'env(name)'
         expect(style.top).toBe('env(name)')
         style.top = 'first-valid(1px)'
-        expect(style.top).toBe('first-valid(1px)')
+        expect(style.top).toBe('1px')
         style.top = 'calc(1px * progress(1, 0, 1))'
         expect(style.top).toBe('calc(1px)')
 
@@ -746,11 +746,11 @@ describe('<whole-value>', () => {
         const style = createStyleBlock()
         const valid = [
             // Serialize the list of tokens
-            ['  /**/  first-valid(  /**/ 1e0 /**/  ', 'first-valid(1)', 'opacity'],
+            ['  /**/  first-valid(  /**/ 1e0 /**/  ', '1', 'opacity'],
             ['  /**/  mix(  0, 1, /**/ 1e0 /**/  ', 'mix(0, 1, 1)', 'opacity'],
             ['  /**/  toggle(  /**/ 1e0 /**/  ', 'toggle(1)', 'opacity'],
             // Nested inside itself
-            ['first-valid(toggle(first-valid(1)))', 'first-valid(toggle(first-valid(1)))', 'opacity'],
+            ['first-valid(toggle(first-valid(1)))', 'toggle(1)', 'opacity'],
             ['mix(0, 1, toggle(mix(0, 1, 1)))', 'mix(0, 1, toggle(mix(0, 1, 1)))', 'opacity'],
             // Omitted value
             ['mix(0,,)', 'mix(0,,)', '--custom'],
@@ -1914,10 +1914,10 @@ describe('background', () => {
         longhands.forEach(longhand => expect(style[longhand]).toBe(''))
         expect(style.background).toBe('var(--custom)')
         expect(style.cssText).toBe('background: var(--custom);')
-        style.background = 'first-valid(none)'
+        style.background = 'toggle(none)'
         longhands.forEach(longhand => expect(style[longhand]).toBe(''))
-        expect(style.background).toBe('first-valid(none)')
-        expect(style.cssText).toBe('background: first-valid(none);')
+        expect(style.background).toBe('toggle(none)')
+        expect(style.cssText).toBe('background: toggle(none);')
 
         // Coordinated value list
         style.background = `${background.replace(' transparent', '')}, ${background}`
@@ -2018,11 +2018,11 @@ describe('background', () => {
         style.backgroundImage = 'var(--custom)'
         expect(style.background).toBe('')
         expect(style.cssText).toBe('background-position: ; background-size: ; background-repeat-x: ; background-repeat-y: ; background-attachment: ; background-origin: ; background-clip: ; background-color: ; background-blend-mode: ; background-image: var(--custom);')
-        longhands.forEach(longhand => style[longhand] = 'first-valid(initial)')
+        longhands.forEach(longhand => style[longhand] = 'toggle(initial)')
         expect(style.background).toBe('')
-        expect(style.cssText).toBe('background-position: first-valid(initial); background-size: first-valid(initial); background-repeat-x: first-valid(initial); background-repeat-y: first-valid(initial); background-attachment: first-valid(initial); background-origin: first-valid(initial); background-clip: first-valid(initial); background-color: first-valid(initial); background-blend-mode: first-valid(initial); background-image: first-valid(initial);')
-        style.background = 'first-valid(initial)'
-        style.backgroundImage = 'first-valid(initial)'
+        expect(style.cssText).toBe('background-position: toggle(initial); background-size: toggle(initial); background-repeat-x: toggle(initial); background-repeat-y: toggle(initial); background-attachment: toggle(initial); background-origin: toggle(initial); background-clip: toggle(initial); background-color: toggle(initial); background-blend-mode: toggle(initial); background-image: toggle(initial);')
+        style.background = 'toggle(initial)'
+        style.backgroundImage = 'toggle(initial)'
     })
 })
 describe('background-repeat', () => {

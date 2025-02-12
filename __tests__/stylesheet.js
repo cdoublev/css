@@ -51,6 +51,20 @@ function createStyleSheet(rules = '', properties = {}) {
     return CSSStyleSheet.create(globalThis, undefined, properties)
 }
 
+/**
+ * @param {string} text
+ * @returns {string}
+ *
+ * It transforms `text` to lowercase and unwraps the first-valid() argument.
+ *
+ * This abstraction is not great but probably the best way to avoid increasing
+ * code complexity in tests, until first-valid() can be replaced with another
+ * <whole-value> substitution that do not require resolved at parse time.
+ */
+function normalizeText(text) {
+    return text.toLowerCase().replace(/first-valid\(([^)]+)\)/g, '$1')
+}
+
 install()
 globalThis.document = { href: 'https://github.com/cdoublev/' }
 
@@ -1151,7 +1165,7 @@ describe('CSS grammar', () => {
     test('@color-profile - valid block contents', () => {
         const input = '@COLOR-PROFILE --name { COMPONENTS: { env(name) }; src: first-valid(url("profile.icc")); }'
         const styleSheet = createStyleSheet(input)
-        expect(styleSheet.cssRules[0].cssText).toBe(input.toLowerCase())
+        expect(styleSheet.cssRules[0].cssText).toBe(normalizeText(input))
     })
     test('@container - invalid block contents', () => {
         const styleSheet = createStyleSheet(`
@@ -1239,7 +1253,7 @@ describe('CSS grammar', () => {
     test('@counter-style - valid block contents', () => {
         const input = '@COUNTER-STYLE name { PAD: { env(name) }; system: first-valid(numeric); }'
         const styleSheet = createStyleSheet(input)
-        expect(styleSheet.cssRules[0].cssText).toBe(input.toLowerCase())
+        expect(styleSheet.cssRules[0].cssText).toBe(normalizeText(input))
     })
     test('@font-face - invalid block contents', () => {
         const styleSheet = createStyleSheet(`
@@ -1289,7 +1303,7 @@ describe('CSS grammar', () => {
         declarations.forEach(declaration => {
             const input = `@FONT-FACE { ${declaration}; }`
             const styleSheet = createStyleSheet(input)
-            expect(styleSheet.cssRules[0].cssText).toBe(input.toLowerCase())
+            expect(styleSheet.cssRules[0].cssText).toBe(normalizeText(input))
         })
     })
     test('@font-feature-values - invalid block contents', () => {
@@ -1367,7 +1381,7 @@ describe('CSS grammar', () => {
         declarations.forEach(declaration => {
             const input = `@FONT-FEATURE-VALUES name { ${declaration}; }`
             const styleSheet = createStyleSheet(input)
-            expect(styleSheet.cssRules[0].cssText).toBe(input.toLowerCase())
+            expect(styleSheet.cssRules[0].cssText).toBe(normalizeText(input))
         })
     })
     test('@font-palette-values - missing declaration for font-family', () => {
@@ -1406,7 +1420,7 @@ describe('CSS grammar', () => {
     test('@font-palette-values - valid block contents', () => {
         const input = '@FONT-PALETTE-VALUES --name { BASE-PALETTE: { env(name) }; font-family: first-valid(name); }'
         const styleSheet = createStyleSheet(input)
-        expect(styleSheet.cssRules[0].cssText).toBe(input.toLowerCase())
+        expect(styleSheet.cssRules[0].cssText).toBe(normalizeText(input))
     })
     test('@function - invalid prelude', () => {
         const styleSheet = createStyleSheet('@function --name(--parameter, --parameter) {}')
@@ -1678,7 +1692,7 @@ describe('CSS grammar', () => {
         contents.forEach(content => {
             const input = `@PAGE { ${content} }`
             const styleSheet = createStyleSheet(input)
-            expect(styleSheet.cssRules[0].cssText).toBe(input.toLowerCase())
+            expect(styleSheet.cssRules[0].cssText).toBe(normalizeText(input))
         })
     })
     test('@position-try - invalid block contents', () => {
@@ -1719,7 +1733,7 @@ describe('CSS grammar', () => {
         declarations.forEach(declaration => {
             const input = `@POSITION-TRY --name { ${declaration}; }`
             const styleSheet = createStyleSheet(input)
-            expect(styleSheet.cssRules[0].cssText).toBe(input.toLowerCase())
+            expect(styleSheet.cssRules[0].cssText).toBe(normalizeText(input))
         })
     })
     test('@property - missing declaration for inherits', () => {
@@ -1765,7 +1779,7 @@ describe('CSS grammar', () => {
         declarations.forEach(declaration => {
             const input = `@PROPERTY --name { syntax: "*"; ${declaration}; }`
             const styleSheet = createStyleSheet(input)
-            expect(styleSheet.cssRules[0].cssText).toBe(input.toLowerCase())
+            expect(styleSheet.cssRules[0].cssText).toBe(normalizeText(input))
         })
     })
     test('@property - invalid and valid initial-value', () => {
@@ -1893,7 +1907,7 @@ describe('CSS grammar', () => {
         declarations.forEach(declaration => {
             const input = `@SCOPE { ${declaration}; }`
             const styleSheet = createStyleSheet(input)
-            expect(styleSheet.cssRules[0].cssText).toBe(input.toLowerCase())
+            expect(styleSheet.cssRules[0].cssText).toBe(normalizeText(input))
         })
     })
     test('@starting-style - invalid block contents', () => {
@@ -2026,7 +2040,7 @@ describe('CSS grammar', () => {
         declarations.forEach(declaration => {
             const input = `@VIEW-TRANSITION { ${declaration}; }`
             const styleSheet = createStyleSheet(input)
-            expect(styleSheet.cssRules[0].cssText).toBe(input.toLowerCase())
+            expect(styleSheet.cssRules[0].cssText).toBe(normalizeText(input))
         })
     })
     test('font feature value type rule - invalid block contents', () => {
@@ -2135,7 +2149,7 @@ describe('CSS grammar', () => {
         ]
         declarations.forEach(declaration => {
             const styleSheet = createStyleSheet(`@keyframes name { FROM { ${declaration}; } }`)
-            expect(styleSheet.cssRules[0].cssText).toBe(`@keyframes name { 0% { ${declaration.toLowerCase()}; } }`)
+            expect(styleSheet.cssRules[0].cssText).toBe(`@keyframes name { 0% { ${normalizeText(declaration)}; } }`)
         })
     })
     test('margin rule - invalid block contents', () => {
@@ -2177,7 +2191,7 @@ describe('CSS grammar', () => {
         declarations.forEach(declaration => {
             const input = `@page { @TOP-LEFT { ${declaration}; } }`
             const styleSheet = createStyleSheet(input)
-            expect(styleSheet.cssRules[0].cssText).toBe(input.toLowerCase())
+            expect(styleSheet.cssRules[0].cssText).toBe(normalizeText(input))
         })
     })
     test('nested group rule - invalid block contents', () => {
@@ -2254,7 +2268,7 @@ describe('CSS grammar', () => {
         declarations.forEach(declaration => {
             const input = `style { @media { & { ${declaration}; } } }`
             const styleSheet = createStyleSheet(input)
-            expect(styleSheet.cssRules[0].cssText).toBe(input.toLowerCase())
+            expect(styleSheet.cssRules[0].cssText).toBe(normalizeText(input))
         })
     })
     test('nested style rule - invalid block contents', () => {
@@ -2331,7 +2345,7 @@ describe('CSS grammar', () => {
         declarations.forEach(declaration => {
             const input = `style { & { ${declaration}; } }`
             const styleSheet = createStyleSheet(input)
-            expect(styleSheet.cssRules[0].cssText).toBe(input.toLowerCase())
+            expect(styleSheet.cssRules[0].cssText).toBe(normalizeText(input))
         })
     })
     test('nested style rule - invalid contents between valid declarations', () => {
@@ -2440,7 +2454,7 @@ describe('CSS grammar', () => {
         declarations.forEach(declaration => {
             const input = `style { ${declaration}; }`
             const styleSheet = createStyleSheet(input)
-            expect(styleSheet.cssRules[0].cssText).toBe(input.toLowerCase())
+            expect(styleSheet.cssRules[0].cssText).toBe(normalizeText(input))
         })
     })
     // Legacy names

@@ -3870,23 +3870,24 @@ describe('<style-feature>', () => {
     test('valid', () => {
         const valid = [
             // Standard property name
-            'color',
+            ['color'],
             // Custom property
-            '--custom: fn(  /**/  1e0  /**/  )',
+            ['--custom: fn(  /**/  1e0  /**/  )'],
             // Dependency-free substitution
-            'width: env(name)',
-            'width: first-valid(green)',
+            ['width: env(name)'],
+            ['width: first-valid(1px)', 'width: 1px'],
             // Element-dependent substitution
-            'width: attr(name)',
-            'width: random-item(--key, 1px)',
-            'width: mix(0, 1px, 1px)',
-            'width: toggle(1px)',
-            'width: calc-mix(0, random(1px, 1px), 1px * sibling-index())',
+            ['width: attr(name)'],
+            ['width: random-item(--key, 1px)'],
+            ['width: mix(0, 1px, 1px)'],
+            ['width: toggle(1px)'],
+            ['width: calc-mix(0, random(1px, 1px), 1px * sibling-index())'],
             // Cascade-dependent substitution
-            'width: initial',
-            'width: var(--custom)',
+            ['width: initial'],
+            ['width: var(--custom)'],
         ]
-        valid.forEach(input => expect(parse('<style-feature>', input, true, containerRule)).toBe(input))
+        valid.forEach(([input, expected = input]) =>
+            expect(parse('<style-feature>', input, true, containerRule)).toBe(expected))
     })
 })
 describe('<syntax-string>', () => {
@@ -3933,21 +3934,22 @@ describe('<supports-decl>', () => {
     test('valid', () => {
         const valid = [
             // Custom property
-            '(--custom: fn(  /**/  1e0  /**/  ))',
+            ['(--custom: fn(  /**/  1e0  /**/  ))'],
             // Dependency-free substitution
-            '(width: env(name))',
-            '(width: first-valid(green))',
+            ['(width: env(name))'],
+            ['(width: first-valid(1px))', '(width: 1px)'],
             // Element-dependent substitution
-            '(width: attr(name))',
-            '(width: random-item(--key, 1px))',
-            '(width: mix(0, 1px, 1px))',
-            '(width: toggle(1px))',
-            '(width: calc-mix(0, random(1px, 1px), 1px * sibling-index()))',
+            ['(width: attr(name))'],
+            ['(width: random-item(--key, 1px))'],
+            ['(width: mix(0, 1px, 1px))'],
+            ['(width: toggle(1px))'],
+            ['(width: calc-mix(0, random(1px, 1px), 1px * sibling-index()))'],
             // Cascade-dependent substitution
-            '(width: initial)',
-            '(width: var(--custom))',
+            ['(width: initial)'],
+            ['(width: var(--custom))'],
         ]
-        valid.forEach(input => expect(parse('<supports-decl>', input, true, supportsRule)).toBe(input))
+        valid.forEach(([input, expected = input]) =>
+            expect(parse('<supports-decl>', input, true, supportsRule)).toBe(expected))
     })
 })
 describe('<supports-feature>', () => {
