@@ -1548,7 +1548,7 @@ describe('animation', () => {
         // Different lengths of longhand values
         style.animationName = 'none, none'
         expect(style.animation).toBe('')
-        expect(style.cssText).toBe('animation-duration: auto; animation-timing-function: ease; animation-delay: 0s; animation-iteration-count: 1; animation-direction: normal; animation-fill-mode: none; animation-play-state: running; animation-name: none, none; animation-timeline: auto; animation-range: normal; animation-trigger: once;')
+        expect(style.cssText).toBe('animation-duration: auto; animation-timing-function: ease; animation-delay: 0s; animation-iteration-count: 1; animation-direction: normal; animation-fill-mode: none; animation-play-state: running; animation-name: none, none; animation-timeline: auto; animation-composition: replace; animation-range: normal; animation-trigger: once;')
     })
 })
 describe('animation-range', () => {
