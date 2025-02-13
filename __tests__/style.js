@@ -1479,24 +1479,29 @@ describe('all', () => {
 
         // Not all equal longhand values
         const [head, ...tail] = longhands
-        const excluded = ['all', 'background', 'border', 'text-wrap']
+        const represented = new Set([head])
         const initial = tail.reduce(
             (properties, property) => {
+                if (represented.has(property)) {
+                    return properties
+                }
                 for (const [shorthand, longhands] of shorthands) {
-                    if (longhands.length === 1 || excluded.includes(shorthand)) {
+                    if (shorthand === 'all' || longhands.length === 1) {
                         continue
                     }
-                    if (longhands.includes(property)) {
+                    if (longhands.includes(property) && !longhands.some(property => represented.has(property))) {
+                        longhands.forEach(property => represented.add(property))
                         properties.add(shorthand)
                         return properties
                     }
                 }
+                represented.add(property)
                 return properties.add(property)
             },
             new Set())
         style[head] = 'inherit'
         expect(style.all).toBe('')
-        expect(style.cssText).toBe(`${head}: inherit; ${[...initial].map(name => `${name}: initial`).join('; ')};`)
+        expect(style.cssText).toBe(`${[...initial].map(name => `${name}: initial`).join('; ')}; ${head}: inherit;`)
     })
 })
 describe('animation', () => {
@@ -2146,6 +2151,9 @@ describe('border', () => {
         expect(style.border).toBe('1px solid green')
         /* (Ideally) expect(style.cssText).toBe('border-block-start-color: orange; border: 1px solid green; border-block-start-width: 1px;') */
         expect(style.cssText).toBe('border-width: 1px; border-style: solid; border-image: none; border-block-start-color: orange; border-block-start-width: 1px; border-color: green;')
+        style.cssText = 'border-image: none; border-block-start-width: 2px; border-width: 1px; border-style: solid; border-color: green;'
+        expect(style.border).toBe('1px solid green')
+        expect(style.cssText).toBe('border-image: none; border-block-start-width: 2px; border-width: 1px; border-style: solid; border-color: green;')
     })
 })
 describe('border-block, border-inline', () => {
