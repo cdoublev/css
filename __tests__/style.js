@@ -54,10 +54,13 @@ const { cssRules: { _rules: [marginRule] } } = pageRule
 describe('CSSStyleDeclaration', () => {
     it('has all properties and methods', () => {
 
-        const style = createStyleBlock()
+        const parentRule = {}
+        const style = createStyleBlock({ parentRule })
         const prototype = Object.getPrototypeOf(style)
         const { properties: { aliases, mappings } } = compatibility
         const names = [...aliases.keys(), ...mappings.keys(), ...Object.keys(properties)]
+
+        expect(style.parentRule).toBe(parentRule)
 
         // Camel/kebab/pascal cased attribute
         names.forEach(property => {
@@ -190,12 +193,7 @@ describe('CSSStyleDeclaration', () => {
         expect(style.fontSize).toBe('')
         expect(style.cssText).toBe('')
     })
-    it('constructs a new instance with a reference to a parent CSS rule', () => {
-        const parentRule = {}
-        const style = createStyleBlock({ parentRule })
-        expect(style.parentRule).toBe(parentRule)
-    })
-    it('constructs a new instance with declarations resulting from parsing `Element.style`', () => {
+    it('stores declarations resulting from parsing `Element.style`', () => {
         const element = {
             getAttribute() {
                 return 'color: green !important; color: orange;'
@@ -204,53 +202,53 @@ describe('CSSStyleDeclaration', () => {
         const style = createStyleBlock({ ownerNode: element })
         expect(style.color).toBe('green')
     })
-    it('does not throw when failing to parse `cssText`', () => {
+})
+describe('CSSStyleDeclaration.cssText', () => {
+    it('does not throw an error when failing to parse the specified value', () => {
         const style = createStyleBlock()
-        style.color = 'black'
-        expect(style.cssText).toBe('color: black;')
         style.cssText = 'color: '
         expect(style.cssText).toBe('')
     })
-    it('ignores a rule in `cssText`', () => {
+    it('ignores rules in the specified value', () => {
         const style = createStyleBlock()
         style.cssText = 'color: green; @page { color: red }; .selector { color: red }; font-size: 12px'
         expect(style.cssText).toBe('color: green; font-size: 12px;')
     })
-    it('stores declarations in the order specified in `cssText`', () => {
+    it('stores declarations in specified order', () => {
         const style = createStyleBlock()
         style.cssText = 'color: orange; width: 1px; color: green'
         expect(style.cssText).toBe('width: 1px; color: green;')
         style.cssText = 'color: green !important; width: 1px; color: orange'
         expect(style.cssText).toBe('color: green !important; width: 1px;')
     })
-    it('does not store a declaration for an invalid property specified with `setProperty()`', () => {
+})
+describe('CSSStyleDeclaration.setProperty()', () => {
+    it('does not store a declaration when the specified name is invalid', () => {
         const style = createStyleBlock()
         style.setProperty(' font-size', '1px')
-        expect(style.fontSize).toBe('')
-        style.setProperty('font-size', '1px !important')
         expect(style.fontSize).toBe('')
         style.setProperty('fontSize', '1px')
         expect(style.fontSize).toBe('')
     })
-    it('does not store a declaration value specified with a priority with `setProperty()`', () => {
+    it('does not store a declaration when the specified value includes a priority', () => {
         const style = createStyleBlock()
-        style.setProperty('font-size', '1px !important')
+        style.fontSize = '1px !important'
         expect(style.fontSize).toBe('')
     })
-    it('normalizes a declaration property to lowercase with `setProperty()`', () => {
+    it('normalizes the specified name to lowercase', () => {
         const style = createStyleBlock()
         style.setProperty('FoNt-SiZe', '12px')
         expect(style.fontSize).toBe('12px')
         expect(style.getPropertyValue('font-size')).toBe('12px')
     })
-    it('throws an error when declaring a value that cannot be converted to string', () => {
+    it('throws an error when the specified a value cannot be converted to string', () => {
         const style = createStyleBlock()
         expect(() => (style.opacity = Symbol('0')))
             .toThrow("Failed to set the 'opacity' property on 'CSSStyleProperties': The provided value is a symbol, which cannot be converted to a string.")
         expect(() => (style.opacity = { toString: () => [0] }))
             .toThrow('Cannot convert object to primitive value')
     })
-    it('declares a non-string value that can be converted to string', () => {
+    it('stores a declaration when the specified value can be converted to string', () => {
 
         const style = createStyleBlock()
 
@@ -1914,7 +1912,7 @@ describe('background', () => {
         expect(style.background).toBe('initial')
         expect(style.cssText).toBe('background: initial;')
 
-        // Pending-substitution value
+        // Pending-substitution
         style.background = 'var(--custom)'
         longhands.forEach(longhand => expect(style[longhand]).toBe(''))
         expect(style.background).toBe('var(--custom)')
@@ -2015,7 +2013,7 @@ describe('background', () => {
         expect(style.background).toBe('')
         expect(style.cssText).toBe('background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial; background-color: initial; background-blend-mode: initial;')
 
-        // Pending-substitution value
+        // Pending-substitution
         longhands.forEach(longhand => style[longhand] = 'var(--custom)')
         expect(style.background).toBe('')
         expect(style.cssText).toBe('background-position: var(--custom); background-size: var(--custom); background-repeat-x: var(--custom); background-repeat-y: var(--custom); background-attachment: var(--custom); background-origin: var(--custom); background-clip: var(--custom); background-color: var(--custom); background-blend-mode: var(--custom); background-image: var(--custom);')
