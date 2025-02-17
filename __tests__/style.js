@@ -221,6 +221,11 @@ describe('CSSStyleDeclaration.cssText', () => {
         style.cssText = 'color: green !important; width: 1px; color: orange'
         expect(style.cssText).toBe('color: green !important; width: 1px;')
     })
+    it('serializes a custom property name as escaped code points', () => {
+        const style = createStyleBlock()
+        style.cssText = '--custom\\ property: 1'
+        expect(style.cssText).toBe('--custom\\ property: 1;')
+    })
 })
 describe('CSSStyleDeclaration.setProperty()', () => {
     it('does not store a declaration when the specified name is invalid', () => {
