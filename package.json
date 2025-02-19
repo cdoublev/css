@@ -8,7 +8,7 @@
   ],
   "version": "0.1.0",
   "engines": {
-    "node": ">= 20"
+    "node": ">= 22"
   },
   "homepage": "https://github.com/cdoublev/css#readme",
   "bugs": "https://github.com/cdoublev/css/issues",
