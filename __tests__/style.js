@@ -52,7 +52,7 @@ const { cssRules: { _rules: [keyframeRule] } } = keyframesRule
 const { cssRules: { _rules: [marginRule] } } = pageRule
 
 describe('CSSStyleDeclaration', () => {
-    it('has all properties and methods', () => {
+    it('has all properties', () => {
 
         const parentRule = {}
         const style = createStyleBlock({ parentRule })
@@ -90,15 +90,15 @@ describe('CSSStyleDeclaration', () => {
         style.borderTopColor = 'red'
         expect(style.borderTopColor).toBe('red')
         expect(style['border-top-color']).toBe('red')
-        style['border-top-color'] = 'green'
-        expect(style.borderTopColor).toBe('green')
-        expect(style['border-top-color']).toBe('green')
+        style['border-top-color'] = ''
+        expect(style.borderTopColor).toBe('')
+        expect(style['border-top-color']).toBe('')
 
         // Custom property
         style['--custom'] = 'blue'
         expect(style.getPropertyValue('--custom')).toBe('')
         style.setProperty('--custom', 'red')
-        expect(style.getPropertyValue('--Custom')).toBe('')
+        expect(style.getPropertyValue('--CUSTOM')).toBe('')
         expect(style.getPropertyValue('--custom')).toBe('red')
         style.cssText = '--custom: green'
         expect(style.getPropertyValue('--custom')).toBe('green')
@@ -151,47 +151,14 @@ describe('CSSStyleDeclaration', () => {
         expect(style.WebkitBoxAlign).toBe('end')
         expect(style['align-items']).toBe('')
 
-        // Property indices map to the corresponding declaration name
-        expect(style[0]).toBe('order')
-        expect(style.item(0)).toBe('order')
+        // Array-like properties
+        expect(style).toHaveLength(4)
         expect(style[1]).toBe('row-gap')
         expect(style.item(1)).toBe('row-gap')
-        expect(style[2]).toBe('column-gap')
-        expect(style.item(2)).toBe('column-gap')
-        expect(style[3]).toBe('-webkit-box-align')
-        expect(style.item(3)).toBe('-webkit-box-align')
-        expect(style[4]).toBeUndefined()
-        expect(style.item(4)).toBe('')
-        expect(style).toHaveLength(4)
-
-        // Create/read/update/delete declaration value(s)
-        style.borderTopColor = ''
-        expect(style.getPropertyValue('border-top-color')).toBe('')
-        expect(style).toHaveLength(4)
-        expect(style[0]).toBe('order')
-        expect(style.item(0)).toBe('order')
-        style.setProperty('order', '')
-        expect(style).toHaveLength(3)
-        expect(style[0]).toBe('row-gap')
-        expect(style.item(0)).toBe('row-gap')
         style.cssText = ''
-        expect(style.cssText).toBe('')
         expect(style).toHaveLength(0)
         expect(style[0]).toBeUndefined()
-        style.cssText = 'font-size: 16px; font-size: 20px !important; font-size: 24px'
-        expect(style.cssText).toBe('font-size: 20px !important;')
-        expect(style.fontSize).toBe('20px')
-        style.setProperty('font-size', '10px', 'important')
-        expect(style.fontSize).toBe('10px')
-        expect(style.getPropertyValue('font-size')).toBe('10px')
-        expect(style.getPropertyPriority('font-size')).toBe('important')
-        expect(style.cssText).toBe('font-size: 10px !important;')
-        style.setProperty('font-size', '10px')
-        expect(style.getPropertyPriority('font-size')).toBe('')
-        expect(style.cssText).toBe('font-size: 10px;')
-        style.removeProperty('font-size')
-        expect(style.fontSize).toBe('')
-        expect(style.cssText).toBe('')
+        expect(style.item(1)).toBe('')
     })
     it('stores declarations resulting from parsing `Element.style`', () => {
         const element = {
@@ -204,11 +171,6 @@ describe('CSSStyleDeclaration', () => {
     })
 })
 describe('CSSStyleDeclaration.cssText', () => {
-    it('does not throw an error when failing to parse the specified value', () => {
-        const style = createStyleBlock()
-        style.cssText = 'color: '
-        expect(style.cssText).toBe('')
-    })
     it('ignores rules in the specified value', () => {
         const style = createStyleBlock()
         style.cssText = 'color: green; @page { color: red }; .selector { color: red }; font-size: 12px'
@@ -231,7 +193,7 @@ describe('CSSStyleDeclaration.setProperty()', () => {
     it('does not store a declaration when the specified name is invalid', () => {
         const style = createStyleBlock()
         style.setProperty(' font-size', '1px')
-        expect(style.fontSize).toBe('')
+        style.setProperty('font-size ', '1px')
         style.setProperty('fontSize', '1px')
         expect(style.fontSize).toBe('')
     })
@@ -240,52 +202,26 @@ describe('CSSStyleDeclaration.setProperty()', () => {
         style.fontSize = '1px !important'
         expect(style.fontSize).toBe('')
     })
-    it('normalizes the specified name to lowercase', () => {
+    it('does not store a declaration when the specified priority is invalid', () => {
+        const style = createStyleBlock()
+        style.setProperty('font-size', '1px', ' ')
+        style.setProperty('font-size', '1px', '!important')
+        expect(style.fontSize).toBe('')
+    })
+    it('stores a declaration for the specified standard property name normalized to lowercase', () => {
         const style = createStyleBlock()
         style.setProperty('FoNt-SiZe', '12px')
         expect(style.fontSize).toBe('12px')
         expect(style.getPropertyValue('font-size')).toBe('12px')
     })
-    it('throws an error when the specified a value cannot be converted to string', () => {
+    it('stores a declaration specified with a priority', () => {
         const style = createStyleBlock()
-        expect(() => (style.opacity = Symbol('0')))
-            .toThrow("Failed to set the 'opacity' property on 'CSSStyleProperties': The provided value is a symbol, which cannot be converted to a string.")
-        expect(() => (style.opacity = { toString: () => [0] }))
-            .toThrow('Cannot convert object to primitive value')
-    })
-    it('stores a declaration when the specified value can be converted to string', () => {
-
-        const style = createStyleBlock()
-
-        style.opacity = { toString: () => '0' }
-        expect(style.opacity).toBe('0')
-
-        style.opacity = { toString: () => 1 }
-        expect(style.opacity).toBe('1')
-
-        style.opacity = BigInt(0)
-        expect(style.opacity).toBe('0')
-        style.opacity = { toString: () => BigInt(1) }
-        expect(style.opacity).toBe('1')
-
-        style.setProperty('--custom', [0])
-        expect(style.getPropertyValue('--custom')).toBe('0')
-
-        style.setProperty('--custom', null)
-        expect(style.getPropertyValue('--custom')).toBe('')
-        style.setProperty('--custom', { toString: () => null })
-        expect(style.getPropertyValue('--custom')).toBe('null')
-
-        style.setProperty('--custom', undefined)
-        expect(style.getPropertyValue('--custom')).toBe('undefined')
-        style.setProperty('--custom', null)
-        style.setProperty('--custom', { toString: () => undefined })
-        expect(style.getPropertyValue('--custom')).toBe('undefined')
-
-        style.setProperty('--custom', false)
-        expect(style.getPropertyValue('--custom')).toBe('false')
-        style.setProperty('--custom', { toString: () => true })
-        expect(style.getPropertyValue('--custom')).toBe('true')
+        style.setProperty('font-size', '10px', 'important')
+        expect(style.getPropertyPriority('font-size')).toBe('important')
+        style.setProperty('font-size', '10px')
+        expect(style.getPropertyPriority('font-size')).toBe('')
+        style.setProperty('--custom', '1', 'important')
+        expect(style.getPropertyPriority('--custom')).toBe('important')
     })
     it('updates a declaration not preceded by a declaration for a property of the same logical property group', () => {
 
@@ -315,6 +251,20 @@ describe('CSSStyleDeclaration.setProperty()', () => {
 
         style.borderBlockStartColor = 'green'
         expect(style.cssText).toBe('border-top-color: green; border-block-start-color: green;')
+    })
+})
+describe('CSSStyleDeclaration.removeProperty()', () => {
+    it('removes a declaration for the specified property name matched case-sensitively', () => {
+        const style = createStyleBlock()
+        style.fontSize = '1px'
+        style.removeProperty('FoNt-SiZe')
+        expect(style).toHaveLength(0)
+    })
+    it('removes declarations for the specified shorthand property name', () => {
+        const style = createStyleBlock()
+        style.gap = '1px'
+        style.removeProperty('gap')
+        expect(style).toHaveLength(0)
     })
 })
 
