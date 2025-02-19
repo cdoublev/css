@@ -627,15 +627,28 @@ describe('arbitrary substitution', () => {
     test('invalid', () => {
         const style = createStyleBlock()
         const invalid = [
-            'attr(name, attr())',
-            'env(name, env())',
-            'inherit(--custom, inherit())',
-            'random-item(--key, random-item())',
-            'var(--custom, var())',
+            // Invalid component value
+            ['env(name) "\n'],
+            ['env(name) url(bad .url)'],
+            ['env(name) ]'],
+            ['env(name) )'],
+            ['env(name) }'],
+            ['env(name) ;'],
+            ['env(name) !'],
+            ['env(name) {}', 'color'],
+            ['{} env(name)', 'color'],
+            ['env(name) !important', 'color'],
+            ['!important env(name)', 'color'],
+            // Nested
+            ['attr(name, attr())'],
+            ['env(name, env())'],
+            ['inherit(--custom, inherit())'],
+            ['random-item(--key, random-item())'],
+            ['var(--custom, var())'],
         ]
-        invalid.forEach(input => {
-            style.setProperty('--custom', input)
-            expect(style.getPropertyValue('--custom')).toBe('')
+        invalid.forEach(([input, property = '--custom']) => {
+            style.setProperty(property, input)
+            expect(style.getPropertyValue(property)).toBe('')
         })
     })
     test('valid', () => {
@@ -654,10 +667,10 @@ describe('arbitrary substitution', () => {
             ['random-item(--key, random-item(--key, 1))'],
             ['var(--custom, var(--custom))'],
             // Serialize the list of tokens
-            ['  /**/ !1/**/1e0 attr(  name, /**/ 1e0 /**/  ', '!1 1 attr(name, 1)'],
-            ['  /**/ !1/**/1e0 env(  name, /**/ 1e0 /**/  ', '!1 1 env(name, 1)'],
-            ['  /**/ !1/**/1e0 random-item(  --key, /**/ 1e0 /**/  ', '!1 1 random-item(--key, 1)'],
-            ['  /**/ !1/**/1e0 var(  --custom, /**/ 1e0 /**/  ', '!1 1 var(--custom, 1)'],
+            ['  /**/ @1/**/1e0 attr(  name, /**/ 1e0 /**/  ', '@1 1 attr(name, 1)'],
+            ['  /**/ @1/**/1e0 env(  name, /**/ 1e0 /**/  ', '@1 1 env(name, 1)'],
+            ['  /**/ @1/**/1e0 random-item(  --key, /**/ 1e0 /**/  ', '@1 1 random-item(--key, 1)'],
+            ['  /**/ @1/**/1e0 var(  --custom, /**/ 1e0 /**/  ', '@1 1 var(--custom, 1)'],
             // Non-strict comma-containing production
             ['var(--custom,,)'],
             ['var(--custom, 1 {})'],

@@ -88,7 +88,7 @@ function getInitialValue(name, value, context, depth) {
     if (value === null) {
         return [null, '']
     }
-    value = parseCSSDeclaration({ name, value }, context)
+    value = parseCSSDeclaration(name, value, false, context)
     if (value === null) {
         console.error(`Parse error: cannot parse initial value of "${name}"`)
         return ''
