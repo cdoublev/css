@@ -214,6 +214,12 @@ describe('CSSStyleDeclaration.setProperty()', () => {
         expect(style.fontSize).toBe('12px')
         expect(style.getPropertyValue('font-size')).toBe('12px')
     })
+    it('stores a declaration for the specified custom property name escaped', () => {
+        const style = createStyleBlock()
+        style.setProperty('--custom PROP', '1')
+        expect(style.getPropertyValue('--custom PROP')).toBe('1')
+        expect(style.cssText).toBe('--custom\\ PROP: 1;')
+    })
     it('stores a declaration specified with a priority', () => {
         const style = createStyleBlock()
         style.setProperty('font-size', '10px', 'important')
@@ -258,6 +264,12 @@ describe('CSSStyleDeclaration.removeProperty()', () => {
         const style = createStyleBlock()
         style.fontSize = '1px'
         style.removeProperty('FoNt-SiZe')
+        expect(style).toHaveLength(0)
+    })
+    it('removes a declaration for the specified custom property name escaped', () => {
+        const style = createStyleBlock()
+        style.setProperty('--custom PROP', '1')
+        style.removeProperty('--custom PROP')
         expect(style).toHaveLength(0)
     })
     it('removes declarations for the specified shorthand property name', () => {
