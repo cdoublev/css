@@ -55,14 +55,19 @@ function createStyleSheet(rules = '', properties = {}) {
  * @param {string} text
  * @returns {string}
  *
- * It transforms `text` to lowercase and unwraps the first-valid() argument.
+ * It transforms `text` to lowercase, unfolds first-valid() argument, removes
+ * newlines.
  *
  * This abstraction is not great but probably the best way to avoid increasing
  * code complexity in tests, until first-valid() can be replaced with another
  * <whole-value> substitution that do not require resolved at parse time.
  */
 function normalizeText(text) {
-    return text.toLowerCase().replace(/first-valid\(([^)]+)\)/g, '$1')
+    return text
+        .toLowerCase()
+        .replace(/first-valid\(([^)]+)\)/g, '$1')
+        .replace(/(\n|  +)+/g, ' ')
+        .trim()
 }
 
 install()
@@ -132,9 +137,12 @@ describe('CSSStyleSheet.insertRule(), CSSStyleSheet.deleteRule()', () => {
         expect(() => styleSheet.insertRule('style {}')).toThrow(UPDATE_LOCKED_STYLESHEET_ERROR)
         expect(() => styleSheet.deleteRule(0)).toThrow(UPDATE_LOCKED_STYLESHEET_ERROR)
     })
-    it('throws an error when trying to insert an invalid rule according to the CSS syntax', () => {
+    it('throws an error when trying to insert an invalid rule according to the CSS grammar', () => {
         const styleSheet = createStyleSheet()
         expect(() => styleSheet.insertRule(' ')).toThrow(MISSING_RULE_ERROR)
+        expect(() => styleSheet.insertRule('@charset "utf-8";')).toThrow(INVALID_RULE_SYNTAX_ERROR)
+        expect(() => styleSheet.insertRule('@top-left {}')).toThrow(INVALID_RULE_SYNTAX_ERROR)
+        expect(() => styleSheet.insertRule('@media;')).toThrow(INVALID_RULE_SYNTAX_ERROR)
         expect(() => styleSheet.insertRule('style;')).toThrow(INVALID_RULE_SYNTAX_ERROR)
         expect(() => styleSheet.insertRule('style {};')).toThrow(EXTRA_RULE_ERROR)
     })
@@ -146,12 +154,6 @@ describe('CSSStyleSheet.insertRule(), CSSStyleSheet.deleteRule()', () => {
         const styleSheet = createStyleSheet()
         expect(() => styleSheet.insertRule('style {}', 1)).toThrow(INVALID_RULE_INDEX_ERROR)
         expect(() => styleSheet.deleteRule(0)).toThrow(INVALID_RULE_INDEX_ERROR)
-    })
-    it('throws an error when trying to insert an invalid rule according to the CSS grammar', () => {
-        const styleSheet = createStyleSheet()
-        expect(() => styleSheet.insertRule('@charset "utf-8";')).toThrow(INVALID_RULE_SYNTAX_ERROR)
-        expect(() => styleSheet.insertRule('@top-left {}')).toThrow(INVALID_RULE_SYNTAX_ERROR)
-        expect(() => styleSheet.insertRule('@media;')).toThrow(INVALID_RULE_SYNTAX_ERROR)
     })
     it('throws an error when trying to insert any other rule than @import or @layer before @import', () => {
         const styleSheet = createStyleSheet('@import "./global.css";')
@@ -985,36 +987,93 @@ test('Setting CSSRule.cssText does nothing', () => {
     expect(rule.cssText).toBe('style {}')
 })
 
-describe('CSS grammar', () => {
-    // Style sheet contents
-    test('top-level - invalid contents', () => {
-
+describe('CSS grammar - syntax', () => {
+    test('top-level - malformed structure', () => {
+        // Only rules are consumed
         const { cssRules } = createStyleSheet(`
-            @charset "utf-8";
-
-            @namespace svg "http://www.w3.org/2000/svg" {}
-            @media;
-            style; {}
-
+            color; {}
             color: red; {}
-            --custom:hover {}
-
-            @annotation {}
-            @top-left {}
-            0% {}
-
-            @invalid } style {}
-            style-1 { @layer name }
-            @invalid } @layer name;
-            style-2 { style }
-            invalid } style {}
-            style-3 { --custom:
+            --custom: hover {} style {}
         `)
-
+        expect(cssRules).toHaveLength(1)
+        expect(cssRules[0].cssText).toBe('style {}')
+    })
+    test('top-level - orphan } in a rule prelude', () => {
+        // It does not stop consuming a top-level rule
+        const { cssRules } = createStyleSheet(`
+            @invalid } style {}
+            style-1 {}
+            @invalid } @layer name;
+            style-2 {}
+            invalid } style {}
+            style-3 {}
+        `)
         expect(cssRules).toHaveLength(3)
         expect(cssRules[0].cssText).toBe('style-1 {}')
         expect(cssRules[1].cssText).toBe('style-2 {}')
-        expect(cssRules[2].cssText).toBe('style-3 { --custom: ; }')
+        expect(cssRules[2].cssText).toBe('style-3 {}')
+    })
+    test('top-level - unclosed rule', () => {
+        const { cssRules } = createStyleSheet('style { --custom: }')
+        expect(cssRules).toHaveLength(1)
+        expect(cssRules[0].cssText).toBe('style { --custom: ; }')
+    })
+    test('nested - malformed structure', () => {
+        const styleSheet = createStyleSheet('style { color; }')
+        expect(styleSheet.cssRules[0].cssText).toBe('style {}')
+    })
+    test('nested - declaration with a value containing a bad token', () => {
+        // It is always invalid... except with forgiving grammar?
+        const { cssRules: [nested] } = createStyleSheet(`
+            style {
+                color: var(--custom) "\n;
+                color: var(--custom) url(bad .url);
+                color: var(--custom) ];
+                color: var(--custom) );
+                color: var(--custom) !;
+                color: !important var(--custom);
+                style {}
+            }
+        `)
+        expect(nested.cssText).toBe('style { & style {} }')
+    })
+    test('nested - declaration not for a custom property with a value containing a positioned {}-block', () => {
+        // It is always consumed as a rule
+        const { cssRules: [nested] } = createStyleSheet(`
+            style {
+                color: {} var(--custom);
+                color:var(--custom) {}
+                style:hover {}
+            }
+        `)
+        expect(nested.cssText).toBe('style { & style:hover {} }')
+    })
+    test('nested - declaration for a custom property with a value containing a positioned {}-block', () => {
+        // It is never consumed as a qualified rule in a nested context
+        const { cssRules: [nested] } = createStyleSheet(`
+            style {
+                --custom-1: {} 1;
+                --custom-2: 1 {};
+                --custom-3: ] {}
+                style:hover {}
+            }
+        `)
+        expect(nested.cssText).toBe('style { --custom-1: {} 1; --custom-2: 1 {}; }')
+    })
+})
+
+describe('CSS grammar - semantic', () => {
+    // Style sheet contents
+    test('top-level - invalid contents', () => {
+        const { cssRules } = createStyleSheet(`
+            @charset "utf-8";
+            @namespace svg "http://www.w3.org/2000/svg" {}
+            @media;
+            @annotation {}
+            @top-left {}
+            0% {}
+        `)
+        expect(cssRules).toHaveLength(0)
     })
     test('top-level - opening and ending HTML comment tokens', () => {
 
@@ -1140,16 +1199,7 @@ describe('CSS grammar', () => {
 
                 style {}
                 color: red;
-                --custom:hover {};
 
-                components: "\n env(name);
-                components: url(bad .url) env(name);
-                components: ] env(name);
-                components: ) env(name);
-                components: ! env(name);
-                components: !important env(name);
-                components: env(name) {};
-                components: {} env(name);
                 components: none;
                 components: inherit(--custom);
                 components: var(--custom);
@@ -1163,7 +1213,12 @@ describe('CSS grammar', () => {
         expect(styleSheet.cssRules[0].cssText).toBe('@color-profile --name { src: url("profile.icc"); }')
     })
     test('@color-profile - valid block contents', () => {
-        const input = '@COLOR-PROFILE --name { COMPONENTS: { env(name) }; src: first-valid(url("profile.icc")); }'
+        const input = `
+            @COLOR-PROFILE --name {
+                COMPONENTS: { env(name) };
+                src: first-valid(url("profile.icc"));
+            }
+        `
         const styleSheet = createStyleSheet(input)
         expect(styleSheet.cssRules[0].cssText).toBe(normalizeText(input))
     })
@@ -1172,7 +1227,6 @@ describe('CSS grammar', () => {
             @container name {
 
                 @media;
-                style;
 
                 @charset "utf-8";
                 @import "./global.css";
@@ -1182,7 +1236,6 @@ describe('CSS grammar', () => {
                 0% {}
 
                 color: red;
-                --custom:hover {};
 
                 @media {}
             }
@@ -1220,16 +1273,7 @@ describe('CSS grammar', () => {
 
                 style {}
                 color: red;
-                --custom:hover {};
 
-                pad: "\n env(name);
-                pad: url(bad .url) env(name);
-                pad: ] env(name);
-                pad: ) env(name);
-                pad: ! env(name);
-                pad: !important env(name);
-                pad: env(name) {};
-                pad: {} env(name);
                 pad: initial;
                 pad: inherit(--custom);
                 pad: var(--custom);
@@ -1251,7 +1295,12 @@ describe('CSS grammar', () => {
         expect(rule2.cssText).toBe('@counter-style name-two { system: numeric; }')
     })
     test('@counter-style - valid block contents', () => {
-        const input = '@COUNTER-STYLE name { PAD: { env(name) }; system: first-valid(numeric); }'
+        const input = `
+            @COUNTER-STYLE name {
+                PAD: { env(name) };
+                system: first-valid(numeric);
+            }
+        `
         const styleSheet = createStyleSheet(input)
         expect(styleSheet.cssRules[0].cssText).toBe(normalizeText(input))
     })
@@ -1261,16 +1310,7 @@ describe('CSS grammar', () => {
 
                 style {}
                 color: red;
-                --custom:hover {};
 
-                font-weight: "\n env(name);
-                size-adjust: url(bad .url) env(name);
-                font-weight: ] env(name);
-                size-adjust: ) env(name);
-                font-weight: ! env(name);
-                size-adjust: !important env(name);
-                font-weight: env(name) {};
-                size-adjust: {} env(name);
                 font-weight: initial;
                 size-adjust: initial;
                 font-weight: inherit(--custom);
@@ -1311,7 +1351,6 @@ describe('CSS grammar', () => {
             @font-feature-values name {
 
                 @media;
-                style;
 
                 @charset "utf-8";
                 @import "./global.css";
@@ -1334,20 +1373,11 @@ describe('CSS grammar', () => {
                 @supports (color: red) {}
                 @top-left {}
                 @view-transition {}
-                style:hover {}
+                style {}
                 0% {}
 
                 color: red;
-                --custom:hover {};
 
-                font-display: "\n env(name);
-                font-display: url(bad .url) env(name);
-                font-display: ] env(name);
-                font-display: ) env(name);
-                font-display: ! env(name);
-                font-display: !important env(name);
-                font-display: env(name) {};
-                font-display: {} env(name);
                 font-display: initial;
                 font-display: inherit(--custom);
                 font-display: var(--custom);
@@ -1393,16 +1423,7 @@ describe('CSS grammar', () => {
 
                 style {}
                 color: red;
-                --custom:hover {};
 
-                base-palette: "\n env(name);
-                base-palette: url(bad .url) env(name);
-                base-palette: ] env(name);
-                base-palette: ) env(name);
-                base-palette: ! env(name);
-                base-palette: !important env(name);
-                base-palette: env(name) {};
-                base-palette: {} env(name);
                 base-palette: initial;
                 base-palette: inherit(--custom);
                 base-palette: var(--custom);
@@ -1418,7 +1439,12 @@ describe('CSS grammar', () => {
         expect(styleSheet.cssRules[0].cssText).toBe('@font-palette-values --name { font-family: name; }')
     })
     test('@font-palette-values - valid block contents', () => {
-        const input = '@FONT-PALETTE-VALUES --name { BASE-PALETTE: { env(name) }; font-family: first-valid(name); }'
+        const input = `
+            @FONT-PALETTE-VALUES --name {
+                BASE-PALETTE: { env(name) };
+                font-family: first-valid(name);
+            }
+        `
         const styleSheet = createStyleSheet(input)
         expect(styleSheet.cssRules[0].cssText).toBe(normalizeText(input))
     })
@@ -1431,7 +1457,6 @@ describe('CSS grammar', () => {
             @function --name {
 
                 @media;
-                style;
 
                 @charset "utf-8";
                 @import "./global.css";
@@ -1457,14 +1482,6 @@ describe('CSS grammar', () => {
 
                 color: red;
 
-                result: "\n env(name);
-                result: url(bad .url) env(name);
-                result: ] env(name);
-                result: ) env(name);
-                result: ! env(name);
-                result: !important env(name);
-                result: env(name) {};
-                result: {} env(name);
                 result: 1 !important;
 
                 @media {}
@@ -1489,7 +1506,6 @@ describe('CSS grammar', () => {
             @keyframes name {
 
                 @media;
-                style;
 
                 @charset "utf-8";
                 @import "./global.css";
@@ -1516,7 +1532,6 @@ describe('CSS grammar', () => {
                 style {}
 
                 color: red;
-                --custom:hover {};
 
                 0% {}
             }
@@ -1532,7 +1547,6 @@ describe('CSS grammar', () => {
             @layer {
 
                 @media;
-                style;
 
                 @charset "utf-8";
                 @import "./global.css";
@@ -1542,7 +1556,6 @@ describe('CSS grammar', () => {
                 0% {}
 
                 color: red;
-                --custom:hover {};
 
                 @media {}
             }
@@ -1579,7 +1592,6 @@ describe('CSS grammar', () => {
             @media {
 
                 @media;
-                style;
 
                 @charset "utf-8";
                 @import "./global.css";
@@ -1589,7 +1601,6 @@ describe('CSS grammar', () => {
                 0% {}
 
                 color: red;
-                --custom:hover {};
 
                 @media {}
             }
@@ -1626,7 +1637,6 @@ describe('CSS grammar', () => {
             @page {
 
                 @media;
-                style;
 
                 @charset "utf-8";
                 @import "./global.css";
@@ -1650,18 +1660,10 @@ describe('CSS grammar', () => {
                 @supports (color: red) {}
                 @view-transition {}
                 0% {}
-                style:hover {}
+                style {}
 
                 top: 1px;
 
-                margin-top: "\n env(name);
-                margin-top: url(bad .url) env(name);
-                margin-top: ] env(name);
-                margin-top: ) env(name);
-                margin-top: ! env(name);
-                margin-top: !important env(name);
-                margin-top: env(name) {};
-                margin-top: {} env(name);
                 margin-top: attr(name);
                 margin-top: toggle(1px);
                 margin-top: calc-mix(0, 1px, 1px);
@@ -1675,7 +1677,7 @@ describe('CSS grammar', () => {
     test('@page - valid block contents', () => {
         const contents = [
             '@top-left {}',
-            '--custom: {} var(--custom);',
+            '--custom: 1;',
             'MARGIN-TOP: { env(name) };',
             'SIZE: { env(name) };',
             'margin-top: first-valid(1px);',
@@ -1701,16 +1703,6 @@ describe('CSS grammar', () => {
 
                 style {}
                 color: red;
-                --custom:hover {};
-
-                top: "\n env(name);
-                top: url(bad .url) env(name);
-                top: ] env(name);
-                top: ) env(name);
-                top: ! env(name);
-                top: !important env(name);
-                top: env(name) {};
-                top: {} env(name);
                 top: 1px !important;
 
                 bottom: 1px;
@@ -1751,22 +1743,13 @@ describe('CSS grammar', () => {
 
                 style {}
                 color: red;
-                --custom:hover {};
 
-                inherits: "\n env(name);
-                inherits: url(bad .url) env(name);
-                inherits: ] env(name);
-                inherits: ) env(name);
-                inherits: ! env(name);
-                inherits: !important env(name);
-                inherits: env(name) {};
-                inherits: {} env(name);
+                syntax: "initial";
                 inherits: initial;
                 inherits: inherit(--custom);
                 inherits: var(--custom);
                 inherits: attr(name);
                 inherits: false !important;
-                syntax: "initial";
             }
         `)
         expect(styleSheet.cssRules[0].cssText).toBe('@property --name { syntax: "*"; inherits: true; }')
@@ -1841,7 +1824,6 @@ describe('CSS grammar', () => {
             @scope {
 
                 @media;
-                style;
 
                 @charset "utf-8";
                 @import "./global.css";
@@ -1849,15 +1831,6 @@ describe('CSS grammar', () => {
                 @annotation {}
                 @top-left {}
                 0% {}
-
-                top: "\n env(name);
-                top: url(bad .url) env(name);
-                top: ] env(name);
-                top: ) env(name);
-                top: ! env(name);
-                top: !important env(name);
-                top: env(name) {};
-                top: {} env(name);
 
                 @media {}
             }
@@ -1892,7 +1865,7 @@ describe('CSS grammar', () => {
         expect(styleSheet.cssRules[0].cssText).toBe(input.toLowerCase())
 
         const declarations = [
-            '--custom: hover {}',
+            '--custom: 1',
             'TOP: { env(name) }',
             'top: first-valid(1px)',
             'top: initial',
@@ -1915,7 +1888,6 @@ describe('CSS grammar', () => {
             @starting-style {
 
                 @media;
-                style;
 
                 @charset "utf-8";
                 @import "./global.css";
@@ -1925,7 +1897,6 @@ describe('CSS grammar', () => {
                 0% {}
 
                 color: red;
-                --custom:hover {};
 
                 @media {}
             }
@@ -1962,7 +1933,6 @@ describe('CSS grammar', () => {
             @supports (color: green) {
 
                 @media;
-                style;
 
                 @charset "utf-8";
                 @import "./global.css";
@@ -1972,7 +1942,6 @@ describe('CSS grammar', () => {
                 0% {}
 
                 color: red;
-                --custom:hover {};
 
                 @media {}
             }
@@ -2010,16 +1979,7 @@ describe('CSS grammar', () => {
 
                 style {}
                 color: red;
-                --custom:hover {};
 
-                types: "\n env(name);
-                types: url(bad .url) env(name);
-                types: ] env(name);
-                types: ) env(name);
-                types: ! env(name);
-                types: !important env(name);
-                types: env(name) {};
-                types: {} env(name);
                 types: initial;
                 types: inherit(--custom);
                 types: var(--custom);
@@ -2050,16 +2010,7 @@ describe('CSS grammar', () => {
 
                     style {}
                     color: red;
-                    --custom:hover {};
 
-                    name: "\n env(name);
-                    name: url(bad .url) env(name);
-                    name: ] env(name);
-                    name: ) env(name);
-                    name: ! env(name);
-                    name: !important env(name);
-                    name: env(name) {};
-                    name: {} env(name);
                     name: initial;
                     name: inherit(--custom);
                     name: var(--custom);
@@ -2117,15 +2068,6 @@ describe('CSS grammar', () => {
 
                     style {}
                     animation-delay: 1s;
-
-                    top: "\n env(name);
-                    top: url(bad .url) env(name);
-                    top: ] env(name);
-                    top: ) env(name);
-                    top: ! env(name);
-                    top: !important env(name);
-                    top: env(name) {};
-                    top: {} env(name);
                     top: 1px !important;
 
                     animation-timing-function: linear;
@@ -2136,7 +2078,7 @@ describe('CSS grammar', () => {
     })
     test('keyframe rule - valid block contents', () => {
         const declarations = [
-            '--custom: {} var(--custom)',
+            '--custom: 1',
             'TOP: { env(name) }',
             'top: first-valid(1px)',
             'top: initial',
@@ -2160,14 +2102,6 @@ describe('CSS grammar', () => {
                     style {}
                     top: 1px;
 
-                    margin-top: "\n env(name);
-                    margin-top: url(bad .url) env(name);
-                    margin-top: ] env(name);
-                    margin-top: ) env(name);
-                    margin-top: ! env(name);
-                    margin-top: !important env(name);
-                    margin-top: env(name) {};
-                    margin-top: {} env(name);
                     margin-top: attr(name);
                     margin-top: toggle(1px);
                     margin-top: calc-mix(0, 1px, 1px);
@@ -2200,7 +2134,6 @@ describe('CSS grammar', () => {
                 @media {
 
                     @media;
-                    style;
 
                     @charset "utf-8";
                     @import "./global.css";
@@ -2221,15 +2154,6 @@ describe('CSS grammar', () => {
                     @view-transition {}
                     0% {}
 
-                    top: "\n env(name);
-                    top: url(bad .url) env(name);
-                    top: ] env(name);
-                    top: ) env(name);
-                    top: ! env(name);
-                    top: !important env(name);
-                    top: env(name) {};
-                    top: {} env(name);
-
                     @media {}
                 }
             }
@@ -2245,7 +2169,7 @@ describe('CSS grammar', () => {
             '@scope {}',
             '@starting-style {}',
             '@supports (color: green) {}',
-            '& style:hover {}',
+            '& style {}',
         ]
         const input = `style { @media { ${rules.join(' ')} } }`
         const styleSheet = createStyleSheet(input)
@@ -2253,7 +2177,7 @@ describe('CSS grammar', () => {
         expect(styleSheet.cssRules[0].cssText).toBe(input.toLowerCase())
 
         const declarations = [
-            '--custom: hover {}',
+            '--custom: 1',
             'TOP: { env(name) }',
             'top: first-valid(1px)',
             'top: initial',
@@ -2277,7 +2201,6 @@ describe('CSS grammar', () => {
                 & {
 
                     @media;
-                    style;
 
                     @charset "utf-8";
                     @import "./global.css";
@@ -2298,15 +2221,6 @@ describe('CSS grammar', () => {
                     @view-transition {}
                     0% {}
 
-                    top: "\n env(name);
-                    top: url(bad .url) env(name);
-                    top: ] env(name);
-                    top: ) env(name);
-                    top: ! env(name);
-                    top: !important env(name);
-                    top: env(name) {};
-                    top: {} env(name);
-
                     @media {}
                 }
             }
@@ -2322,7 +2236,7 @@ describe('CSS grammar', () => {
             '@scope {}',
             '@starting-style {}',
             '@supports (color: green) {}',
-            '& style:hover {}',
+            '& style {}',
         ]
         const input = `style { & { ${rules.join(' ')} } }`
         const styleSheet = createStyleSheet(input)
@@ -2330,7 +2244,7 @@ describe('CSS grammar', () => {
         expect(styleSheet.cssRules[0].cssText).toBe(input.toLowerCase())
 
         const declarations = [
-            '--custom: hover {}',
+            '--custom: 1',
             'TOP: { env(name) }',
             'top: first-valid(1px)',
             'top: initial',
@@ -2351,10 +2265,13 @@ describe('CSS grammar', () => {
     test('nested style rule - invalid contents between valid declarations', () => {
         const styleSheet = createStyleSheet(`
             style {
+
                 color: orange;
+
                 @media;
                 . {}
                 --custom: { var(1) };
+
                 color: green;
             }
         `)
@@ -2362,14 +2279,13 @@ describe('CSS grammar', () => {
     })
     test('style rule - invalid prelude containing an undeclared namespace prefix', () => {
 
-        const input = `
+        const { cssRules } = createStyleSheet(`
             @namespace svg "http://www.w3.org/2000/svg";
             svg|rect { fill: green }
             SVG|rect { fill: red }
             @namespace html "https://www.w3.org/1999/xhtml/";
             html|type {}
-        `
-        const { cssRules } = createStyleSheet(input)
+        `)
 
         expect(cssRules).toHaveLength(2)
 
@@ -2387,7 +2303,6 @@ describe('CSS grammar', () => {
             style {
 
                 @media;
-                style;
 
                 @charset "utf-8";
                 @import "./global.css";
@@ -2408,15 +2323,6 @@ describe('CSS grammar', () => {
                 @view-transition {}
                 0% {}
 
-                top: "\n env(name);
-                top: url(bad .url) env(name);
-                top: ] env(name);
-                top: ) env(name);
-                top: ! env(name);
-                top: !important env(name);
-                top: env(name) {};
-                top: {} env(name);
-
                 @media {}
             }
         `)
@@ -2431,7 +2337,7 @@ describe('CSS grammar', () => {
             '@scope {}',
             '@starting-style {}',
             '@supports (color: green) {}',
-            '& style:hover {}',
+            '& style {}',
         ]
         const input = `style { ${rules.join(' ')} }`
         const styleSheet = createStyleSheet(input)
@@ -2439,7 +2345,7 @@ describe('CSS grammar', () => {
         expect(styleSheet.cssRules[0].cssText).toBe(input.toLowerCase())
 
         const declarations = [
-            '--custom: hover {}',
+            '--custom: 1',
             'TOP: { env(name) }',
             'top: first-valid(1px)',
             'top: initial',
