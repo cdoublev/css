@@ -1043,6 +1043,7 @@ describe('CSS grammar - syntax', () => {
             style {
                 color: {} var(--custom);
                 color:var(--custom) {}
+                color: ] {}
                 style:hover {}
             }
         `)
