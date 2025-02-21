@@ -241,7 +241,7 @@ describe('symbols', () => {
         const input = '<length-percentage [0,∞]>'
         const parsed = { ...type('<length-percentage>'), max: Infinity, min: 0 }
         expect(parse(input)).toEqual(parsed)
-        expect(parse('<length>', { definition: parsed })).toEqual({ ...type('<length>'), max: Infinity, min: 0 })
+        expect(parse('<length>', parsed)).toEqual({ ...type('<length>'), max: Infinity, min: 0 })
         expect(serialize(parsed)).toBe(input)
     })
     test('<rotate()>', () => {
@@ -532,28 +532,16 @@ describe('groups', () => {
 })
 describe('context rules', () => {
     test("a# produced by <'property'>", () => {
-
-        const root = { definition: { name: 'property', type: 'property' } }
-
-        // property = <'property'> = a#
-        const range = { definition: { name: "<'property'>", type: 'non-terminal' }, parent: root }
-        expect(parse('a#', range)).toEqual(a)
-        expect(parse('[a b]#', range)).toEqual(sequence(a, b))
-        expect(parse('<number>#', range)).toEqual(number)
-
-        const as = repeat(a, 1, 20, ',')
-        // property = a#
-        expect(parse('a#', root)).toEqual(as)
-        // property = <'property'> = a# b
-        expect(parse('a# b', range)).toEqual(sequence(as, b))
-        // property = <'property'> = fn(a#)
-        expect(parse('fn(a#)', range)).toEqual({ name: 'fn', type: 'function', value: as })
-        // property = <'property'> = <production> = a#
-        const production = { definition: { name: 'production', type: 'non-terminal' }, parent: range }
-        expect(parse('a#', production)).toEqual(as)
+        const production = { name: "<'property'>", type: 'non-terminal' }
+        const repetition = repeat(a, 1, 20, ',')
+        expect(parse('a#', production)).toEqual(a)
+        expect(parse('a# b', production)).toEqual(sequence(repetition, b))
+        expect(parse('[a b]#', production)).toEqual(sequence(a, b))
+        expect(parse('<number>#', production)).toEqual(number)
+        expect(parse('fn(a#)', production)).toEqual({ name: 'fn', type: 'function', value: repetition })
     })
     test("[['+' | '-'] <calc-product>]* produced by <calc-sum>", () => {
-        const production = { definition: parse('<calc-sum>') }
+        const production = parse('<calc-sum>')
         expect(parse("[['+' | '-'] <calc-product>]*", production)).toEqual(
             repeat(
                 sequence(
@@ -563,7 +551,7 @@ describe('context rules', () => {
                 31))
     })
     test('<calc-sum># produced by <hypoth()>, <max()>, <min()>', () => {
-        const production = { definition: { name: '<hypoth()>' } }
+        const production = parse('<hypoth()>')
         expect(parse('<calc-sum>#', production)).toEqual(repeat(type('<calc-sum>'), 1, 32, ','))
     })
 })
