@@ -1327,6 +1327,8 @@ describe('view-transition-name', () => {
         const style = createStyleBlock()
         style.viewTransitionName = 'AUTO'
         expect(style.viewTransitionName).toBe('')
+        style.viewTransitionName = 'match-element'
+        expect(style.viewTransitionName).toBe('')
     })
 })
 describe('voice-pitch, voice-range', () => {
