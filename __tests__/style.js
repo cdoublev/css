@@ -222,12 +222,20 @@ describe('CSSStyleDeclaration.setProperty()', () => {
     })
     it('stores a declaration specified with a priority', () => {
         const style = createStyleBlock()
+        // Standard property
         style.setProperty('font-size', '10px', 'important')
         expect(style.getPropertyPriority('font-size')).toBe('important')
         style.setProperty('font-size', '10px')
         expect(style.getPropertyPriority('font-size')).toBe('')
+        // Custom property
         style.setProperty('--custom', '1', 'important')
         expect(style.getPropertyPriority('--custom')).toBe('important')
+        // Longhand property alias
+        style.setProperty('order', '1', 'important')
+        expect(style.getPropertyPriority('-webkit-order')).toBe('important')
+        // Shorthand property alias
+        style.setProperty('gap', '1px', 'important')
+        expect(style.getPropertyPriority('grid-gap')).toBe('important')
     })
     it('updates a declaration not preceded by a declaration for a property of the same logical property group', () => {
 
@@ -265,6 +273,17 @@ describe('CSSStyleDeclaration.removeProperty()', () => {
         style.fontSize = '1px'
         style.removeProperty('FoNt-SiZe')
         expect(style).toHaveLength(0)
+    })
+    it('removes a declaration for the target of the specified legacy name alias', () => {
+        const style = createStyleBlock()
+        // Longhand name alias
+        style.order = '1'
+        style.removeProperty('-webkit-order')
+        expect(style.order).toBe('')
+        // Shorthand name alias
+        style.gap = '1px'
+        style.removeProperty('grid-gap')
+        expect(style.gap).toBe('')
     })
     it('removes a declaration for the specified custom property name escaped', () => {
         const style = createStyleBlock()
