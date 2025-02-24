@@ -100,14 +100,6 @@ describe('CSSStyleDeclaration', () => {
         style.setProperty('--custom', 'red')
         expect(style.getPropertyValue('--CUSTOM')).toBe('')
         expect(style.getPropertyValue('--custom')).toBe('red')
-        style.cssText = '--custom: green'
-        expect(style.getPropertyValue('--custom')).toBe('green')
-        const { length } = style
-        style.setProperty('--custom', '')
-        expect(style).toHaveLength(length)
-        style.removeProperty('--custom')
-        expect(style.getPropertyValue('--custom')).toBe('')
-        expect(style).toHaveLength(length - 1)
 
         // Longhand property alias
         style.order = '1'
@@ -152,9 +144,9 @@ describe('CSSStyleDeclaration', () => {
         expect(style['align-items']).toBe('')
 
         // Array-like properties
-        expect(style).toHaveLength(4)
-        expect(style[1]).toBe('row-gap')
-        expect(style.item(1)).toBe('row-gap')
+        expect(style).toHaveLength(5)
+        expect(style[4]).toBe('-webkit-box-align')
+        expect(style.item(4)).toBe('-webkit-box-align')
         style.cssText = ''
         expect(style).toHaveLength(0)
         expect(style[0]).toBeUndefined()
@@ -187,6 +179,12 @@ describe('CSSStyleDeclaration.cssText', () => {
         const style = createStyleBlock()
         style.cssText = '--custom\\ property: 1'
         expect(style.cssText).toBe('--custom\\ property: 1;')
+    })
+    it('stores and serializes a custom property specified with an empty string', () => {
+        const style = createStyleBlock()
+        style.cssText = '--custom:;'
+        expect(style.cssText).toBe('--custom: ;')
+        expect(style.getPropertyValue('--custom')).toBe(' ')
     })
 })
 describe('CSSStyleDeclaration.setProperty()', () => {
@@ -236,6 +234,15 @@ describe('CSSStyleDeclaration.setProperty()', () => {
         // Shorthand property alias
         style.setProperty('gap', '1px', 'important')
         expect(style.getPropertyPriority('grid-gap')).toBe('important')
+    })
+    it('removes a declaration for the specified name when the specified value is an empty string', () => {
+        const style = createStyleBlock()
+        style.cssText = 'color: green; --custom: 1;'
+        style.setProperty('color', '')
+        style.setProperty('--custom', '')
+        expect(style.getPropertyValue('color')).toBe('')
+        expect(style.getPropertyValue('--custom')).toBe('')
+        expect(style).toHaveLength(0)
     })
     it('updates a declaration not preceded by a declaration for a property of the same logical property group', () => {
 
@@ -770,8 +777,8 @@ describe('--*', () => {
         const style = createStyleBlock()
         const valid = [
             // Whitespaces and comments
-            [''],
-            ['  /**/  ', ''],
+            ['', ' '],
+            ['  /**/  ', ' '],
             [
                 '  /**/  Red  ,  (  orange  /**/  )  ,  green  /**/  ! /**/ important',
                 'Red  ,  (  orange  /**/  )  ,  green !important',
@@ -785,7 +792,7 @@ describe('--*', () => {
         valid.forEach(([input, expected = input]) => {
             style.cssText = `--custom: ${input}`
             expect(style.getPropertyValue('--custom')).toBe(expected.replace(' !important', ''))
-            expect(style.cssText).toBe(`--custom: ${expected};`)
+            expect(style.cssText).toBe(`--custom: ${expected.trim()};`)
         })
     })
 })
