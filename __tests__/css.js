@@ -71,12 +71,14 @@ describe('CSS.supports()', () => {
     it('returns whether it supports the given property declaration', () => {
         const declarations = [
             [' color', 'red', false],
+            ['color ', 'red', false],
             ['color/**/', 'red', false],
             ['color', 'red !important', false],
             ['COLOR', 'green'],
+            ['--custom', '1'],
             ['color', 'initial'],
             ['color', 'var(--custom)'],
-            ['--custom', '1'],
+            ['color', 'first-valid(green)'],
             ['grid-gap', '1px'],
             ['-webkit-box-align', 'center'],
         ]
@@ -84,43 +86,8 @@ describe('CSS.supports()', () => {
             expect(CSS.supports(property, value)).toBe(expected))
     })
     it('returns whether it supports the given feature condition', () => {
-        const conditions = [
-            // <general-enclosed>
-            ['general(enclosed)', false],
-            // <supports-decl>
-            ['color: green'],
-            ['color: green !important'],
-            ['color: initial'],
-            ['color: var(--custom)'],
-            ['--custom: 1'],
-            ['grid-gap: 1px'],
-            ['-webkit-box-align: center'],
-            ['(color: green)'],
-            ['(unsupported: 1)', false],
-            ['(color: unsupported)', false],
-            ['(color: green) and (color: green)'],
-            ['(color: unsupported) and (color: green)', false],
-            ['(color: unsupported) and (color: unsupported)', false],
-            ['(color: green) or (color: green)'],
-            ['(color: unsupported) or (color: green)'],
-            ['(color: unsupported) or (color: unsupported)', false],
-            ['((color: unsupported) and (color: unsupported)) or (color: green)'],
-            ['((color: unsupported) or (color: green)) and (color: green)'],
-            ['not (unsupported: 1)'],
-            ['not (color: green)', false],
-            ['not (color: unsupported)'],
-            // <supports-font-format-fn>
-            ['font-format("woff")', false],
-            ['font-format(woff)'],
-            // <supports-font-tech-fn>
-            ['font-tech(color-svg)'],
-            // <supports-selector-fn>
-            ['selector(undeclared|*)', false],
-            ['selector(::-webkit-unknown)', false],
-            ['selector(::before:is(type))', false],
-            ['selector(:is(::before))', false],
-            ['selector(type + .class)'],
-        ]
-        conditions.forEach(([condition, expected = true]) => expect(CSS.supports(condition)).toBe(expected))
+        // Complete test is in __tests__/match.js
+        expect(CSS.supports('general(enclosed)')).toBeFalsy()
+        expect(CSS.supports('color: green')).toBeTruthy()
     })
 })

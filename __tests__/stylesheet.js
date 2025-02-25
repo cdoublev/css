@@ -704,6 +704,7 @@ describe('CSSMediaRule', () => {
 
         // CSSMediaRule
         expect(MediaList.is(rule.media)).toBeTruthy()
+        expect(rule.matches).toBeTruthy()
     })
 })
 describe('CSSNamespaceRule', () => {
@@ -950,6 +951,9 @@ describe('CSSSupportsRule', () => {
 
         // CSSConditionRule
         expect(rule.conditionText).toBe('(color: green)')
+
+        // CSSSupportsRule
+        expect(rule.matches).toBeTruthy()
     })
 })
 describe('CSSViewTransitionRule', () => {
