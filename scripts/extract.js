@@ -81,7 +81,6 @@ const replaced = {
         'corner-inline-start-shape': { value: '<corner-shape-value>{1,2}' },
         'corner-left-shape': { value: '<corner-shape-value>{1,2}' },
         'corner-right-shape': { value: '<corner-shape-value>{1,2}' },
-        'corner-shape': { value: '<corner-shape-value>{1,4}' },
         'corner-top-shape': { value: '<corner-shape-value>{1,2}' },
         // TODO: fix `value` of `clip`
         'clip': { value: 'rect([<length> | auto]{4} | [<length> | auto]#{4}) | auto' },
@@ -624,7 +623,7 @@ const errors = {
         links: ['https://github.com/w3c/csswg-drafts/issues/8097'],
     },
     '@when': { cause: 'It is not yet supported.' },
-    '<boolean-expr[]>': { cause: 'It is not yet supported.' },
+    '<boolean-expr>': { cause: 'It is not yet supported.' },
     '<box>': {
         cause: 'It is a generic type that is not used anywhere, and should not be exported.',
         links: [

@@ -3759,12 +3759,13 @@ describe('<shape()>', () => {
 
         const from = keyword('from')
         const zero = length(0, 'px', ['<length-percentage>'])
-        const coordinate = list([zero, zero], ' ', ['<coordinate-pair>'])
+        const position = list([zero, zero], ' ', ['<position-two>', '<position>'])
         const move = keyword('move')
         const by = keyword('by')
+        const coordinate = list([zero, zero], ' ', ['<coordinate-pair>'])
         const endpoint = list([by, coordinate], ' ', ['<command-end-point>'])
         const commands = list([list([move, endpoint], ' ', ['<move-command>', '<shape-command>'])], ',')
-        const value = list([omitted, from, coordinate, comma, commands])
+        const value = list([omitted, from, position, comma, commands])
 
         expect(parse('<shape()>', 'shape(from 0px 0px, move by 0px 0px)', false)).toMatchObject({
             name: 'shape',
