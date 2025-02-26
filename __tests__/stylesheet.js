@@ -93,6 +93,19 @@ describe('CSSStyleSheet', () => {
         // CSSStyleSheet properties
         expect(styleSheet.ownerRule).toBeNull()
     })
+    it('creates a constructed CSSStyleSheet with a MediaList', () => {
+
+        const { media } = new globalThis.CSSStyleSheet({ media: 'all' })
+        const styleSheet = new globalThis.CSSStyleSheet({ media })
+
+        expect(styleSheet.media).not.toBe(media)
+        expect(styleSheet.media.mediaText).toBe(media.mediaText)
+
+        media.mediaText = '(width)'
+        expect(styleSheet.media.mediaText).toBe('(width)')
+        styleSheet.media.mediaText = 'all'
+        expect(media.mediaText).toBe('all')
+    })
     it('creates a non-constructed CSSStyleSheet', () => {
 
         const location = 'http://github.com/cdoublev/css/'
