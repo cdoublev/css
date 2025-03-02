@@ -213,6 +213,12 @@ describe('symbols', () => {
         expect(parse('fn( fn( a ) )')).toEqual(parsed)
         expect(serialize(parsed)).toBe('fn(fn(a))')
     })
+    test('<function-token> a )', () => {
+        const input = '<function-token> a )'
+        const parsed = { type: 'function', value: a }
+        expect(parse(input)).toEqual(parsed)
+        expect(serialize(parsed)).toBe(input)
+    })
     test('(a)', () => {
         const parsed = {
             associatedToken: '(',

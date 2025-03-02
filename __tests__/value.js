@@ -4209,10 +4209,8 @@ describe('<selector-list>', () => {
             ['::HIGHLIGHT(name)', '::highlight(name)'],
             ['::-WEBKIT-UNKNOWN', '::-webkit-unknown'],
             // Forgiving pseudo-class selector
-            [':is(::before, type, undeclared|type, ::after)'],
-            [':where(::before, type, undeclared|type, ::after)'],
-            [':is()'],
-            [':where()'],
+            [':is(::before, type, undeclared|type, ::after, a {}, {} a)'],
+            [':where(::before, type, undeclared|type, ::after, a {}, {} a)'],
             // Pseudo-element as pseudo-class (back-compatibility with CSS2)
             [':after', '::after'],
             [':before', '::before'],

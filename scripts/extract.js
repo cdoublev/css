@@ -169,7 +169,7 @@ const replaced = {
         '<timeline-range-name>': 'contain | cover | entry | entry-crossing | exit | exit-crossing',
         '<transform-function>': '<matrix()> | <matrix3d()> | <perspective()> | <translate()> | <translateX()> | <translateY()> | <translateZ()> | <translate3d()> | <scale()> | <scaleX()> | <scaleY()> | <scaleZ()> | <scale3d()> | <rotate()> | <rotateX()> | <rotateY()> | <rotateZ()> | <rotate3d()> | <skew()> | <skewX()> | <skewY()>',
         '<uri>': '<url>',
-        '<url-modifier>': '<request-url-modifier> | <ident> | <function>',
+        '<url-modifier>': '<request-url-modifier> | <ident> | <function-token> <any-value>? )',
         '<url-set>': '<image-set()>',
         '<zero>': '<number-token>',
         // https://github.com/w3c/csswg-drafts/issues/8346, https://github.com/w3c/csswg-drafts/pull/8367#issuecomment-1408147460, https://github.com/w3c/csswg-drafts/issues/9729, https://github.com/w3c/csswg-drafts/issues/10833
@@ -181,9 +181,8 @@ const replaced = {
         '<radial-size>': 'closest-corner | farthest-corner | <radial-radius>{1,2}',
         // https://github.com/speced/bikeshed/issues/3011
         '<corner-shape-value>': 'round | scoop | bevel | notch | straight | squircle | superellipse(<number [0,∞]> | infinity)',
-        // https://github.com/w3c/csswg-drafts/issues/7016
-        '<general-enclosed>': '<function> | (<any-value>?)',
-        '<pseudo-class-selector>': ': <ident> | : <function>',
+        // https://github.com/w3c/csswg-drafts/pull/11807
+        '<pseudo-class-selector>': ': <ident> | : <function-token> <any-value> )',
         // https://github.com/w3c/fxtf-drafts/issues/532
         '<mask-reference>': 'none | <image>',
         // https://github.com/w3c/csswg-drafts/pull/10131
