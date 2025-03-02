@@ -4209,8 +4209,8 @@ describe('<selector-list>', () => {
             ['::HIGHLIGHT(name)', '::highlight(name)'],
             ['::-WEBKIT-UNKNOWN', '::-webkit-unknown'],
             // Forgiving pseudo-class selector
-            [':is(::before, type, undeclared|type, ::after)', ':is(type)'],
-            [':where(::before, type, undeclared|type, ::after)', ':where(type)'],
+            [':is(::before, type, undeclared|type, ::after)'],
+            [':where(::before, type, undeclared|type, ::after)'],
             [':is()'],
             [':where()'],
             // Pseudo-element as pseudo-class (back-compatibility with CSS2)
@@ -4222,7 +4222,7 @@ describe('<selector-list>', () => {
             ['::before:hover'],
             ['::before:empty'],
             ['::before:not(:hover, :not(:focus, :empty))'],
-            ['::before:is(:hover, type, #id, .class, :root, :not(:root), type > :hover, :not(:focus))', '::before:is(:hover, :not(:focus))'],
+            ['::before:is(:hover, type, #id, .class, :root, :not(:root), type > :hover, :not(:focus))'],
             ['::marker:only-child'],
             ['::marker:nth-child(1 of :hover)'],
             ['::marker:not(:only-child, :not(:nth-child(1 of :hover)))'],
