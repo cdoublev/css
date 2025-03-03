@@ -1049,11 +1049,10 @@ describe('display', () => {
             expect(style.display).toBe(to)
         })
         // Legacy mapped value
-        compatibility.values['display'].forEach(replacement =>
-            replacement.mappings.forEach(mapping => {
-                style.display = mapping
-                expect(style.display).toBe(mapping)
-            }))
+        for (const mapped of compatibility.values.keywords['display'].mappings.keys()) {
+            style.display = mapped
+            expect(style.display).toBe(mapped)
+        }
     })
 })
 describe('float', () => {
@@ -1467,6 +1466,7 @@ describe('all', () => {
         const style = createStyleBlock()
 
         style.all = 'initial'
+
         expect(style).toHaveLength(longhands.length)
         expect(style[longhands[0]]).toBe('initial')
         expect(style.all).toBe('initial')
@@ -1504,7 +1504,7 @@ describe('all', () => {
                 represented.add(property)
                 return properties.add(property)
             },
-            new Set())
+            new Set)
         style[head] = 'inherit'
         expect(style.all).toBe('')
         expect(style.cssText).toBe(`${[...initial].map(name => `${name}: initial`).join('; ')}; ${head}: inherit;`)
