@@ -256,6 +256,9 @@ describe('symbols', () => {
         expect(parse(input)).toEqual(parsed)
         expect(serialize(parsed)).toBe(input)
     })
+    test('<dashed-function>', () => {
+        expect(parse('<dashed-function>')).toEqual(nonTerminal['<dashed-function>'])
+    })
     test('<declaration>', () => {
         const input = '<declaration>'
         const parsed = { name: '<declaration>', type: 'arbitrary' }

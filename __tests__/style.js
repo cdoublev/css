@@ -332,6 +332,7 @@ describe('CSSFontFaceDescriptors', () => {
             ['inherit(--custom)'],
             // Cascade-dependent substitution
             ['var(--custom)'],
+            ['--custom()'],
             // Element-dependent substitution
             ['attr(name)'],
             ['random-item(--key, 1)', 'random-item(--key, 1%)'],
@@ -437,6 +438,8 @@ describe('CSSKeyframeProperties', () => {
         // Cascade-dependent substitution
         style.fontWeight = 'var(--custom)'
         expect(style.fontWeight).toBe('var(--custom)')
+        style.fontWeight = '--custom()'
+        expect(style.fontWeight).toBe('--custom()')
 
         // Element-dependent substitution
         style.fontWeight = 'attr(name)'
@@ -514,6 +517,8 @@ describe('CSSMarginDescriptors', () => {
         // Cascade-dependent substitution
         style.fontWeight = 'var(--custom)'
         expect(style.fontWeight).toBe('var(--custom)')
+        style.fontWeight = '--custom()'
+        expect(style.fontWeight).toBe('--custom()')
     })
 })
 describe('CSSPageDescriptors', () => {
@@ -586,6 +591,10 @@ describe('CSSPageDescriptors', () => {
         style.size = 'var(--custom)'
         expect(style.fontWeight).toBe('var(--custom)')
         expect(style.size).toBe('var(--custom)')
+        style.fontWeight = '--custom()'
+        style.size = '--custom()'
+        expect(style.fontWeight).toBe('--custom()')
+        expect(style.size).toBe('--custom()')
 
         // Specific serialization rule
         style.size = '1px 1px'
@@ -631,6 +640,8 @@ describe('CSSPositionTryDescriptors', () => {
         // Cascade-dependent substitution
         style.top = 'var(--custom)'
         expect(style.top).toBe('var(--custom)')
+        style.top = '--custom()'
+        expect(style.top).toBe('--custom()')
 
         // Element-dependent substitution
         style.top = 'attr(name)'
@@ -683,6 +694,7 @@ describe('arbitrary substitution', () => {
             ['inherit(--custom, inherit())'],
             ['random-item(--key, random-item())'],
             ['var(--custom, var())'],
+            ['--custom(--custom(!))'],
         ]
         invalid.forEach(([input, property = '--custom']) => {
             style.setProperty(property, input)
@@ -698,17 +710,22 @@ describe('arbitrary substitution', () => {
             ['unknown(inherit(--custom))'],
             ['unknown(random-item(--key, 1))'],
             ['unknown(var(--custom))'],
+            ['unknown(--custom())'],
             // Nested inside itself
             ['attr(name, attr(name))'],
             ['env(name, env(name))'],
             ['inherit(--custom, inherit(--custom))'],
             ['random-item(--key, random-item(--key, 1))'],
             ['var(--custom, var(--custom))'],
+            ['--custom(--custom())'],
+            // Custom function name with escaped characters
+            ['--cust\\ om()'],
             // Serialize the list of tokens
             ['  /**/ @1/**/1e0 attr(  name, /**/ 1e0 /**/  ', '@1 1 attr(name, 1)'],
             ['  /**/ @1/**/1e0 env(  name, /**/ 1e0 /**/  ', '@1 1 env(name, 1)'],
             ['  /**/ @1/**/1e0 random-item(  --key, /**/ 1e0 /**/  ', '@1 1 random-item(--key, 1)'],
             ['  /**/ @1/**/1e0 var(  --custom, /**/ 1e0 /**/  ', '@1 1 var(--custom, 1)'],
+            ['  /**/ @1/**/1e0 --custom(  /**/ 1e0 /**/  ', '@1 1 --custom(1)'],
             // Non-strict comma-containing production
             ['var(--custom,,)'],
             ['var(--custom, 1 {})'],

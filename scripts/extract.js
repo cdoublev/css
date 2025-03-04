@@ -48,10 +48,20 @@ const initial = {
         '<x>': '<number>',
         '<y>': '<number>',
         '<whole-value>': '<declaration-value>?',
-        // https://github.com/w3c/csswg-drafts/issues/8835
-        '<urange>': "u '+' <ident-token> '?'* | u <dimension-token> '?'* | u <number-token> '?'* | u <number-token> <dimension-token> | u <number-token> <number-token> | u '+' '?'+",
+        // https://github.com/w3c/csswg-drafts/issues/10558
+        '<dashed-function>': {
+            name: '<dashed-function>',
+            type: 'non-terminal',
+            value: {
+                name: '<dashed-ident>',
+                type: 'function',
+                value: '<declaration-value>#?',
+            },
+        },
         // TODO: fix parsing/serializing `<radial-gradient-syntax>`, `<radial-size>`
         '<radial-radius>': 'closest-side | farthest-side | <length-percentage [0,∞]>',
+        // https://github.com/w3c/csswg-drafts/issues/8835
+        '<urange>': "u '+' <ident-token> '?'* | u <dimension-token> '?'* | u <number-token> '?'* | u <number-token> <dimension-token> | u <number-token> <number-token> | u '+' '?'+",
     },
 }
 const replaced = {
@@ -631,10 +641,6 @@ const errors = {
             'https://github.com/w3c/csswg-drafts/commit/3a1c2a859a5e28a553f03757b45c237d9444680b',
         ],
     },
-    '<dashed-function>': {
-        cause: 'It cannot be defined with the CSS value definition syntax yet.',
-        links: ['https://github.com/w3c/csswg-drafts/issues/10558'],
-    },
     '<identifier>': { cause: 'It is equivalent to <ident>. Since most of CSS 2.2 is superseded, it is not worth requesting a change.' },
     '<palette-mix()>': { cause: 'It is extracted by w3c/reffy without its value definition, which is basically a problem with the definition markup.' },
     '<repeat()>': {
@@ -739,8 +745,26 @@ function findRule(type, rules = [], depth = 1) {
  * @param {string} value
  * @returns {string}
  */
-function serializeValueDefinition(value) {
-    return serializeDefinition(parseDefinition(value))
+function serializeValueDefinition(value, depth = 1) {
+    switch (typeof value) {
+        case 'object': {
+            value = Object.entries(value).reduce(
+                (string, [key, value]) => {
+                    if (key === 'value') {
+                        value = serializeValueDefinition(value, depth + 1)
+                    } else if (typeof value === 'string') {
+                        value = addQuotes(value)
+                    }
+                    return `${string}${tab(depth + 1)}${key}: ${value},\n`
+                },
+                '')
+            return `{\n${value}${tab(depth)}}`
+        }
+        case 'string':
+            return addQuotes(serializeDefinition(parseDefinition(value)))
+        default:
+            throw RangeError('Unexpected value definition type')
+    }
 }
 
 /**
@@ -750,7 +774,7 @@ function serializeValueDefinition(value) {
 function serializeTypes(types) {
     return types.reduce(
         (string, [type, value]) =>
-            `${string}${tab(1)}${addQuotes(type)}: ${addQuotes(serializeValueDefinition(value))},\n`,
+            `${string}${tab(1)}${addQuotes(type)}: ${serializeValueDefinition(value)},\n`,
         '')
 }
 
@@ -778,7 +802,7 @@ function serializeProperties(properties) {
             if (key === 'CSS') {
                 value = value.replace(/ \| inherit$/, '')
             }
-            string += `${tab(2)}value: ${addQuotes(serializeValueDefinition(value))},\n${tab(1)}},\n`
+            string += `${tab(2)}value: ${serializeValueDefinition(value)},\n${tab(1)}},\n`
             return string
         },
         '')
@@ -799,7 +823,7 @@ function serializeDescriptors(descriptors) {
                 } else if (type) {
                     string += `${tab(3)}type: '${type}',\n`
                 }
-                string += `${tab(3)}value: ${addQuotes(serializeValueDefinition(value))},\n${tab(2)}},\n`
+                string += `${tab(3)}value: ${serializeValueDefinition(value)},\n${tab(2)}},\n`
             })
             string += `${tab(1)}},\n`
             return string
