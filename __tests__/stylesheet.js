@@ -1268,7 +1268,7 @@ describe('CSS grammar - semantic', () => {
             '@font-face {}',
             '@font-feature-values name {}',
             '@font-palette-values --name { font-family: name; }',
-            '@function --name {}',
+            '@function --name() {}',
             '@keyframes name {}',
             '@layer name;',
             '@media {}',
@@ -1379,7 +1379,7 @@ describe('CSS grammar - semantic', () => {
                 @font-face {}
                 @font-feature-values name {}
                 @font-palette-values --name { font-family: name; }
-                @function --name {}
+                @function --name() {}
                 @keyframes name {}
                 @layer name;
                 @media {}
@@ -1472,7 +1472,7 @@ describe('CSS grammar - semantic', () => {
     })
     test('@function - invalid block contents', () => {
         const styleSheet = createStyleSheet(`
-            @function --name {
+            @function --name() {
 
                 @media;
 
@@ -1485,7 +1485,7 @@ describe('CSS grammar - semantic', () => {
                 @font-face {}
                 @font-feature-values name {}
                 @font-palette-values --name { font-family: name }
-                @function --name {}
+                @function --name() {}
                 @keyframes name {}
                 @layer name;
                 @page {}
@@ -1505,7 +1505,7 @@ describe('CSS grammar - semantic', () => {
                 @media {}
             }
         `)
-        expect(styleSheet.cssRules[0].cssText).toBe('@function --name { @media {} }')
+        expect(styleSheet.cssRules[0].cssText).toBe('@function --name() { @media {} }')
     })
     test('@function - valid block contents', () => {
         const contents = [
@@ -1515,7 +1515,7 @@ describe('CSS grammar - semantic', () => {
             '--custom: {} var(--custom);',
             'RESULT: { env(name) };',
         ]
-        const input = `@FUNCTION --name { ${contents.join(' ')} }`
+        const input = `@FUNCTION --name() { ${contents.join(' ')} }`
         const styleSheet = createStyleSheet(input)
         expect(styleSheet.cssRules[0].cssText).toBe(input.toLowerCase())
     })
@@ -1535,7 +1535,7 @@ describe('CSS grammar - semantic', () => {
                 @font-face {}
                 @font-feature-values name {}
                 @font-palette-values --name { font-family: name }
-                @function --name {}
+                @function --name() {}
                 @keyframes name {}
                 @layer name;
                 @media {}
@@ -1588,7 +1588,7 @@ describe('CSS grammar - semantic', () => {
             '@font-face {}',
             '@font-feature-values name {}',
             '@font-palette-values --name { font-family: name; }',
-            '@function --name {}',
+            '@function --name() {}',
             '@keyframes name {}',
             '@layer name;',
             '@media {}',
@@ -1633,7 +1633,7 @@ describe('CSS grammar - semantic', () => {
             '@font-face {}',
             '@font-feature-values name {}',
             '@font-palette-values --name { font-family: name; }',
-            '@function --name {}',
+            '@function --name() {}',
             '@keyframes name {}',
             '@layer name;',
             '@media {}',
@@ -1666,7 +1666,7 @@ describe('CSS grammar - semantic', () => {
                 @font-face {}
                 @font-feature-values name {}
                 @font-palette-values --name { font-family: name }
-                @function --name {}
+                @function --name() {}
                 @keyframes name {}
                 @layer name;
                 @media {}
@@ -1864,7 +1864,7 @@ describe('CSS grammar - semantic', () => {
             '@font-face {}',
             '@font-feature-values name {}',
             '@font-palette-values --name { font-family: name; }',
-            '@function --name {}',
+            '@function --name() {}',
             '@keyframes name {}',
             '@layer name;',
             '@media {}',
@@ -1929,7 +1929,7 @@ describe('CSS grammar - semantic', () => {
             '@font-face {}',
             '@font-feature-values name {}',
             '@font-palette-values --name { font-family: name; }',
-            '@function --name {}',
+            '@function --name() {}',
             '@keyframes name {}',
             '@layer name;',
             '@media {}',
@@ -1974,7 +1974,7 @@ describe('CSS grammar - semantic', () => {
             '@font-face {}',
             '@font-feature-values name {}',
             '@font-palette-values --name { font-family: name; }',
-            '@function --name {}',
+            '@function --name() {}',
             '@keyframes name {}',
             '@layer name;',
             '@media {}',
@@ -2162,7 +2162,7 @@ describe('CSS grammar - semantic', () => {
                     @font-face {}
                     @font-feature-values name {}
                     @font-palette-values --name { font-family: name }
-                    @function --name {}
+                    @function --name() {}
                     @keyframes name {}
                     @layer name;
                     @page {}
@@ -2229,7 +2229,7 @@ describe('CSS grammar - semantic', () => {
                     @font-face {}
                     @font-feature-values name {}
                     @font-palette-values --name { font-family: name }
-                    @function --name {}
+                    @function --name() {}
                     @keyframes name {}
                     @layer name;
                     @page {}
@@ -2331,7 +2331,7 @@ describe('CSS grammar - semantic', () => {
                 @font-face {}
                 @font-feature-values name {}
                 @font-palette-values --name { font-family: name }
-                @function --name {}
+                @function --name() {}
                 @keyframes name {}
                 @layer name;
                 @page {}

@@ -58,6 +58,7 @@ const initial = {
                 value: '<declaration-value>#?',
             },
         },
+        '<dashed-function-head>': '<function-token> <function-parameter>#? ) [returns <css-type>]?',
         // TODO: fix parsing/serializing `<radial-gradient-syntax>`, `<radial-size>`
         '<radial-radius>': 'closest-side | farthest-side | <length-percentage [0,∞]>',
         // https://github.com/w3c/csswg-drafts/issues/8835

@@ -3103,6 +3103,20 @@ describe('<counter-style-name>', () => {
         expect(parse('<counter-style-name>', 'NAME')).toBe('NAME')
     })
 })
+describe('<dashed-function-head>', () => {
+    test('invalid', () => {
+        expect(parse('<dashed-function-head>', 'custom()', false)).toBeNull()
+    })
+    test('representation', () => {
+        const nameAndParameters = {
+            name: '--CUSTOM',
+            types: ['<function>'],
+            value: omitted,
+        }
+        const head = list([nameAndParameters, omitted], ' ', ['<dashed-function-head>'])
+        expect(parse('<dashed-function-head>', '--CUSTOM()', false)).toMatchObject(head)
+    })
+})
 describe('<drop-shadow()>', () => {
     test('representation', () => {
         expect(parse('<drop-shadow()>', 'drop-shadow(1px 1px)', false)).toMatchObject({
