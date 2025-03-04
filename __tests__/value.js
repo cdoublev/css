@@ -3116,6 +3116,9 @@ describe('<dashed-function-head>', () => {
         const head = list([nameAndParameters, omitted], ' ', ['<dashed-function-head>'])
         expect(parse('<dashed-function-head>', '--CUSTOM()', false)).toMatchObject(head)
     })
+    test('valid', () => {
+        expect(parse('<dashed-function-head>', '--custom() returns *')).toBe('--custom()')
+    })
 })
 describe('<drop-shadow()>', () => {
     test('representation', () => {
