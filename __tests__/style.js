@@ -306,363 +306,6 @@ describe('CSSStyleDeclaration.removeProperty()', () => {
     })
 })
 
-describe('CSSFontFaceDescriptors', () => {
-    test('invalid', () => {
-
-        const style = CSSFontFaceDescriptors.create(globalThis, undefined, { parentRule: fontFaceRule })
-
-        // Custom property
-        style.setProperty('--custom', 'red')
-        expect(style.getPropertyValue('--custom')).toBe('')
-
-        // Invalid name
-        style.setProperty('font-size-adjust', 'none')
-        expect(style.getPropertyValue('font-size-adjust')).toBe('')
-        expect(style.fontSizeAdjust).toBeUndefined()
-
-        // Priority
-        style.setProperty('font-weight', '1', 'important')
-        expect(style.fontWeight).toBe('')
-        style.setProperty('size-adjust', '1px', 'important')
-        expect(style.sizeAdjust).toBe('')
-
-        const invalid = [
-            // Cascade or element-dependent substitution
-            ['initial'],
-            ['inherit(--custom)'],
-            // Cascade-dependent substitution
-            ['var(--custom)'],
-            ['--custom()'],
-            // Element-dependent substitution
-            ['attr(name)'],
-            ['random-item(--key, 1)', 'random-item(--key, 1%)'],
-            ['mix(0, 1, 1)', 'mix(0, 1%, 1%)'],
-            ['toggle(1)', 'toggle(1%)'],
-            ['calc-mix(0, 1, 1)', 'calc-mix(0, 1%, 1%)'],
-            ['container-progress(aspect-ratio, 1, 1)', 'calc(1% * container-progress(aspect-ratio, 1, 1))'],
-            ['random(1, 1)', 'random(1%, 1%)'],
-            ['sibling-count()', 'calc(1% * sibling-count())'],
-        ]
-        invalid.forEach(([fontWeight, sizeAdjust = fontWeight]) => {
-            style.fontWeight = fontWeight
-            style.sizeAdjust = sizeAdjust
-            expect(style.fontWeight).toBe('')
-            expect(style.sizeAdjust).toBe('')
-        })
-    })
-    test('valid', () => {
-
-        const style = CSSFontFaceDescriptors.create(globalThis, undefined, { parentRule: fontFaceRule })
-
-        // Alias
-        expect(style.fontStretch).toBe(style.fontWidth)
-        style.fontStretch = 'condensed'
-        expect(style.fontStretch).toBe('condensed')
-        expect(style.fontWidth).toBe('condensed')
-
-        // Dependency-free substitution
-        style.fontWeight = 'env(name, attr(name))'
-        style.sizeAdjust = 'env(name, attr(name))'
-        expect(style.fontWeight).toBe('env(name, attr(name))')
-        expect(style.sizeAdjust).toBe('env(name, attr(name))')
-        style.fontWeight = 'first-valid(1)'
-        style.sizeAdjust = 'first-valid(1%)'
-        expect(style.fontWeight).toBe('1')
-        expect(style.sizeAdjust).toBe('1%')
-        style.fontWeight = 'calc(progress(1, 0, 1))'
-        style.sizeAdjust = 'calc(1% * progress(1, 0, 1))'
-        expect(style.fontWeight).toBe('calc(1)')
-        expect(style.sizeAdjust).toBe('calc(1%)')
-
-        // Specific serialization rule
-        style.ascentOverride = '1% 1%'
-        expect(style.ascentOverride).toBe('1%')
-        style.descentOverride = '1% 1%'
-        expect(style.descentOverride).toBe('1%')
-        style.fontSize = '1 1'
-        expect(style.fontSize).toBe('1')
-        style.fontWidth = 'normal normal'
-        expect(style.fontWidth).toBe('normal')
-        style.fontStyle = 'oblique 14deg'
-        expect(style.fontStyle).toBe('oblique')
-        style.fontStyle = 'oblique 1deg 1deg'
-        expect(style.fontStyle).toBe('oblique 1deg')
-        style.fontWeight = 'normal normal'
-        expect(style.fontWeight).toBe('normal')
-        style.lineGapOverride = '1% 1%'
-        expect(style.lineGapOverride).toBe('1%')
-        style.subscriptPositionOverride = '1% 1%'
-        expect(style.subscriptPositionOverride).toBe('1%')
-        style.subscriptSizeOverride = '1% 1%'
-        expect(style.subscriptSizeOverride).toBe('1%')
-        style.subscriptPositionOverride = '1% 1%'
-        expect(style.subscriptPositionOverride).toBe('1%')
-    })
-})
-describe('CSSKeyframeProperties', () => {
-    test('invalid', () => {
-
-        const style = CSSKeyframeProperties.create(globalThis, undefined, { parentRule: keyframeRule })
-
-        // Invalid name
-        style.setProperty('animation-delay', '1s')
-        expect(style.getPropertyValue('animation-delay')).toBe('')
-        expect(style.animationDelay).toBeUndefined()
-
-        // Priority
-        style.setProperty('font-weight', '1', 'important')
-        expect(style.fontWeight).toBe('')
-    })
-    test('valid', () => {
-
-        const style = CSSKeyframeProperties.create(globalThis, undefined, { parentRule: keyframeRule })
-
-        // Custom property
-        style.setProperty('--custom', 'green')
-        expect(style.getPropertyValue('--custom')).toBe('green')
-
-        // Dependency-free substitution
-        style.fontWeight = 'env(name)'
-        expect(style.fontWeight).toBe('env(name)')
-        style.fontWeight = 'first-valid(1)'
-        expect(style.fontWeight).toBe('1')
-        style.fontWeight = 'calc(progress(1, 0, 1))'
-        expect(style.fontWeight).toBe('calc(1)')
-
-        // Cascade or element-dependent substitution
-        style.fontWeight = 'initial'
-        expect(style.fontWeight).toBe('initial')
-        style.fontWeight = 'inherit(--custom)'
-        expect(style.fontWeight).toBe('inherit(--custom)')
-
-        // Cascade-dependent substitution
-        style.fontWeight = 'var(--custom)'
-        expect(style.fontWeight).toBe('var(--custom)')
-        style.fontWeight = '--custom()'
-        expect(style.fontWeight).toBe('--custom()')
-
-        // Element-dependent substitution
-        style.fontWeight = 'attr(name)'
-        expect(style.fontWeight).toBe('attr(name)')
-        style.fontWeight = 'random-item(--key, 1)'
-        expect(style.fontWeight).toBe('random-item(--key, 1)')
-        style.fontWeight = 'mix(0, 1, 1)'
-        expect(style.fontWeight).toBe('mix(0, 1, 1)')
-        style.fontWeight = 'toggle(1)'
-        expect(style.fontWeight).toBe('toggle(1)')
-        style.fontWeight = 'calc-mix(0, 1, 1)'
-        expect(style.fontWeight).toBe('calc-mix(0, 1, 1)')
-        style.fontWeight = 'container-progress(aspect-ratio, 1, 1)'
-        expect(style.fontWeight).toBe('container-progress(aspect-ratio, 1, 1)')
-        style.fontWeight = 'random(1, 1)'
-        expect(style.fontWeight).toBe('random(1, 1)')
-        style.fontWeight = 'sibling-count()'
-        expect(style.fontWeight).toBe('sibling-count()')
-    })
-})
-describe('CSSMarginDescriptors', () => {
-    test('invalid', () => {
-
-        const style = CSSMarginDescriptors.create(globalThis, undefined, { parentRule: marginRule })
-
-        // Invalid name
-        style.setProperty('top', '1px')
-        expect(style.getPropertyValue('top')).toBe('')
-        expect(style.top).toBeUndefined()
-
-        const invalid = [
-            // Element-dependent substitution
-            'attr(name)',
-            'env(attr(name))',
-            'random-item(--key, 1)',
-            'mix(0, 1, 1)',
-            'toggle(1)',
-            'calc-mix(0, 1, 1)',
-            'container-progress(aspect-ratio, 1, 1)',
-            'random(1, 1)',
-            'sibling-count()',
-        ]
-        invalid.forEach(input => {
-            style.fontWeight = input
-            expect(style.fontWeight).toBe('')
-        })
-    })
-    test('valid', () => {
-
-        const style = CSSMarginDescriptors.create(globalThis, undefined, { parentRule: marginRule })
-
-        // Custom property
-        style.setProperty('--custom', 'green')
-        expect(style.getPropertyValue('--custom')).toBe('green')
-
-        // Priority
-        style.setProperty('font-weight', '1', 'important')
-        expect(style.fontWeight).toBe('1')
-        expect(style.getPropertyPriority('font-weight')).toBe('important')
-
-        // Dependency-free substitution
-        style.fontWeight = 'env(name)'
-        expect(style.fontWeight).toBe('env(name)')
-        style.fontWeight = 'first-valid(1)'
-        expect(style.fontWeight).toBe('1')
-        style.fontWeight = 'calc(progress(1, 0, 1))'
-        expect(style.fontWeight).toBe('calc(1)')
-
-        // Cascade or element-dependent substitution
-        style.fontWeight = 'initial'
-        expect(style.fontWeight).toBe('initial')
-        style.fontWeight = 'inherit(--custom)'
-        expect(style.fontWeight).toBe('inherit(--custom)')
-
-        // Cascade-dependent substitution
-        style.fontWeight = 'var(--custom)'
-        expect(style.fontWeight).toBe('var(--custom)')
-        style.fontWeight = '--custom()'
-        expect(style.fontWeight).toBe('--custom()')
-    })
-})
-describe('CSSPageDescriptors', () => {
-    test('invalid', () => {
-
-        const style = CSSPageDescriptors.create(globalThis, undefined, { parentRule: pageRule })
-
-        // Invalid name
-        style.setProperty('top', '1px')
-        expect(style.getPropertyValue('top')).toBe('')
-        expect(style.top).toBeUndefined()
-
-        const invalid = [
-            // Element-dependent substitution
-            ['attr(name)'],
-            ['random-item(--key, 1)', 'random-item(--key, 1px)'],
-            ['mix(0, 1, 1)', 'mix(0, 1px, 1px)'],
-            ['toggle(1)', 'toggle(1px)'],
-            ['calc-mix(0, 1, 1)', 'calc-mix(0, 1px, 1px)'],
-            ['container-progress(aspect-ratio, 1, 1)', 'calc(1px * container-progress(aspect-ratio, 1, 1))'],
-            ['random(1, 1)', 'random(1px, 1px)'],
-            ['sibling-count()', 'calc(1px * sibling-count())'],
-        ]
-        invalid.forEach(([fontWeight, size = fontWeight]) => {
-            style.fontWeight = fontWeight
-            style.size = size
-            expect(style.fontWeight).toBe('')
-            expect(style.size).toBe('')
-        })
-    })
-    test('valid', () => {
-
-        const style = CSSPageDescriptors.create(globalThis, undefined, { parentRule: pageRule })
-
-        // Custom property
-        style.setProperty('--custom', 'green')
-        expect(style.getPropertyValue('--custom')).toBe('green')
-
-        // Priority
-        style.setProperty('size', '1px', 'important')
-        expect(style.size).toBe('1px')
-        expect(style.getPropertyPriority('size')).toBe('important')
-
-        // Dependency-free substitution
-        style.fontWeight = 'env(name, attr(name))'
-        style.size = 'env(name, attr(name))'
-        expect(style.fontWeight).toBe('env(name, attr(name))')
-        expect(style.size).toBe('env(name, attr(name))')
-        style.fontWeight = 'first-valid(1)'
-        style.size = 'first-valid(1px)'
-        expect(style.fontWeight).toBe('1')
-        expect(style.size).toBe('1px')
-        style.fontWeight = 'calc(progress(1, 0, 1))'
-        style.size = 'calc(1px * progress(1, 0, 1))'
-        expect(style.fontWeight).toBe('calc(1)')
-        expect(style.size).toBe('calc(1px)')
-
-        // Cascade or element-dependent substitution
-        style.fontWeight = 'initial'
-        style.size = 'initial'
-        expect(style.fontWeight).toBe('initial')
-        expect(style.size).toBe('initial')
-        style.fontWeight = 'inherit(--custom)'
-        style.size = 'inherit(--custom)'
-        expect(style.fontWeight).toBe('inherit(--custom)')
-        expect(style.size).toBe('inherit(--custom)')
-
-        // Cascade-dependent substitution
-        style.fontWeight = 'var(--custom)'
-        style.size = 'var(--custom)'
-        expect(style.fontWeight).toBe('var(--custom)')
-        expect(style.size).toBe('var(--custom)')
-        style.fontWeight = '--custom()'
-        style.size = '--custom()'
-        expect(style.fontWeight).toBe('--custom()')
-        expect(style.size).toBe('--custom()')
-
-        // Specific serialization rule
-        style.size = '1px 1px'
-        expect(style.size).toBe('1px')
-    })
-})
-describe('CSSPositionTryDescriptors', () => {
-    test('invalid', () => {
-
-        const style = CSSPositionTryDescriptors.create(globalThis, undefined, { parentRule: positionTryRule })
-
-        // Custom property
-        style.setProperty('--custom', 'red')
-        expect(style.getPropertyValue('--custom')).toBe('')
-
-        // Invalid name
-        style.setProperty('font-weight', '1')
-        expect(style.getPropertyValue('font-weight')).toBe('')
-        expect(style.fontWeight).toBeUndefined()
-
-        // Priority
-        style.setProperty('top', '1px', 'important')
-        expect(style.top).toBe('')
-    })
-    test('valid', () => {
-
-        const style = CSSPositionTryDescriptors.create(globalThis, undefined, { parentRule: positionTryRule })
-
-        // Dependency-free substitution
-        style.top = 'env(name)'
-        expect(style.top).toBe('env(name)')
-        style.top = 'first-valid(1px)'
-        expect(style.top).toBe('1px')
-        style.top = 'calc(1px * progress(1, 0, 1))'
-        expect(style.top).toBe('calc(1px)')
-
-        // Cascade or element-dependent substitution
-        style.top = 'initial'
-        expect(style.top).toBe('initial')
-        style.top = 'inherit(--custom)'
-        expect(style.top).toBe('inherit(--custom)')
-
-        // Cascade-dependent substitution
-        style.top = 'var(--custom)'
-        expect(style.top).toBe('var(--custom)')
-        style.top = '--custom()'
-        expect(style.top).toBe('--custom()')
-
-        // Element-dependent substitution
-        style.top = 'attr(name)'
-        expect(style.top).toBe('attr(name)')
-        style.top = 'random-item(--key, 1px)'
-        expect(style.top).toBe('random-item(--key, 1px)')
-        style.top = 'mix(0, 1px, 1px)'
-        expect(style.top).toBe('mix(0, 1px, 1px)')
-        style.top = 'toggle(1px)'
-        expect(style.top).toBe('toggle(1px)')
-        style.top = 'calc-mix(0, 1px, 1px)'
-        expect(style.top).toBe('calc-mix(0, 1px, 1px)')
-        style.top = 'calc(1px * container-progress(aspect-ratio, 1, 1))'
-        expect(style.top).toBe('calc(1px * container-progress(aspect-ratio, 1, 1))')
-        style.top = 'random(1px, 1px)'
-        expect(style.top).toBe('random(1px, 1px)')
-        style.top = 'calc(1px * sibling-count())'
-        expect(style.top).toBe('calc(1px * sibling-count())')
-    })
-})
-
 describe('CSS-wide keyword', () => {
     test('valid', () => {
         const style = createStyleBlock()
@@ -4867,5 +4510,362 @@ describe('white-space', () => {
         longhands.forEach(longhand => style[longhand] = initial(longhand))
         expect(style.whiteSpace).toBe('normal')
         expect(style.cssText).toBe('white-space: normal;')
+    })
+})
+
+describe('CSSFontFaceDescriptors', () => {
+    test('invalid', () => {
+
+        const style = CSSFontFaceDescriptors.create(globalThis, undefined, { parentRule: fontFaceRule })
+
+        // Custom property
+        style.setProperty('--custom', 'red')
+        expect(style.getPropertyValue('--custom')).toBe('')
+
+        // Invalid name
+        style.setProperty('font-size-adjust', 'none')
+        expect(style.getPropertyValue('font-size-adjust')).toBe('')
+        expect(style.fontSizeAdjust).toBeUndefined()
+
+        // Priority
+        style.setProperty('font-weight', '1', 'important')
+        expect(style.fontWeight).toBe('')
+        style.setProperty('size-adjust', '1px', 'important')
+        expect(style.sizeAdjust).toBe('')
+
+        const invalid = [
+            // Cascade or element-dependent substitution
+            ['initial'],
+            ['inherit(--custom)'],
+            // Cascade-dependent substitution
+            ['var(--custom)'],
+            ['--custom()'],
+            // Element-dependent substitution
+            ['attr(name)'],
+            ['random-item(--key, 1)', 'random-item(--key, 1%)'],
+            ['mix(0, 1, 1)', 'mix(0, 1%, 1%)'],
+            ['toggle(1)', 'toggle(1%)'],
+            ['calc-mix(0, 1, 1)', 'calc-mix(0, 1%, 1%)'],
+            ['container-progress(aspect-ratio, 1, 1)', 'calc(1% * container-progress(aspect-ratio, 1, 1))'],
+            ['random(1, 1)', 'random(1%, 1%)'],
+            ['sibling-count()', 'calc(1% * sibling-count())'],
+        ]
+        invalid.forEach(([fontWeight, sizeAdjust = fontWeight]) => {
+            style.fontWeight = fontWeight
+            style.sizeAdjust = sizeAdjust
+            expect(style.fontWeight).toBe('')
+            expect(style.sizeAdjust).toBe('')
+        })
+    })
+    test('valid', () => {
+
+        const style = CSSFontFaceDescriptors.create(globalThis, undefined, { parentRule: fontFaceRule })
+
+        // Alias
+        expect(style.fontStretch).toBe(style.fontWidth)
+        style.fontStretch = 'condensed'
+        expect(style.fontStretch).toBe('condensed')
+        expect(style.fontWidth).toBe('condensed')
+
+        // Dependency-free substitution
+        style.fontWeight = 'env(name, attr(name))'
+        style.sizeAdjust = 'env(name, attr(name))'
+        expect(style.fontWeight).toBe('env(name, attr(name))')
+        expect(style.sizeAdjust).toBe('env(name, attr(name))')
+        style.fontWeight = 'first-valid(1)'
+        style.sizeAdjust = 'first-valid(1%)'
+        expect(style.fontWeight).toBe('1')
+        expect(style.sizeAdjust).toBe('1%')
+        style.fontWeight = 'calc(progress(1, 0, 1))'
+        style.sizeAdjust = 'calc(1% * progress(1, 0, 1))'
+        expect(style.fontWeight).toBe('calc(1)')
+        expect(style.sizeAdjust).toBe('calc(1%)')
+
+        // Specific serialization rule
+        style.ascentOverride = '1% 1%'
+        expect(style.ascentOverride).toBe('1%')
+        style.descentOverride = '1% 1%'
+        expect(style.descentOverride).toBe('1%')
+        style.fontSize = '1 1'
+        expect(style.fontSize).toBe('1')
+        style.fontWidth = 'normal normal'
+        expect(style.fontWidth).toBe('normal')
+        style.fontStyle = 'oblique 14deg'
+        expect(style.fontStyle).toBe('oblique')
+        style.fontStyle = 'oblique 1deg 1deg'
+        expect(style.fontStyle).toBe('oblique 1deg')
+        style.fontWeight = 'normal normal'
+        expect(style.fontWeight).toBe('normal')
+        style.lineGapOverride = '1% 1%'
+        expect(style.lineGapOverride).toBe('1%')
+        style.subscriptPositionOverride = '1% 1%'
+        expect(style.subscriptPositionOverride).toBe('1%')
+        style.subscriptSizeOverride = '1% 1%'
+        expect(style.subscriptSizeOverride).toBe('1%')
+        style.subscriptPositionOverride = '1% 1%'
+        expect(style.subscriptPositionOverride).toBe('1%')
+    })
+})
+describe('CSSKeyframeProperties', () => {
+    test('invalid', () => {
+
+        const style = CSSKeyframeProperties.create(globalThis, undefined, { parentRule: keyframeRule })
+
+        // Invalid name
+        style.setProperty('animation-delay', '1s')
+        expect(style.getPropertyValue('animation-delay')).toBe('')
+        expect(style.animationDelay).toBeUndefined()
+
+        // Priority
+        style.setProperty('font-weight', '1', 'important')
+        expect(style.fontWeight).toBe('')
+    })
+    test('valid', () => {
+
+        const style = CSSKeyframeProperties.create(globalThis, undefined, { parentRule: keyframeRule })
+
+        // Custom property
+        style.setProperty('--custom', 'green')
+        expect(style.getPropertyValue('--custom')).toBe('green')
+
+        // Dependency-free substitution
+        style.fontWeight = 'env(name)'
+        expect(style.fontWeight).toBe('env(name)')
+        style.fontWeight = 'first-valid(1)'
+        expect(style.fontWeight).toBe('1')
+        style.fontWeight = 'calc(progress(1, 0, 1))'
+        expect(style.fontWeight).toBe('calc(1)')
+
+        // Cascade or element-dependent substitution
+        style.fontWeight = 'initial'
+        expect(style.fontWeight).toBe('initial')
+        style.fontWeight = 'inherit(--custom)'
+        expect(style.fontWeight).toBe('inherit(--custom)')
+
+        // Cascade-dependent substitution
+        style.fontWeight = 'var(--custom)'
+        expect(style.fontWeight).toBe('var(--custom)')
+        style.fontWeight = '--custom()'
+        expect(style.fontWeight).toBe('--custom()')
+
+        // Element-dependent substitution
+        style.fontWeight = 'attr(name)'
+        expect(style.fontWeight).toBe('attr(name)')
+        style.fontWeight = 'random-item(--key, 1)'
+        expect(style.fontWeight).toBe('random-item(--key, 1)')
+        style.fontWeight = 'mix(0, 1, 1)'
+        expect(style.fontWeight).toBe('mix(0, 1, 1)')
+        style.fontWeight = 'toggle(1)'
+        expect(style.fontWeight).toBe('toggle(1)')
+        style.fontWeight = 'calc-mix(0, 1, 1)'
+        expect(style.fontWeight).toBe('calc-mix(0, 1, 1)')
+        style.fontWeight = 'container-progress(aspect-ratio, 1, 1)'
+        expect(style.fontWeight).toBe('container-progress(aspect-ratio, 1, 1)')
+        style.fontWeight = 'random(1, 1)'
+        expect(style.fontWeight).toBe('random(1, 1)')
+        style.fontWeight = 'sibling-count()'
+        expect(style.fontWeight).toBe('sibling-count()')
+    })
+})
+describe('CSSMarginDescriptors', () => {
+    test('invalid', () => {
+
+        const style = CSSMarginDescriptors.create(globalThis, undefined, { parentRule: marginRule })
+
+        // Invalid name
+        style.setProperty('top', '1px')
+        expect(style.getPropertyValue('top')).toBe('')
+        expect(style.top).toBeUndefined()
+
+        const invalid = [
+            // Element-dependent substitution
+            'attr(name)',
+            'env(attr(name))',
+            'random-item(--key, 1)',
+            'mix(0, 1, 1)',
+            'toggle(1)',
+            'calc-mix(0, 1, 1)',
+            'container-progress(aspect-ratio, 1, 1)',
+            'random(1, 1)',
+            'sibling-count()',
+        ]
+        invalid.forEach(input => {
+            style.fontWeight = input
+            expect(style.fontWeight).toBe('')
+        })
+    })
+    test('valid', () => {
+
+        const style = CSSMarginDescriptors.create(globalThis, undefined, { parentRule: marginRule })
+
+        // Custom property
+        style.setProperty('--custom', 'green')
+        expect(style.getPropertyValue('--custom')).toBe('green')
+
+        // Priority
+        style.setProperty('font-weight', '1', 'important')
+        expect(style.fontWeight).toBe('1')
+        expect(style.getPropertyPriority('font-weight')).toBe('important')
+
+        // Dependency-free substitution
+        style.fontWeight = 'env(name)'
+        expect(style.fontWeight).toBe('env(name)')
+        style.fontWeight = 'first-valid(1)'
+        expect(style.fontWeight).toBe('1')
+        style.fontWeight = 'calc(progress(1, 0, 1))'
+        expect(style.fontWeight).toBe('calc(1)')
+
+        // Cascade or element-dependent substitution
+        style.fontWeight = 'initial'
+        expect(style.fontWeight).toBe('initial')
+        style.fontWeight = 'inherit(--custom)'
+        expect(style.fontWeight).toBe('inherit(--custom)')
+
+        // Cascade-dependent substitution
+        style.fontWeight = 'var(--custom)'
+        expect(style.fontWeight).toBe('var(--custom)')
+        style.fontWeight = '--custom()'
+        expect(style.fontWeight).toBe('--custom()')
+    })
+})
+describe('CSSPageDescriptors', () => {
+    test('invalid', () => {
+
+        const style = CSSPageDescriptors.create(globalThis, undefined, { parentRule: pageRule })
+
+        // Invalid name
+        style.setProperty('top', '1px')
+        expect(style.getPropertyValue('top')).toBe('')
+        expect(style.top).toBeUndefined()
+
+        const invalid = [
+            // Element-dependent substitution
+            ['attr(name)'],
+            ['random-item(--key, 1)', 'random-item(--key, 1px)'],
+            ['mix(0, 1, 1)', 'mix(0, 1px, 1px)'],
+            ['toggle(1)', 'toggle(1px)'],
+            ['calc-mix(0, 1, 1)', 'calc-mix(0, 1px, 1px)'],
+            ['container-progress(aspect-ratio, 1, 1)', 'calc(1px * container-progress(aspect-ratio, 1, 1))'],
+            ['random(1, 1)', 'random(1px, 1px)'],
+            ['sibling-count()', 'calc(1px * sibling-count())'],
+        ]
+        invalid.forEach(([fontWeight, size = fontWeight]) => {
+            style.fontWeight = fontWeight
+            style.size = size
+            expect(style.fontWeight).toBe('')
+            expect(style.size).toBe('')
+        })
+    })
+    test('valid', () => {
+
+        const style = CSSPageDescriptors.create(globalThis, undefined, { parentRule: pageRule })
+
+        // Custom property
+        style.setProperty('--custom', 'green')
+        expect(style.getPropertyValue('--custom')).toBe('green')
+
+        // Priority
+        style.setProperty('size', '1px', 'important')
+        expect(style.size).toBe('1px')
+        expect(style.getPropertyPriority('size')).toBe('important')
+
+        // Dependency-free substitution
+        style.fontWeight = 'env(name, attr(name))'
+        style.size = 'env(name, attr(name))'
+        expect(style.fontWeight).toBe('env(name, attr(name))')
+        expect(style.size).toBe('env(name, attr(name))')
+        style.fontWeight = 'first-valid(1)'
+        style.size = 'first-valid(1px)'
+        expect(style.fontWeight).toBe('1')
+        expect(style.size).toBe('1px')
+        style.fontWeight = 'calc(progress(1, 0, 1))'
+        style.size = 'calc(1px * progress(1, 0, 1))'
+        expect(style.fontWeight).toBe('calc(1)')
+        expect(style.size).toBe('calc(1px)')
+
+        // Cascade or element-dependent substitution
+        style.fontWeight = 'initial'
+        style.size = 'initial'
+        expect(style.fontWeight).toBe('initial')
+        expect(style.size).toBe('initial')
+        style.fontWeight = 'inherit(--custom)'
+        style.size = 'inherit(--custom)'
+        expect(style.fontWeight).toBe('inherit(--custom)')
+        expect(style.size).toBe('inherit(--custom)')
+
+        // Cascade-dependent substitution
+        style.fontWeight = 'var(--custom)'
+        style.size = 'var(--custom)'
+        expect(style.fontWeight).toBe('var(--custom)')
+        expect(style.size).toBe('var(--custom)')
+        style.fontWeight = '--custom()'
+        style.size = '--custom()'
+        expect(style.fontWeight).toBe('--custom()')
+        expect(style.size).toBe('--custom()')
+
+        // Specific serialization rule
+        style.size = '1px 1px'
+        expect(style.size).toBe('1px')
+    })
+})
+describe('CSSPositionTryDescriptors', () => {
+    test('invalid', () => {
+
+        const style = CSSPositionTryDescriptors.create(globalThis, undefined, { parentRule: positionTryRule })
+
+        // Custom property
+        style.setProperty('--custom', 'red')
+        expect(style.getPropertyValue('--custom')).toBe('')
+
+        // Invalid name
+        style.setProperty('font-weight', '1')
+        expect(style.getPropertyValue('font-weight')).toBe('')
+        expect(style.fontWeight).toBeUndefined()
+
+        // Priority
+        style.setProperty('top', '1px', 'important')
+        expect(style.top).toBe('')
+    })
+    test('valid', () => {
+
+        const style = CSSPositionTryDescriptors.create(globalThis, undefined, { parentRule: positionTryRule })
+
+        // Dependency-free substitution
+        style.top = 'env(name)'
+        expect(style.top).toBe('env(name)')
+        style.top = 'first-valid(1px)'
+        expect(style.top).toBe('1px')
+        style.top = 'calc(1px * progress(1, 0, 1))'
+        expect(style.top).toBe('calc(1px)')
+
+        // Cascade or element-dependent substitution
+        style.top = 'initial'
+        expect(style.top).toBe('initial')
+        style.top = 'inherit(--custom)'
+        expect(style.top).toBe('inherit(--custom)')
+
+        // Cascade-dependent substitution
+        style.top = 'var(--custom)'
+        expect(style.top).toBe('var(--custom)')
+        style.top = '--custom()'
+        expect(style.top).toBe('--custom()')
+
+        // Element-dependent substitution
+        style.top = 'attr(name)'
+        expect(style.top).toBe('attr(name)')
+        style.top = 'random-item(--key, 1px)'
+        expect(style.top).toBe('random-item(--key, 1px)')
+        style.top = 'mix(0, 1px, 1px)'
+        expect(style.top).toBe('mix(0, 1px, 1px)')
+        style.top = 'toggle(1px)'
+        expect(style.top).toBe('toggle(1px)')
+        style.top = 'calc-mix(0, 1px, 1px)'
+        expect(style.top).toBe('calc-mix(0, 1px, 1px)')
+        style.top = 'calc(1px * container-progress(aspect-ratio, 1, 1))'
+        expect(style.top).toBe('calc(1px * container-progress(aspect-ratio, 1, 1))')
+        style.top = 'random(1px, 1px)'
+        expect(style.top).toBe('random(1px, 1px)')
+        style.top = 'calc(1px * sibling-count())'
+        expect(style.top).toBe('calc(1px * sibling-count())')
     })
 })
