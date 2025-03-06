@@ -11,40 +11,100 @@
  *
  * Then it generates the wrapper classes from all lib/cssom/*.webidl.
  */
+const { cssPropertyToIDLAttribute, tab } = require('../lib/utils/string.js')
 const Transformer = require('webidl2js')
 const compatibility = require('../lib/compatibility.js')
-const { cssPropertyToIDLAttribute } = require('../lib/utils/string.js')
 const fs = require('node:fs/promises')
 const path = require('node:path')
 const { rules } = require('../lib/rules/definitions.js')
 
 const targetDir = path.join(__dirname, '..', 'lib', 'cssom')
 
+const fontFaceRule = rules.find(rule => rule.name === '@font-face')
+const keyframeRule = rules.find(rule => rule.name === '@keyframes').value.rules.find(rule => rule.name === '@keyframe')
+const pageRule = rules.find(rule => rule.name === '@page')
+const marginRule = pageRule.value.rules.find(rule => rule.name === '@margin')
+const styleRule = rules.find(rule => rule.name === '@style')
+const positionTryRule = rules.find(rule => rule.name === '@position-try')
+
+const definitions = [
+    {
+        name: 'CSSFontFaceDescriptors',
+        link: 'https://drafts.csswg.org/css-fonts-4/#cssfontfacedescriptors',
+        rule: fontFaceRule,
+    },
+    {
+        name: 'CSSKeyframeProperties',
+        rule: keyframeRule,
+    },
+    {
+        link: 'https://github.com/w3c/csswg-drafts/issues/10106',
+        name: 'CSSMarginDescriptors',
+        rule: marginRule,
+    },
+    {
+        name: 'CSSPageDescriptors',
+        link: 'https://drafts.csswg.org/cssom-1/#csspagedescriptors',
+        rule: pageRule,
+    },
+    {
+        name: 'CSSPositionTryDescriptors',
+        link: 'https://drafts.csswg.org/css-anchor-position-1/#csspositiontrydescriptors',
+        rule: positionTryRule,
+    },
+    {
+        name: 'CSSStyleProperties',
+        link: 'https://drafts.csswg.org/cssom-1/#cssstyleproperties',
+        rule: styleRule,
+    },
+]
+
 /**
- * @param {string} name
- * @param {string[]} attributes
- * @param {string[]} [extensions]
+ * @see {@link https://webidl.spec.whatwg.org/#idl-types}
+ *
+ * These Web IDL types cannot be used as attribute names, which must otherwise
+ * be escaped with `_`, which is unfortunate because attributes must be defined
+ * with a type and because the workaround is not documented.
  */
-function createStyleDeclarationChildInterface(name, attributes, extensions = []) {
-    let content = '[Exposed=Window]\n'
-    content += `interface ${name} : CSSStyleDeclaration {\n`
-    content += '\t// https://drafts.csswg.org/cssom-1/#dom-cssstyledeclaration-camel_cased_attribute\n'
-    for (const attribute of attributes) {
-        const camelCasedAttribute = cssPropertyToIDLAttribute(attribute)
-        const prelude = [...extensions, `ReflectStyle="${attribute}"`]
-        content += `\t[${prelude}] attribute [LegacyNullToEmptyString] CSSOMString _${camelCasedAttribute};\n`
+const reserved = [
+    'any',
+    'bigint',
+    'boolean',
+    'byte',
+    'double',
+    'float',
+    'long',
+    'object',
+    'octet',
+    'short',
+    'symbol',
+    'undefined',
+]
+
+/**
+ * @param {object} definition
+ * @returns {Promise}
+ * @see {@link https://drafts.csswg.org/cssom-1/#dom-cssstyleproperties-dashed-attribute}
+ * @see {@link https://drafts.csswg.org/cssom-1/#dom-cssstyledeclaration-camel-cased-attribute}
+ * @see {@link https://drafts.csswg.org/cssom-1/#dom-cssstyleproperties-webkit-cased-attribute}
+ */
+function createStyleDeclarationChildInterface({ extensions = [], link, name, rule }) {
+    let content = ''
+    if (link) {
+        content += `\n// ${link}\n`
     }
-    content += '\t// https://drafts.csswg.org/cssom-1/#dom-cssstyledeclaration-webkit_cased_attribute\n'
-    for (const attribute of attributes.filter(name => name.startsWith('-webkit'))) {
-        const webkitCasedAttribute = cssPropertyToIDLAttribute(attribute, true)
+    content += `[Exposed=Window]\ninterface ${name} : CSSStyleDeclaration {\n`
+    for (let attribute of getRuleAttributes(rule)) {
         const prelude = [...extensions, `ReflectStyle="${attribute}"`]
-        content += `\t[${prelude}] attribute [LegacyNullToEmptyString] CSSOMString _${webkitCasedAttribute};\n`
-    }
-    content += '\t// https://drafts.csswg.org/cssom-1/#dom-cssstyledeclaration-dashed_attribute\n'
-    for (const attribute of attributes) {
-        if (!attribute.includes('-')) continue
-        const prelude = [...extensions, `ReflectStyle="${attribute}"`]
-        content += `\t[${prelude}] attribute [LegacyNullToEmptyString] CSSOMString ${attribute};\n`
+        if (attribute.includes('-')) {
+            content += `${tab(1)}[${prelude}] attribute [LegacyNullToEmptyString] CSSOMString ${cssPropertyToIDLAttribute(attribute)};\n`
+            if (attribute.startsWith('-webkit-')) {
+                content += `${tab(1)}[${prelude}] attribute [LegacyNullToEmptyString] CSSOMString ${cssPropertyToIDLAttribute(attribute, true)};\n`
+            }
+        } else if (reserved.includes(attribute)) {
+            attribute = `_${attribute}`
+        }
+        content += `${tab(1)}[${prelude}] attribute [LegacyNullToEmptyString] CSSOMString ${attribute};\n`
     }
     content += '};\n'
     return fs.writeFile(path.join(targetDir, `${name}.webidl`), content)
@@ -82,45 +142,12 @@ function getRuleAttributes({ name, value: { descriptors, properties } }) {
     return attributes
 }
 
-function buildDefinitions() {
-
-    const fontFaceRule = rules.find(rule => rule.name === '@font-face')
-    const keyframeRule = rules.find(rule => rule.name === '@keyframes').value.rules.find(rule => rule.name === '@keyframe')
-    const pageRule = rules.find(rule => rule.name === '@page')
-    const marginRule = pageRule.value.rules.find(rule => rule.name === '@margin')
-    const styleRule = rules.find(rule => rule.name === '@style')
-    const positionTryRule = rules.find(rule => rule.name === '@position-try')
-
-    return Promise.all([
-        createStyleDeclarationChildInterface('CSSFontFaceDescriptors', getRuleAttributes(fontFaceRule)),
-        createStyleDeclarationChildInterface('CSSKeyframeProperties', getRuleAttributes(keyframeRule)),
-        createStyleDeclarationChildInterface('CSSMarginDescriptors', getRuleAttributes(marginRule)),
-        createStyleDeclarationChildInterface('CSSPageDescriptors', getRuleAttributes(pageRule)),
-        createStyleDeclarationChildInterface('CSSPositionTryDescriptors', getRuleAttributes(positionTryRule)),
-        createStyleDeclarationChildInterface('CSSStyleProperties', getRuleAttributes(styleRule), ['CEReactions']),
-    ])
-}
-
-function buildInterfaces() {
-
+/**
+ * @returns {Promise}
+ */
+function createInterfaces() {
     const transformer = new Transformer({
         implSuffix: '-impl',
-        /**
-         * TODO: implement support for `[CEReactions]`
-         *
-        processCEReactions(code) {
-            const preSteps = this.addImport("jsdom/custom-elements.js", "ceReactionsPreSteps");
-            const postSteps = this.addImport("jsdom/custom-elements.js", "ceReactionsPostSteps");
-            return `
-                ${preSteps}(globalObject);
-                try {
-                    ${code}
-                } finally {
-                    ${postSteps}(globalObject);
-                }
-            `;
-        },
-        */
         processReflect(idl, implName) {
             const reflectStyle = idl.extAttrs.find(extAttr => extAttr.name === 'ReflectStyle')
             if (reflectStyle?.rhs?.type !== 'string') {
@@ -132,14 +159,19 @@ function buildInterfaces() {
             }
         },
     })
-
     transformer.addSource(targetDir, targetDir)
-
     return transformer.generate(targetDir)
 }
 
-buildDefinitions()
-    .then(buildInterfaces)
+/**
+ * @returns {Promise[]}
+ */
+function createDefinitions() {
+    return Promise.all(definitions.map(createStyleDeclarationChildInterface))
+}
+
+createDefinitions()
+    .then(createInterfaces)
     .catch(error => {
         console.log('Please report this issue: https://github.com/cdoublev/css/issues/new')
         throw error
