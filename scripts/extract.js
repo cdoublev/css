@@ -611,23 +611,12 @@ const errors = {
     '@custom-media': { cause: 'It is not yet supported.' },
     '@custom-selector': { cause: 'It is not yet supported.' },
     '@else': { cause: 'It is not yet supported.' },
-    '@font-feature-values': {
-        cause: 'In this library, it is intentionally defined with <declaration-at-rule-list> instead of <declaration-rule-list>, which is interpreted like <block-contents>.',
-        links: ['https://github.com/w3c/csswg-drafts/issues/8834#issuecomment-1554481507'],
-    },
-    '@function': {
-        cause: 'In this library, it is intentionally defined with <declaration-at-rule-list> instead of <declaration-rule-list>, which is interpreted like <block-contents>.',
-        links: ['https://github.com/w3c/csswg-drafts/issues/8834#issuecomment-1554481507'],
-    },
+    '@function': { cause: 'In this library, its prelude value definition folded into a production to avoid creating CSSFunctionRule when the prelude is invalid.' },
     '@historical-forms': {
         cause: 'It should be removed.',
         links: ['https://github.com/w3c/csswg-drafts/issues/9926'],
     },
     '@layer': { cause: 'It is the only rule with alternative definitions therefore only the first (block) definition is correctly checked.' },
-    '@page': {
-        cause: 'In this library, it is intentionally defined with <declaration-at-rule-list> instead of <declaration-rule-list>, which is interpreted like <block-contents>.',
-        links: ['https://github.com/w3c/csswg-drafts/issues/8834#issuecomment-1554481507'],
-    },
     '@viewport': {
         cause: 'It has been removed but there is still a descriptor defined in CSS Round Display.',
         links: ['https://github.com/w3c/csswg-drafts/issues/8097'],
