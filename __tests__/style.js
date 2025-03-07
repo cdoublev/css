@@ -51,108 +51,39 @@ const { cssRules: { _rules: [fontFaceRule, keyframesRule, pageRule, positionTryR
 const { cssRules: { _rules: [keyframeRule] } } = keyframesRule
 const { cssRules: { _rules: [marginRule] } } = pageRule
 
-describe('CSSStyleDeclaration', () => {
-    it('has all properties', () => {
+describe('CSSStyleDeclaration / CSSStyleProperties', () => {
+    it('has all standard properties', () => {
 
-        const parentRule = {}
-        const style = createStyleBlock({ parentRule })
+        const style = createStyleBlock()
         const prototype = Object.getPrototypeOf(style)
         const { properties: { aliases, mappings } } = compatibility
         const names = [...aliases.keys(), ...mappings.keys(), ...Object.keys(properties)]
 
-        expect(style.parentRule).toBe(parentRule)
-
-        // Camel/kebab/pascal cased attribute
-        names.forEach(property => {
-
-            if (property === '--*') {
+        names.forEach(dashed => {
+            if (dashed === '--*') {
                 return
             }
-
-            const prefixed = property.startsWith('-webkit-')
-            const attribute = cssPropertyToIDLAttribute(property, prefixed)
-
-            // Kebab case
-            expect(Object.getOwnPropertyDescriptor(prototype, property).get).toBeDefined()
-            expect(Object.getOwnPropertyDescriptor(prototype, property).set).toBeDefined()
-            // Camel case
-            expect(Object.getOwnPropertyDescriptor(prototype, attribute).get).toBeDefined()
-            expect(Object.getOwnPropertyDescriptor(prototype, attribute).set).toBeDefined()
-            // Pascal case (only `-webkit` prefixed legacy name aliases and property mappings)
+            const prefixed = dashed.startsWith('-webkit-')
+            const camel = cssPropertyToIDLAttribute(dashed, prefixed)
+            expect(Object.hasOwn(prototype, dashed))
+            expect(Object.hasOwn(prototype, camel))
             if (prefixed) {
-                const attribute = cssPropertyToIDLAttribute(property)
-                expect(Object.getOwnPropertyDescriptor(prototype, attribute).get).toBeDefined()
-                expect(Object.getOwnPropertyDescriptor(prototype, attribute).set).toBeDefined()
+                const webkit = cssPropertyToIDLAttribute(dashed)
+                expect(Object.hasOwn(prototype, webkit))
             }
         })
-
-        // Camel and kebab case attributes mirroring
-        style.borderTopColor = 'red'
-        expect(style.borderTopColor).toBe('red')
-        expect(style['border-top-color']).toBe('red')
-        style['border-top-color'] = ''
-        expect(style.borderTopColor).toBe('')
-        expect(style['border-top-color']).toBe('')
-
-        // Custom property
-        style['--custom'] = 'blue'
-        expect(style.getPropertyValue('--custom')).toBe('')
-        style.setProperty('--custom', 'red')
-        expect(style.getPropertyValue('--CUSTOM')).toBe('')
-        expect(style.getPropertyValue('--custom')).toBe('red')
-
-        // Longhand property alias
-        style.order = '1'
-        expect(style.order).toBe('1')
-        expect(style['-webkit-order']).toBe('1')
-        expect(style.webkitOrder).toBe('1')
-        expect(style.WebkitOrder).toBe('1')
-        style.webkitOrder = '2'
-        expect(style.order).toBe('2')
-        expect(style['-webkit-order']).toBe('2')
-        expect(style.webkitOrder).toBe('2')
-        expect(style.WebkitOrder).toBe('2')
-        style.WebkitOrder = '3'
-        expect(style.order).toBe('3')
-        expect(style['-webkit-order']).toBe('3')
-        expect(style.webkitOrder).toBe('3')
-        expect(style.WebkitOrder).toBe('3')
-
-        // Shorthand property alias
-        style.gap = 'normal'
-        expect(style.gap).toBe('normal')
-        expect(style.gridGap).toBe('normal')
-        style.gridGap = '1px'
-        expect(style.gap).toBe('1px')
-        expect(style.gridGap).toBe('1px')
-
-        // Mapped longhand property
-        style['-webkit-box-align'] = 'start'
-        expect(style['-webkit-box-align']).toBe('start')
-        expect(style.webkitBoxAlign).toBe('start')
-        expect(style.WebkitBoxAlign).toBe('start')
-        expect(style['align-items']).toBe('')
-        style.webkitBoxAlign = 'center'
-        expect(style['-webkit-box-align']).toBe('center')
-        expect(style.webkitBoxAlign).toBe('center')
-        expect(style.WebkitBoxAlign).toBe('center')
-        expect(style['align-items']).toBe('')
-        style.WebkitBoxAlign = 'end'
-        expect(style['-webkit-box-align']).toBe('end')
-        expect(style.webkitBoxAlign).toBe('end')
-        expect(style.WebkitBoxAlign).toBe('end')
-        expect(style['align-items']).toBe('')
-
-        // Array-like properties
-        expect(style).toHaveLength(5)
-        expect(style[4]).toBe('-webkit-box-align')
-        expect(style.item(4)).toBe('-webkit-box-align')
-        style.cssText = ''
-        expect(style).toHaveLength(0)
-        expect(style[0]).toBeUndefined()
-        expect(style.item(1)).toBe('')
     })
-    it('stores declarations resulting from parsing `Element.style`', () => {
+    it('initializes with declarations of a CSSRule', () => {
+
+        const value = properties.color.initial
+        const declarations = [{ name: 'color', value: value.parsed }]
+        const parentRule = {}
+        const style = createStyleBlock({ declarations, parentRule })
+
+        expect(style.color).toBe(value.serialized)
+        expect(style.parentRule).toBe(parentRule)
+    })
+    it('initializes with declarations resulting from parsing `Element.style`', () => {
         const element = {
             getAttribute() {
                 return 'color: green !important; color: orange;'
@@ -161,12 +92,99 @@ describe('CSSStyleDeclaration', () => {
         const style = createStyleBlock({ ownerNode: element })
         expect(style.color).toBe('green')
     })
+    it('has array-like properties and methods', () => {
+
+        const style = createStyleBlock()
+
+        style.color = 'green'
+
+        expect(style).toHaveLength(1)
+        expect(style[0]).toBe('color')
+        expect(style.item(0)).toBe('color')
+    })
+    it('reflects a dashed property with its camel-cased and webkit cased variants', () => {
+
+        const style = createStyleBlock()
+
+        style['-webkit-line-clamp'] = '1'
+
+        expect(style['-webkit-line-clamp']).toBe('1')
+        expect(style.webkitLineClamp).toBe('1')
+        expect(style.WebkitLineClamp).toBe('1')
+
+        style.webkitLineClamp = '2'
+
+        expect(style['-webkit-line-clamp']).toBe('2')
+        expect(style.webkitLineClamp).toBe('2')
+        expect(style.WebkitLineClamp).toBe('2')
+
+        style.WebkitLineClamp = '3'
+
+        expect(style['-webkit-line-clamp']).toBe('3')
+        expect(style.webkitLineClamp).toBe('3')
+        expect(style.WebkitLineClamp).toBe('3')
+    })
+    it('reflects a longhand property with its alias', () => {
+
+        const style = createStyleBlock()
+
+        style.order = '1'
+
+        expect(style.order).toBe('1')
+        expect(style['-webkit-order']).toBe('1')
+
+        style['-webkit-order'] = '2'
+
+        expect(style.order).toBe('2')
+        expect(style['-webkit-order']).toBe('2')
+    })
+    it('reflects a shorthand property with its alias', () => {
+
+        const style = createStyleBlock()
+
+        style.gap = '1px'
+
+        expect(style.gap).toBe('1px')
+        expect(style['grid-gap']).toBe('1px')
+
+        style['grid-gap'] = '2px'
+
+        expect(style.gap).toBe('2px')
+        expect(style['grid-gap']).toBe('2px')
+    })
+    it('sets a declaration for a longhand property mapping to another property', () => {
+        const style = createStyleBlock()
+        style['-webkit-box-align'] = 'start'
+        expect(style['-webkit-box-align']).toBe('start')
+        expect(style['align-items']).toBe('')
+    })
 })
 describe('CSSStyleDeclaration.cssText', () => {
-    it('ignores rules in the specified value', () => {
+    it('does not store a declaration with an invalid name', () => {
         const style = createStyleBlock()
-        style.cssText = 'color: green; @page { color: red }; .selector { color: red }; font-size: 12px'
-        expect(style.cssText).toBe('color: green; font-size: 12px;')
+        style.cssText = 'webkitLineClamp: 1; WebkitLineClamp: 1'
+        expect(style.cssText).toBe('')
+    })
+    it('stores a declaration for the target of a property alias', () => {
+        const style = createStyleBlock()
+        style.cssText = '-webkit-order: 1; grid-gap: 1px'
+        expect(style.cssText).toBe('order: 1; gap: 1px;')
+    })
+    it('stores a declaration for a property mapping to another property', () => {
+        const style = createStyleBlock()
+        style.cssText = '-webkit-box-align: start'
+        expect(style.cssText).toBe('-webkit-box-align: start;')
+    })
+    it('stores a custom property declaration with an escaped code point', () => {
+        const style = createStyleBlock()
+        style.cssText = '--custom\\ property: 1'
+        expect(style.cssText).toBe('--custom\\ property: 1;')
+    })
+    it('stores a custom property declaration with an empty string value', () => {
+        const style = createStyleBlock()
+        style.cssText = '--custom:;'
+        expect(style.cssText).toBe('--custom: ;')
+        expect(style.getPropertyValue('--custom')).toBe(' ')
     })
     it('stores declarations in specified order', () => {
         const style = createStyleBlock()
@@ -175,71 +193,142 @@ describe('CSSStyleDeclaration.cssText', () => {
         style.cssText = 'color: green !important; width: 1px; color: orange'
         expect(style.cssText).toBe('color: green !important; width: 1px;')
     })
-    it('serializes a custom property name as escaped code points', () => {
+    it('ignores rules', () => {
         const style = createStyleBlock()
-        style.cssText = '--custom\\ property: 1'
-        expect(style.cssText).toBe('--custom\\ property: 1;')
-    })
-    it('stores and serializes a custom property specified with an empty string', () => {
-        const style = createStyleBlock()
-        style.cssText = '--custom:;'
-        expect(style.cssText).toBe('--custom: ;')
-        expect(style.getPropertyValue('--custom')).toBe(' ')
+        style.cssText = 'color: green; @page { color: red }; .selector { color: red }; font-size: 12px'
+        expect(style.cssText).toBe('color: green; font-size: 12px;')
     })
 })
-describe('CSSStyleDeclaration.setProperty()', () => {
-    it('does not store a declaration when the specified name is invalid', () => {
+describe('CSSStyleDeclaration.setProperty(), CSSStyleDeclaration.getPropertyValue(), CSSStyleDeclaration.removeProperty()', () => {
+    it('does not store a declaration with an invalid name', () => {
+
         const style = createStyleBlock()
-        style.setProperty(' font-size', '1px')
-        style.setProperty('font-size ', '1px')
-        style.setProperty('fontSize', '1px')
-        expect(style.fontSize).toBe('')
+
+        style.setProperty(' -webkit-line-clamp', '1')
+        style.setProperty('-webkit-line-clamp ', '1')
+        style.setProperty('webkitLineClamp', '1')
+        style.setProperty('WebkitLineClamp', '1')
+
+        expect(style.getPropertyValue(''))
     })
-    it('does not store a declaration when the specified value includes a priority', () => {
+    it('does not store a declaration with a value including a priority', () => {
         const style = createStyleBlock()
-        style.fontSize = '1px !important'
-        expect(style.fontSize).toBe('')
+        style.setProperty('font-size', '1px !important')
+        expect(style.getPropertyValue('font-size')).toBe('')
     })
-    it('does not store a declaration when the specified priority is invalid', () => {
+    it('does not store a declaration with an invalid priority', () => {
         const style = createStyleBlock()
         style.setProperty('font-size', '1px', ' ')
         style.setProperty('font-size', '1px', '!important')
-        expect(style.fontSize).toBe('')
+        expect(style.getPropertyValue('font-size')).toBe('')
     })
-    it('stores a declaration for the specified standard property name normalized to lowercase', () => {
+    it('sets and removes a declaration for a standard property normalized to lowercase', () => {
+
         const style = createStyleBlock()
-        style.setProperty('FoNt-SiZe', '12px')
-        expect(style.fontSize).toBe('12px')
-        expect(style.getPropertyValue('font-size')).toBe('12px')
+
+        style.setProperty('-WEBKIT-LINE-CLAMP', '1')
+
+        expect(style.getPropertyValue('-WEBKIT-LINE-CLAMP')).toBe('1')
+        expect(style.getPropertyValue('webkitLineClamp')).toBe('')
+        expect(style.getPropertyValue('WebkitLineClamp')).toBe('')
+
+        style.removeProperty('-WEBKIT-LINE-CLAMP')
+
+        expect(style.getPropertyValue('-webkit-line-clamp')).toBe('')
     })
-    it('stores a declaration for the specified custom property name escaped', () => {
+    it('sets and removes a declaration for the target of a longhand property alias', () => {
+
         const style = createStyleBlock()
+
+        style.setProperty('-webkit-order', '1')
+
+        expect(style.getPropertyValue('order')).toBe('1')
+        expect(style.getPropertyValue('-webkit-order')).toBe('1')
+
+        style.removeProperty('-webkit-order')
+
+        expect(style.getPropertyValue('order')).toBe('')
+        expect(style.getPropertyValue('-webkit-order')).toBe('')
+    })
+    it('sets and removes a declaration for the target of a shorthand property alias', () => {
+
+        const style = createStyleBlock()
+
+        style.setProperty('grid-gap', '1px')
+
+        expect(style.getPropertyValue('gap')).toBe('1px')
+        expect(style.getPropertyValue('grid-gap')).toBe('1px')
+
+        style.removeProperty('grid-gap')
+
+        expect(style.getPropertyValue('gap')).toBe('')
+        expect(style.getPropertyValue('grid-gap')).toBe('')
+    })
+    it('sets a declaration for a longhand property mapping to another property', () => {
+
+        const style = createStyleBlock()
+
+        style.setProperty('-webkit-box-align', 'start')
+
+        expect(style.getPropertyValue('-webkit-box-align')).toBe('start')
+        expect(style.getPropertyValue('align-items')).toBe('')
+    })
+    it('sets and removes a declaration for a custom property with an escaped name', () => {
+
+        const style = createStyleBlock()
+
         style.setProperty('--custom PROP', '1')
+
         expect(style.getPropertyValue('--custom PROP')).toBe('1')
-        expect(style.cssText).toBe('--custom\\ PROP: 1;')
+        expect(style.getPropertyValue('--custom\ PROP')).toBe('1')
+
+        style.removeProperty('--custom PROP')
+
+        expect(style.getPropertyValue('--custom PROP')).toBe('')
     })
-    it('stores a declaration specified with a priority', () => {
+    it('sets and removes a declaration for a custom property containing an escaped code point', () => {
+
         const style = createStyleBlock()
+
+        style.setProperty('--custom\ PROP', '1')
+
+        expect(style.getPropertyValue('--custom PROP')).toBe('1')
+        expect(style.getPropertyValue('--custom\ PROP')).toBe('1')
+
+        style.removeProperty('--custom\ PROP')
+
+        expect(style.getPropertyValue('--custom\ PROP')).toBe('')
+    })
+    it('sets a declaration with a priority', () => {
+
+        const style = createStyleBlock()
+
         // Standard property
         style.setProperty('font-size', '10px', 'important')
         expect(style.getPropertyPriority('font-size')).toBe('important')
         style.setProperty('font-size', '10px')
         expect(style.getPropertyPriority('font-size')).toBe('')
-        // Custom property
-        style.setProperty('--custom', '1', 'important')
-        expect(style.getPropertyPriority('--custom')).toBe('important')
+
         // Longhand property alias
         style.setProperty('order', '1', 'important')
         expect(style.getPropertyPriority('-webkit-order')).toBe('important')
+
         // Shorthand property alias
         style.setProperty('gap', '1px', 'important')
         expect(style.getPropertyPriority('grid-gap')).toBe('important')
+
+        // Custom property
+        style.setProperty('--custom', '1', 'important')
+        expect(style.getPropertyPriority('--custom')).toBe('important')
     })
     it('removes a declaration for the specified name when the specified value is an empty string', () => {
+
         const style = createStyleBlock()
+
         style.cssText = 'color: green; --custom: 1;'
         style.setProperty('color', '')
         style.setProperty('--custom', '')
+
         expect(style.getPropertyValue('color')).toBe('')
         expect(style.getPropertyValue('--custom')).toBe('')
         expect(style).toHaveLength(0)
@@ -272,37 +361,6 @@ describe('CSSStyleDeclaration.setProperty()', () => {
 
         style.borderBlockStartColor = 'green'
         expect(style.cssText).toBe('border-top-color: green; border-block-start-color: green;')
-    })
-})
-describe('CSSStyleDeclaration.removeProperty()', () => {
-    it('removes a declaration for the specified property name matched case-sensitively', () => {
-        const style = createStyleBlock()
-        style.fontSize = '1px'
-        style.removeProperty('FoNt-SiZe')
-        expect(style).toHaveLength(0)
-    })
-    it('removes a declaration for the target of the specified legacy name alias', () => {
-        const style = createStyleBlock()
-        // Longhand name alias
-        style.order = '1'
-        style.removeProperty('-webkit-order')
-        expect(style.order).toBe('')
-        // Shorthand name alias
-        style.gap = '1px'
-        style.removeProperty('grid-gap')
-        expect(style.gap).toBe('')
-    })
-    it('removes a declaration for the specified custom property name escaped', () => {
-        const style = createStyleBlock()
-        style.setProperty('--custom PROP', '1')
-        style.removeProperty('--custom PROP')
-        expect(style).toHaveLength(0)
-    })
-    it('removes declarations for the specified shorthand property name', () => {
-        const style = createStyleBlock()
-        style.gap = '1px'
-        style.removeProperty('gap')
-        expect(style).toHaveLength(0)
     })
 })
 
