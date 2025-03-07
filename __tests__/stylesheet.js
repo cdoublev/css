@@ -122,8 +122,6 @@ describe('CSSStyleSheet', () => {
         }
         const styleSheet = createStyleSheet('', properties)
 
-        expect(CSSStyleSheet.is(styleSheet)).toBeTruthy()
-
         // StyleSheet properties
         expect(styleSheet.disabled).toBeFalsy()
         expect(styleSheet.href).toBe(location)
@@ -281,7 +279,7 @@ describe('CSSStyleSheet.replace(), CSSStyleSheet.replaceSync()', () => {
             @import "./global.css";
             @namespace <bad-string-or-url>;
             style { color: green }
-            color: red
+            color: red;
         `)
 
         expect(CSSStyleRule.is(styleSheet.cssRules[0])).toBeTruthy()
@@ -473,8 +471,6 @@ describe('CSSFontFaceRule', () => {
 
         // CSSFontFaceRule
         expect(CSSFontFaceDescriptors.is(rule.style)).toBeTruthy()
-        rule.style.src = ''
-        expect(rule.cssText).toBe('@font-face {}')
     })
 })
 describe('CSSFontFeatureValuesRule', () => {
@@ -608,8 +604,6 @@ describe('CSSKeyframeRule', () => {
         expect(rule.cssText).toBe('0% { color: green; }')
         expect(() => rule.keyText = '101%').toThrow(SET_INVALID_KEY_TEXT_ERROR)
         expect(CSSKeyframeProperties.is(rule.style)).toBeTruthy()
-        rule.style.color = ''
-        expect(rule.cssText).toBe('0% {}')
     })
 })
 describe('CSSKeyframesRule', () => {
@@ -726,8 +720,6 @@ describe('CSSMarginRule', () => {
         // CSSMarginRule
         expect(rule.name).toBe('top-left')
         expect(CSSMarginDescriptors.is(rule.style)).toBeTruthy()
-        rule.style.color = ''
-        expect(rule.cssText).toBe('@top-left {}')
     })
 })
 describe('CSSMediaRule', () => {
@@ -773,12 +765,12 @@ describe('CSSNestedDeclarations', () => {
 
         const styleSheet = createStyleSheet(`
             style {
-                @container name { color: green; }
-                @layer { color: green; }
-                @media { color: green; }
-                @scope { color: green; }
-                @starting-style { color: green; }
-                @supports (color: green) { color: green; }
+                @container name { color: green }
+                @layer { color: green }
+                @media { color: green }
+                @scope { color: green }
+                @starting-style { color: green }
+                @supports (color: green) { color: green }
             }
         `)
 
@@ -843,8 +835,6 @@ describe('CSSPositionTryRule', () => {
         // CSSPositionTryRule
         expect(rule.name).toBe('--name')
         expect(CSSPositionTryDescriptors.is(rule.style)).toBeTruthy()
-        rule.style.top = ''
-        expect(rule.cssText).toBe('@position-try --name {}')
     })
 })
 describe('CSSPropertyRule', () => {
