@@ -419,6 +419,9 @@ describe('arbitrary substitution', () => {
             ['random-item(--key, random-item(--key, 1))'],
             ['var(--custom, var(--custom))'],
             ['--custom(--custom())'],
+            // Non-strict comma-containing production
+            ['var(--custom,,)'],
+            ['var(--custom, 1 {})'],
             // Custom function name with escaped characters
             ['--cust\\ om()'],
             // Serialize the list of tokens
@@ -427,9 +430,6 @@ describe('arbitrary substitution', () => {
             ['  /**/ @1/**/1e0 random-item(  --key, /**/ 1e0 /**/  ', '@1 1 random-item(--key, 1)'],
             ['  /**/ @1/**/1e0 var(  --custom, /**/ 1e0 /**/  ', '@1 1 var(--custom, 1)'],
             ['  /**/ @1/**/1e0 --custom(  /**/ 1e0 /**/  ', '@1 1 --custom(1)'],
-            // Non-strict comma-containing production
-            ['var(--custom,,)'],
-            ['var(--custom, 1 {})'],
             // Omitted component value
             ['attr(name string)'],
             ['attr(name string, "")', 'attr(name)'],

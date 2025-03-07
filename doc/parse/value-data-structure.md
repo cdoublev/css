@@ -42,7 +42,7 @@ A component value must expose its token type in order to be matched against a to
   - `<string-token>`
     - `<attribute-selector>`
 
-**[Issue](https://github.com/w3c/csswg-drafts/issues/7016):** `<function-token>` cannot be matched because any CSS input goes through *consume a component value* which means that *non-preserved tokens [...] never appear in any parser output*.
+**[Issue](https://github.com/w3c/csswg-drafts/issues/7016):** `<function-token>` cannot be matched because because any CSS input goes through *consume a component value* before grammar validation.
 
 A component value must expose its matched CSS type(s) in hierarchical order, to apply any associated parsing and serialization rule. For example, a component value matching `<percentage>` and `<alpha-value>` must serialize as a `<number>` to the shortest possible form, therefore `<alpha-value>` must be read before `<percentage>`.
 
