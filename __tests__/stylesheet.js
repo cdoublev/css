@@ -18,6 +18,7 @@ const { INVALID_FONT_FEATURE_VALUE_ERROR } = require('../lib/cssom/CSSFontFeatur
 const {
     CSSImportRule,
     CSSFontFaceDescriptors,
+    CSSFunctionDescriptors,
     CSSKeyframeProperties,
     CSSKeyframesRule,
     CSSLayerStatementRule,
@@ -479,7 +480,11 @@ describe('CSSFontFaceRule', () => {
 describe('CSSFontFeatureValuesRule', () => {
     test('properties', () => {
 
-        const styleSheet = createStyleSheet('@font-feature-values name { font-display: block }')
+        const styleSheet = createStyleSheet(`
+            @font-feature-values name {
+                @annotation {}
+                font-display: block;
+            }`)
         const rule = styleSheet.cssRules[0]
 
         // CSSRule
@@ -535,6 +540,33 @@ describe('CSSFontPaletteValuesRule', () => {
         expect(rule.fontFamily).toBe('name')
         expect(rule.basePalette).toBe('light')
         expect(rule.overrideColors).toBe('0 green')
+    })
+})
+describe('CSSFunctionRule, CSSFunctionDeclarations', () => {
+    test('properties', () => {
+
+        const styleSheet = createStyleSheet(`
+            @function --name() {
+                @media {}
+                result: 1;
+            }
+        `)
+        const rule = styleSheet.cssRules[0]
+        const declarations = rule.cssRules[1]
+
+        // CSSRule
+        expect(rule.cssText).toBe('@function --name() { @media {} result: 1; }')
+        expect(rule.parentRule).toBeNull()
+        expect(rule.parentStyleSheet).toBe(styleSheet)
+        expect(declarations.cssText).toBe('result: 1;')
+        expect(declarations.parentRule).toBe(rule)
+        expect(declarations.parentStyleSheet).toBe(styleSheet)
+
+        // CSSGroupingRule
+        expect(CSSRuleList.is(rule.cssRules)).toBeTruthy()
+
+        // CSSFunctionDeclarations
+        expect(CSSFunctionDescriptors.is(declarations.style)).toBeTruthy()
     })
 })
 describe('CSSImportRule', () => {
@@ -752,30 +784,37 @@ describe('CSSNestedDeclarations', () => {
 
         for (const parentRule of styleSheet.cssRules[0].cssRules) {
 
-            const nestedDeclarations = parentRule.cssRules[0]
+            const rule = parentRule.cssRules[0]
 
             // CSSRule
-            expect(nestedDeclarations.cssText).toBe('color: green;')
-            expect(nestedDeclarations.parentRule).toBe(parentRule)
-            expect(nestedDeclarations.parentStyleSheet).toBe(styleSheet)
+            expect(rule.cssText).toBe('color: green;')
+            expect(rule.parentRule).toBe(parentRule)
+            expect(rule.parentStyleSheet).toBe(styleSheet)
 
             // CSSNestedDeclarations
-            // https://github.com/w3c/csswg-drafts/issues/11272
-            // expect(CSSStyleProperties.is(nestedDeclarations.style)).toBeTruthy()
-            expect(nestedDeclarations.style).toHaveLength(1)
+            expect(CSSStyleProperties.is(rule.style)).toBeTruthy()
         }
     })
 })
-describe('CSSPageRule', () => {
+describe('CSSPageRule, CSSPageDeclarations', () => {
     test('properties', () => {
 
-        const styleSheet = createStyleSheet('@page intro { color: green; @top-left {} }')
+        const styleSheet = createStyleSheet(`
+            @page intro {
+                @top-left {}
+                color: green;
+            }
+        `)
         const rule = styleSheet.cssRules[0]
+        const declarations = rule.cssRules[1]
 
         // CSSRule
-        expect(rule.cssText).toBe('@page intro { color: green; @top-left {} }')
+        expect(rule.cssText).toBe('@page intro { @top-left {} color: green; }')
         expect(rule.parentRule).toBeNull()
         expect(rule.parentStyleSheet).toBe(styleSheet)
+        expect(declarations.cssText).toBe('color: green;')
+        expect(declarations.parentRule).toBe(rule)
+        expect(declarations.parentStyleSheet).toBe(styleSheet)
 
         // CSSGroupingRule
         expect(CSSRuleList.is(rule.cssRules)).toBeTruthy()
@@ -785,8 +824,9 @@ describe('CSSPageRule', () => {
         rule.selectorText = 'outro'
         expect(rule.selectorText).toBe('outro')
         expect(CSSPageDescriptors.is(rule.style)).toBeTruthy()
-        rule.style.color = ''
-        expect(rule.cssText).toBe('@page outro { @top-left {} }')
+
+        // CSSPageDeclarations
+        expect(CSSPageDescriptors.is(declarations.style)).toBeTruthy()
     })
 })
 describe('CSSPositionTryRule', () => {
@@ -828,11 +868,16 @@ describe('CSSPropertyRule', () => {
 describe('CSSScopeRule', () => {
     test('properties', () => {
 
-        const styleSheet = createStyleSheet('@scope (start) to (end) { color: green; style {} }')
+        const styleSheet = createStyleSheet(`
+            @scope (start) to (end) {
+                style {}
+                color: green;
+            }
+        `)
         const rule = styleSheet.cssRules[0]
 
         // CSSRule
-        expect(rule.cssText).toBe('@scope (start) to (end) { color: green; style {} }')
+        expect(rule.cssText).toBe('@scope (start) to (end) { style {} color: green; }')
         expect(rule.parentRule).toBeNull()
         expect(rule.parentStyleSheet).toBe(styleSheet)
 
@@ -864,7 +909,6 @@ describe('CSSStyleRule', () => {
 
         const styleSheet = createStyleSheet(`
             style {
-                color: orange;
                 @scope {
                     scoped {
                         nested {}
@@ -879,7 +923,7 @@ describe('CSSStyleRule', () => {
         const scopedStyleRule = scopeRule.cssRules[0]
 
         // CSSRule
-        expect(styleRule.cssText).toBe('style { color: orange; @scope { scoped { & nested {} } } & nested {} color: green; }')
+        expect(styleRule.cssText).toBe('style { @scope { scoped { & nested {} } } & nested {} color: green; }')
         expect(scopedStyleRule.cssText).toBe('scoped { & nested {} }')
         expect(nestedStyleRule.cssText).toBe('& nested {}')
         expect(styleRule.parentRule).toBeNull()
@@ -907,9 +951,6 @@ describe('CSSStyleRule', () => {
         expect(CSSStyleProperties.is(styleRule.style)).toBeTruthy()
         expect(CSSStyleProperties.is(scopedStyleRule.style)).toBeTruthy()
         expect(CSSStyleProperties.is(nestedStyleRule.style)).toBeTruthy()
-        expect(styleRule.style).toHaveLength(1)
-        expect(scopedStyleRule.style).toHaveLength(0)
-        expect(nestedStyleRule.style).toHaveLength(0)
     })
     test('methods', () => {
 

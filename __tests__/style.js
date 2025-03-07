@@ -2,6 +2,7 @@
 const {
     cssom: {
         CSSFontFaceDescriptors,
+        CSSFunctionDescriptors,
         CSSKeyframeProperties,
         CSSMarginDescriptors,
         CSSPageDescriptors,
@@ -41,13 +42,14 @@ const styleSheet = CSSStyleSheet.createImpl(globalThis, [{ media: '' }])
 
 styleSheet.replaceSync(`
     @font-face {}
+    @function --name() {}
     @keyframes animation { 0% {} }
     @page { @top-left {} }
     @position-try --custom {}
     style {}
 `)
 
-const { cssRules: { _rules: [fontFaceRule, keyframesRule, pageRule, positionTryRule, styleRule] } } = styleSheet
+const { cssRules: { _rules: [fontFaceRule, functionRule, keyframesRule, pageRule, positionTryRule, styleRule] } } = styleSheet
 const { cssRules: { _rules: [keyframeRule] } } = keyframesRule
 const { cssRules: { _rules: [marginRule] } } = pageRule
 
@@ -4662,6 +4664,21 @@ describe('CSSFontFaceDescriptors', () => {
         expect(style.subscriptSizeOverride).toBe('1%')
         style.subscriptPositionOverride = '1% 1%'
         expect(style.subscriptPositionOverride).toBe('1%')
+    })
+})
+describe('CSSFunctionDescriptors', () => {
+    test('invalid', () => {
+
+        const style = CSSFunctionDescriptors.create(globalThis, undefined, { parentRule: functionRule })
+
+        // Invalid name
+        style.setProperty('color', 'red')
+        expect(style.getPropertyValue('color')).toBe('')
+        expect(style.color).toBeUndefined()
+
+        // Priority
+        style.setProperty('result', '1', 'important')
+        expect(style.result).toBe('')
     })
 })
 describe('CSSKeyframeProperties', () => {

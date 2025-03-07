@@ -3,6 +3,7 @@
  * from CSSStyleDeclaration:
  *
  *   - ./lib/cssom/CSSFontFaceDescriptors.webidl
+ *   - ./lib/cssom/CSSFunctionDescriptors.webidl
  *   - ./lib/cssom/CSSKeyframeProperties.webidl
  *   - ./lib/cssom/CSSMarginDescriptors.webidl
  *   - ./lib/cssom/CSSPageDescriptors.webidl
@@ -21,6 +22,7 @@ const { rules } = require('../lib/rules/definitions.js')
 const targetDir = path.join(__dirname, '..', 'lib', 'cssom')
 
 const fontFaceRule = rules.find(rule => rule.name === '@font-face')
+const functionRule = rules.find(rule => rule.name === '@function')
 const keyframeRule = rules.find(rule => rule.name === '@keyframes').value.rules.find(rule => rule.name === '@keyframe')
 const pageRule = rules.find(rule => rule.name === '@page')
 const marginRule = pageRule.value.rules.find(rule => rule.name === '@margin')
@@ -32,6 +34,11 @@ const definitions = [
         name: 'CSSFontFaceDescriptors',
         link: 'https://drafts.csswg.org/css-fonts-4/#cssfontfacedescriptors',
         rule: fontFaceRule,
+    },
+    {
+        link: 'https://drafts.csswg.org/css-mixins-1/#cssfunctiondescriptors',
+        name: 'CSSFunctionDescriptors',
+        rule: functionRule,
     },
     {
         name: 'CSSKeyframeProperties',

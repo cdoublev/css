@@ -2,6 +2,7 @@
 !/lib/cssom/*-impl.js
 !/lib/cssom/index.js
 /lib/cssom/CSSFontFaceDescriptors.webidl
+/lib/cssom/CSSFunctionDescriptors.webidl
 /lib/cssom/CSSKeyframeProperties.webidl
 /lib/cssom/CSSMarginDescriptors.webidl
 /lib/cssom/CSSPageDescriptors.webidl
