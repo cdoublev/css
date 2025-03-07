@@ -192,8 +192,6 @@ const replaced = {
         '<radial-size>': 'closest-corner | farthest-corner | <radial-radius>{1,2}',
         // https://github.com/speced/bikeshed/issues/3011
         '<corner-shape-value>': 'round | scoop | bevel | notch | straight | squircle | superellipse(<number [0,∞]> | infinity)',
-        // https://github.com/w3c/csswg-drafts/pull/11821
-        '<css-type>': "<syntax-component> | <type()> | '*'",
         // https://github.com/w3c/csswg-drafts/pull/11807
         '<pseudo-class-selector>': ': <ident> | : <function-token> <any-value> )',
         // https://github.com/w3c/fxtf-drafts/issues/532

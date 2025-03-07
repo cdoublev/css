@@ -3117,7 +3117,7 @@ describe('<dashed-function-head>', () => {
         expect(parse('<dashed-function-head>', '--CUSTOM()', false)).toMatchObject(head)
     })
     test('valid', () => {
-        expect(parse('<dashed-function-head>', '--custom() returns *')).toBe('--custom()')
+        expect(parse('<dashed-function-head>', '--custom() returns type(*)')).toBe('--custom()')
     })
 })
 describe('<drop-shadow()>', () => {
