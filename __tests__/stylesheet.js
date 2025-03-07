@@ -478,13 +478,14 @@ describe('CSSFontFeatureValuesRule', () => {
 
         const styleSheet = createStyleSheet(`
             @font-feature-values name {
-                @annotation {}
+                @annotation { name: 1 }
+                @annotation { name: 2 }
                 font-display: block;
             }`)
         const rule = styleSheet.cssRules[0]
 
         // CSSRule
-        expect(rule.cssText).toBe('@font-feature-values name { font-display: block; }')
+        expect(rule.cssText).toBe('@font-feature-values name { font-display: block; @annotation { name: 2; } }')
         expect(rule.parentRule).toBeNull()
         expect(rule.parentStyleSheet).toBe(styleSheet)
 
@@ -494,12 +495,12 @@ describe('CSSFontFeatureValuesRule', () => {
         // CSSFontFeatureValuesMap
         rule.styleset.set('double-W', 0)
         expect(rule.styleset.get('double-W')).toEqual([0])
-        expect(rule.cssText).toBe('@font-feature-values name { font-display: block; @styleset { double-W: 0; } }')
+        expect(rule.cssText).toBe('@font-feature-values name { font-display: block; @annotation { name: 2; } @styleset { double-W: 0; } }')
         rule.styleset.set('double-W', [0, 1])
         expect(rule.styleset.get('double-W')).toEqual([0, 1])
-        expect(rule.cssText).toBe('@font-feature-values name { font-display: block; @styleset { double-W: 0 1; } }')
+        expect(rule.cssText).toBe('@font-feature-values name { font-display: block; @annotation { name: 2; } @styleset { double-W: 0 1; } }')
         rule.styleset.delete('double-W')
-        expect(rule.cssText).toBe('@font-feature-values name { font-display: block; }')
+        expect(rule.cssText).toBe('@font-feature-values name { font-display: block; @annotation { name: 2; } }')
         expect(() => rule.annotation.set('boxed', [0, 1])).toThrow(INVALID_FONT_FEATURE_VALUE_ERROR)
         expect(() => rule.annotation.set('boxed', [-1])).toThrow(INVALID_FONT_FEATURE_VALUE_ERROR)
         expect(() => rule.characterVariant.set('alpha-2', [0, 1, 2])).toThrow(INVALID_FONT_FEATURE_VALUE_ERROR)
