@@ -530,8 +530,6 @@ const excluded = {
             ...Object.keys(arbitrary),
             ...blocks.contents,
             ...Object.keys(forgiving),
-            // Legacy webkit function name aliases
-            ...[...compatibility.values['*'].values()].flatMap(replacements => replacements.aliases),
         ],
         'CSS': [
             // Obsoleted by CSS Backgrounds

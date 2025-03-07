@@ -5,6 +5,8 @@
  *   - `parsed` to the result from parsing `initial`
  *   - `serialized` to the result from serializing `parsed`
  */
+const { install } = require('../lib/index.js')
+// Do not import CSSOM implementations before the above import
 const { addQuotes, logError, tab } = require('../lib/utils/string.js')
 const descriptors = require('../lib/descriptors/definitions.js')
 const fs = require('node:fs/promises')
@@ -14,6 +16,8 @@ const path = require('node:path')
 const properties = require('../lib/properties/definitions.js')
 const { serializeCSSValue } = require('../lib/serialize.js')
 const shorthands = require('../lib/properties/shorthands.js')
+
+install()
 
 /**
  * @param {string[]} types
