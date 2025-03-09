@@ -59,6 +59,8 @@ const initial = {
             },
         },
         '<dashed-function-head>': '<function-token> <function-parameter>#? ) [returns <css-type>]?',
+        // https://github.com/w3c/csswg-drafts/pull/11867
+        '<form-control-identifier>': 'select',
         // TODO: fix parsing/serializing `<radial-gradient-syntax>`, `<radial-size>`
         '<radial-radius>': 'closest-side | farthest-side | <length-percentage [0,∞]>',
         // https://github.com/w3c/csswg-drafts/issues/8835
@@ -190,6 +192,8 @@ const replaced = {
         '<linear-gradient-syntax>': '[[<angle> | <zero> | to <side-or-corner>] || <color-interpolation-method>]? , <color-stop-list>',
         '<radial-gradient-syntax>': '[[[<radial-shape> || <radial-size>]? [at <position>]?]! || <color-interpolation-method>]? , <color-stop-list>',
         '<radial-size>': 'closest-corner | farthest-corner | <radial-radius>{1,2}',
+        // https://github.com/w3c/csswg-drafts/issues/11842
+        '<control-value()>': 'control-value(<syntax-type-name>?)',
         // https://github.com/speced/bikeshed/issues/3011
         '<corner-shape-value>': 'round | scoop | bevel | notch | straight | squircle | superellipse(<number [0,∞]> | infinity)',
         // https://github.com/w3c/csswg-drafts/pull/11807
@@ -415,6 +419,10 @@ const excluded = {
             'align-self',
             'justify-content',
         ],
+        'css-forms': [
+            // https://github.com/w3c/csswg-drafts/issues/11865
+            'appearance',
+        ],
         'css-gcpm': [
             // https://github.com/w3c/csswg-drafts/issues/1981
             'content',
@@ -554,6 +562,10 @@ const excluded = {
             '<left>',
             '<right>',
             '<top>',
+        ],
+        'css-forms': [
+            // https://github.com/w3c/csswg-drafts/issues/11842
+            '<type>',
         ],
         'css-gcpm': [
             // Prefer CSS Generated Content

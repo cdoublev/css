@@ -433,8 +433,8 @@ describe('arbitrary substitution', () => {
             ['  /**/ @1/**/1e0 var(  --custom, /**/ 1e0 /**/  ', '@1 1 var(--custom, 1)'],
             ['  /**/ @1/**/1e0 --custom(  /**/ 1e0 /**/  ', '@1 1 --custom(1)'],
             // Omitted component value
-            ['attr(name string)'],
-            ['attr(name string, "")', 'attr(name)'],
+            ['attr(name raw-string)'],
+            ['attr(name raw-string, "")', 'attr(name)'],
         ]
         valid.forEach(([input, expected = input]) => {
             style.opacity = input

@@ -2357,18 +2357,18 @@ describe('<random()>', () => {
     test('invalid', () => {
         const invalid = [
             // Inconsistent calculation types
-            ['<number> | <length>', 'random(1, 1px, by 1)'],
-            ['<number> | <percentage>', 'random(1, 1%, by 1)'],
+            ['<number> | <length>', 'random(1, 1px, 1)'],
+            ['<number> | <percentage>', 'random(1, 1%, 1)'],
             // Result type mismatch
-            ['<number> | <percentage>', 'random(1, (1% + 1px) / 1px, by 1)'],
-            ['<length>', 'random(1px, 1%, by 1px)'],
+            ['<number> | <percentage>', 'random(1, (1% + 1px) / 1px, 1)'],
+            ['<length>', 'random(1px, 1%, 1px)'],
         ]
         invalid.forEach(([definition, input]) => expect(parse(definition, input, false)).toBeNull())
     })
     test('valid', () => {
         const valid = [
-            ['<number>', 'random(per-element, 1 / 1, 1em / 1px)', 'random(per-element, 1, 1em / 1px)'],
-            ['<length-percentage>', 'random(1px, 1%)'],
+            ['<number>', 'random(auto, 1 / 1, 1em / 1px)', 'random(1, 1em / 1px)'],
+            ['<length-percentage>', 'random(--key, 1px, 1%)'],
             ['<length-percentage>', 'calc(1px * random(1% / 1px, 1))'],
         ]
         valid.forEach(([definition, input, expected = input]) => expect(parse(definition, input)).toBe(expected))
@@ -3058,6 +3058,18 @@ describe('<content()>', () => {
     })
     test('valid', () => {
         expect(parse('<content()>', 'content(text)')).toBe('content()')
+    })
+})
+describe('<control-value()>', () => {
+    test('representation', () => {
+        expect(parse('<control-value()>', 'control-value()', false)).toMatchObject({
+            name: 'control-value',
+            types: ['<function>', '<control-value()>'],
+            value: omitted,
+        })
+    })
+    test('valid', () => {
+        expect(parse('<control-value()>', 'control-value(string)')).toEqual('control-value()')
     })
 })
 describe('<counter>', () => {
