@@ -2420,7 +2420,7 @@ describe('CSS grammar - semantic', () => {
         expect(keyframesRule.cssText).toBe('@keyframes name {}')
     })
     test('legacy property name', () => {
-        const styleSheet = createStyleSheet('style { -webkit-order: 1; }')
+        const styleSheet = createStyleSheet('style { -webkit-order: 1 }')
         expect(styleSheet.cssRules[0].cssText).toBe('style { order: 1; }')
     })
 })

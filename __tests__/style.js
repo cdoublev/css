@@ -1640,7 +1640,7 @@ describe('background', () => {
         expect(style.background).toBe('initial')
         expect(style.cssText).toBe('background: initial;')
 
-        // Pending-substitution
+        // Pending substitution
         style.background = 'var(--custom)'
         longhands.forEach(longhand => expect(style[longhand]).toBe(''))
         expect(style.background).toBe('var(--custom)')
@@ -1741,7 +1741,7 @@ describe('background', () => {
         expect(style.background).toBe('')
         expect(style.cssText).toBe('background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial; background-color: initial; background-blend-mode: initial;')
 
-        // Pending-substitution
+        // Pending substitution
         longhands.forEach(longhand => style[longhand] = 'var(--custom)')
         expect(style.background).toBe('')
         expect(style.cssText).toBe('background-position: var(--custom); background-size: var(--custom); background-repeat-x: var(--custom); background-repeat-y: var(--custom); background-attachment: var(--custom); background-origin: var(--custom); background-clip: var(--custom); background-color: var(--custom); background-blend-mode: var(--custom); background-image: var(--custom);')
