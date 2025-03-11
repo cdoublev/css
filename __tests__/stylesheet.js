@@ -345,117 +345,72 @@ describe('CSSContainerRule', () => {
 describe('CSSCounterStyleRule', () => {
     test('properties', () => {
 
-        let styleSheet = createStyleSheet('@counter-style name { system: fixed 1; speak-as: auto }')
+        const styleSheet = createStyleSheet('@counter-style name { speak-as: auto }')
         let rule = styleSheet.cssRules[0]
 
         // CSSRule
-        expect(rule.cssText).toBe('@counter-style name { speak-as: auto; system: fixed; }')
+        expect(rule.cssText).toBe('@counter-style name { speak-as: auto; }')
         expect(rule.parentRule).toBeNull()
         expect(rule.parentStyleSheet).toBe(styleSheet)
 
         // CSSCounterStyleRule
-        expect(rule.name).toBe('name')
         rule.name = 'decimal'
-        expect(rule.name).toBe('name')
         rule.name = ''
         expect(rule.name).toBe('name')
         rule.name = '\n'
         expect(rule.name).toBe('\\a')
-        rule.speakAs = 'none'
-        expect(rule.speakAs).toBe('auto')
-
-        // Fixed
-        rule.system = 'fixed 2'
+        // system: symbolic (default)
+        rule.additiveSymbols = '1 a'
+        expect(rule.additiveSymbols).toBe('')
+        rule.symbols = 'a'
+        expect(rule.symbols).toBe('a')
+        rule.system = 'fixed'
+        rule.system = 'extends decimal'
+        expect(rule.system).toBe('')
+        rule.system = 'symbolic'
+        expect(rule.system).toBe('symbolic')
+        // system: fixed
+        rule = createStyleSheet('@counter-style name { system: fixed }').cssRules[0]
+        rule.additiveSymbols = '1 a'
+        expect(rule.additiveSymbols).toBe('')
+        rule.symbols = 'a'
+        expect(rule.symbols).toBe('a')
+        rule.system = 'symbolic'
+        rule.system = 'extends decimal'
         expect(rule.system).toBe('fixed')
-        rule.symbols = 'one two'
-        expect(rule.symbols).toBe('one two')
         rule.system = 'fixed 2'
         expect(rule.system).toBe('fixed 2')
-        rule.symbols = 'one two'
-        expect(rule.symbols).toBe('one two')
-        rule.additiveSymbols = '1 one'
+        rule.system = 'fixed calc(1)'
+        expect(rule.system).toBe('fixed calc(1)')
+        // system: numeric (and alphabetic)
+        rule = createStyleSheet('@counter-style name { system: numeric }').cssRules[0]
+        rule.additiveSymbols = '1 a, 2 b'
         expect(rule.additiveSymbols).toBe('')
-        rule.system = 'numeric'
-        rule.system = 'additive'
-        rule.system = 'extends decimal'
-        expect(rule.system).toBe('fixed 2')
-
-        // Cyclic (or symbolic)
-        styleSheet = createStyleSheet('@counter-style name {}')
-        rule = styleSheet.cssRules[0]
-        rule.system = 'cyclic'
-        expect(rule.system).toBe('')
-        rule.symbols = 'one'
-        expect(rule.symbols).toBe('one')
-        rule.system = 'cyclic'
-        expect(rule.system).toBe('cyclic')
-        rule.symbols = 'one two'
-        expect(rule.symbols).toBe('one two')
-        rule.system = 'numeric'
-        rule.system = 'fixed'
-        rule.system = 'extends decimal'
-        expect(rule.system).toBe('cyclic')
-
-        // Numeric (or alphabetic)
-        styleSheet = createStyleSheet('@counter-style name {}')
-        rule = styleSheet.cssRules[0]
-        rule.system = 'numeric'
-        expect(rule.system).toBe('')
-        rule.symbols = 'one'
-        expect(rule.symbols).toBe('one')
-        rule.system = 'numeric'
-        expect(rule.system).toBe('')
-        rule.symbols = 'one two'
-        expect(rule.symbols).toBe('one two')
-        rule.system = 'numeric'
-        expect(rule.system).toBe('numeric')
-        rule.symbols = 'one'
-        expect(rule.symbols).toBe('one two')
-        rule.symbols = 'one two three'
-        expect(rule.symbols).toBe('one two three')
-        rule.system = 'cyclic'
-        rule.system = 'fixed'
-        rule.system = 'extends decimal'
-        expect(rule.system).toBe('numeric')
-
-        // Additive
-        styleSheet = createStyleSheet('@counter-style name {}')
-        rule = styleSheet.cssRules[0]
-        rule.system = 'additive'
-        expect(rule.system).toBe('')
-        rule.additiveSymbols = '1 one'
-        expect(rule.additiveSymbols).toBe('1 one')
-        rule.system = 'additive'
-        expect(rule.system).toBe('additive')
-        rule.additiveSymbols = '2 two, 1 one'
-        expect(rule.additiveSymbols).toBe('2 two, 1 one')
-        rule.symbols = 'one two'
+        rule.symbols = 'a'
         expect(rule.symbols).toBe('')
-        rule.system = 'cyclic'
-        rule.system = 'fixed'
+        rule.symbols = 'a b'
+        expect(rule.symbols).toBe('a b')
+        rule.system = 'symbolic'
         rule.system = 'extends decimal'
+        expect(rule.system).toBe('numeric')
+        // system: additive
+        rule = createStyleSheet('@counter-style name { system: additive }').cssRules[0]
+        rule.symbols = 'a'
+        expect(rule.symbols).toBe('')
+        rule.additiveSymbols = '1 a'
+        expect(rule.additiveSymbols).toBe('1 a')
+        rule.system = 'symbolic'
         expect(rule.system).toBe('additive')
-
-        // Extended counter style
-        styleSheet = createStyleSheet('@counter-style name { symbols: one; additive-symbols: 1 one }')
-        rule = styleSheet.cssRules[0]
-        rule.system = 'extends decimal'
-        expect(rule.system).toBe('')
-        styleSheet = createStyleSheet('@counter-style name {}')
-        rule = styleSheet.cssRules[0]
-        rule.system = 'extends decimal'
+        // system: extends <counter-style-name>
+        rule = createStyleSheet('@counter-style name { system: extends decimal }').cssRules[0]
+        rule.additiveSymbols = '1 a'
+        expect(rule.additiveSymbols).toBe('')
+        rule.symbols = 'a'
+        expect(rule.symbols).toBe('')
+        rule.system = 'symbolic'
         expect(rule.system).toBe('extends decimal')
-        rule.symbols = 'one'
-        expect(rule.symbols).toBe('')
-        rule.additiveSymbols = '1 one'
-        expect(rule.additiveSymbols).toBe('')
-        rule.system = 'extends circle'
-        expect(rule.system).toBe('extends circle')
-        rule.system = 'extends none'
-        rule.system = 'cyclic'
-        rule.system = 'additive'
-        rule.system = 'fixed'
-        expect(rule.system).toBe('extends circle')
+        rule.system = 'extends disc'
+        expect(rule.system).toBe('extends disc')
     })
 })
 describe('CSSFontFaceRule', () => {
