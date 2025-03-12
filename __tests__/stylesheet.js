@@ -1462,7 +1462,7 @@ describe('CSS grammar - semantic', () => {
         expect(styleSheet.cssRules[0].cssText).toBe(normalizeText(input))
     })
     test('@function - invalid prelude', () => {
-        const styleSheet = createStyleSheet('@function --name(--parameter, --parameter) {}')
+        const styleSheet = createStyleSheet('@function --name(--parameter-1, --parameter-2, --parameter-2) {}')
         expect(styleSheet.cssRules).toHaveLength(0)
     })
     test('@function - invalid block contents', () => {
