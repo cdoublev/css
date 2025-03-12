@@ -59,8 +59,6 @@ const initial = {
             },
         },
         '<dashed-function-head>': '<function-token> <function-parameter>#? ) [returns <css-type>]?',
-        // https://github.com/w3c/csswg-drafts/pull/11867
-        '<form-control-identifier>': 'select',
         // TODO: fix parsing/serializing `<radial-gradient-syntax>`, `<radial-size>`
         '<radial-radius>': 'closest-side | farthest-side | <length-percentage [0,∞]>',
         // https://github.com/w3c/csswg-drafts/issues/8835
@@ -212,12 +210,7 @@ const replaced = {
     },
 }
 const excluded = {
-    descriptors: {
-        'css-round-display': [
-            // https://github.com/w3c/csswg-drafts/issues/8097
-            'viewport-fit',
-        ],
-    },
+    descriptors: {},
     functions: {
         'css-grid': [
             // Defined inline
@@ -627,10 +620,6 @@ const errors = {
         links: ['https://github.com/w3c/csswg-drafts/issues/9926'],
     },
     '@layer': { cause: 'It is the only rule with alternative definitions therefore only the first (block) definition is correctly checked.' },
-    '@viewport': {
-        cause: 'It has been removed but there is still a descriptor defined in CSS Round Display.',
-        links: ['https://github.com/w3c/csswg-drafts/issues/8097'],
-    },
     '@when': { cause: 'It is not yet supported.' },
     '<boolean-expr>': { cause: 'It is not yet supported.' },
     '<box>': {
@@ -672,10 +661,11 @@ function reportError(spec, name, message) {
 function reportMissingPseudoSelectors(selectors, key) {
     const { classes, elements } = pseudos
     const { selectors: { '*': skipFromAllSpecs = [], [key]: skip = [] } } = excluded
-    selectors.forEach(({ name }) => {
+    selectors.forEach(({ name, values }) => {
         if (skip.includes(name) || skipFromAllSpecs.includes(name)) {
             return
         }
+        addTypes(values, key)
         if (name.startsWith('::')) {
             if (name.endsWith('()')) {
                 if (!elements.functions[name.slice(2, -2)]) {
