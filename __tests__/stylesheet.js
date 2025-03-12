@@ -506,8 +506,16 @@ describe('CSSFontPaletteValuesRule', () => {
 describe('CSSFunctionRule, CSSFunctionDeclarations', () => {
     test('properties', () => {
 
+        const parameters = [
+            ['--param\\ eter-1'],
+            ['--parameter-2 type(*)', '--parameter-2'],
+            ['--parameter-3 <number>'],
+            ['--parameter-4 <number> : 1'],
+            ['--parameter-5 type(<number>)', '--parameter-5 <number>'],
+            ['--parameter-6 type(<number> | <percentage>)'],
+        ]
         const styleSheet = createStyleSheet(`
-            @function --name() {
+            @function --name(${parameters.map(([input]) => input).join(', ')}) returns type(*) {
                 @media {}
                 result: 1;
             }
@@ -516,7 +524,7 @@ describe('CSSFunctionRule, CSSFunctionDeclarations', () => {
         const declarations = rule.cssRules[1]
 
         // CSSRule
-        expect(rule.cssText).toBe('@function --name() { @media {} result: 1; }')
+        expect(rule.cssText).toBe(`@function --name(${parameters.map(([input, expected = input]) => expected).join(', ')}) { @media {} result: 1; }`)
         expect(rule.parentRule).toBeNull()
         expect(rule.parentStyleSheet).toBe(styleSheet)
         expect(declarations.cssText).toBe('result: 1;')
@@ -526,8 +534,33 @@ describe('CSSFunctionRule, CSSFunctionDeclarations', () => {
         // CSSGroupingRule
         expect(CSSRuleList.is(rule.cssRules)).toBeTruthy()
 
+        // CSSFunctionRule
+        expect(rule.name).toBe('--name')
+        expect(rule.returnType).toBe('*')
+
         // CSSFunctionDeclarations
         expect(CSSFunctionDescriptors.is(declarations.style)).toBeTruthy()
+    })
+    test('methods', () => {
+
+        const parameters = [
+            '--param\\ eter-1',
+            '--parameter-2 type(*)',
+            '--parameter-3 <number>',
+            '--parameter-4 <number>: 1',
+            '--parameter-5 type(<number>)',
+            '--parameter-6 type(<number> | <percentage>)',
+        ]
+        const rule = createStyleSheet(`@function --name(${parameters.join(', ')}) {}`).cssRules[0]
+
+        expect(rule.getParameters()).toEqual([
+            { defaultValue: null, name: '--param\\ eter-1', type: '*' },
+            { defaultValue: null, name: '--parameter-2', type: '*' },
+            { defaultValue: null, name: '--parameter-3', type: '<number>' },
+            { defaultValue: '1', name: '--parameter-4', type: '<number>' },
+            { defaultValue: null, name: '--parameter-5', type: '<number>' },
+            { defaultValue: null, name: '--parameter-6', type: '<number> | <percentage>' },
+        ])
     })
 })
 describe('CSSImportRule', () => {

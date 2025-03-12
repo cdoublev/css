@@ -3206,6 +3206,20 @@ describe('<font-format>', () => {
         valid.forEach(value => expect(parse('<font-format>', value)).toBe(value))
     })
 })
+describe('<function-parameter>', () => {
+    test('invalid', () => {
+        expect(parse('<function-parameter>', '--name <integer>: 1.5', false)).toBeNull()
+    })
+    test('representation', () => {
+        const name = dashedIdent('--name', ['<custom-property-name>'])
+        const declaration = list([name, omitted, omitted], ' ', ['<function-parameter>'])
+        expect(parse('<function-parameter>', '--name', false)).toMatchObject(declaration)
+    })
+    test('valid', () => {
+        expect(parse('<function-parameter>', '--name type(*)')).toBe('--name')
+        expect(parse('<function-parameter>', '--name type(<number>)')).toBe('--name <number>')
+    })
+})
 describe('<gradient>', () => {
     test('invalid', () => {
         expect(parse('<gradient>', 'radial-gradient(circle 1px 1px, red)', false)).toBeNull()
