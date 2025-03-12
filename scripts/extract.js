@@ -975,7 +975,7 @@ function addDescriptors(definitions = [], rule, key) {
         }
         const context = descriptors.find(([key]) => key === rule)
         if (context) {
-            const [, entries] = context
+            const entries = context[1]
             const index = entries.findIndex(([key]) => key === name)
             if (-1 < index) {
                 const entry = entries[index]

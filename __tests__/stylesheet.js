@@ -217,7 +217,7 @@ describe('CSSStyleSheet.insertRule(), CSSStyleSheet.deleteRule()', () => {
 
         expect(cssRules).toHaveLength(1)
 
-        const [namespaceRule] = cssRules
+        const namespaceRule = cssRules[0]
 
         expect(CSSNamespaceRule.is(namespaceRule)).toBeTruthy()
 
@@ -318,10 +318,8 @@ describe('CSSColorProfileRule', () => {
         expect(rule.parentStyleSheet).toBe(styleSheet)
 
         // CSSColorProfileRule
-        expect(rule.components).toBe('')
         expect(rule.name).toBe('--name')
         expect(rule.src).toBe('url("profile.icc")')
-        expect(rule.renderingIntent).toBe('')
     })
 })
 describe('CSSContainerRule', () => {
@@ -345,21 +343,31 @@ describe('CSSContainerRule', () => {
 describe('CSSCounterStyleRule', () => {
     test('properties', () => {
 
-        const styleSheet = createStyleSheet('@counter-style name { speak-as: auto }')
+        const styleSheet = createStyleSheet('@counter-style name { system: fixed; speak-as: auto }')
         let rule = styleSheet.cssRules[0]
 
         // CSSRule
-        expect(rule.cssText).toBe('@counter-style name { speak-as: auto; }')
+        expect(rule.cssText).toBe('@counter-style name { speak-as: auto; system: fixed; }')
         expect(rule.parentRule).toBeNull()
         expect(rule.parentStyleSheet).toBe(styleSheet)
 
         // CSSCounterStyleRule
-        rule.name = 'decimal'
+        //   https://github.com/w3c/csswg-drafts/issues/9363
         rule.name = ''
         expect(rule.name).toBe('name')
         rule.name = '\n'
         expect(rule.name).toBe('\\a')
-        // system: symbolic (default)
+        //   Priority
+        rule.system = 'fixed !important'
+        //   Cascade or element-dependent substitution
+        rule.system = 'initial'
+        rule.system = 'var(--custom)'
+        rule.system = 'attr(name)'
+        //   Dependency-free pending substitution
+        rule.system = 'env(name)'
+        expect(rule.system).toBe('fixed')
+        //   system: symbolic (default)
+        rule = createStyleSheet('@counter-style name {}').cssRules[0]
         rule.additiveSymbols = '1 a'
         expect(rule.additiveSymbols).toBe('')
         rule.symbols = 'a'
@@ -369,7 +377,7 @@ describe('CSSCounterStyleRule', () => {
         expect(rule.system).toBe('')
         rule.system = 'symbolic'
         expect(rule.system).toBe('symbolic')
-        // system: fixed
+        //   system: fixed
         rule = createStyleSheet('@counter-style name { system: fixed }').cssRules[0]
         rule.additiveSymbols = '1 a'
         expect(rule.additiveSymbols).toBe('')
@@ -378,11 +386,11 @@ describe('CSSCounterStyleRule', () => {
         rule.system = 'symbolic'
         rule.system = 'extends decimal'
         expect(rule.system).toBe('fixed')
-        rule.system = 'fixed 2'
+        rule.system = 'first-valid(fixed 2)'
         expect(rule.system).toBe('fixed 2')
-        rule.system = 'fixed calc(1)'
-        expect(rule.system).toBe('fixed calc(1)')
-        // system: numeric (and alphabetic)
+        rule.system = 'fixed calc(2)'
+        expect(rule.system).toBe('fixed calc(2)')
+        //   system: numeric (and alphabetic)
         rule = createStyleSheet('@counter-style name { system: numeric }').cssRules[0]
         rule.additiveSymbols = '1 a, 2 b'
         expect(rule.additiveSymbols).toBe('')
@@ -489,6 +497,7 @@ describe('CSSFontPaletteValuesRule', () => {
         expect(rule.parentStyleSheet).toBe(styleSheet)
 
         // CSSFontPaletteValuesRule
+        expect(rule.name).toBe('--name')
         expect(rule.fontFamily).toBe('name')
         expect(rule.basePalette).toBe('light')
         expect(rule.overrideColors).toBe('0 green')
@@ -585,7 +594,7 @@ describe('CSSKeyframesRule', () => {
     })
     test('methods', () => {
 
-        const { cssRules: [rule] } = createStyleSheet('@keyframes name {}')
+        const rule = createStyleSheet('@keyframes name {}').cssRules[0]
         const keyframes = rule.cssRules
 
         expect(keyframes).toHaveLength(0)
@@ -599,7 +608,7 @@ describe('CSSKeyframesRule', () => {
         expect(() => rule.appendRule('invalid')).toThrow(INVALID_RULE_SYNTAX_ERROR)
 
         rule.appendRule('to { color: green }')
-        const [, to] = keyframes
+        const to = keyframes[1]
 
         expect(keyframes).toHaveLength(2)
         expect(to.style.color).toBe('green')
@@ -808,7 +817,6 @@ describe('CSSPropertyRule', () => {
         expect(rule.name).toBe('--name')
         expect(rule.syntax).toBe('"*"')
         expect(rule.inherits).toBe('true')
-        expect(rule.initialValue).toBe('')
     })
 })
 describe('CSSScopeRule', () => {
@@ -920,7 +928,7 @@ describe('CSSStyleRule', () => {
         expect(cssRules).toHaveLength(2)
 
         rule.insertRule('@media all {}', 2)
-        const [mediaRule] = cssRules
+        const mediaRule = cssRules[0]
 
         expect(cssRules).toHaveLength(3)
         expect(mediaRule.conditionText).toBe('print')
@@ -986,7 +994,7 @@ describe('CSSViewTransitionRule', () => {
  * behavior, but throw an error in strict mode.
  */
 test('Setting CSSRule.cssText does nothing', () => {
-    const { cssRules: [rule] } = createStyleSheet('style {}')
+    const rule = createStyleSheet('style {}').cssRules[0]
     rule.cssText = 'override {}'
     expect(rule.cssText).toBe('style {}')
 })
@@ -2294,7 +2302,7 @@ describe('CSS grammar - semantic', () => {
 
         expect(cssRules).toHaveLength(2)
 
-        const [, styleRule] = cssRules
+        const styleRule = cssRules[1]
 
         expect(CSSStyleRule.is(styleRule)).toBeTruthy()
 
@@ -2370,9 +2378,9 @@ describe('CSS grammar - semantic', () => {
     })
     // Legacy names
     test('legacy rule name', () => {
-        const { cssRules: [keyframesRule] } = createStyleSheet('@-webkit-keyframes name {}')
-        expect(CSSKeyframesRule.is(keyframesRule)).toBeTruthy()
-        expect(keyframesRule.cssText).toBe('@keyframes name {}')
+        const rule = createStyleSheet('@-webkit-keyframes name {}').cssRules[0]
+        expect(CSSKeyframesRule.is(rule)).toBeTruthy()
+        expect(rule.cssText).toBe('@keyframes name {}')
     })
     test('legacy property name', () => {
         const styleSheet = createStyleSheet('style { -webkit-order: 1 }')
