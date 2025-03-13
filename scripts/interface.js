@@ -31,8 +31,8 @@ const positionTryRule = rules.find(rule => rule.name === '@position-try')
 
 const definitions = [
     {
-        name: 'CSSFontFaceDescriptors',
         link: 'https://drafts.csswg.org/css-fonts-4/#cssfontfacedescriptors',
+        name: 'CSSFontFaceDescriptors',
         rule: fontFaceRule,
     },
     {
@@ -50,18 +50,18 @@ const definitions = [
         rule: marginRule,
     },
     {
-        name: 'CSSPageDescriptors',
         link: 'https://drafts.csswg.org/cssom-1/#csspagedescriptors',
+        name: 'CSSPageDescriptors',
         rule: pageRule,
     },
     {
-        name: 'CSSPositionTryDescriptors',
         link: 'https://drafts.csswg.org/css-anchor-position-1/#csspositiontrydescriptors',
+        name: 'CSSPositionTryDescriptors',
         rule: positionTryRule,
     },
     {
-        name: 'CSSStyleProperties',
         link: 'https://drafts.csswg.org/cssom-1/#cssstyleproperties',
+        name: 'CSSStyleProperties',
         rule: styleRule,
     },
 ]

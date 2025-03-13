@@ -3069,7 +3069,7 @@ describe('<control-value()>', () => {
         })
     })
     test('valid', () => {
-        expect(parse('<control-value()>', 'control-value(string)')).toEqual('control-value()')
+        expect(parse('<control-value()>', 'control-value(string)')).toBe('control-value()')
     })
 })
 describe('<counter>', () => {

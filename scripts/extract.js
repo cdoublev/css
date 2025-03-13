@@ -593,7 +593,6 @@ const excluded = {
         ],
     },
 }
-/* eslint-enable sort-keys */
 
 const descriptors = [...Object.keys(initial.descriptors).map(rule => [rule, Object.entries(initial.descriptors[rule])])]
 const properties = [...Object.entries(initial.properties)]
@@ -642,6 +641,7 @@ const errors = {
     },
     ':nth()': { cause: 'It should be restricted to <pseudo-page> (CSS Page 3). Its name should not include the leading colon.' },
 }
+/* eslint-enable sort-keys */
 
 /**
  * @param {string} spec

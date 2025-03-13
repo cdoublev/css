@@ -67,11 +67,11 @@ describe('CSSStyleDeclaration / CSSStyleProperties', () => {
             }
             const prefixed = dashed.startsWith('-webkit-')
             const camel = cssPropertyToIDLAttribute(dashed, prefixed)
-            expect(Object.hasOwn(prototype, dashed))
-            expect(Object.hasOwn(prototype, camel))
+            expect(Object.hasOwn(prototype, dashed)).toBeTruthy()
+            expect(Object.hasOwn(prototype, camel)).toBeTruthy()
             if (prefixed) {
                 const webkit = cssPropertyToIDLAttribute(dashed)
-                expect(Object.hasOwn(prototype, webkit))
+                expect(Object.hasOwn(prototype, webkit)).toBeTruthy()
             }
         })
     })
@@ -211,7 +211,7 @@ describe('CSSStyleDeclaration.setProperty(), CSSStyleDeclaration.getPropertyValu
         style.setProperty('webkitLineClamp', '1')
         style.setProperty('WebkitLineClamp', '1')
 
-        expect(style.getPropertyValue(''))
+        expect(style.getPropertyValue('-webkit-line-clamp')).toBe('')
     })
     it('does not store a declaration with a value including a priority', () => {
         const style = createStyleBlock()
