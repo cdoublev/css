@@ -3,6 +3,7 @@ const Stream = require('../lib/parse/stream.js')
 
 const string = 'hello'
 const stream = new Stream(string)
+const error = Error('oups')
 
 beforeEach(() => {
     stream.reset()
@@ -27,7 +28,7 @@ describe('moveToEnd()', () => {
 describe('consume(item, fallback)', () => {
     it('throws an error when the given item is not at the front of the stream', () => {
         expect(() => stream.consume('_', Error)).toThrow('"_" was expected')
-        expect(() => stream.consume('_', Error('oups'))).toThrow('oups')
+        expect(() => stream.consume('_', error)).toThrow('oups')
         expect(stream.index).toBe(-1)
     })
     it('consumes the item at the front of the stream', () => {
@@ -52,6 +53,7 @@ describe('consume(item, fallback)', () => {
         expect(stream.consume(char => char === 'h')).toBe('h')
         expect(stream.consume(char => char === 'e' ? 'success' : null)).toBe('success')
         expect(stream.consume(char => char === 'e' ? 'success' : false)).toBeNull()
+        expect(stream.consume(char => char === 'e' ? 'success' : error)).toBe(error)
         expect(stream.consume(char => char === stream.current)).toBe('l')
         expect(stream.consume((char, arg1, arg2) => char === 'l' ? `${arg1}${arg2}` : null, 'l', 'o')).toBe('lo')
         expect(stream.index).toBe(3)
