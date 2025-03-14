@@ -755,6 +755,7 @@ describe('comma separated values', () => {
 describe('functions', () => {
     test('invalid', () => {
         const invalid = [
+            ['fn()', 'fn(1)'],
             // Comma-containing production
             ['fn(<any-value>)', 'fn(,)'],
             ['fn(<any-value>)', 'fn(a {})'],
