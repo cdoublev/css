@@ -52,8 +52,9 @@ describe('consume(item, fallback)', () => {
         expect(stream.consume(char => char === 'h')).toBe('h')
         expect(stream.consume(char => char === 'e' ? 'success' : null)).toBe('success')
         expect(stream.consume(char => char === 'e' ? 'success' : false)).toBeNull()
+        expect(stream.consume(char => char === stream.current)).toBe('l')
         expect(stream.consume((char, arg1, arg2) => char === 'l' ? `${arg1}${arg2}` : null, 'l', 'o')).toBe('lo')
-        expect(stream.index).toBe(2)
+        expect(stream.index).toBe(3)
     })
 })
 
