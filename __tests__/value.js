@@ -752,6 +752,11 @@ describe('comma separated values', () => {
         expect(parse(definition, 'a, ,')).toBe('a,,')
     })
 })
+describe('simple blocks', () => {
+    test('invalid', () => {
+        expect(parse('(a)', '[a]', false)).toBeNull()
+    })
+})
 describe('functions', () => {
     test('invalid', () => {
         const invalid = [
