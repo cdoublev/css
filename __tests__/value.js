@@ -756,6 +756,10 @@ describe('simple blocks', () => {
     test('invalid', () => {
         expect(parse('(a)', '[a]', false)).toBeNull()
     })
+    test('valid', () => {
+        // Unclosed (parse error)
+        expect(parse('(a)', '(a')).toBe('(a)')
+    })
 })
 describe('functions', () => {
     test('invalid', () => {
@@ -775,8 +779,10 @@ describe('functions', () => {
     })
     test('valid', () => {
         const valid = [
+            // Unclosed (parse error)
+            ['fn()', 'fn(', 'fn()'],
             // Case-insensitive name
-            ['function(a)', 'FUNction(a)', 'function(a)'],
+            ['fn(a)', 'FN(a)', 'fn(a)'],
             // Comma-containing production
             ['fn([<declaration-value>?]#)', 'fn({}, , { a }, { , }, {{}})', 'fn(,, a, {,}, {{}})'],
             ['fn(<declaration-value>?, a)', 'fn(, a)'],
