@@ -3014,9 +3014,13 @@ describe('<color>', () => {
     test('valid <color-mix()>', () => {
         const valid = [
             // Omitted component values
+            ['color-mix(in srgb, red 50%, green)', 'color-mix(in srgb, red, green)'],
+            ['color-mix(in srgb, red, green 50%)', 'color-mix(in srgb, red, green)'],
             ['color-mix(in srgb, red 50%, green 50%)', 'color-mix(in srgb, red, green)'],
             ['color-mix(in srgb, red 51%, green 49%)', 'color-mix(in srgb, red 51%, green)'],
             ['color-mix(in srgb, red 49%, green 51%)', 'color-mix(in srgb, red 49%, green)'],
+            ['color-mix(in srgb, red 49%, green)'],
+            ['color-mix(in srgb, red, green 51%)', 'color-mix(in srgb, red 49%, green)'],
             ['color-mix(in srgb, red 100%, green 100%)'],
             // Preserve channel values except <hue> and <alpha-value>
             ['color-mix(in srgb, rgba(-100% 200% 0 / 101%), hsla(540deg -1% 0 / 50%))', 'color-mix(in srgb, rgb(-255 510 0), hsl(180 -1 0 / 0.5))'],
