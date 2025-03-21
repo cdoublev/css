@@ -779,10 +779,10 @@ describe('functions', () => {
     })
     test('valid', () => {
         const valid = [
-            // Unclosed (parse error)
-            ['fn()', 'fn(', 'fn()'],
             // Case-insensitive name
             ['fn(a)', 'FN(a)', 'fn(a)'],
+            // Unclosed (parse error)
+            ['fn()', 'fn(', 'fn()'],
             // Comma-containing production
             ['fn([<declaration-value>?]#)', 'fn({}, , { a }, { , }, {{}})', 'fn(,, a, {,}, {{}})'],
             ['fn(<declaration-value>?, a)', 'fn(, a)'],

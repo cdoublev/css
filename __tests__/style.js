@@ -469,8 +469,9 @@ describe('<whole-value>', () => {
     test('valid', () => {
         const style = createStyleBlock()
         const valid = [
+            // Resolved at parse time
+            ['first-valid(1)', '1', 'opacity'],
             // Serialize the list of tokens
-            ['  /**/  first-valid(  /**/ 1e0 /**/  ', '1', 'opacity'],
             ['  /**/  mix(  0, 1, /**/ 1e0 /**/  ', 'mix(0, 1, 1)', 'opacity'],
             ['  /**/  toggle(  /**/ 1e0 /**/  ', 'toggle(1)', 'opacity'],
             // Nested inside itself

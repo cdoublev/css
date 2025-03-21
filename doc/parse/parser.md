@@ -57,7 +57,7 @@ An **ambiguity** exists when there are multiple derivations for the same input.
 
 A canonical example to illustrate a parsing ambiguity is the grammar of math operations, which involves associativity and precedence rules. The priorities associated with these rules are important because the (semantic) result could be different without them.
 
-As in math operations, left associativity is usually expected for parsing programming languages: the parser must read the input from left to right: `1 - 2 + 3` must be interpreted to `2` instead of `4`. But to interpret `1 + 2 * 3` to `7` instead of `9`, precedence rules must be hard-coded with a more complex value definition than `<calc-value> [['+' | '-' | '*' | '/'] <calc-value>]*`.
+As in math operations, left associativity is usually expected for parsing programming languages: the parser must read the input from left to right: `1 - 2 + 3` must be interpreted to `2` instead of `4`. But to interpret `1 + 2 * 3` to `7` instead of `9`, precedence rules must be encoded with a more complex value definition than `<calc-value> [['+' | '-' | '*' | '/'] <calc-value>]*`.
 
 For grammars that remain ambiguous, a priority must be decided, either ahead of time (statically), with the first, last, or longest match priority, or at parse time (dynamically), depending on the context.
 

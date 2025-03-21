@@ -61,7 +61,7 @@ function createStyleSheet(rules = '', properties = {}) {
  *
  * This abstraction is not great but probably the best way to avoid increasing
  * code complexity in tests, until first-valid() can be replaced with another
- * <whole-value> substitution that do not require resolved at parse time.
+ * <whole-value> substitution that do not require to be resolved at parse time.
  */
 function normalizeText(text) {
     return text
@@ -1069,7 +1069,7 @@ describe('CSS grammar - syntax', () => {
     })
     test('nested - declaration with a value containing a bad token', () => {
         // It is always invalid... except with forgiving grammar?
-        const { cssRules: [nested] } = createStyleSheet(`
+        const styleSheet = createStyleSheet(`
             style {
                 color: var(--custom) "\n;
                 color: var(--custom) url(bad .url);
@@ -1080,11 +1080,11 @@ describe('CSS grammar - syntax', () => {
                 style {}
             }
         `)
-        expect(nested.cssText).toBe('style { & style {} }')
+        expect(styleSheet.cssRules[0].cssText).toBe('style { & style {} }')
     })
     test('nested - declaration not for a custom property with a value containing a positioned {}-block', () => {
         // It is always consumed as a rule
-        const { cssRules: [nested] } = createStyleSheet(`
+        const styleSheet = createStyleSheet(`
             style {
                 color: {} var(--custom);
                 color:var(--custom) {}
@@ -1092,11 +1092,11 @@ describe('CSS grammar - syntax', () => {
                 style:hover {}
             }
         `)
-        expect(nested.cssText).toBe('style { & style:hover {} }')
+        expect(styleSheet.cssRules[0].cssText).toBe('style { & style:hover {} }')
     })
     test('nested - declaration for a custom property with a value containing a positioned {}-block', () => {
         // It is never consumed as a qualified rule in a nested context
-        const { cssRules: [nested] } = createStyleSheet(`
+        const styleSheet = createStyleSheet(`
             style {
                 --custom-1: {} 1;
                 --custom-2: 1 {};
@@ -1104,14 +1104,14 @@ describe('CSS grammar - syntax', () => {
                 style:hover {}
             }
         `)
-        expect(nested.cssText).toBe('style { --custom-1: {} 1; --custom-2: 1 {}; }')
+        expect(styleSheet.cssRules[0].cssText).toBe('style { --custom-1: {} 1; --custom-2: 1 {}; }')
     })
 })
 
 describe('CSS grammar - semantic', () => {
     // Style sheet contents
     test('top-level - invalid contents', () => {
-        const { cssRules } = createStyleSheet(`
+        const styleSheet = createStyleSheet(`
             @charset "utf-8";
             @namespace svg "http://www.w3.org/2000/svg" {}
             @media;
@@ -1119,7 +1119,7 @@ describe('CSS grammar - semantic', () => {
             @top-left {}
             0% {}
         `)
-        expect(cssRules).toHaveLength(0)
+        expect(styleSheet.cssRules).toHaveLength(0)
     })
     test('top-level - opening and ending HTML comment tokens', () => {
 
