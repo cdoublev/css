@@ -408,11 +408,11 @@ describe('arbitrary substitution', () => {
         const style = createStyleBlock()
         const valid = [
             // Valid at parse time
-            ['unknown(attr(name))'],
-            ['unknown(env(name))'],
-            ['unknown(inherit(--custom))'],
-            ['unknown(random-item(--key, 1))'],
-            ['unknown(var(--custom))'],
+            ['unknown(ATTR(name))'],
+            ['unknown(ENV(name))'],
+            ['unknown(INHERIT(--custom))'],
+            ['unknown(RANDOM-ITEM(--key, 1))'],
+            ['unknown(VAR(--custom))'],
             ['unknown(--custom())'],
             // Nested inside itself
             ['attr(name, attr(name))'],
@@ -470,10 +470,10 @@ describe('<whole-value>', () => {
         const style = createStyleBlock()
         const valid = [
             // Resolved at parse time
-            ['first-valid(1)', '1', 'opacity'],
+            ['FIRST-VALID(1)', '1', 'opacity'],
             // Serialize the list of tokens
-            ['  /**/  mix(  0, 1, /**/ 1e0 /**/  ', 'mix(0, 1, 1)', 'opacity'],
-            ['  /**/  toggle(  /**/ 1e0 /**/  ', 'toggle(1)', 'opacity'],
+            ['  /**/  MIX(  0, 1, /**/ 1e0 /**/  ', 'mix(0, 1, 1)', 'opacity'],
+            ['  /**/  TOGGLE(  /**/ 1e0 /**/  ', 'toggle(1)', 'opacity'],
             // Nested inside itself
             ['first-valid(toggle(first-valid(1)))', 'toggle(1)', 'opacity'],
             ['mix(0, 1, toggle(mix(0, 1, 1)))', 'mix(0, 1, toggle(mix(0, 1, 1)))', 'opacity'],

@@ -1061,6 +1061,10 @@ describe('<url>', () => {
     })
     test('valid', () => {
         const valid = [
+            // Case-insensitive name
+            ['URL(file.jpg)', 'url("file.jpg")'],
+            ['URL("file.jpg")', 'url("file.jpg")'],
+            ['SRC("file.jpg")', 'src("file.jpg")'],
             // Unclosed (parse error)
             ['url(', 'url("")'],
             ['url( ', 'url("")'],
@@ -1638,7 +1642,7 @@ describe('<calc()>', () => {
     test('valid single operand', () => {
         const valid = [
             // <number>, <dimension>, <percentage>
-            ['<number>', 'calc(1)'],
+            ['<number>', 'CALC(1)', 'calc(1)'],
             ['<length>', 'calc(1px)'],
             ['<percentage>', 'calc(1%)'],
             // <calc-keyword>
@@ -1819,7 +1823,7 @@ describe('<min()>, <max()>', () => {
             ['<length-percentage>', 'min(1%)', 'calc(1%)'],
             // Identical units
             ['<number>', 'min(0, 1)', 'calc(0)'],
-            ['<length>', 'min(0em, 1em)'],
+            ['<length>', 'MIN(0em, 1em)', 'min(0em, 1em)'],
             ['<length-percentage>', 'min(0%, 1%)'],
             ['<percentage>', 'min(0%, 1%)', 'calc(0%)'],
             // Different units
@@ -1854,7 +1858,7 @@ describe('<clamp()>', () => {
             ['<number>', 'clamp(0, 2, 1)', 'calc(1)'],
             ['<number>', 'clamp(1, 0, 2)', 'calc(1)'],
             ['<number>', 'clamp(1, 2, 0)', 'calc(1)'],
-            ['<length>', 'clamp(0em, 1em, 2em)'],
+            ['<length>', 'CLAMP(0em, 1em, 2em)', 'clamp(0em, 1em, 2em)'],
             ['<length-percentage>', 'clamp(0%, 1%, 2%)'],
             ['<percentage>', 'clamp(0%, 1%, 2%)', 'calc(1%)'],
             // Different units
@@ -1891,7 +1895,7 @@ describe('<round()>', () => {
             ['<number>', 'round(down, 1.9)', 'calc(1)'],
             ['<number>', 'round(to-zero, 1, 2)', 'calc(0)'],
             ['<number>', 'round(to-zero, -1, 2)', 'calc(0)'],
-            ['<length>', 'round(1em, 1em)'],
+            ['<length>', 'ROUND(1em, 1em)', 'round(1em, 1em)'],
             ['<length-percentage>', 'round(1%, 1%)'],
             ['<percentage>', 'round(1%, 1%)', 'calc(1%)'],
             // Different units
@@ -1974,7 +1978,7 @@ describe('<mod()>', () => {
             ['<number>', 'mod(3, 2)', 'calc(1)'],
             ['<number>', 'mod(3, -2)', 'calc(-1)'],
             ['<number>', 'mod(-3, 2)', 'calc(1)'],
-            ['<length>', 'mod(3em, 2em)'],
+            ['<length>', 'MOD(3em, 2em)', 'mod(3em, 2em)'],
             ['<length-percentage>', 'mod(3%, 2%)'],
             ['<percentage>', 'mod(3%, 2%)', 'calc(1%)'],
             // Different units
@@ -2018,7 +2022,7 @@ describe('<rem()>', () => {
             ['<number>', 'rem(3, 2)', 'calc(1)'],
             ['<number>', 'rem(3, -2)', 'calc(1)'],
             ['<number>', 'rem(-3, 2)', 'calc(-1)'],
-            ['<length>', 'rem(3em, 2em)'],
+            ['<length>', 'REM(3em, 2em)', 'rem(3em, 2em)'],
             ['<length-percentage>', 'rem(3%, 2%)'],
             ['<percentage>', 'rem(3%, 2%)', 'calc(1%)'],
             // Different units
@@ -2059,7 +2063,7 @@ describe('<sin()>', () => {
         const valid = [
             ['<number>', 'sin(45)', `calc(${+Math.sin(45).toFixed(6)})`],
             ['<number>', 'sin(45deg)', `calc(${+Math.sin(toRadians(45)).toFixed(6)})`],
-            ['<angle-percentage>', 'calc(1deg * sin(1%))'],
+            ['<angle-percentage>', 'calc(1deg * SIN(1%))', 'calc(1deg * sin(1%))'],
         ]
         valid.forEach(([definition, input, expected = input]) => expect(parse(definition, input)).toBe(expected))
     })
@@ -2085,7 +2089,7 @@ describe('<cos()>', () => {
         const valid = [
             ['<number>', 'cos(45)', `calc(${+Math.cos(45).toFixed(6)})`],
             ['<number>', 'cos(45deg)', `calc(${+Math.cos(toRadians(45)).toFixed(6)})`],
-            ['<angle-percentage>', 'calc(1deg * cos(1%))'],
+            ['<angle-percentage>', 'calc(1deg * COS(1%))', 'calc(1deg * cos(1%))'],
         ]
         valid.forEach(([definition, input, expected = input]) => expect(parse(definition, input)).toBe(expected))
     })
@@ -2106,7 +2110,7 @@ describe('<tan()>', () => {
         const valid = [
             ['<number>', 'tan(45)', `calc(${+Math.tan(45).toFixed(6)})`],
             ['<number>', 'tan(45deg)', `calc(${+Math.tan(toRadians(45)).toFixed(6)})`],
-            ['<angle-percentage>', 'calc(1deg * tan(1%))'],
+            ['<angle-percentage>', 'calc(1deg * TAN(1%))', 'calc(1deg * tan(1%))'],
         ]
         valid.forEach(([definition, input, expected = input]) => expect(parse(definition, input)).toBe(expected))
     })
@@ -2141,7 +2145,7 @@ describe('<asin()>', () => {
     })
     test('valid', () => {
         expect(parse('<angle>', 'asin(0.5)')).toBe('calc(30deg)')
-        expect(parse('<angle-percentage>', 'asin(1% / 1deg)')).toBe('asin(1% / 1deg)')
+        expect(parse('<angle-percentage>', 'ASIN(1% / 1deg)')).toBe('asin(1% / 1deg)')
     })
 })
 describe('<acos()>', () => {
@@ -2159,7 +2163,7 @@ describe('<acos()>', () => {
     })
     test('valid', () => {
         expect(parse('<angle>', 'acos(0.5)')).toBe('calc(60deg)')
-        expect(parse('<angle-percentage>', 'acos(1% / 1deg)')).toBe('acos(1% / 1deg)')
+        expect(parse('<angle-percentage>', 'ACOS(1% / 1deg)')).toBe('acos(1% / 1deg)')
     })
 })
 describe('<atan()>', () => {
@@ -2177,7 +2181,7 @@ describe('<atan()>', () => {
     })
     test('valid', () => {
         expect(parse('<angle>', 'atan(0.5)')).toBe(`calc(${+toDegrees(Math.atan(0.5)).toFixed(6)}deg)`)
-        expect(parse('<angle-percentage>', 'atan(1% / 1deg)')).toBe('atan(1% / 1deg)')
+        expect(parse('<angle-percentage>', 'ATAN(1% / 1deg)')).toBe('atan(1% / 1deg)')
     })
 })
 describe('<atan2()>', () => {
@@ -2196,7 +2200,7 @@ describe('<atan2()>', () => {
         const valid = [
             ['<angle>', 'atan2(1, 1)', `calc(${+toDegrees(Math.atan2(1, 1)).toFixed(6)}deg)`],
             ['<angle>', 'atan2(1px, 1px)', `calc(${+toDegrees(Math.atan2(1, 1)).toFixed(6)}deg)`],
-            ['<length-percentage>', 'calc(atan2(1%, 1%) / 1deg * 1px)', 'calc(1px * atan2(1%, 1%) / 1deg)'],
+            ['<length-percentage>', 'calc(ATAN2(1%, 1%) / 1deg * 1px)', 'calc(1px * atan2(1%, 1%) / 1deg)'],
             ['<angle>', 'atan2(1in, 100px)', `calc(${+toDegrees(Math.atan2(96, 100)).toFixed(6)}deg)`],
             ['<angle>', 'atan2(1em, 1px)', 'atan2(1em, 1px)'],
             ['<angle-percentage>', 'atan2(1deg, atan2(1%, 1%))', 'atan2(1deg, atan2(1%, 1%))'],
@@ -2218,7 +2222,7 @@ describe('<pow()>', () => {
     })
     test('valid', () => {
         expect(parse('<number>', 'pow(4, 2)')).toBe('calc(16)')
-        expect(parse('<length-percentage>', 'calc(1px * pow(1, 1% / 1px))')).toBe('calc(1px * pow(1, 1% / 1px))')
+        expect(parse('<length-percentage>', 'calc(1px * POW(1, 1% / 1px))')).toBe('calc(1px * pow(1, 1% / 1px))')
     })
 })
 describe('<sqrt()>', () => {
@@ -2235,7 +2239,7 @@ describe('<sqrt()>', () => {
     })
     test('valid', () => {
         expect(parse('<number>', 'sqrt(4)')).toBe('calc(2)')
-        expect(parse('<length-percentage>', 'calc(1px * sqrt(1% / 1px))')).toBe('calc(1px * sqrt(1% / 1px))')
+        expect(parse('<length-percentage>', 'calc(1px * SQRT(1% / 1px))')).toBe('calc(1px * sqrt(1% / 1px))')
     })
 })
 describe('<hypot()>', () => {
@@ -2254,7 +2258,7 @@ describe('<hypot()>', () => {
         const valid = [
             // Identical units
             ['<number>', 'hypot(3, 4)', 'calc(5)'],
-            ['<length>', 'hypot(1em, 2em)'],
+            ['<length>', 'HYPOT(1em, 2em)', 'hypot(1em, 2em)'],
             ['<length-percentage>', 'hypot(1%)'],
             ['<percentage>', 'hypot(3%, 4%)', 'calc(5%)'],
             // Different units
@@ -2281,7 +2285,7 @@ describe('<log()>', () => {
         const valid = [
             ['<number>', 'log(e)', 'calc(1)'],
             ['<number>', 'log(8, 2)', 'calc(3)'],
-            ['<length-percentage>', 'calc(1px * log(1, 1% / 1px))'],
+            ['<length-percentage>', 'calc(1px * LOG(1, 1% / 1px))', 'calc(1px * log(1, 1% / 1px))'],
         ]
         valid.forEach(([definition, input, expected = input]) => expect(parse(definition, input)).toBe(expected))
     })
@@ -2300,7 +2304,7 @@ describe('<exp()>', () => {
     })
     test('valid', () => {
         expect(parse('<number>', 'exp(1)')).toBe(`calc(${Math.E.toFixed(6)})`)
-        expect(parse('<length-percentage>', 'calc(1px * exp(1% / 1px))')).toBe('calc(1px * exp(1% / 1px))')
+        expect(parse('<length-percentage>', 'calc(1px * EXP(1% / 1px))')).toBe('calc(1px * exp(1% / 1px))')
     })
 })
 describe('<abs()>', () => {
@@ -2312,7 +2316,7 @@ describe('<abs()>', () => {
         const valid = [
             ['<number>', 'abs(-1)', 'calc(1)'],
             ['<number>', 'abs(-infinity)', 'calc(infinity)'],
-            ['<length>', 'abs(-1em)'],
+            ['<length>', 'ABS(-1em)', 'abs(-1em)'],
             ['<length-percentage>', 'abs(abs(-1%))'],
             ['<percentage>', 'abs(-1%)', 'calc(1%)'],
         ]
@@ -2328,7 +2332,7 @@ describe('<sign()>', () => {
         const valid = [
             ['<number>', 'sign(-2)', 'calc(-1)'],
             ['<number>', 'sign(-infinity)', 'calc(-1)'],
-            ['<number>', 'sign(-1em)', 'sign(-1em)'],
+            ['<number>', 'SIGN(-1em)', 'sign(-1em)'],
             ['<length-percentage>', 'calc(sign(-1%) * 1%)', 'calc(1% * sign(-1%))'],
         ]
         valid.forEach(([definition, input, expected]) => expect(parse(definition, input)).toBe(expected))
@@ -2353,7 +2357,7 @@ describe('<calc-mix()>', () => {
     })
     test('valid', () => {
         const valid = [
-            ['<length>', 'calc-mix(--timeline, 1px * 1, 1px)', 'calc-mix(--timeline, 1px, 1px)'],
+            ['<length>', 'CALC-MIX(--timeline, 1px * 1, 1px)', 'calc-mix(--timeline, 1px, 1px)'],
             ['<length>', 'calc-mix(0 * 1, 1px, 1px)', 'calc-mix(0, 1px, 1px)'],
             ['<length>', 'calc-mix(0%, 1px, 1px)'],
             ['<length>', 'calc-mix(progress(1%, 1% + 1%, 1%), 1px, 1px)', 'calc-mix(1, 1px, 1px)'],
@@ -2379,7 +2383,7 @@ describe('<random()>', () => {
     })
     test('valid', () => {
         const valid = [
-            ['<number>', 'random(auto, 1 / 1, 1em / 1px)', 'random(1, 1em / 1px)'],
+            ['<number>', 'RANDOM(auto, 1 / 1, 1em / 1px)', 'random(1, 1em / 1px)'],
             ['<length-percentage>', 'random(--key, 1px, 1%)'],
             ['<length-percentage>', 'calc(1px * random(1% / 1px, 1))'],
         ]
@@ -2405,7 +2409,7 @@ describe('<progress()>', () => {
             ['<number>', 'progress(1, 0, 2)', 'calc(0.5)'],
             ['<number>', 'progress(1, 2, 0)', 'calc(0.5)'],
             ['<number>', 'progress(-1, 0, 2)', 'calc(-0.5)'],
-            ['<number>', 'progress(1em, 0em, 2em)'],
+            ['<number>', 'PROGRESS(1em, 0em, 2em)', 'progress(1em, 0em, 2em)'],
             ['<length-percentage>', 'calc(1px * progress(1%, 0%, 2%))'],
             // Different units
             ['<number>', 'progress(48px, 0px, 1in)', 'calc(0.5)'],
@@ -2436,7 +2440,7 @@ describe('<container-progress()>', () => {
         invalid.forEach(([definition, input]) => expect(parse(definition, input, false)).toBeNull())
     })
     test('valid', () => {
-        expect(parse('<number>', 'container-progress(width, 0px + 1px, 1px * 1)'))
+        expect(parse('<number>', 'CONTAINER-PROGRESS(width, 0px + 1px, 1px * 1)'))
             .toBe('container-progress(width, 1px, 1px)')
         expect(parse('<number>', 'container-progress(aspect-ratio, -1, 1)'))
             .toBe('container-progress(aspect-ratio, -1, 1)')
@@ -2459,13 +2463,13 @@ describe('<media-progress()>', () => {
         invalid.forEach(([definition, input]) => expect(parse(definition, input, false)).toBeNull())
     })
     test('valid', () => {
-        expect(parse('<number>', 'media-progress(width, 0px + 1px, 1px * 1)')).toBe('media-progress(width, 1px, 1px)')
+        expect(parse('<number>', 'MEDIA-PROGRESS(width, 0px + 1px, 1px * 1)')).toBe('media-progress(width, 1px, 1px)')
         expect(parse('<number>', 'media-progress(aspect-ratio, -1, 1)')).toBe('media-progress(aspect-ratio, -1, 1)')
     })
 })
 describe('<sibling-count()>, <sibling-index()>', () => {
     test('valid', () => {
-        expect(parse('<integer>', 'sibling-index()')).toBe('sibling-index()')
+        expect(parse('<integer>', 'SIBLING-INDEX()')).toBe('sibling-index()')
         expect(parse('<length>', 'calc(sibling-index() * 1px)')).toBe('calc(1px * sibling-index())')
     })
 })
