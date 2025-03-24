@@ -487,7 +487,6 @@ const excluded = {
     specifications: [
         // Not ready
         'css-color-6',
-        'css-color-hdr',
         'css-conditional-values',
         'css-gaps',
         'css-grid-3',
@@ -564,6 +563,16 @@ const excluded = {
             '<content-list>',
             // https://github.com/w3c/csswg-drafts/issues/1981
             '<element()>',
+        ],
+        'css-color': [
+            // Prefer CSS Color HDR
+            '<colorspace-params>',
+            '<predefined-rgb>',
+        ],
+        'css-color-5': [
+            // Prefer CSS Color HDR
+            '<colorspace-params>',
+            '<predefined-rgb>',
         ],
         'css-images': [
             // TODO: fix parsing/serializing `<radial-gradient-syntax>`, `<radial-size>`
