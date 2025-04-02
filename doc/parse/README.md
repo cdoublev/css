@@ -137,7 +137,7 @@ Each *parse* procedure from CSS Syntax is named a *parser entry point* and runs 
   >
   > [...]
 
-Entry points can receive a string, tokens, or component values, and output the expected structure: a component value, a declaration, a rule, or a list of them. They are not intended to be used at an intermediate step of the recursive parsing process, since some algorithms output high-level objects that are not a string, tokens, or component values.
+Entry points can receive a string, tokens, or component values, and output the expected structure: a component value, a declaration, a rule, or a list of them. They are not intended to be used at an intermediate step of the recursive parse process, since some algorithms output high-level objects that are not a string, tokens, or component values.
 
 Algorithms for a rule and a declaration require validating them in the context against their grammar:
 

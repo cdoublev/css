@@ -144,7 +144,7 @@ describe('CSSStyleSheet.insertRule(), CSSStyleSheet.deleteRule()', () => {
         expect(() => styleSheet.deleteRule(0)).toThrow(ACCESS_THIRD_PARTY_STYLESHEET_ERROR)
     })
     it('throws an error when trying to insert/delete a rule while modifications on the style sheet are not allowed', () => {
-        const styleSheet = new globalThis.CSSStyleSheet()
+        const styleSheet = new globalThis.CSSStyleSheet
         styleSheet.replace('')
         expect(() => styleSheet.insertRule('style {}')).toThrow(UPDATE_LOCKED_STYLESHEET_ERROR)
         expect(() => styleSheet.deleteRule(0)).toThrow(UPDATE_LOCKED_STYLESHEET_ERROR)
@@ -159,7 +159,7 @@ describe('CSSStyleSheet.insertRule(), CSSStyleSheet.deleteRule()', () => {
         expect(() => styleSheet.insertRule('style {};')).toThrow(EXTRA_RULE_ERROR)
     })
     it('throws an error when trying to insert @import in a constructed style sheet', () => {
-        const styleSheet = new globalThis.CSSStyleSheet()
+        const styleSheet = new globalThis.CSSStyleSheet
         expect(() => styleSheet.insertRule('@import "./global.css";')).toThrow(INSERT_INVALID_IMPORT_ERROR)
     })
     it('throws an error when trying to insert/delete a rule at an index greater than the length of rules', () => {
@@ -245,13 +245,13 @@ describe('CSSStyleSheet.replace(), CSSStyleSheet.replaceSync()', () => {
         expect(() => styleSheet.replaceSync('')).toThrow(UPDATE_LOCKED_STYLESHEET_ERROR)
     })
     it('throws an error when trying to replace rules concurrently', async () => {
-        const styleSheet = new globalThis.CSSStyleSheet()
+        const styleSheet = new globalThis.CSSStyleSheet
         styleSheet.replace('')
         return expect(styleSheet.replace('')).rejects.toMatchObject(UPDATE_LOCKED_STYLESHEET_ERROR)
     })
     it('replaces a rule asynchronously/synchronously', async () => {
 
-        const styleSheet = new globalThis.CSSStyleSheet()
+        const styleSheet = new globalThis.CSSStyleSheet
         const { cssRules } = styleSheet
 
         expect(await styleSheet.replace('style { color: orange }')).toBe(styleSheet)
@@ -265,7 +265,7 @@ describe('CSSStyleSheet.replace(), CSSStyleSheet.replaceSync()', () => {
     })
     it('ignores opening and ending HTML comment tokens', () => {
 
-        const styleSheet = new globalThis.CSSStyleSheet()
+        const styleSheet = new globalThis.CSSStyleSheet
 
         styleSheet.replaceSync('<!-- style {} -->')
 
@@ -273,7 +273,7 @@ describe('CSSStyleSheet.replace(), CSSStyleSheet.replaceSync()', () => {
     })
     it('ignores import rules and invalid statements', () => {
 
-        const styleSheet = new globalThis.CSSStyleSheet()
+        const styleSheet = new globalThis.CSSStyleSheet
 
         styleSheet.replaceSync(`
             @import "./global.css";

@@ -13,6 +13,7 @@ const {
     hash,
     ident,
     identToken,
+    integer,
     keyword,
     length,
     list,
@@ -1165,7 +1166,7 @@ describe('<integer>', () => {
         invalid.forEach(input => expect(parse('<integer [0,∞]>', input, false)).toBeNull())
     })
     test('representation', () => {
-        expect(parse('<integer>', '1', false)).toMatchObject(numberToken(1, ['<integer>']))
+        expect(parse('<integer>', '1', false)).toMatchObject(integer(1))
     })
     test('valid', () => {
         const valid = [
@@ -3135,9 +3136,9 @@ describe('<counter-style-name>', () => {
         expect(parse('<counter-style-name>', 'NAME')).toBe('NAME')
     })
 })
-describe('<dashed-function-head>', () => {
+describe('<custom-function-definition>', () => {
     test('invalid', () => {
-        expect(parse('<dashed-function-head>', 'custom()', false)).toBeNull()
+        expect(parse('<custom-function-definition>', 'custom()', false)).toBeNull()
     })
     test('representation', () => {
         const nameAndParameters = {
@@ -3145,11 +3146,11 @@ describe('<dashed-function-head>', () => {
             types: ['<function>'],
             value: omitted,
         }
-        const head = list([nameAndParameters, omitted], ' ', ['<dashed-function-head>'])
-        expect(parse('<dashed-function-head>', '--CUSTOM()', false)).toMatchObject(head)
+        const definition = list([nameAndParameters, omitted], ' ', ['<custom-function-definition>'])
+        expect(parse('<custom-function-definition>', '--CUSTOM()', false)).toMatchObject(definition)
     })
     test('valid', () => {
-        expect(parse('<dashed-function-head>', '--custom() returns type(*)')).toBe('--custom()')
+        expect(parse('<custom-function-definition>', '--custom() returns type(*)')).toBe('--custom()')
     })
 })
 describe('<drop-shadow()>', () => {
@@ -3544,12 +3545,12 @@ describe('<mf-comparison>', () => {
 })
 describe('<mf-boolean>', () => {
     test('invalid', () => {
+        expect(parse('<mf-boolean>', 'min-color', false, mediaRule)).toBeNull()
         expect(parse('<mf-boolean>', 'min-orientation', false, mediaRule)).toBeNull()
-        expect(parse('<mf-boolean>', 'min-width', false, mediaRule)).toBeNull()
     })
     test('representation', () => {
-        expect(parse('<mf-boolean>', 'width', false, mediaRule))
-            .toMatchObject(ident('width', ['<mf-name>', '<mf-boolean>']))
+        expect(parse('<mf-boolean>', 'color', false, mediaRule))
+            .toMatchObject(ident('color', ['<mf-name>', '<mf-boolean>']))
     })
     test('valid', () => {
         expect(parse('<mf-boolean>', 'orientation', true, mediaRule)).toBe('orientation')
@@ -3561,7 +3562,7 @@ describe('<mf-name>', () => {
         expect(parse('<mf-name>', 'inline-size', false, mediaRule)).toBeNull()
     })
     test('representation', () => {
-        expect(parse('<mf-name>', 'width', false, mediaRule)).toMatchObject(ident('width', ['<mf-name>']))
+        expect(parse('<mf-name>', 'color', false, mediaRule)).toMatchObject(ident('color', ['<mf-name>']))
     })
     test('valid', () => {
         const valid = [
@@ -3578,26 +3579,26 @@ describe('<mf-plain>', () => {
     test('invalid', () => {
         const invalid = [
             'min-orientation: landscape',
-            'width: 1',
+            'color: red',
             // Element-dependent numeric substitution
-            'width: calc-mix(0, 1px, 1px)',
-            'width: random(1px, 1px)',
-            'width: calc(1px * sibling-index())',
+            'color: calc-mix(0, 1, 1)',
+            'color: random(1, 1)',
+            'color: sibling-index()',
         ]
         invalid.forEach(input => expect(parse('<mf-plain>', input, false, mediaRule)).toBeNull())
     })
     test('representation', () => {
-        const name = ident('width', ['<mf-name>'])
-        const value = length(1, 'px', ['<mf-value>'])
+        const name = ident('color', ['<mf-name>'])
+        const value = integer(1, ['<mf-value>'])
         const feature = list([name, delimiter(':'), value], ' ', ['<mf-plain>'])
-        expect(parse('<mf-plain>', 'width: 1px', false, mediaRule)).toMatchObject(feature)
+        expect(parse('<mf-plain>', 'color: 1', false, mediaRule)).toMatchObject(feature)
     })
     test('valid', () => {
         const valid = [
             ['orientation: PORTRAIT', 'orientation: portrait'],
             ['color: 1.0', 'color: 1'],
             ['min-width: 0', 'min-width: 0px'],
-            ['width: calc(1px * 1)', 'width: calc(1px)'],
+            ['color: calc(1 * 1)', 'color: calc(1)'],
             ['aspect-ratio: 1', 'aspect-ratio: 1 / 1'],
         ]
         valid.forEach(([input, expected]) => expect(parse('<mf-plain>', input, true, mediaRule)).toBe(expected))
@@ -3607,33 +3608,33 @@ describe('<mf-range>', () => {
     test('invalid', () => {
         const invalid = [
             // Prefixed <mf-name>
-            'min-width = 1px',
-            '1px < min-width < 1px',
+            'min-color = 1',
+            '1 < min-color < 1',
             // Discrete <mf-name>
             'orientation = 1',
             '1 < orientation < 1',
             // Invalid <mf-value>
-            'width = 1',
-            '1 < width < 1px',
-            '1px < width < 1',
+            'color = 1px',
+            '1 < color < 1px',
+            '1px < color < 1',
             // Element-dependent numeric substitutions
-            'width < calc-mix(0, 1px, 1px)',
-            'width < random(1px, 1px)',
-            'width < calc(1px * sibling-index())',
+            'color < calc-mix(0, 1, 1)',
+            'color < random(1, 1)',
+            'color < sibling-index()',
         ]
         invalid.forEach(input => expect(parse('<mf-range>', input, false, mediaRule)).toBeNull())
     })
     test('representation', () => {
-        const name = ident('width', ['<mf-name>'])
+        const name = ident('color', ['<mf-name>'])
         const comparator = delimiter('=', ['<mf-eq>', '<mf-comparison>'])
-        const value = length(1, 'px', ['<mf-value>'])
+        const value = integer(1, ['<mf-value>'])
         const range = list([name, comparator, value], ' ', ['<mf-range>'])
-        expect(parse('<mf-range>', 'width = 1px', false, mediaRule)).toMatchObject(range)
+        expect(parse('<mf-range>', 'color = 1', false, mediaRule)).toMatchObject(range)
     })
     test('valid', () => {
         const valid = [
-            ['width < 0', 'width < 0px'],
-            ['width < calc(1px * 1)', 'width < calc(1px)'],
+            ['color < 0', 'color < 0'],
+            ['color < calc(1 * 1)', 'color < calc(1)'],
             ['0 < aspect-ratio < 1', '0 / 1 < aspect-ratio < 1 / 1'],
         ]
         valid.forEach(([input, expected]) => expect(parse('<mf-range>', input, true, mediaRule)).toBe(expected))
@@ -3889,7 +3890,7 @@ describe('<step-easing-function>', () => {
         expect(parse('<step-easing-function>', 'steps(1)', false)).toMatchObject({
             name: 'steps',
             types: ['<function>', '<steps()>', '<step-easing-function>'],
-            value: list([numberToken(1, ['<integer>']), omitted, omitted]),
+            value: list([integer(1), omitted, omitted]),
         })
     })
     test('valid', () => {
