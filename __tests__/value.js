@@ -3936,6 +3936,9 @@ describe('<style-feature>', () => {
         const valid = [
             // Standard property name
             ['color'],
+            // Aliased and mapped property name
+            ['-webkit-order'],
+            ['-webkit-box-align'],
             // Custom property
             ['--custom: fn(  /**/  1e0  /**/  )'],
             // Dependency-free substitution
