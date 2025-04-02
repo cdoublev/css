@@ -309,6 +309,7 @@ describe('support', () => {
     test('declaration', () => {
         const declarations = [
             // <general-enclosed>
+            ['unknown', false],
             ['unknown: 1', false],
             ['color: invalid', false],
             // Property value range
