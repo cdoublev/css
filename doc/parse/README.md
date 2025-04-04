@@ -155,7 +155,7 @@ Some rules like `@charset`, `@import`, `@namespace`, `@layer`, also define the o
 
 However, CSS Syntax does not prescribe when and how to construct the CSSOM representation.
 
-Parsing a style sheet must run recursively from its top to bottom level, which allows constructing the CSSOM tree in parallel, noting that a `CSSStyleSheet` will never be discarded, or with a second traversal, to avoid discarding `CSSRule`s and cancelling any processing, like fetching a style sheet referenced by a `CSSImportRule`.
+Parsing a style sheet must run recursively from its top to bottom level, which allows to construct the CSSOM tree in parallel, noting that a `CSSStyleSheet` will never be discarded, or with a second traversal, to avoid discarding `CSSRule`s and cancelling any processing, like fetching a style sheet referenced by a `CSSImportRule`.
 
 ---
 
