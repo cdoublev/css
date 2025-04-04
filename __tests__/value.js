@@ -785,7 +785,8 @@ describe('functions', () => {
             // Unclosed (parse error)
             ['fn()', 'fn(', 'fn()'],
             // Comma-containing production
-            ['fn([<declaration-value>?]#)', 'fn({}, , { a }, { , }, {{}})', 'fn(,, a, {,}, {{}})'],
+            ['fn([<declaration-value>?]#)', 'fn(, {})', 'fn(,)'],
+            ['fn([<declaration-value>?]#)', 'fn({ a }, { , }, {{}})', 'fn(a, {,}, {{}})'],
             ['fn(<declaration-value>?, a)', 'fn(, a)'],
         ]
         valid.forEach(([definition, input, expected = input]) => expect(parse(definition, input)).toBe(expected))
