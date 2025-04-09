@@ -183,11 +183,8 @@ const replaced = {
         '<url-modifier>': '<request-url-modifier> | <ident> | <function-token> <any-value>? )',
         '<url-set>': '<image-set()>',
         '<zero>': '<number-token>',
-        // https://github.com/w3c/csswg-drafts/issues/8346, https://github.com/w3c/csswg-drafts/pull/8367#issuecomment-1408147460, https://github.com/w3c/csswg-drafts/issues/9729, https://github.com/w3c/csswg-drafts/issues/10833
-        '<angular-color-hint>': '<angle-percentage> | <zero>',
-        '<color-stop-angle>': '[<angle-percentage> | <zero>]{1,2}',
+        // https://github.com/w3c/csswg-drafts/pull/8367#issuecomment-1408147460, https://github.com/w3c/csswg-drafts/issues/9729, https://github.com/w3c/csswg-drafts/issues/10833
         '<conic-gradient-syntax>': '[[[from [<angle> | <zero>]]? [at <position>]?]! || <color-interpolation-method>]? , <angular-color-stop-list>',
-        '<linear-gradient-syntax>': '[[<angle> | <zero> | to <side-or-corner>] || <color-interpolation-method>]? , <color-stop-list>',
         '<radial-gradient-syntax>': '[[[<radial-shape> || <radial-size>]? [at <position>]?]! || <color-interpolation-method>]? , <color-stop-list>',
         '<radial-size>': 'closest-corner | farthest-corner | <radial-radius>{1,2}',
         // https://github.com/w3c/csswg-drafts/issues/11842
@@ -566,12 +563,12 @@ const excluded = {
         ],
         'css-color': [
             // Prefer CSS Color HDR
-            '<colorspace-params>',
+            '<color-function>',
             '<predefined-rgb>',
         ],
         'css-color-5': [
             // Prefer CSS Color HDR
-            '<colorspace-params>',
+            '<color-function>',
             '<predefined-rgb>',
         ],
         'css-images': [
@@ -635,6 +632,10 @@ const errors = {
             'https://github.com/w3c/csswg-drafts/commit/798ba91a41295c5d8e084ba7e93c4073e720b4f3',
             'https://github.com/w3c/csswg-drafts/commit/3a1c2a859a5e28a553f03757b45c237d9444680b',
         ],
+    },
+    '<color()>': {
+        cause: 'It is redefined in CSS Color HDR only to avoid linking to the definition in CSS Color.',
+        links: ['https://github.com/w3c/csswg-drafts/pull/12006'],
     },
     '<identifier>': { cause: 'It is equivalent to <ident>. Since most of CSS 2.2 is superseded, it is not worth requesting a change.' },
     '<palette-mix()>': { cause: 'It is extracted by w3c/reffy without its value definition, which is basically a problem with the definition markup.' },

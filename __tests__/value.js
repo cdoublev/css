@@ -3017,6 +3017,69 @@ describe('<color>', () => {
         ]
         valid.forEach(([input, expected = input]) => expect(parse('<color>', input)).toBe(expected))
     })
+    test('valid <ictcp()>', () => {
+        const valid = [
+            // Out of range arguments
+            ['ictcp(-1 -1 -1 / -1)', 'ictcp(-1 -1 -1 / 0)'],
+            ['ictcp(2 1 1 / 2)', 'ictcp(2 1 1)'],
+            // Map <percentage> to <number>
+            ['ictcp(-1% -1% -1% / -1%)', 'ictcp(-0.01 -0.005 -0.005 / 0)'],
+            ['ictcp(101% 101% 101% / 101%)', 'ictcp(1.01 0.505 0.505)'],
+            // Preserve `none`
+            ['ictcp(none none none / none)'],
+            // Precision (at least 16 bits)
+            ['ictcp(0.0000001 0 0 / 0.499)', 'ictcp(0 0 0 / 0.498)'],
+            ['ictcp(0.00000051 0 0 / 0.501)', 'ictcp(0.000001 0 0 / 0.5)'],
+            ['ictcp(0.00001% 0 0 / 49.9%)', 'ictcp(0 0 0 / 0.498)'],
+            ['ictcp(0.00005% 0 0 / 50.1%)', 'ictcp(0.000001 0 0 / 0.5)'],
+            // Relative color
+            ['ictcp(from green alpha calc(i) calc(ct * 1%) / calc(cp + 1 + 1))', 'ictcp(from green alpha calc(i) calc(1% * ct) / calc(2 + cp))'],
+            ['ictcp(from ictcp(-1 2 0 / -1) -100% 200% 0% / 101%)', 'ictcp(from ictcp(-1 2 0 / 0) -1 1 0)'],
+        ]
+        valid.forEach(([input, expected = input]) => expect(parse('<color>', input)).toBe(expected))
+    })
+    test('valid <jzazbz()>', () => {
+        const valid = [
+            // Out of range arguments
+            ['jzazbz(-1 -1 -1 / -1)', 'jzazbz(-1 -1 -1 / 0)'],
+            ['jzazbz(2 1 1 / 2)', 'jzazbz(2 1 1)'],
+            // Map <percentage> to <number>
+            ['jzazbz(-1% -1% -1% / -1%)', 'jzazbz(-0.01 -0.0021 -0.0021 / 0)'],
+            ['jzazbz(101% 101% 101% / 101%)', 'jzazbz(1.01 0.2121 0.2121)'],
+            // Preserve `none`
+            ['jzazbz(none none none / none)'],
+            // Precision (at least 16 bits)
+            ['jzazbz(0.0000001 0 0 / 0.499)', 'jzazbz(0 0 0 / 0.498)'],
+            ['jzazbz(0.00000051 0 0 / 0.501)', 'jzazbz(0.000001 0 0 / 0.5)'],
+            ['jzazbz(0.00001% 0 0 / 49.9%)', 'jzazbz(0 0 0 / 0.498)'],
+            ['jzazbz(0.00005% 0 0 / 50.1%)', 'jzazbz(0.000001 0 0 / 0.5)'],
+            // Relative color
+            ['jzazbz(from green alpha calc(jz) calc(az * 1%) / calc(bz + 1 + 1))', 'jzazbz(from green alpha calc(jz) calc(1% * az) / calc(2 + bz))'],
+            ['jzazbz(from jzazbz(-1 2 0 / -1) -100% 200% 0% / 101%)', 'jzazbz(from jzazbz(-1 2 0 / 0) -1 0.42 0)'],
+        ]
+        valid.forEach(([input, expected = input]) => expect(parse('<color>', input)).toBe(expected))
+    })
+    test('valid <jzczhz()>', () => {
+        const valid = [
+            // Out of range arguments
+            ['jzczhz(-1 -1 -540 / -1)', 'jzczhz(-1 -1 180 / 0)'],
+            ['jzczhz(2 1 540 / 2)', 'jzczhz(2 1 180)'],
+            // Map <percentage> to <number>
+            ['jzczhz(-1% -1% -1.5turn / -1%)', 'jzczhz(-0.01 -0.0026 180 / 0)'],
+            ['jzczhz(101% 101% 1.5turn / 101%)', 'jzczhz(1.01 0.2626 180)'],
+            // Preserve `none`
+            ['jzczhz(none none none / none)'],
+            // Precision (at least 16 bits)
+            ['jzczhz(0.0000001 0 0 / 0.499)', 'jzczhz(0 0 0 / 0.498)'],
+            ['jzczhz(0.00000051 0 0 / 0.501)', 'jzczhz(0.000001 0 0 / 0.5)'],
+            ['jzczhz(0.00001% 0 0 / 49.9%)', 'jzczhz(0 0 0 / 0.498)'],
+            ['jzczhz(0.00005% 0 0 / 50.1%)', 'jzczhz(0.000001 0 0 / 0.5)'],
+            // Relative color
+            ['jzczhz(from green alpha calc(jz) calc(cz * 1deg) / calc(hz + 1 + 1))', 'jzczhz(from green alpha calc(jz) calc(1deg * cz) / calc(2 + hz))'],
+            ['jzczhz(from jzczhz(-1 2 540 / -1) -100% 200% 540deg / 101%)', 'jzczhz(from jzczhz(-1 2 180 / 0) -1 0.52 180)'],
+        ]
+        valid.forEach(([input, expected = input]) => expect(parse('<color>', input)).toBe(expected))
+    })
     test('valid <color-mix()>', () => {
         const valid = [
             // Omitted component values

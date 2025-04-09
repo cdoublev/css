@@ -2457,7 +2457,7 @@ describe('columns', () => {
         const style = createStyleBlock()
 
         // Initial longhand values
-        style.columns = 'auto auto'
+        style.columns = 'auto auto / auto'
         expect(style).toHaveLength(longhands.length)
         longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
         expect(style.columns).toBe('auto')
@@ -2477,6 +2477,11 @@ describe('columns', () => {
         longhands.forEach(longhand => style[longhand] = initial(longhand))
         expect(style.columns).toBe('auto')
         expect(style.cssText).toBe('columns: auto;')
+
+        // Explicit initial column-count value
+        style.columnHeight = '1px'
+        expect(style.columns).toBe('auto auto / 1px')
+        expect(style.cssText).toBe('columns: auto auto / 1px;')
     })
 })
 describe('contain-intrinsic-size', () => {
