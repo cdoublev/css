@@ -7,10 +7,10 @@
  */
 const { install } = require('../lib/index.js')
 // Do not import CSSOM implementations before the above import
+const { isList, isOmitted } = require('../lib/utils/value.js')
 const { logError, quote, tab } = require('../lib/utils/string.js')
 const descriptors = require('../lib/descriptors/definitions.js')
 const fs = require('node:fs/promises')
-const { isOmitted } = require('../lib/utils/value.js')
 const { parseCSSDeclaration } = require('../lib/parse/parser.js')
 const path = require('node:path')
 const properties = require('../lib/properties/definitions.js')
@@ -52,7 +52,7 @@ function serializeListArguments(separator, types, tabs) {
  */
 function serializeComponentValue(component, depth) {
     const tabs = tab(depth + 1)
-    if (Array.isArray(component)) {
+    if (isList(component)) {
         const { types, separator } = component
         const childTabs = tab(depth + 2)
         const listOptionalArguments = serializeListArguments(separator, types, tabs)
