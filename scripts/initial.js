@@ -7,7 +7,7 @@
  */
 const { install } = require('../lib/index.js')
 // Do not import CSSOM implementations before the above import
-const { addQuotes, logError, tab } = require('../lib/utils/string.js')
+const { logError, quote, tab } = require('../lib/utils/string.js')
 const descriptors = require('../lib/descriptors/definitions.js')
 const fs = require('node:fs/promises')
 const { isOmitted } = require('../lib/utils/value.js')
@@ -24,7 +24,7 @@ install()
  * @returns {string}
  */
 function serializeTypes(types) {
-    return `[${types.map(addQuotes).join(', ')}]`
+    return `[${types.map(quote).join(', ')}]`
 }
 
 /**
@@ -72,7 +72,7 @@ function serializeComponentValue(component, depth) {
             if (key === 'types') {
                 value = serializeTypes(value)
             } else if (typeof value === 'string') {
-                value = addQuotes(value)
+                value = quote(value)
             } else if (typeof value === 'object') {
                 value = serializeComponentValue(value, depth + 1)
             }
@@ -108,21 +108,21 @@ function getInitialValue(name, value, context, depth) {
 function serializePropertyDefinitions(properties) {
     return Object.entries(properties).reduce(
         (string, [property, { animate, group, initial, value }]) => {
-            string += `${tab(1)}${addQuotes(property)}: {\n`
+            string += `${tab(1)}${quote(property)}: {\n`
             if (animate === false || shorthands.get(property)?.every(name => properties[name]?.animate === false)) {
                 string += `${tab(2)}animate: false,\n`
             }
             if (group) {
-                string += `${tab(2)}group: ${addQuotes(group)},\n`
+                string += `${tab(2)}group: ${quote(group)},\n`
             }
             if (initial !== undefined) {
                 const [parsed, serialized] = getInitialValue(property, initial, '@style', 3)
                 string += `${tab(2)}initial: {\n`
                 string += `${tab(3)}parsed: ${parsed},\n`
-                string += `${tab(3)}serialized: ${addQuotes(serialized)},\n`
+                string += `${tab(3)}serialized: ${quote(serialized)},\n`
                 string += `${tab(2)}},\n`
             }
-            string += `${tab(2)}value: ${addQuotes(value)},\n`
+            string += `${tab(2)}value: ${quote(value)},\n`
             string += `${tab(1)}},\n`
             return string
         },
@@ -136,19 +136,19 @@ function serializePropertyDefinitions(properties) {
 function serializeDescriptorDefinitions(descriptors) {
     return Object.entries(descriptors).reduce(
         (string, [rule, definitions]) => {
-            string += `${tab(1)}${addQuotes(rule)}: {\n`
+            string += `${tab(1)}${quote(rule)}: {\n`
             Object.entries(definitions).forEach(([descriptor, { initial, type, value }]) => {
-                string += `${tab(2)}${addQuotes(descriptor)}: {\n`
+                string += `${tab(2)}${quote(descriptor)}: {\n`
                 if (initial !== undefined) {
                     const [parsed, serialized] = getInitialValue(descriptor, initial, rule, 4)
                     string += `${tab(3)}initial: {\n`
                     string += `${tab(4)}parsed: ${parsed},\n`
-                    string += `${tab(4)}serialized: ${addQuotes(serialized)},\n`
+                    string += `${tab(4)}serialized: ${quote(serialized)},\n`
                     string += `${tab(3)}},\n`
                 } else if (type) {
                     string += `${tab(3)}type: '${type}',\n`
                 }
-                string += `${tab(3)}value: ${addQuotes(value)},\n`
+                string += `${tab(3)}value: ${quote(value)},\n`
                 string += `${tab(2)}},\n`
             })
             string += `${tab(1)}},\n`

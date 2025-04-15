@@ -12,7 +12,7 @@
  *   - ./lib/rules/definitions.js
  *   - ./lib/values/pseudos.js
  */
-const { addQuotes, tab } = require('../lib/utils/string.js')
+const { quote, tab } = require('../lib/utils/string.js')
 const arbitrary = require('../lib/parse/arbitrary.js')
 const blocks = require('../lib/values/blocks.js')
 const colors = require('../lib/values/colors.js')
@@ -751,7 +751,7 @@ function serializeValueDefinition(value, depth = 1) {
                     if (key === 'value') {
                         value = serializeValueDefinition(value, depth + 1)
                     } else if (typeof value === 'string') {
-                        value = addQuotes(value)
+                        value = quote(value)
                     }
                     return `${string}${tab(depth + 1)}${key}: ${value},\n`
                 },
@@ -759,7 +759,7 @@ function serializeValueDefinition(value, depth = 1) {
             return `{\n${value}${tab(depth)}}`
         }
         case 'string':
-            return addQuotes(serializeDefinition(parseDefinition(value)))
+            return quote(serializeDefinition(parseDefinition(value)))
         default:
             throw RangeError('Unexpected value definition type')
     }
@@ -772,7 +772,7 @@ function serializeValueDefinition(value, depth = 1) {
 function serializeTypes(types) {
     return types.reduce(
         (string, [type, value]) =>
-            `${string}${tab(1)}${addQuotes(type)}: ${serializeValueDefinition(value)},\n`,
+            `${string}${tab(1)}${quote(type)}: ${serializeValueDefinition(value)},\n`,
         '')
 }
 
@@ -783,7 +783,7 @@ function serializeTypes(types) {
 function serializeProperties(properties) {
     return properties.reduce(
         (string, [property, { animationType, initial, logicalPropertyGroup, value }, key]) => {
-            string += `${tab(1)}${addQuotes(property)}: {\n`
+            string += `${tab(1)}${quote(property)}: {\n`
             if (animationType === 'not animatable') {
                 string += `${tab(2)}animate: false,\n`
             }
@@ -793,9 +793,9 @@ function serializeProperties(properties) {
                     console.log(`[${key}] ${property} is missing in the logical property group "${logicalPropertyGroup}"`)
                 }
                 if (group) {
-                    string += `${tab(2)}group: ${addQuotes(group)},\n`
+                    string += `${tab(2)}group: ${quote(group)},\n`
                 }
-                string += `${tab(2)}initial: ${initial ? addQuotes(initial) : null},\n`
+                string += `${tab(2)}initial: ${initial ? quote(initial) : null},\n`
             }
             if (key === 'CSS') {
                 value = value.replace(/ \| inherit$/, '')
@@ -813,11 +813,11 @@ function serializeProperties(properties) {
 function serializeDescriptors(descriptors) {
     return descriptors.reduce(
         (string, [rule, definitions]) => {
-            string += `${tab(1)}${addQuotes(rule)}: {\n`
+            string += `${tab(1)}${quote(rule)}: {\n`
             definitions.sort(sortByName).forEach(([descriptor, { initial, type, value }]) => {
-                string += `${tab(2)}${addQuotes(descriptor)}: {\n`
+                string += `${tab(2)}${quote(descriptor)}: {\n`
                 if (initial && !initial.toLowerCase().startsWith('n/a')) {
-                    string += `${tab(3)}initial: ${addQuotes(initial)},\n`
+                    string += `${tab(3)}initial: ${quote(initial)},\n`
                 } else if (type) {
                     string += `${tab(3)}type: '${type}',\n`
                 }
