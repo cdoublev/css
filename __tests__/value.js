@@ -4364,8 +4364,8 @@ describe('<selector-list>', () => {
             // Sub-pseudo-element
             ['::after::marker'],
             ['::before::marker'],
-            ['::first-letter::postfix'],
             ['::first-letter::prefix'],
+            ['::first-letter::suffix'],
             ['::before:hover::marker:focus', '::before:hover::marker:focus'],
             ['::part(name)::marker'],
             ['::part(name)::part(name)'],
