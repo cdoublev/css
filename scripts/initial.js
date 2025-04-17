@@ -46,29 +46,29 @@ function serializeListArguments(separator, types, tabs) {
 }
 
 /**
- * @param {object|object[]} component
+ * @param {object|object[]} object
  * @param {number} depth
  * @returns {string}
  */
-function serializeComponentValue(component, depth) {
+function serializeComponentValue(object, depth) {
     const tabs = tab(depth + 1)
-    if (isList(component)) {
-        const { types, separator } = component
+    if (isList(object)) {
+        const { types, separator } = object
         const childTabs = tab(depth + 2)
         const listOptionalArguments = serializeListArguments(separator, types, tabs)
-        return component
+        return object
             .reduce(
-                (string, component) =>
-                    `${string}${childTabs}${serializeComponentValue(component, depth + 2)},\n`,
+                (string, object) =>
+                    `${string}${childTabs}${serializeComponentValue(object, depth + 2)},\n`,
                 `list(\n${tabs}[\n`)
             .concat(`${tabs}]${listOptionalArguments},\n${tab(depth)})`)
     }
-    if (isOmitted(component)) {
+    if (isOmitted(object)) {
         return 'omitted'
     }
-    return Object.keys(component).sort().reduce(
+    return Object.keys(object).sort().reduce(
         (string, key) => {
-            let { [key]: value } = component
+            let { [key]: value } = object
             if (key === 'types') {
                 value = serializeTypes(value)
             } else if (typeof value === 'string') {
