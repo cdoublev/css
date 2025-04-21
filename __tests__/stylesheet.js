@@ -103,9 +103,8 @@ describe('CSSStyleSheet', () => {
         expect(styleSheet.media.mediaText).toBe(media.mediaText)
 
         media.mediaText = '(width)'
-        expect(styleSheet.media.mediaText).toBe('(width)')
-        styleSheet.media.mediaText = 'all'
-        expect(media.mediaText).toBe('all')
+        expect(media.mediaText).toBe('(width)')
+        expect(styleSheet.media.mediaText).toBe('all')
     })
     it('creates a non-constructed CSSStyleSheet', () => {
 
