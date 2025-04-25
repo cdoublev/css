@@ -1468,6 +1468,11 @@ describe('CSS grammar - semantic', () => {
 
                 style {}
                 color: red;
+                override-colors: 0 currentcolor;
+                override-colors: 0 AccentColor;
+                override-colors: 0 light-dark(red, red);
+                override-colors: 0 contrast-color(red);
+                override-colors: 0 device-cmyk(0 0 0 0);
 
                 base-palette: initial;
                 base-palette: inherit(--custom);
