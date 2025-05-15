@@ -1591,34 +1591,22 @@ describe('<calc()>', () => {
             ['<calc()>', 'calc(1 + 2)', {
                 name: 'calc',
                 types: ['<function>', '<calc()>'],
-                value: {
-                    types: ['<calc-sum>'],
-                    value: [one, two],
-                },
+                value: list([one, two], '+', ['<calc-sum>']),
             }],
             ['<calc()>', 'calc(1 - 2)', {
                 name: 'calc',
                 types: ['<function>', '<calc()>'],
-                value: {
-                    types: ['<calc-sum>'],
-                    value: [one, { types: ['<calc-negate>'], value: two }],
-                },
+                value: list([one, { types: ['<calc-negate>'], value: two }], '+', ['<calc-sum>']),
             }],
             ['<calc()>', 'calc(1 * 2)', {
                 name: 'calc',
                 types: ['<function>', '<calc()>'],
-                value: {
-                    types: ['<calc-product>'],
-                    value: [one, two],
-                },
+                value: list([one, two], '*', ['<calc-product>']),
             }],
             ['<calc()>', 'calc(1 / 2)', {
                 name: 'calc',
                 types: ['<function>', '<calc()>'],
-                value: {
-                    types: ['<calc-product>'],
-                    value: [one, { types: ['<calc-invert>'], value: two }],
-                },
+                value: list([one, { types: ['<calc-invert>'], value: two }], '*', ['<calc-product>']),
             }],
             // Resolved calculation
             ['<number>', 'calc(1)', {
