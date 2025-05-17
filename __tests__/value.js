@@ -39,7 +39,7 @@ const { serializeCSSComponentValue } = require('../lib/serialize.js')
  * @param {object|string} [context]
  * @returns {object|object[]|string|null}
  */
-function parse(definition, value, serialize = true, context = styleRule) {
+function parse(definition, value, serialize = true, context) {
     value = parseCSSGrammar(value, definition, context)
     if (serialize) {
         if (value) {
@@ -832,7 +832,8 @@ describe('<declaration-value>', () => {
         invalid.forEach(input => expect(parse('<declaration-value>', input, false)).toBeNull())
     })
     test('representation', () => {
-        const value = list([identToken('declaration'), delimiter(' '), identToken('value')], '', ['<declaration-value>'])
+        const tokens = [identToken('declaration'), delimiter(' '), identToken('value')]
+        const value = list(tokens, '', ['<declaration-value>'])
         expect(parse('<declaration-value>', 'declaration value', false)).toMatchObject(value)
     })
     test('valid', () => {
@@ -2343,7 +2344,7 @@ describe('<calc-mix()>', () => {
             ['<number> | <percentage>', 'calc-mix(0, 1, (1% + 1px) / 1px)'],
             ['<length>', 'calc-mix(0, 1px, 1% + 1px)'],
         ]
-        invalid.forEach(([definition, input]) => expect(parse(definition, input, false)).toBeNull())
+        invalid.forEach(([definition, input]) => expect(parse(definition, input, false, styleRule)).toBeNull())
     })
     test('valid', () => {
         const valid = [
@@ -2356,7 +2357,7 @@ describe('<calc-mix()>', () => {
             ['<length-percentage>', 'calc-mix(progress(1%, 1%, 1%), 1px, 1%)'],
             ['<length-percentage>', 'calc(1px * calc-mix(0%, 1% / 1px, (1% + 1px) / 1px))'],
         ]
-        valid.forEach(([definition, input, expected = input]) => expect(parse(definition, input)).toBe(expected))
+        valid.forEach(([definition, input, expected = input]) => expect(parse(definition, input, true, styleRule)).toBe(expected))
     })
 })
 describe('<random()>', () => {
@@ -2369,7 +2370,7 @@ describe('<random()>', () => {
             ['<number> | <percentage>', 'random(1, (1% + 1px) / 1px, 1)'],
             ['<length>', 'random(1px, 1%, 1px)'],
         ]
-        invalid.forEach(([definition, input]) => expect(parse(definition, input, false)).toBeNull())
+        invalid.forEach(([definition, input]) => expect(parse(definition, input, false, styleRule)).toBeNull())
     })
     test('valid', () => {
         const valid = [
@@ -2377,7 +2378,7 @@ describe('<random()>', () => {
             ['<length-percentage>', 'random(--key, 1px, 1%)'],
             ['<length-percentage>', 'calc(1px * random(1% / 1px, 1))'],
         ]
-        valid.forEach(([definition, input, expected = input]) => expect(parse(definition, input)).toBe(expected))
+        valid.forEach(([definition, input, expected = input]) => expect(parse(definition, input, true, styleRule)).toBe(expected))
     })
 })
 
@@ -2427,12 +2428,12 @@ describe('<container-progress()>', () => {
             ['<length-percentage>', 'calc(1px * container-progress(width, 1%, 1px))'],
             ['<length>', 'calc(1px * container-progress(width, 1% + 1px, 1px))'],
         ]
-        invalid.forEach(([definition, input]) => expect(parse(definition, input, false)).toBeNull())
+        invalid.forEach(([definition, input]) => expect(parse(definition, input, false, styleRule)).toBeNull())
     })
     test('valid', () => {
-        expect(parse('<number>', 'CONTAINER-PROGRESS(width, 0px + 1px, 1px * 1)'))
+        expect(parse('<number>', 'CONTAINER-PROGRESS(width, 0px + 1px, 1px * 1)', true, styleRule))
             .toBe('container-progress(width, 1px, 1px)')
-        expect(parse('<number>', 'container-progress(aspect-ratio, -1, 1)'))
+        expect(parse('<number>', 'container-progress(aspect-ratio, -1, 1)', true, styleRule))
             .toBe('container-progress(aspect-ratio, -1, 1)')
     })
 })
@@ -2450,17 +2451,19 @@ describe('<media-progress()>', () => {
             ['<length-percentage>', 'calc(1px * media-progress(width, 1%, 1px))'],
             ['<length>', 'calc(1px * media-progress(width, 1% + 1px, 1px))'],
         ]
-        invalid.forEach(([definition, input]) => expect(parse(definition, input, false)).toBeNull())
+        invalid.forEach(([definition, input]) => expect(parse(definition, input, false, styleRule)).toBeNull())
     })
     test('valid', () => {
-        expect(parse('<number>', 'MEDIA-PROGRESS(width, 0px + 1px, 1px * 1)')).toBe('media-progress(width, 1px, 1px)')
-        expect(parse('<number>', 'media-progress(aspect-ratio, -1, 1)')).toBe('media-progress(aspect-ratio, -1, 1)')
+        expect(parse('<number>', 'MEDIA-PROGRESS(width, 0px + 1px, 1px * 1)', true, styleRule))
+            .toBe('media-progress(width, 1px, 1px)')
+        expect(parse('<number>', 'media-progress(aspect-ratio, -1, 1)', true, styleRule))
+            .toBe('media-progress(aspect-ratio, -1, 1)')
     })
 })
 describe('<sibling-count()>, <sibling-index()>', () => {
     test('valid', () => {
-        expect(parse('<integer>', 'SIBLING-INDEX()')).toBe('sibling-index()')
-        expect(parse('<length>', 'calc(sibling-index() * 1px)')).toBe('calc(1px * sibling-index())')
+        expect(parse('<integer>', 'SIBLING-INDEX()', true, styleRule)).toBe('sibling-index()')
+        expect(parse('<length>', 'calc(sibling-index() * 1px)', true, styleRule)).toBe('calc(1px * sibling-index())')
     })
 })
 
@@ -2778,7 +2781,7 @@ describe('<color>', () => {
             ['rgb(from green alpha calc(r) calc(g * 1%) / calc(b + 1 + 1))', 'rgb(from green alpha calc(r) calc(1% * g) / calc(2 + b))'],
             ['rgba(from rgba(-1 256 0 / -1) -100% 200% 0% / 101%)', 'rgb(from rgb(-1 256 0 / 0) -255 510 0)'],
         ]
-        valid.forEach(([input, expected = input]) => expect(parse('<color>', input)).toBe(expected))
+        valid.forEach(([input, expected = input]) => expect(parse('<color>', input, true, styleRule)).toBe(expected))
     })
     test('valid <hsl()> or <hsla()>', () => {
         const valid = [
@@ -2828,7 +2831,7 @@ describe('<color>', () => {
             ['hsl(from green alpha calc(h) calc(s * 1%) / calc(l + 1 + 1))', 'hsl(from green alpha calc(h) calc(1% * s) / calc(2 + l))'],
             ['hsla(from hsla(540 -1 0 / -1) 540deg 101% 0% / 101%)', 'hsl(from hsl(180 -1 0 / 0) 180 101 0)'],
         ]
-        valid.forEach(([input, expected = input]) => expect(parse('<color>', input)).toBe(expected))
+        valid.forEach(([input, expected = input]) => expect(parse('<color>', input, true, styleRule)).toBe(expected))
     })
     test('valid <hwb()>', () => {
         const valid = [
@@ -2874,7 +2877,7 @@ describe('<color>', () => {
             ['hwb(from green alpha calc(h) calc(w * 1%) / calc(b + 1 + 1))', 'hwb(from green alpha calc(h) calc(1% * w) / calc(2 + b))'],
             ['hwb(from hwb(540 -1 0 / -1) 540deg -1% 0% / 101%)', 'hwb(from hwb(180 -1 0 / 0) 180 -1 0)'],
         ]
-        valid.forEach(([input, expected = input]) => expect(parse('<color>', input)).toBe(expected))
+        valid.forEach(([input, expected = input]) => expect(parse('<color>', input, true, styleRule)).toBe(expected))
     })
     test('valid <lab()>', () => {
         const valid = [
@@ -4298,7 +4301,7 @@ describe('<selector-list>', () => {
             '::before span',
             '::before + span',
         ]
-        invalid.forEach(input => expect(parse('<selector-list>', input, false)).toBeNull())
+        invalid.forEach(input => expect(parse('<selector-list>', input, false, styleRule)).toBeNull())
     })
     test('representation', () => {
 
@@ -4309,7 +4312,7 @@ describe('<selector-list>', () => {
         const complex = list([complexUnit, list()], ' ', ['<complex-selector>'])
         const selectors = list([complex], ',', ['<complex-selector-list>', '<selector-list>'])
 
-        expect(parse('<selector-list>', '.class', false)).toMatchObject(selectors)
+        expect(parse('<selector-list>', '.class', false, styleRule)).toMatchObject(selectors)
     })
     test('valid', () => {
         const valid = [
@@ -4363,7 +4366,7 @@ describe('<selector-list>', () => {
             ['&'],
             ['type&#identifier&.class&[attr]&:hover&'],
         ]
-        valid.forEach(([input, expected = input]) => expect(parse('<selector-list>', input)).toBe(expected))
+        valid.forEach(([input, expected = input]) => expect(parse('<selector-list>', input, true, styleRule)).toBe(expected))
     })
 })
 describe('<media-query-list>', () => {
