@@ -20,7 +20,7 @@ Parsing is the process of deriving an unstructured input into a representation e
 
 A **derivation** is the path followed to traverse the input and production rules.
 
-**Note:** in functional programming, `traverse` can be described as a more powerfull version of `reduce`, and parsing does indeed reduce a string into a parse tree, but both are not powerfull enough to parse CSS.
+**Note:** in functional programming, `traverse` can be described as a more powerful version of `reduce`, and parsing does indeed reduce a string into a parse tree, but both are not powerful enough to parse CSS.
 
 A **derivation tree** (aka. concrete tree or parse tree) is a hierarchical representation of this traversal. A branch node represents a non-terminal, a combination, a repetition, as a container for zero or more component values. A leaf node represents a terminal as a single component value.
 
@@ -110,7 +110,9 @@ A CSS parser must backtrack after failing to match a component value or when the
 
 It must successfully parse `a a b` against `[a | a a] b`, or `a a` against `a | a a`, by backtracking, instead of failing to find a match after the first choice in `a | a a` (greedy parser), or instead of looking ahead or re-ordering `a | a a` to `a a | a` to find the longest match (maximal munch parser).
 
-Backtracking requires saving the index in the list of component values that corresponds to the location before parsing a node. If parsing the tail node fails and cannot yield an alternative result, it must be removed from the tree before backtracking again. Any sequence of symbols combined with `|`, `||`, `&&`, or any symbol qualified by a multiplier where `min < max`, yield alternatives.
+**Note:** an obvious requirement that follows is that an input component value must not be tagged with the name of a production that was matched before backtracking.
+
+Backtracking requires saving the index in the input list of component values, before parsing a node. If the tail node fails to be parsed and cannot yield an alternative result, it must be removed from the tree before backtracking again. Any sequence of symbols combined with `|`, `||`, `&&`, or any symbol qualified by a multiplier where `min < max`, yield alternatives.
 
 One would expect to read combined symbols in the same direction as the input. For example, `a a` would match the first alternative in `[a | a a] a?` (`a?` would not be omitted). But the specifications do not define such priority in alternations (`|`) and arrangements (`||`).
 
@@ -118,7 +120,11 @@ One would expect to read combined symbols in the same direction as the input. Fo
 
 It would be useless to try other `<color>` alternatives when matching `#000 false` against `<color> true`. Actually, there are only a few productions that can yield a different result after backtracking, and they would not need it if their alternatives were sorted in left precedence order for longest match priority.
 
+**Note:** this actually has no significant impact on time complexity.
+
 Similarly, backtracking is useless when a function or simple block value failed to match its (context-free) value definition, or when a value is invalid according to a specific rule for the production: the whole input is guaranteed to be invalid. But many functions and simple blocks are defined with alternative value definitions like `rgb(<percentage>#{3}, <alpha-value>?) | rgb(<number>#{3}, <alpha-value>?)` instead of `rgb([<number>#{3} | <percentage>#{3}], <alpha-value>?)`.
+
+**Note:** this actually has no significant impact on time complexity.
 
 The only way to short-circuit recursive parse functions and immediately abort parsing, is to throw an error and catch it in a main parse function. However, error boundaries are needed to resume parsing at a higher level.
 
@@ -129,7 +135,7 @@ To [parse a CSS style sheet](https://drafts.csswg.org/css-syntax-3/#parse-a-css-
 
 But [`@page`](https://drafts.csswg.org/css-page-3/#syntax-page-selector), a top-level rule defined since CSS 1, must be parsed with *parse something according to a CSS grammar*, which runs first *parse a list of component values*, which does not expect a high-level object.
 
-Similarly as for a function or a simple block, `@page <page-selector-list> { <declaration-rule-list> }` does not represent a list of tokens but an object whose `name`, `prelude`, `value`, match the corresponding part of this value definition.
+Similarly as for a function or a simple block, `@page <page-selector-list> { <declaration-rule-list> }` does not represent a list of tokens but an object whose `name`, `prelude`, `value`, matches the corresponding part of this value definition.
 
 To parse `<declaration-rule-list>` and other [`<block-contents>` subtypes](https://drafts.csswg.org/css-syntax-3/#typedef-block-contents), the parser must *consume a block’s contents* (rules and declarations), which requires filtering contents invalid in the context, which means any qualified rule, and any at-rule or declaration that is not accepted in `@page` or that does not match the corresponding grammar.
 
@@ -155,7 +161,7 @@ A CSS rule definition must define:
   - whether declarations cascade
   - whether it applies to elements
 
-The grammar can be extended depending on the context. CSS-wide keywords, arbitrary and whole value substitutions, are not part of a specific property grammar but are accepted for any property, and for descriptors in some contexts. Similarly, some numeric substitutions are only valid in contexts applying to an element.
+The grammar may be extended depending on the context. CSS-wide keywords, arbitrary and whole value substitutions, are not part of a specific property grammar but are accepted for any property, and for descriptors in some contexts. Similarly, some numeric substitutions are only valid in contexts applying to an element.
 
 `Element.style`, `Element.sizes`, `CanvasTextDrawingStyles.font`, `CSSFontFeatureValuesMap.set()`, etc, use parser entry points that take a grammar but no context. However, since CSS Syntax often requires validating values *"in the context"*, it is implicitly required, and the `grammar` argument can remain context-free. It cannot represent a style rule by default, since none of the above interfaces are associated to a style rule.
 

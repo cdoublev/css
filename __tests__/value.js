@@ -3515,11 +3515,11 @@ describe('<keyframe-selector>', () => {
             ['from', '0%'],
             ['to', '100%'],
             // Element-dependent numeric substitution
-            ['calc-mix(0, 1%, 1%)', 'calc-mix(0, 1%, 1%)'],
-            ['random(1%, 1%)', 'random(1%, 1%)'],
-            ['calc(1% * sibling-index())', 'calc(1% * sibling-index())'],
+            ['calc-mix(0, 1%, 1%)'],
+            ['random(1%, 1%)'],
+            ['calc(1% * sibling-index())'],
         ]
-        valid.forEach(([input, expected]) =>
+        valid.forEach(([input, expected = input]) =>
             expect(parse('<keyframe-selector>', input, true, keyframeRule)).toBe(expected))
     })
 })
