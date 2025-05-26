@@ -753,7 +753,7 @@ describe('comma separated values', () => {
         expect(parse(definition, 'a, ,')).toBe('a,,')
     })
 })
-describe('simple blocks', () => {
+describe('blocks', () => {
     test('invalid', () => {
         expect(parse('(a)', '[a]', false)).toBeNull()
     })
@@ -3556,7 +3556,7 @@ describe('<line-names>', () => {
     test('representation', () => {
         expect(parse('<line-names>', '[name]', false)).toMatchObject({
             associatedToken: '[',
-            types: ['<simple-block>', '<line-names>'],
+            types: ['<block>', '<line-names>'],
             value: list([customIdent('name')]),
         })
     })
@@ -4049,7 +4049,7 @@ describe('<supports-decl>', () => {
         }
         const block = {
             associatedToken: '(',
-            types: ['<simple-block>', '<supports-decl>'],
+            types: ['<block>', '<supports-decl>'],
             value: declaration,
         }
         expect(parse('<supports-decl>', '(color: green)', false, supportsRule)).toMatchObject(block)
@@ -4087,7 +4087,7 @@ describe('<supports-feature>', () => {
     test('representation', () => {
         expect(parse('<supports-feature>', '(color: green)', false, supportsRule)).toMatchObject({
             associatedToken: '(',
-            types: ['<simple-block>', '<supports-decl>', '<supports-feature>'],
+            types: ['<block>', '<supports-decl>', '<supports-feature>'],
             value: {
                 important: false,
                 name: 'color',

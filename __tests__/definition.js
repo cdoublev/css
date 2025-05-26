@@ -222,8 +222,8 @@ describe('symbols', () => {
     test('(a)', () => {
         const parsed = {
             associatedToken: '(',
-            type: 'simple-block',
-            value: { associatedToken: '(', type: 'simple-block', value: a },
+            type: 'block',
+            value: { associatedToken: '(', type: 'block', value: a },
         }
         expect(parse('( ( a ) )')).toEqual(parsed)
         expect(serialize(parsed)).toBe('((a))')
@@ -231,8 +231,8 @@ describe('symbols', () => {
     test("'['a']'", () => {
         const parsed = {
             associatedToken: '[',
-            type: 'simple-block',
-            value: { associatedToken: '[', type: 'simple-block', value: a },
+            type: 'block',
+            value: { associatedToken: '[', type: 'block', value: a },
         }
         expect(parse("'[' '[' a ']' ']'")).toEqual(parsed)
         expect(serialize(parsed)).toBe("'[''['a']'']'")
