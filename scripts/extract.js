@@ -14,7 +14,6 @@
  */
 const { quote, tab } = require('../lib/utils/string.js')
 const arbitrary = require('../lib/parse/arbitrary.js')
-const blocks = require('../lib/values/blocks.js')
 const colors = require('../lib/values/colors.js')
 const compatibility = require('../lib/compatibility.js')
 const { definitions: dimensions } = require('../lib/values/dimensions.js')
@@ -523,7 +522,6 @@ const excluded = {
             '<url-token>',
             '<whitespace-token>',
             ...Object.keys(arbitrary),
-            ...blocks.contents,
             ...Object.keys(forgiving),
         ],
         'CSS': [

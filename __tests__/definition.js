@@ -265,12 +265,6 @@ describe('symbols', () => {
         expect(parse(input)).toEqual(parsed)
         expect(serialize(parsed)).toBe(input)
     })
-    test('<declaration-list>', () => {
-        const input = '<declaration-list>'
-        const parsed = { name: '<declaration-list>', type: 'block-contents' }
-        expect(parse(input)).toEqual(parsed)
-        expect(serialize(parsed)).toBe(input)
-    })
     test('<forgiving-selector-list>', () => {
         const input = '<forgiving-selector-list>'
         const parsed = { name: '<forgiving-selector-list>', type: 'forgiving' }
