@@ -1118,9 +1118,9 @@ describe('-webkit-line-clamp', () => {
         style.webkitLineClamp = '1'
         expect(style.maxLines).toBe('1')
         expect(style.blockEllipsis).toBe('auto')
-        expect(style.continue).toBe('-webkit-discard')
+        expect(style.continue).toBe('-webkit-legacy')
         expect(style.webkitLineClamp).toBe('1')
-        expect(style.cssText).toBe('-webkit-line-clamp: 1;')
+        expect(style.cssText).toBe('line-clamp: 1 -webkit-legacy;')
     })
     test('shorthand reification', () => {
 
@@ -1133,18 +1133,17 @@ describe('-webkit-line-clamp', () => {
 
         // All longhands cannot always be represented
         style.blockEllipsis = 'auto'
-        expect(style.webkitLineClamp).toBe('none')
-        expect(style.cssText).toBe('-webkit-line-clamp: none;')
-        style.continue = '-webkit-discard'
+        style.continue = '-webkit-legacy'
         expect(style.webkitLineClamp).toBe('')
-        expect(style.cssText).toBe('max-lines: none; block-ellipsis: auto; continue: -webkit-discard;')
+        expect(style.cssText).toBe('line-clamp: auto -webkit-legacy;')
         style.maxLines = '1'
-        expect(style.webkitLineClamp).toBe('1')
-        expect(style.cssText).toBe('-webkit-line-clamp: 1;')
-        style.blockEllipsis = 'auto'
-        style.continue = initial('continue')
+        style.continue = 'auto'
         expect(style.webkitLineClamp).toBe('')
         expect(style.cssText).toBe('max-lines: 1; block-ellipsis: auto; continue: auto;')
+        style.blockEllipsis = initial('block-ellipsis')
+        style.continue = '-webkit-legacy'
+        expect(style.webkitLineClamp).toBe('')
+        expect(style.cssText).toBe('line-clamp: 1 none -webkit-legacy;')
     })
 })
 describe('-webkit-text-stroke', () => {
@@ -1447,15 +1446,15 @@ describe('animation-trigger', () => {
         expect(style.cssText).toBe('animation-trigger: once;')
 
         // Different lengths of longhand values
-        style.animationTriggerType = 'once, once'
+        style.animationTriggerBehavior = 'once, once'
         expect(style.animationTrigger).toBe('')
-        expect(style.cssText).toBe('animation-trigger-type: once, once; animation-trigger-timeline: auto; animation-trigger-range: normal; animation-trigger-exit-range: auto;')
-        style.animationTriggerType = 'once'
+        expect(style.cssText).toBe('animation-trigger-behavior: once, once; animation-trigger-timeline: auto; animation-trigger-range: normal; animation-trigger-exit-range: auto;')
+        style.animationTriggerBehavior = 'once'
 
         // Ranges cannot be specified when the timeline is `auto` or `none`
         style.animationTriggerRange = 'entry'
         expect(style.animationTrigger).toBe('')
-        expect(style.cssText).toBe('animation-trigger-type: once; animation-trigger-timeline: auto; animation-trigger-range: entry; animation-trigger-exit-range: auto;')
+        expect(style.cssText).toBe('animation-trigger-behavior: once; animation-trigger-timeline: auto; animation-trigger-range: entry; animation-trigger-exit-range: auto;')
         style.animationTriggerRange = 'normal'
 
         // Omitted range end values
@@ -3298,15 +3297,27 @@ describe('line-clamp', () => {
         style.lineClamp = '1'
         expect(style.maxLines).toBe('1')
         expect(style.blockEllipsis).toBe('auto')
-        expect(style.continue).toBe('discard')
+        expect(style.continue).toBe('collapse')
         expect(style.lineClamp).toBe('1')
         expect(style.cssText).toBe('line-clamp: 1;')
         style.lineClamp = 'auto'
         expect(style.maxLines).toBe('none')
         expect(style.blockEllipsis).toBe('auto')
-        expect(style.continue).toBe('discard')
+        expect(style.continue).toBe('collapse')
         expect(style.lineClamp).toBe('auto')
         expect(style.cssText).toBe('line-clamp: auto;')
+        style.lineClamp = '1 -webkit-legacy'
+        expect(style.maxLines).toBe('1')
+        expect(style.blockEllipsis).toBe('auto')
+        expect(style.continue).toBe('-webkit-legacy')
+        expect(style.lineClamp).toBe('1 -webkit-legacy')
+        expect(style.cssText).toBe('line-clamp: 1 -webkit-legacy;')
+        style.lineClamp = 'none -webkit-legacy'
+        expect(style.maxLines).toBe('none')
+        expect(style.blockEllipsis).toBe('none')
+        expect(style.continue).toBe('-webkit-legacy')
+        expect(style.lineClamp).toBe('none -webkit-legacy')
+        expect(style.cssText).toBe('line-clamp: none -webkit-legacy;')
     })
     test('shorthand reification', () => {
 
@@ -3321,13 +3332,14 @@ describe('line-clamp', () => {
         style.maxLines = '1'
         expect(style.lineClamp).toBe('')
         expect(style.cssText).toBe('max-lines: 1; block-ellipsis: none; continue: auto;')
-        style.blockEllipsis = 'auto'
-        expect(style.lineClamp).toBe('')
-        expect(style.cssText).toBe('max-lines: 1; block-ellipsis: auto; continue: auto;')
         style.maxLines = initial('max-lines')
+        style.blockEllipsis = 'auto'
         expect(style.lineClamp).toBe('')
         expect(style.cssText).toBe('-webkit-line-clamp: none;')
         style.blockEllipsis = initial('block-ellipsis')
+        style.continue = 'collapse'
+        expect(style.lineClamp).toBe('')
+        expect(style.cssText).toBe('max-lines: none; block-ellipsis: none; continue: collapse;')
         style.continue = 'discard'
         expect(style.lineClamp).toBe('')
         expect(style.cssText).toBe('max-lines: none; block-ellipsis: none; continue: discard;')
@@ -4612,7 +4624,6 @@ describe('CSSFontFaceDescriptors', () => {
             ['mix(0, 1, 1)', 'mix(0, 1%, 1%)'],
             ['toggle(1)', 'toggle(1%)'],
             ['calc-mix(0, 1, 1)', 'calc-mix(0, 1%, 1%)'],
-            ['container-progress(aspect-ratio, 1, 1)', 'calc(1% * container-progress(aspect-ratio, 1, 1))'],
             ['random(1, 1)', 'random(1%, 1%)'],
             ['sibling-count()', 'calc(1% * sibling-count())'],
         ]
@@ -4740,8 +4751,6 @@ describe('CSSKeyframeProperties', () => {
         expect(style.fontWeight).toBe('toggle(1)')
         style.fontWeight = 'calc-mix(0, 1, 1)'
         expect(style.fontWeight).toBe('calc-mix(0, 1, 1)')
-        style.fontWeight = 'container-progress(aspect-ratio, 1, 1)'
-        expect(style.fontWeight).toBe('container-progress(aspect-ratio, 1, 1)')
         style.fontWeight = 'random(1, 1)'
         expect(style.fontWeight).toBe('random(1, 1)')
         style.fontWeight = 'sibling-count()'
@@ -4766,7 +4775,6 @@ describe('CSSMarginDescriptors', () => {
             'mix(0, 1, 1)',
             'toggle(1)',
             'calc-mix(0, 1, 1)',
-            'container-progress(aspect-ratio, 1, 1)',
             'random(1, 1)',
             'sibling-count()',
         ]
@@ -4826,7 +4834,6 @@ describe('CSSPageDescriptors', () => {
             ['mix(0, 1, 1)', 'mix(0, 1px, 1px)'],
             ['toggle(1)', 'toggle(1px)'],
             ['calc-mix(0, 1, 1)', 'calc-mix(0, 1px, 1px)'],
-            ['container-progress(aspect-ratio, 1, 1)', 'calc(1px * container-progress(aspect-ratio, 1, 1))'],
             ['random(1, 1)', 'random(1px, 1px)'],
             ['sibling-count()', 'calc(1px * sibling-count())'],
         ]
@@ -4942,8 +4949,6 @@ describe('CSSPositionTryDescriptors', () => {
         expect(style.top).toBe('toggle(1px)')
         style.top = 'calc-mix(0, 1px, 1px)'
         expect(style.top).toBe('calc-mix(0, 1px, 1px)')
-        style.top = 'calc(1px * container-progress(aspect-ratio, 1, 1))'
-        expect(style.top).toBe('calc(1px * container-progress(aspect-ratio, 1, 1))')
         style.top = 'random(1px, 1px)'
         expect(style.top).toBe('random(1px, 1px)')
         style.top = 'calc(1px * sibling-count())'

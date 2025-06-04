@@ -118,7 +118,7 @@ const replaced = {
     },
     types: {
         // Extensions (https://github.com/w3c/reffy/issues/1647)
-        '<color-mix()>': 'color-mix([<progress> && <color-interpolation-method>?], <color>, <color>) | color-mix(<color-interpolation-method>, [<color> && <percentage [0,100]>?]#{2})',
+        '<color-mix()>': 'color-mix([<progress> && <color-interpolation-method>?], <color>, <color>) | color-mix(<color-interpolation-method>, [<color> && <percentage [0,100]>?]#)',
         '<cross-fade()>': 'cross-fade(<progress>, [<image> | <color>], [<image> | <color>]) | cross-fade(<cf-image>#)',
         '<keyframe-selector>': 'from | to | <percentage [0,100]> | <timeline-range-name> <percentage>',
         // Missing production rules
@@ -144,7 +144,6 @@ const replaced = {
         '<id>': '<id-selector>',
         '<ident>': '<ident-token>',
         '<integer>': '<number-token>',
-        '<intrinsic-size-keyword>': '<ident>',
         '<length>': '<dimension>',
         '<mq-boolean>': '<integer [0,1]>',
         '<n-dimension>': '<dimension-token>',
@@ -171,6 +170,7 @@ const replaced = {
         '<signed-integer>': '<number-token>',
         '<signless-integer>': '<number-token>',
         '<size-feature>': '<media-feature>',
+        '<size-keyword>': '<ident>',
         '<string>': '<string-token>',
         '<style-feature>': '<declaration> | <ident>',
         '<system-color>': colors.system.join(' | '),
@@ -188,8 +188,8 @@ const replaced = {
         '<radial-size>': 'closest-corner | farthest-corner | <radial-radius>{1,2}',
         // https://github.com/w3c/csswg-drafts/issues/11842
         '<control-value()>': 'control-value(<syntax-type-name>?)',
-        // https://github.com/speced/bikeshed/issues/3011
-        '<corner-shape-value>': 'round | scoop | bevel | notch | straight | squircle | superellipse(<number [0,∞]> | infinity)',
+        // https://github.com/w3c/csswg-drafts/pull/12263
+        '<corner-shape-value>': 'round | scoop | bevel | notch | square | squircle | <superellipse()>',
         // https://github.com/w3c/fxtf-drafts/issues/532
         '<mask-reference>': 'none | <image>',
         // https://github.com/w3c/csswg-drafts/pull/10131
@@ -226,17 +226,6 @@ const excluded = {
             'calc-size()',
         ],
         'css-values-5': [
-            // Already defined with a type
-            'calc-mix()',
-            'container-progress()',
-            'first-valid()',
-            'if()',
-            'inherit()',
-            'media-progress()',
-            'mix()',
-            'progress()',
-            'toggle()',
-            'transform-mix()',
             // Defined inline
             'crossorigin()',
             'integrity()',
@@ -615,7 +604,7 @@ const errors = {
     '@custom-media': { cause: 'It is not yet supported.' },
     '@custom-selector': { cause: 'It is not yet supported.' },
     '@else': { cause: 'It is not yet supported.' },
-    '@function': { cause: 'In this library, its prelude value definition folded into a production to avoid creating CSSFunctionRule when the prelude is invalid.' },
+    '@function': { cause: 'In this library, its prelude value definition is folded into a production to allow validating the rule before creating CSSFunctionRule.' },
     '@historical-forms': {
         cause: 'It should be removed.',
         links: ['https://github.com/w3c/csswg-drafts/issues/9926'],
@@ -630,10 +619,6 @@ const errors = {
             'https://github.com/w3c/csswg-drafts/commit/798ba91a41295c5d8e084ba7e93c4073e720b4f3',
             'https://github.com/w3c/csswg-drafts/commit/3a1c2a859a5e28a553f03757b45c237d9444680b',
         ],
-    },
-    '<color()>': {
-        cause: 'It is redefined in CSS Color HDR only to avoid linking to the definition in CSS Color.',
-        links: ['https://github.com/w3c/csswg-drafts/pull/12006'],
     },
     '<identifier>': { cause: 'It is equivalent to <ident>. Since most of CSS 2.2 is superseded, it is not worth requesting a change.' },
     '<palette-mix()>': { cause: 'It is extracted by w3c/reffy without its value definition, which is basically a problem with the definition markup.' },

@@ -2414,56 +2414,10 @@ describe('<progress()>', () => {
         valid.forEach(([definition, input, expected = input]) => expect(parse(definition, input)).toBe(expected))
     })
 })
-describe('<container-progress()>', () => {
-    test('invalid', () => {
-        const invalid = [
-            // Invalid feature
-            ['<number>', 'container-progress(resolution, 1dpi, 1dpi)'],
-            ['<number>', 'container-progress(orientation, 1, 1)'],
-            ['<number>', 'container-progress(width: 1px, 1px, 1px)'],
-            ['<number>', 'container-progress(width < 1px, 1px, 1px)'],
-            // Invalid value
-            ['<number>', 'container-progress(width, 1, 1)'],
-            ['<number>', 'container-progress(width, 1%, 1%)'],
-            ['<length-percentage>', 'calc(1px * container-progress(width, 1%, 1px))'],
-            ['<length>', 'calc(1px * container-progress(width, 1% + 1px, 1px))'],
-        ]
-        invalid.forEach(([definition, input]) => expect(parse(definition, input, false, styleRule)).toBeNull())
-    })
-    test('valid', () => {
-        expect(parse('<number>', 'CONTAINER-PROGRESS(width, 0px + 1px, 1px * 1)', true, styleRule))
-            .toBe('container-progress(width, 1px, 1px)')
-        expect(parse('<number>', 'container-progress(aspect-ratio, -1, 1)', true, styleRule))
-            .toBe('container-progress(aspect-ratio, -1, 1)')
-    })
-})
-describe('<media-progress()>', () => {
-    test('invalid', () => {
-        const invalid = [
-            // Invalid feature
-            ['<number>', 'media-progress(inline-size, 1px, 1px)'],
-            ['<number>', 'media-progress(grid, 1, 1)'],
-            ['<number>', 'media-progress(width: 1px, 1px, 1px)'],
-            ['<number>', 'media-progress(width < 1px, 1px, 1px)'],
-            // Invalid value
-            ['<number>', 'media-progress(width, 1, 1)'],
-            ['<number>', 'media-progress(width, 1%, 1%)'],
-            ['<length-percentage>', 'calc(1px * media-progress(width, 1%, 1px))'],
-            ['<length>', 'calc(1px * media-progress(width, 1% + 1px, 1px))'],
-        ]
-        invalid.forEach(([definition, input]) => expect(parse(definition, input, false, styleRule)).toBeNull())
-    })
-    test('valid', () => {
-        expect(parse('<number>', 'MEDIA-PROGRESS(width, 0px + 1px, 1px * 1)', true, styleRule))
-            .toBe('media-progress(width, 1px, 1px)')
-        expect(parse('<number>', 'media-progress(aspect-ratio, -1, 1)', true, styleRule))
-            .toBe('media-progress(aspect-ratio, -1, 1)')
-    })
-})
 describe('<sibling-count()>, <sibling-index()>', () => {
     test('valid', () => {
-        expect(parse('<integer>', 'SIBLING-INDEX()', true, styleRule)).toBe('sibling-index()')
-        expect(parse('<length>', 'calc(sibling-index() * 1px)', true, styleRule)).toBe('calc(1px * sibling-index())')
+        expect(parse('<integer>', 'SIBLING-COUNT()', true, styleRule)).toBe('sibling-count()')
+        expect(parse('<length>', 'calc(sibling-count() * 1px)', true, styleRule)).toBe('calc(1px * sibling-count())')
     })
 })
 
@@ -2776,7 +2730,7 @@ describe('<color>', () => {
             ['rgb(calc(-1%) 0% 0% / calc(-1%))', 'rgba(0, 0, 0, 0)'],
             ['rgb(calc(101%) 0% 0% / calc(101%))', 'rgb(255, 0, 0)'],
             ['rgba(-1 calc(1em / 1px) 101% / 1)', 'rgb(0 calc(1em / 1px) 255)'],
-            ['rgb(calc(1) sibling-index() progress(1, 0, 2))', 'rgb(1 sibling-index() 0.5)'],
+            ['rgb(calc(1) sibling-count() progress(1, 0, 2))', 'rgb(1 sibling-count() 0.5)'],
             // Relative color
             ['rgb(from green alpha calc(r) calc(g * 1%) / calc(b + 1 + 1))', 'rgb(from green alpha calc(r) calc(1% * g) / calc(2 + b))'],
             ['rgba(from rgba(-1 256 0 / -1) -100% 200% 0% / 101%)', 'rgb(from rgb(-1 256 0 / 0) -255 510 0)'],
@@ -2826,7 +2780,7 @@ describe('<color>', () => {
             ['hsl(calc(-540deg) 100% 50% / calc(-1%))', 'rgba(0, 255, 255, 0)'],
             ['hsl(calc(540deg) 100% 50% / 101%)', 'rgb(0, 255, 255)'],
             ['hsla(-540 calc(1em / 1px) 101% / 1)', 'hsl(180 calc(1em / 1px) 100)'],
-            ['hsl(calc(1) sibling-index() progress(1, 0, 2))', 'hsl(1 sibling-index() 0.5)'],
+            ['hsl(calc(1) sibling-count() progress(1, 0, 2))', 'hsl(1 sibling-count() 0.5)'],
             // Relative color
             ['hsl(from green alpha calc(h) calc(s * 1%) / calc(l + 1 + 1))', 'hsl(from green alpha calc(h) calc(1% * s) / calc(2 + l))'],
             ['hsla(from hsla(540 -1 0 / -1) 540deg 101% 0% / 101%)', 'hsl(from hsl(180 -1 0 / 0) 180 101 0)'],
@@ -2872,7 +2826,7 @@ describe('<color>', () => {
             ['hwb(calc(-540deg) 0% 0% / calc(-1%))', 'rgba(0, 255, 255, 0)'],
             ['hwb(calc(540deg) 0% 0% / calc(101%))', 'rgb(0, 255, 255)'],
             ['hwb(-540 calc(1em / 1px) 101% / 1)', 'hwb(180 calc(1em / 1px) 100)'],
-            ['hwb(calc(1) sibling-index() progress(1, 0, 2))', 'hwb(1 sibling-index() 0.5)'],
+            ['hwb(calc(1) sibling-count() progress(1, 0, 2))', 'hwb(1 sibling-count() 0.5)'],
             // Relative color
             ['hwb(from green alpha calc(h) calc(w * 1%) / calc(b + 1 + 1))', 'hwb(from green alpha calc(h) calc(1% * w) / calc(2 + b))'],
             ['hwb(from hwb(540 -1 0 / -1) 540deg -1% 0% / 101%)', 'hwb(from hwb(180 -1 0 / 0) 180 -1 0)'],
@@ -3072,30 +3026,19 @@ describe('<color>', () => {
         valid.forEach(([input, expected = input]) => expect(parse('<color>', input)).toBe(expected))
     })
     test('valid <color-mix()>', () => {
-        const valid = [
-            // Omitted component values
-            ['color-mix(in srgb, red 50%, green)', 'color-mix(in srgb, red, green)'],
-            ['color-mix(in srgb, red, green 50%)', 'color-mix(in srgb, red, green)'],
-            ['color-mix(in srgb, red 50%, green 50%)', 'color-mix(in srgb, red, green)'],
-            ['color-mix(in srgb, red 51%, green 49%)', 'color-mix(in srgb, red 51%, green)'],
-            ['color-mix(in srgb, red 49%, green 51%)', 'color-mix(in srgb, red 49%, green)'],
-            ['color-mix(in srgb, red 49%, green)'],
-            ['color-mix(in srgb, red, green 51%)', 'color-mix(in srgb, red 49%, green)'],
-            ['color-mix(in srgb, red 100%, green 100%)'],
-            // Preserve channel values except <hue> and <alpha-value>
-            ['color-mix(in srgb, rgba(-100% 200% 0 / 101%), hsla(540deg -1% 0 / 50%))', 'color-mix(in srgb, rgb(-255 510 0), hsl(180 -1 0 / 0.5))'],
-        ]
-        valid.forEach(([input, expected = input]) => expect(parse('<color>', input)).toBe(expected))
+        // Preserve color components except <hue> and <alpha-value>
+        expect(parse('<color>', 'color-mix(in srgb, rgba(-100% 200% 0 / 101%), hsla(540deg -1% 0 / 50%))'))
+            .toBe('color-mix(in srgb, rgb(-255 510 0), hsl(180 -1 0 / 0.5))')
     })
     test('valid <contrast-color()>', () => {
-        // Preserve channel values except <hue> and <alpha-value>
+        // Preserve color components except <hue> and <alpha-value>
         expect(parse('<color>', 'contrast-color(rgba(-100% 200% 0 / 101%))'))
             .toBe('contrast-color(rgb(-255 510 0))')
         expect(parse('<color>', 'contrast-color(hsla(540deg -1% 0 / 50%))'))
             .toBe('contrast-color(hsl(180 -1 0 / 0.5))')
     })
     test('valid <light-dark()>', () => {
-        // Preserve channel values except <hue> and <alpha-value>
+        // Preserve color components except <hue> and <alpha-value>
         expect(parse('<color>', 'light-dark(rgba(-100% 200% 0 / 101%), hsla(540deg -1% 0 / 50%))'))
             .toBe('light-dark(rgb(-255 510 0), hsl(180 -1 0 / 0.5))')
     })
@@ -3517,7 +3460,7 @@ describe('<keyframe-selector>', () => {
             // Element-dependent numeric substitution
             ['calc-mix(0, 1%, 1%)'],
             ['random(1%, 1%)'],
-            ['calc(1% * sibling-index())'],
+            ['calc(1% * sibling-count())'],
         ]
         valid.forEach(([input, expected = input]) =>
             expect(parse('<keyframe-selector>', input, true, keyframeRule)).toBe(expected))
@@ -3638,7 +3581,7 @@ describe('<mf-plain>', () => {
             // Element-dependent numeric substitution
             'color: calc-mix(0, 1, 1)',
             'color: random(1, 1)',
-            'color: sibling-index()',
+            'color: sibling-count()',
         ]
         invalid.forEach(input => expect(parse('<mf-plain>', input, false, mediaRule)).toBeNull())
     })
@@ -3675,7 +3618,7 @@ describe('<mf-range>', () => {
             // Element-dependent numeric substitutions
             'color < calc-mix(0, 1, 1)',
             'color < random(1, 1)',
-            'color < sibling-index()',
+            'color < sibling-count()',
         ]
         invalid.forEach(input => expect(parse('<mf-range>', input, false, mediaRule)).toBeNull())
     })
@@ -3903,10 +3846,10 @@ describe('<size-feature>', () => {
             // Element-dependent numeric substitution
             'width: calc-mix(0, 1px, 1px)',
             'width: random(1px, 1px)',
-            'width: calc(1px * sibling-index())',
+            'width: calc(1px * sibling-count())',
             'width < calc-mix(0, 1px, 1px)',
             'width < random(1px, 1px)',
-            'width < calc(1px * sibling-index())',
+            'width < calc(1px * sibling-count())',
         ]
         valid.forEach(input => expect(parse('<size-feature>', input, true, containerRule)).toBe(input))
     })
@@ -4004,7 +3947,7 @@ describe('<style-feature>', () => {
             ['width: random-item(--key, 1px)'],
             ['width: mix(0, 1px, 1px)'],
             ['width: toggle(1px)'],
-            ['width: calc-mix(0, random(1px, 1px), 1px * sibling-index())'],
+            ['width: calc-mix(0, random(1px, 1px), 1px * sibling-count())'],
             // Cascade-dependent substitution
             ['width: initial'],
             ['width: var(--custom)'],
@@ -4066,7 +4009,7 @@ describe('<supports-decl>', () => {
             ['(width: random-item(--key, 1px))'],
             ['(width: mix(0, 1px, 1px))'],
             ['(width: toggle(1px))'],
-            ['(width: calc-mix(0, random(1px, 1px), 1px * sibling-index()))'],
+            ['(width: calc-mix(0, random(1px, 1px), 1px * sibling-count()))'],
             // Cascade-dependent substitution
             ['(width: initial)'],
             ['(width: var(--custom))'],

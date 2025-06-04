@@ -1325,7 +1325,7 @@ describe('CSS grammar - semantic', () => {
                 pad: attr(name);
                 pad: toggle(symbolic);
                 pad: calc-mix(0, 1, 1) ' ';
-                pad: container-progress(aspect-ratio, 1, 1) ' ';
+                pad: sibling-count() ' ';
                 pad: 1 ' ' !important;
                 range: 1 0;
 
@@ -1368,8 +1368,8 @@ describe('CSS grammar - semantic', () => {
                 size-adjust: toggle(1%);
                 font-weight: calc-mix(0, 1, 1);
                 size-adjust: calc-mix(0, 1%, 1%);
-                font-weight: container-progress(aspect-ratio, 1, 1);
-                size-adjust: calc(1% * container-progress(aspect-ratio, 1, 1));
+                font-weight: sibling-count();
+                size-adjust: calc(1% * sibling-count());
                 font-weight: 1 !important;
                 size-adjust: 1px !important;
 
@@ -1480,7 +1480,7 @@ describe('CSS grammar - semantic', () => {
                 base-palette: attr(name);
                 base-palette: toggle(1);
                 base-palette: calc-mix(0, 1, 1);
-                base-palette: container-progress(aspect-ratio, 1, 1);
+                base-palette: sibling-count();
                 base-palette: 1 !important;
 
                 font-family: name;
@@ -1717,7 +1717,7 @@ describe('CSS grammar - semantic', () => {
                 margin-top: attr(name);
                 margin-top: toggle(1px);
                 margin-top: calc-mix(0, 1px, 1px);
-                margin-top: calc(1px * container-progress(aspect-ratio, 1, 1));
+                margin-top: calc(1px * sibling-count());
 
                 @top-left {}
             }
@@ -1770,7 +1770,7 @@ describe('CSS grammar - semantic', () => {
             'top: attr(name)',
             'top: toggle(1px)',
             'top: calc-mix(0, 1px, 1px)',
-            'top: calc(1px * container-progress(aspect-ratio, 1, 1))',
+            'top: calc(1px * sibling-count())',
         ]
         declarations.forEach(declaration => {
             const input = `@POSITION-TRY --name { ${declaration}; }`
@@ -1847,7 +1847,7 @@ describe('CSS grammar - semantic', () => {
             ['calc(1% + 1px)', '<length-percentage>'],
             ['calc-mix(0, 1px, 1px)', '<length>'],
             ['random(1px, 1px)', '<length>'],
-            ['calc(1px * sibling-index())', '<length>'],
+            ['calc(1px * sibling-count())', '<length>'],
             ['translate(1px)', '<transform-function>'],
             // Substitutions
             ['env(name)', '*'],
@@ -1924,7 +1924,7 @@ describe('CSS grammar - semantic', () => {
             'top: attr(name)',
             'top: toggle(1px)',
             'top: calc-mix(0, 1px, 1px)',
-            'top: calc(1px * container-progress(aspect-ratio, 1, 1))',
+            'top: calc(1px * sibling-count())',
             'top: 1px !important',
         ]
         declarations.forEach(declaration => {
@@ -2067,7 +2067,7 @@ describe('CSS grammar - semantic', () => {
                     name: attr(name);
                     name: toggle(name);
                     name: calc-mix(0, 1, 1) 1;
-                    name: container-progress(aspect-ratio, 1, 1) 1;
+                    name: sibling-count() 1;
                     name: 0 !important;
 
                     name: -1;
@@ -2137,7 +2137,7 @@ describe('CSS grammar - semantic', () => {
             'top: attr(name)',
             'top: toggle(1px)',
             'top: calc-mix(0, 1px, 1px)',
-            'top: calc(1px * container-progress(aspect-ratio, 1, 1))',
+            'top: calc(1px * sibling-count())',
         ]
         declarations.forEach(declaration => {
             const styleSheet = createStyleSheet(`@keyframes name { FROM { ${declaration}; } }`)
@@ -2155,7 +2155,7 @@ describe('CSS grammar - semantic', () => {
                     margin-top: attr(name);
                     margin-top: toggle(1px);
                     margin-top: calc-mix(0, 1px, 1px);
-                    margin-top: calc(1px * container-progress(aspect-ratio, 1px, 1px));
+                    margin-top: calc(1px * sibling-count());
 
                     margin-bottom: 1px;
                 }
@@ -2236,7 +2236,7 @@ describe('CSS grammar - semantic', () => {
             'top: attr(name)',
             'top: toggle(1px)',
             'top: calc-mix(0, 1px, 1px)',
-            'top: calc(1px * container-progress(aspect-ratio, 1, 1))',
+            'top: calc(1px * sibling-count())',
             'top: 1px !important',
         ]
         declarations.forEach(declaration => {
@@ -2303,7 +2303,7 @@ describe('CSS grammar - semantic', () => {
             'top: attr(name)',
             'top: toggle(1px)',
             'top: calc-mix(0, 1px, 1px)',
-            'top: calc(1px * container-progress(aspect-ratio, 1, 1))',
+            'top: calc(1px * sibling-count())',
             'top: 1px !important',
         ]
         declarations.forEach(declaration => {
@@ -2404,7 +2404,7 @@ describe('CSS grammar - semantic', () => {
             'top: attr(name)',
             'top: toggle(1px)',
             'top: calc-mix(0, 1px, 1px)',
-            'top: calc(1px * container-progress(aspect-ratio, 1, 1))',
+            'top: calc(1px * sibling-count())',
             'top: 1px !important',
         ]
         declarations.forEach(declaration => {
