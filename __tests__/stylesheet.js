@@ -512,6 +512,7 @@ describe('CSSFunctionRule, CSSFunctionDeclarations', () => {
             ['--parameter-4 <number> : 1'],
             ['--parameter-5 type(<number>)', '--parameter-5 <number>'],
             ['--parameter-6 type(<number> | <percentage>)'],
+            ['--parameter-7 type("<number>")', '--parameter-7 <number>'],
         ]
         const styleSheet = createStyleSheet(`
             @function --name(${parameters.map(([input]) => input).join(', ')}) returns type(*) {
