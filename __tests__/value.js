@@ -2335,6 +2335,59 @@ describe('<sign()>', () => {
         valid.forEach(([definition, input, expected]) => expect(parse(definition, input)).toBe(expected))
     })
 })
+describe('<progress()>', () => {
+    test('invalid', () => {
+        const invalid = [
+            // Inconsistent calculation types
+            ['<number> | <length>', 'progress(1, 1px, 1)'],
+            ['<number> | <percentage>', 'progress(1, 1%, 1)'],
+            // Result type mismatch
+            ['<number> | <percentage>', 'progress(1, (1% + 1px) / 1px, 1)'],
+            ['<length>', 'calc(1px * progress(1%, 1px, 1px))'],
+        ]
+        invalid.forEach(([definition, input]) => expect(parse(definition, input, false)).toBeNull())
+    })
+    test('valid', () => {
+        const valid = [
+            // Identical units
+            ['<number>', 'progress(1, 0, 2)', 'calc(0.5)'],
+            ['<number>', 'progress(1, 2, 0)', 'calc(0.5)'],
+            ['<number>', 'progress(-1, 0, 2)', 'calc(-0.5)'],
+            ['<number>', 'PROGRESS(1em, 0em, 2em)', 'progress(1em, 0em, 2em)'],
+            ['<length-percentage>', 'calc(1px * progress(1%, 0%, 2%))'],
+            // Different units
+            ['<number>', 'progress(48px, 0px, 1in)', 'calc(0.5)'],
+            ['<length-percentage>', 'calc(1px * progress(1px, 0%, 2px))'],
+            // Consistent type
+            ['<number>', 'progress(1 * 1, 360deg / 1turn, 1em / 1px)', 'progress(1, 1, 1em / 1px)'],
+            ['<length-percentage>', 'calc(1px * progress(1 * 1, 1% / 1%, 1em / 1px))', 'calc(1px * progress(1, 1% / 1%, 1em / 1px))'],
+            // Equal argument values
+            ['<number>', 'progress(1, 1, 1)', 'calc(0)'],
+        ]
+        valid.forEach(([definition, input, expected = input]) => expect(parse(definition, input)).toBe(expected))
+    })
+})
+describe('<calc-mix()>', () => {
+    test('invalid', () => {
+        const invalid = [
+            // Inconsistent calculation types
+            ['<number> | <length>', 'calc-mix(1, 1px)'],
+            ['<number> | <percentage>', 'calc-mix(1, 1%)'],
+            // Result type mismatch
+            ['<number> | <percentage>', 'calc-mix(1, (1% + 1px) / 1px)'],
+            ['<length>', 'calc-mix(1px, 1% + 1px)'],
+        ]
+        invalid.forEach(([definition, input]) => expect(parse(definition, input, false, styleRule)).toBeNull())
+    })
+    test('valid', () => {
+        const valid = [
+            ['<length>', 'CALC-MIX(1px * 1, 1px)', 'calc-mix(1px, 1px)'],
+            ['<length-percentage>', 'calc-mix(1px, 1%)'],
+            ['<length-percentage>', 'calc(1px * calc-mix(1% / 1px, (1% + 1px) / 1px))'],
+        ]
+        valid.forEach(([definition, input, expected = input]) => expect(parse(definition, input, true, styleRule)).toBe(expected))
+    })
+})
 describe('<calc-interpolate()>', () => {
     test('invalid', () => {
         const invalid = [
@@ -2379,27 +2432,6 @@ describe('<calc-interpolate()>', () => {
         valid.forEach(([definition, input, expected = input]) => expect(parse(definition, input, true, styleRule)).toBe(expected))
     })
 })
-describe('<calc-mix()>', () => {
-    test('invalid', () => {
-        const invalid = [
-            // Inconsistent calculation types
-            ['<number> | <length>', 'calc-mix(1, 1px)'],
-            ['<number> | <percentage>', 'calc-mix(1, 1%)'],
-            // Result type mismatch
-            ['<number> | <percentage>', 'calc-mix(1, (1% + 1px) / 1px)'],
-            ['<length>', 'calc-mix(1px, 1% + 1px)'],
-        ]
-        invalid.forEach(([definition, input]) => expect(parse(definition, input, false, styleRule)).toBeNull())
-    })
-    test('valid', () => {
-        const valid = [
-            ['<length>', 'CALC-MIX(1px * 1, 1px)', 'calc-mix(1px, 1px)'],
-            ['<length-percentage>', 'calc-mix(1px, 1%)'],
-            ['<length-percentage>', 'calc(1px * calc-mix(1% / 1px, (1% + 1px) / 1px))'],
-        ]
-        valid.forEach(([definition, input, expected = input]) => expect(parse(definition, input, true, styleRule)).toBe(expected))
-    })
-})
 describe('<random()>', () => {
     test('invalid', () => {
         const invalid = [
@@ -2419,39 +2451,6 @@ describe('<random()>', () => {
             ['<length-percentage>', 'calc(1px * random(1% / 1px, 1))'],
         ]
         valid.forEach(([definition, input, expected = input]) => expect(parse(definition, input, true, styleRule)).toBe(expected))
-    })
-})
-
-describe('<progress()>', () => {
-    test('invalid', () => {
-        const invalid = [
-            // Inconsistent calculation types
-            ['<number> | <length>', 'progress(1, 1px, 1)'],
-            ['<number> | <percentage>', 'progress(1, 1%, 1)'],
-            // Result type mismatch
-            ['<number> | <percentage>', 'progress(1, (1% + 1px) / 1px, 1)'],
-            ['<length>', 'calc(1px * progress(1%, 1px, 1px))'],
-        ]
-        invalid.forEach(([definition, input]) => expect(parse(definition, input, false)).toBeNull())
-    })
-    test('valid', () => {
-        const valid = [
-            // Identical units
-            ['<number>', 'progress(1, 0, 2)', 'calc(0.5)'],
-            ['<number>', 'progress(1, 2, 0)', 'calc(0.5)'],
-            ['<number>', 'progress(-1, 0, 2)', 'calc(-0.5)'],
-            ['<number>', 'PROGRESS(1em, 0em, 2em)', 'progress(1em, 0em, 2em)'],
-            ['<length-percentage>', 'calc(1px * progress(1%, 0%, 2%))'],
-            // Different units
-            ['<number>', 'progress(48px, 0px, 1in)', 'calc(0.5)'],
-            ['<length-percentage>', 'calc(1px * progress(1px, 0%, 2px))'],
-            // Consistent type
-            ['<number>', 'progress(1 * 1, 360deg / 1turn, 1em / 1px)', 'progress(1, 1, 1em / 1px)'],
-            ['<length-percentage>', 'calc(1px * progress(1 * 1, 1% / 1%, 1em / 1px))', 'calc(1px * progress(1, 1% / 1%, 1em / 1px))'],
-            // Equal argument values
-            ['<number>', 'progress(1, 1, 1)', 'calc(0)'],
-        ]
-        valid.forEach(([definition, input, expected = input]) => expect(parse(definition, input)).toBe(expected))
     })
 })
 describe('<sibling-count()>, <sibling-index()>', () => {
@@ -3921,6 +3920,12 @@ describe('<shape()>', () => {
     })
 })
 describe('<size-feature>', () => {
+    test('representation', () => {
+        const name = ident('width', ['<mf-name>'])
+        const value = length(1, 'px', ['<mf-value>'])
+        const feature = list([name, delimiter(':'), value], ' ', ['<mf-plain>', '<media-feature>', '<size-feature>'])
+        expect(parse('<size-feature>', 'width: 1px', false)).toMatchObject(feature)
+    })
     test('valid', () => {
         const valid = [
             // Element-dependent numeric substitution
