@@ -44,9 +44,9 @@
   "devDependencies": {
     "@cdoublev/eslint-config": "^0.11.0",
     "eslint": "^9.0.0",
-    "jest": "^29.0.0",
+    "jest": "^30.0.0",
     "jest-junit": "^16.0.0",
-    "webref": "w3c/webref#19d2acf0968793b9be59ed53271035dac00a4e07"
+    "webref": "w3c/webref#27dcf68a28ce80686e35570f6e8ddd70cbf27e6a"
   },
   "publishConfig": {
     "access": "public"

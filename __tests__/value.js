@@ -562,6 +562,12 @@ describe('whitespaces', () => {
     test('leading and trailing', () => {
         expect(parse('fn(a)', '  fn(  a  )  ')).toBe('fn(a)')
         expect(parse('(a)', '  (  a  )  ')).toBe('(a)')
+        expect(parse('a, a?, a', 'a ,a')).toBe('a, a')
+        expect(parse('a, <any-value>', 'a ,a')).toBe('a, a')
+        expect(parse('a, <any-value>?', 'a, ')).toBe('a,')
+        expect(parse('a: a', 'a :a')).toBe('a: a')
+        expect(parse('a: <any-value>', 'a :a')).toBe('a: a')
+        expect(parse('a: <any-value>?', 'a: ')).toBe('a:')
     })
 })
 describe('comma separated values', () => {
@@ -2329,33 +2335,67 @@ describe('<sign()>', () => {
         valid.forEach(([definition, input, expected]) => expect(parse(definition, input)).toBe(expected))
     })
 })
-describe('<calc-mix()>', () => {
+describe('<calc-interpolate()>', () => {
     test('invalid', () => {
         const invalid = [
-            // Invalid <progress> type
-            ['<number> | <length>', 'calc-mix(1px, 1, 1)'],
-            ['<length-percentage>', 'calc-mix(calc(1% / 1px), 1px, 1px)'],
-            ['<length-percentage>', 'calc-mix(calc((1% + 1px) / 1px), 1px, 1px)'],
-            ['<length-percentage>', 'calc-mix(progress(1%, 1px, 1px), 1px, 1px)'],
+            // Invalid <progress-source> type
+            ['<number> | <length>', 'calc-interpolate(1px, 0: 1, 1: 1)'],
+            ['<length-percentage>', 'calc-interpolate(calc(1% / 1px), 0: 1px, 1: 1px)'],
+            ['<length-percentage>', 'calc-interpolate(calc((1% + 1px) / 1px), 0: 1px, 1: 1px)'],
+            ['<length-percentage>', 'calc-interpolate(progress(1%, 1px, 1px), 0: 1px, 1: 1px)'],
+            // Invalid <input-position> type
+            ['<length-percentage>', 'calc-interpolate(0, calc(1% / 1px): 0px, 1: 1px)'],
+            ['<length-percentage>', 'calc-interpolate(0, calc((1% + 1px) / 1px): 0px, 1: 1px)'],
+            ['<length-percentage>', 'calc-interpolate(0, progress(1%, 1px, 1px): 0px, 1: 1px)'],
+            // Missing absolute <input-source> type
+            ['<length>', 'calc-interpolate(1px, 0: 1px, 1: 1px)'],
+            // Inconsistent absolute <progress-source> and <input-position> types
+            ['<length>', 'calc-interpolate(0deg, 0px: 1px, 1px: 1px)'],
+            ['<length>', 'calc-interpolate(0px, 0deg: 1px, 1px: 1px)'],
             // Inconsistent calculation types
-            ['<number> | <length>', 'calc-mix(0, 1, 1px)'],
-            ['<number> | <percentage>', 'calc-mix(0, 1, 1%)'],
+            ['<number> | <length>', 'calc-interpolate(0, 0: 1, 1: 1px)'],
+            ['<number> | <percentage>', 'calc-interpolate(0, 0: 1, 1: 1%)'],
             // Result type mismatch
-            ['<number> | <percentage>', 'calc-mix(0, 1, (1% + 1px) / 1px)'],
-            ['<length>', 'calc-mix(0, 1px, 1% + 1px)'],
+            ['<number> | <percentage>', 'calc-interpolate(0, 0: 1, 1: (1% + 1px) / 1px)'],
+            ['<length>', 'calc-interpolate(0, 0: 1px, 1: 1% + 1px)'],
         ]
         invalid.forEach(([definition, input]) => expect(parse(definition, input, false, styleRule)).toBeNull())
     })
     test('valid', () => {
         const valid = [
-            ['<length>', 'CALC-MIX(--timeline, 1px * 1, 1px)', 'calc-mix(--timeline, 1px, 1px)'],
-            ['<length>', 'calc-mix(0 * 1, 1px, 1px)', 'calc-mix(0, 1px, 1px)'],
-            ['<length>', 'calc-mix(0%, 1px, 1px)'],
-            ['<length>', 'calc-mix(progress(1%, 1% + 1%, 1%), 1px, 1px)', 'calc-mix(progress(1%, 2%, 1%), 1px, 1px)'],
-            ['<length-percentage>', 'calc-mix(0, 1px, 1%)'],
-            ['<length-percentage>', 'calc-mix(0%, 1px, 1%)'],
-            ['<length-percentage>', 'calc-mix(progress(1%, 1%, 1%), 1px, 1%)'],
-            ['<length-percentage>', 'calc(1px * calc-mix(0%, 1% / 1px, (1% + 1px) / 1px))'],
+            // Mixed <progress-source> and <input-position> types
+            ['<number>', 'CALC-INTERPOLATE(--timeline, 0px: 1, 1%: 1)', 'calc-interpolate(--timeline, 0px: 1, 1%: 1)'],
+            ['<number>', 'calc-interpolate(0, 0px: 1, 100%: 1)'],
+            ['<number>', 'calc-interpolate(0%, 0px: 1, 1: 1)'],
+            ['<number>', 'calc-interpolate(0px, 0px: 1, 1: 1)'],
+            // Type checking <percentage> in nested <progress-source> or <input-position> contexts
+            ['<number>', 'calc-interpolate(progress(0%, 0%, 1%), progress(0%, 0%, 1%): 1, progress(0%, 1%, 1%): 1)'],
+            ['<length-percentage>', 'calc-interpolate(progress(0%, 0%, 1%), progress(0%, 0%, 1%): 1px, progress(0%, 1%, 1%): 1px)'],
+            ['<length-percentage>', 'calc-interpolate(0%, 0%: 1px, 100%: 1px)'],
+            // Type checking and simplification of <calc-sum> and <calc-interpolate()>
+            ['<length-percentage>', 'calc-interpolate(0%, 0: 1px * 1, 1: 1% + 1px)', 'calc-interpolate(0%, 0: 1px, 1: 1% + 1px)'],
+            ['<length-percentage>', 'calc(1px * calc-interpolate(0%, 0: 1% / 1px, 1: (1% + 1px) / 1px))'],
+        ]
+        valid.forEach(([definition, input, expected = input]) => expect(parse(definition, input, true, styleRule)).toBe(expected))
+    })
+})
+describe('<calc-mix()>', () => {
+    test('invalid', () => {
+        const invalid = [
+            // Inconsistent calculation types
+            ['<number> | <length>', 'calc-mix(1, 1px)'],
+            ['<number> | <percentage>', 'calc-mix(1, 1%)'],
+            // Result type mismatch
+            ['<number> | <percentage>', 'calc-mix(1, (1% + 1px) / 1px)'],
+            ['<length>', 'calc-mix(1px, 1% + 1px)'],
+        ]
+        invalid.forEach(([definition, input]) => expect(parse(definition, input, false, styleRule)).toBeNull())
+    })
+    test('valid', () => {
+        const valid = [
+            ['<length>', 'CALC-MIX(1px * 1, 1px)', 'calc-mix(1px, 1px)'],
+            ['<length-percentage>', 'calc-mix(1px, 1%)'],
+            ['<length-percentage>', 'calc(1px * calc-mix(1% / 1px, (1% + 1px) / 1px))'],
         ]
         valid.forEach(([definition, input, expected = input]) => expect(parse(definition, input, true, styleRule)).toBe(expected))
     })
@@ -3025,6 +3065,11 @@ describe('<color>', () => {
         ]
         valid.forEach(([input, expected = input]) => expect(parse('<color>', input)).toBe(expected))
     })
+    test('valid <color-interpolate()>', () => {
+        // Preserve color components except <hue> and <alpha-value>
+        expect(parse('<color>', 'color-interpolate(0, 0: rgba(-100% 200% 0 / 101%), 1: hsla(540deg -1% 0 / 50%))'))
+            .toBe('color-interpolate(0, 0: rgb(-255 510 0), 1: hsl(180 -1 0 / 0.5))')
+    })
     test('valid <color-mix()>', () => {
         // Preserve color components except <hue> and <alpha-value>
         expect(parse('<color>', 'color-mix(in srgb, rgba(-100% 200% 0 / 101%), hsla(540deg -1% 0 / 50%))'))
@@ -3447,6 +3492,24 @@ describe('<image-set()>', () => {
         expect(parse('<image-set()>', '-webkit-image-set("image.jpg" 1x)')).toBe('image-set("image.jpg")')
     })
 })
+describe('<input-position>', () => {
+    test('invalid', () => {
+        expect(parse('<input-position>', '(1% + 1px) / 1px', false)).toBeNull()
+        expect(parse('<input-position>', 'progress(1%, 1px, 1px)', false)).toBeNull()
+    })
+    test('representation', () => {
+        const progress = percentage(50, ['<calc-value>', '<input-position>'])
+        expect(parse('<input-position>', '50%', false)).toMatchObject(progress)
+    })
+    test('valid', () => {
+        const valid = [
+            ['100% / 2', '50%'],
+            ['calc(100% / 2)', '50%'],
+            ['progress(0%, 0%, 1%)', 'progress(0%, 0%, 1%)'],
+        ]
+        valid.forEach(([input, expected]) => expect(parse('<input-position>', input)).toBe(expected))
+    })
+})
 describe('<keyframe-selector>', () => {
     test('representation', () => {
         expect(parse('<keyframe-selector>', '0%', false, keyframeRule))
@@ -3458,7 +3521,7 @@ describe('<keyframe-selector>', () => {
             ['from', '0%'],
             ['to', '100%'],
             // Element-dependent numeric substitution
-            ['calc-mix(0, 1%, 1%)'],
+            ['calc-interpolate(0, 0: 1%, 1: 1%)'],
             ['random(1%, 1%)'],
             ['calc(1% * sibling-count())'],
         ]
@@ -3579,7 +3642,7 @@ describe('<mf-plain>', () => {
             'min-orientation: landscape',
             'color: red',
             // Element-dependent numeric substitution
-            'color: calc-mix(0, 1, 1)',
+            'color: calc-interpolate(0, 0: 1, 1: 1)',
             'color: random(1, 1)',
             'color: sibling-count()',
         ]
@@ -3616,7 +3679,7 @@ describe('<mf-range>', () => {
             '1 < color < 1px',
             '1px < color < 1',
             // Element-dependent numeric substitutions
-            'color < calc-mix(0, 1, 1)',
+            'color < calc-interpolate(0, 0: 1, 1: 1)',
             'color < random(1, 1)',
             'color < sibling-count()',
         ]
@@ -3669,6 +3732,18 @@ describe('<page-selector-list>', () => {
         expect(parse('<page-selector-list>', 'toc:right', false)).toMatchObject(selectors)
     })
 })
+describe('<pointer()>', () => {
+    test('representation', () => {
+        expect(parse('<pointer()>', 'pointer()', false)).toMatchObject({
+            name: 'pointer',
+            types: ['<function>', '<pointer()>'],
+            value: omitted,
+        })
+    })
+    test('valid', () => {
+        expect(parse('<pointer()>', 'pointer(inline self)')).toBe('pointer()')
+    })
+})
 describe('<position>', () => {
     test('representation', () => {
         expect(parse('<position>', 'left', false)).toMatchObject(keyword('left', ['<position-one>', '<position>']))
@@ -3688,7 +3763,7 @@ describe('<position>', () => {
         valid.forEach(([input, expected]) => expect(parse('<position>', input)).toBe(expected))
     })
 })
-describe('<progress>', () => {
+describe('<progress-source>', () => {
     test('invalid', () => {
         const invalid = [
             // Invalid <calc-sum>
@@ -3698,14 +3773,19 @@ describe('<progress>', () => {
             'auto',
             'none',
         ]
-        invalid.forEach(input => expect(parse('<progress>', input, false)).toBeNull())
+        invalid.forEach(input => expect(parse('<progress-source>', input, false)).toBeNull())
     })
     test('representation', () => {
-        const calculation = percentage(50, ['<calc-value>'])
-        expect(parse('<progress>', '50%', false)).toMatchObject(list([calculation, omitted], ' ', ['<progress>']))
+        const progress = percentage(50, ['<calc-value>', '<progress-source>'])
+        expect(parse('<progress-source>', '50%', false)).toMatchObject(progress)
     })
     test('valid', () => {
-        expect(parse('<progress>', '100% / 2')).toBe('50%')
+        const valid = [
+            ['100% / 2', '50%'],
+            ['calc(100% / 2)', '50%'],
+            ['progress(0%, 0%, 1%)', 'progress(0%, 0%, 1%)'],
+        ]
+        valid.forEach(([input, expected]) => expect(parse('<progress-source>', input)).toBe(expected))
     })
 })
 describe('<pt-name-and-class-selector>', () => {
@@ -3844,10 +3924,10 @@ describe('<size-feature>', () => {
     test('valid', () => {
         const valid = [
             // Element-dependent numeric substitution
-            'width: calc-mix(0, 1px, 1px)',
+            'width: calc-interpolate(0, 0: 1px, 1: 1px)',
             'width: random(1px, 1px)',
             'width: calc(1px * sibling-count())',
-            'width < calc-mix(0, 1px, 1px)',
+            'width < calc-interpolate(0, 0: 1px, 1: 1px)',
             'width < random(1px, 1px)',
             'width < calc(1px * sibling-count())',
         ]
@@ -3945,9 +4025,9 @@ describe('<style-feature>', () => {
             // Element-dependent substitution
             ['width: attr(name)'],
             ['width: random-item(--key, 1px)'],
-            ['width: mix(0, 1px, 1px)'],
+            ['width: interpolate(0, 0: 1px, 1: 1px)'],
             ['width: toggle(1px)'],
-            ['width: calc-mix(0, random(1px, 1px), 1px * sibling-count())'],
+            ['width: calc-interpolate(0, 0: random(1px, 1px), 1: 1px * sibling-count())'],
             // Cascade-dependent substitution
             ['width: initial'],
             ['width: var(--custom)'],
@@ -4007,9 +4087,9 @@ describe('<supports-decl>', () => {
             // Element-dependent substitution
             ['(width: attr(name))'],
             ['(width: random-item(--key, 1px))'],
-            ['(width: mix(0, 1px, 1px))'],
+            ['(width: interpolate(0, 0: 1px, 1: 1px))'],
             ['(width: toggle(1px))'],
-            ['(width: calc-mix(0, random(1px, 1px), 1px * sibling-count()))'],
+            ['(width: calc-interpolate(0, 0: random(1px, 1px), 1: 1px * sibling-count()))'],
             // Cascade-dependent substitution
             ['(width: initial)'],
             ['(width: var(--custom))'],

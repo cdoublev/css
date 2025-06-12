@@ -83,15 +83,6 @@ const replaced = {
         'border-end-start-radius': { initial: '0' },
         'border-start-end-radius': { initial: '0' },
         'border-start-start-radius': { initial: '0' },
-        // https://github.com/w3c/csswg-drafts/issues/11650
-        'corner-block-end-shape': { value: '<corner-shape-value>{1,2}' },
-        'corner-block-start-shape': { value: '<corner-shape-value>{1,2}' },
-        'corner-bottom-shape': { value: '<corner-shape-value>{1,2}' },
-        'corner-inline-end-shape': { value: '<corner-shape-value>{1,2}' },
-        'corner-inline-start-shape': { value: '<corner-shape-value>{1,2}' },
-        'corner-left-shape': { value: '<corner-shape-value>{1,2}' },
-        'corner-right-shape': { value: '<corner-shape-value>{1,2}' },
-        'corner-top-shape': { value: '<corner-shape-value>{1,2}' },
         // TODO: fix `value` of `clip`
         'clip': { value: 'rect([<length> | auto]{4} | [<length> | auto]#{4}) | auto' },
         // TODO: fix `value` of `copy-into`
@@ -118,9 +109,10 @@ const replaced = {
     },
     types: {
         // Extensions (https://github.com/w3c/reffy/issues/1647)
-        '<color-mix()>': 'color-mix([<progress> && <color-interpolation-method>?], <color>, <color>) | color-mix(<color-interpolation-method>, [<color> && <percentage [0,100]>?]#)',
-        '<cross-fade()>': 'cross-fade(<progress>, [<image> | <color>], [<image> | <color>]) | cross-fade(<cf-image>#)',
+        '<color>': '<color-base> | currentColor | <system-color> | <contrast-color()> | <device-cmyk()> | <light-dark()> | <color-interpolate()>',
         '<keyframe-selector>': 'from | to | <percentage [0,100]> | <timeline-range-name> <percentage>',
+        '<single-animation-timeline>': 'auto | none | <dashed-ident> | <pointer()> | <scroll()> | <view()>',
+        '<transform-list>': '<transform-function>+ | <transform-mix()> | <transform-interpolate()>',
         // Missing production rules
         '<absolute-size>': 'xx-small | x-small | small | medium | large | x-large | xx-large',
         '<age>': 'child | young | old',
@@ -143,6 +135,7 @@ const replaced = {
         '<hex-color>': '<hash-token>',
         '<id>': '<id-selector>',
         '<ident>': '<ident-token>',
+        '<input-position>': '<calc-sum>',
         '<integer>': '<number-token>',
         '<length>': '<dimension>',
         '<mq-boolean>': '<integer [0,1]>',
@@ -176,7 +169,8 @@ const replaced = {
         '<system-color>': colors.system.join(' | '),
         '<target-name>': '<string>',
         '<time>': '<dimension>',
-        '<timeline-range-name>': 'contain | cover | entry | entry-crossing | exit | exit-crossing',
+        '<timeline-range-center-subject>': 'source | target',
+        '<timeline-range-name>': 'contain | cover | entry | entry-crossing | exit | exit-crossing | fill | fit',
         '<transform-function>': '<matrix()> | <matrix3d()> | <perspective()> | <translate()> | <translateX()> | <translateY()> | <translateZ()> | <translate3d()> | <scale()> | <scaleX()> | <scaleY()> | <scaleZ()> | <scale3d()> | <rotate()> | <rotateX()> | <rotateY()> | <rotateZ()> | <rotate3d()> | <skew()> | <skewX()> | <skewY()>',
         '<uri>': '<url>',
         '<url-modifier>': '<request-url-modifier> | <ident> | <function-token> <any-value>? )',
@@ -186,6 +180,8 @@ const replaced = {
         '<conic-gradient-syntax>': '[[[from [<angle> | <zero>]]? [at <position>]?]! || <color-interpolation-method>]? , <angular-color-stop-list>',
         '<radial-gradient-syntax>': '[[[<radial-shape> || <radial-size>]? [at <position>]?]! || <color-interpolation-method>]? , <color-stop-list>',
         '<radial-size>': 'closest-corner | farthest-corner | <radial-radius>{1,2}',
+        // https://github.com/w3c/csswg-drafts/pull/12329
+        '<color-interpolate()>': 'color-interpolate([<progress-source> && [by <easing-function>]? && <easing-function>? && <color-interpolation-method>?] , <input-position>{1,2} : <color> , [[<easing-function> || <color-interpolation-method>]? , <input-position>{1,2} : <color>]#)',
         // https://github.com/w3c/csswg-drafts/issues/11842
         '<control-value()>': 'control-value(<syntax-type-name>?)',
         // https://github.com/w3c/csswg-drafts/pull/12263
@@ -196,9 +192,11 @@ const replaced = {
         '<media-feature>': '<mf-plain> | <mf-boolean> | <mf-range>',
         '<media-in-parens>': '(<media-condition>) | (<media-feature>) | <general-enclosed>',
         // https://github.com/w3c/csswg-drafts/issues/10797
-        '<progress>': "[<calc-sum> | <'animation-timeline'>] && [by <easing-function>]?",
+        '<progress-source>': "<calc-sum> | <'animation-timeline'>",
         // TODO: fix `value` of `<pseudo-page>`
         '<pseudo-page>': ': [left | right | first | blank | nth(<an+b> [of <custom-ident>]?)]',
+        // https://github.com/w3c/csswg-drafts/pull/12280
+        '<shape()>': "shape(<'fill-rule'>? from <position> , <shape-command>#)",
         // https://github.com/w3c/csswg-drafts/issues/7897
         '<single-transition>': '<time> || <easing-function> || <time> || <transition-behavior-value> || [none | <single-transition-property>]',
     },
@@ -582,6 +580,10 @@ const excluded = {
             // Duplicate of CSS Values
             '<url>',
         ],
+        'pointer-animations': [
+            // https://github.com/w3c/csswg-drafts/issues/12285
+            '<axis>'
+        ],
     },
 }
 
@@ -625,6 +627,10 @@ const errors = {
     '<repeat()>': {
         cause: 'It is a generic type whose production rule is incorrectly defined, that is not used anywhere, and should not be exported.',
         links: ['https://github.com/w3c/csswg-drafts/issues/11385'],
+    },
+    '<segment-options>': {
+        cause: 'It is a generic type that should be defined informatively.',
+        links: ['https://github.com/w3c/csswg-drafts/issues/6245'],
     },
     '<unicode-range-token>': {
         cause: 'It is intended to replace <urange> but there are ongoing problems with consuming this token therefore it is not yet implemented.',

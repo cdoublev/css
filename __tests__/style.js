@@ -448,16 +448,16 @@ describe('<whole-value>', () => {
         const invalid = [
             // Not the <whole-value>
             ['first-valid(0) 0', 'margin'],
-            ['mix(0, 0, 0) 0', 'margin'],
-            ['mix(0, 0, first-valid(0) 0)', 'margin'],
+            ['interpolate(0, 0: 0, 1: 0) 0', 'margin'],
+            ['interpolate(0, 0: 0, 1: first-valid(0) 0)', 'margin'],
             ['toggle(0) 0', 'margin'],
             ['toggle(first-valid(0) 0)', 'margin'],
             // Invalid <whole-value> argument for the property
             ['first-valid(first-valid(invalid))', 'color'],
-            ['mix(0, mix(0, invalid, red), red)', 'color'],
+            ['interpolate(0, 0: interpolate(0, 0: invalid, 1: red), 1: red)', 'color'],
             ['toggle(invalid)', 'color'],
-            // mix() for non-animatable property
-            ['mix(0, 1s, 1s)', 'animation-duration'],
+            // interpolate() for non-animatable property
+            ['interpolate(0, 0: 0s, 1: 0s)', 'animation-duration'],
             // toggle() nested inside itself
             ['toggle(toggle(1))', 'opacity'],
         ]
@@ -472,17 +472,17 @@ describe('<whole-value>', () => {
             // Resolved at parse time
             ['FIRST-VALID(1)', '1', 'opacity'],
             // Serialize the list of tokens
-            ['  /**/  MIX(  0, 1, /**/ 1e0 /**/  ', 'mix(0, 1, 1)', 'opacity'],
+            ['  /**/  INTERPOLATE(  0, 0: 1, 1: /**/ 1e0 /**/  ', 'interpolate(0, 0: 1, 1: 1)', 'opacity'],
             ['  /**/  TOGGLE(  /**/ 1e0 /**/  ', 'toggle(1)', 'opacity'],
             // Nested inside itself
             ['first-valid(toggle(first-valid(1)))', 'toggle(1)', 'opacity'],
-            ['mix(0, 1, toggle(mix(0, 1, 1)))', 'mix(0, 1, toggle(mix(0, 1, 1)))', 'opacity'],
+            ['interpolate(0, 0: 1, 1: toggle(interpolate(0, 0: 1, 1: 1)))', 'interpolate(0, 0: 1, 1: toggle(interpolate(0, 0: 1, 1: 1)))', 'opacity'],
             // Omitted value
-            ['mix(0,,)', 'mix(0,,)', '--custom'],
+            ['interpolate(0, 0:, 1:)', 'interpolate(0, 0:, 1:)', '--custom'],
             ['toggle(,)', 'toggle(,)', '--custom'],
             // Priority to the declaration value range
             ['first-valid(1) 1', 'first-valid(1) 1', '--custom'],
-            ['mix(0, 1, 1) 1', 'mix(0, 1, 1) 1', '--custom'],
+            ['interpolate(0, 0: 1, 1: 1) 1', 'interpolate(0, 0: 1, 1: 1) 1', '--custom'],
             ['toggle(1) 1', 'toggle(1) 1', '--custom'],
             ['toggle(toggle(1))', 'toggle(toggle(1))', '--custom'],
         ]
@@ -506,7 +506,7 @@ describe('--*', () => {
             ],
             // Substitution
             ['var(  --PROPerty, /**/ 1e0 /**/  )  ', 'var(  --PROPerty, /**/ 1e0 /**/  )'],
-            ['mix(0,/**/, 1e0 )  ', 'mix(0,/**/, 1e0 )'],
+            ['interpolate(0, 0:/**/, 1: 1e0 )  ', 'interpolate(0, 0:/**/, 1: 1e0 )'],
             ['initial'],
             ['initial initial'],
         ]
@@ -524,6 +524,13 @@ describe('alignment-baseline', () => {
         expect(style.alignmentBaseline).toBe('text-top')
         style.alignmentBaseline = 'text-after-edge'
         expect(style.alignmentBaseline).toBe('text-bottom')
+    })
+})
+describe('animation-range-center', () => {
+    test('valid', () => {
+        const style = createStyleBlock()
+        style.animationRangeCenter = 'source 50%'
+        expect(style.animationRangeCenter).toBe('source')
     })
 })
 describe('animation-range-start, animation-range-end, animation-trigger-exit-range-end, animation-trigger-exit-range-start, animation-trigger-range-end, animation-trigger-range-start', () => {
@@ -3988,6 +3995,49 @@ describe('place-self', () => {
         expect(style.cssText).toBe('place-self: auto;')
     })
 })
+describe('pointer-timeline', () => {
+
+    const longhands = shorthands.get('pointer-timeline')
+
+    test('shorthand expansion', () => {
+
+        const style = createStyleBlock()
+        const timeline = 'none block'
+
+        // Initial longhand values
+        style.pointerTimeline = timeline
+        expect(style).toHaveLength(longhands.length)
+        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
+        expect(style.pointerTimeline).toBe('none')
+        expect(style.cssText).toBe('pointer-timeline: none;')
+
+        // Missing longhand values
+        style.pointerTimeline = 'none'
+        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
+        expect(style.pointerTimeline).toBe('none')
+        expect(style.cssText).toBe('pointer-timeline: none;')
+
+        // Coordinated value list
+        style.pointerTimeline = `${timeline}, ${timeline}`
+        longhands.forEach(longhand => expect(style[longhand]).toBe(`${initial(longhand)}, ${initial(longhand)}`))
+        expect(style.pointerTimeline).toBe('none, none')
+        expect(style.cssText).toBe('pointer-timeline: none, none;')
+    })
+    test('shorthand reification', () => {
+
+        const style = createStyleBlock()
+
+        // Initial longhand values
+        longhands.forEach(longhand => style[longhand] = initial(longhand))
+        expect(style.pointerTimeline).toBe('none')
+        expect(style.cssText).toBe('pointer-timeline: none;')
+
+        // Different lengths of longhand values
+        style.pointerTimelineName = 'none, none'
+        expect(style.pointerTimeline).toBe('')
+        expect(style.cssText).toBe('pointer-timeline-name: none, none; pointer-timeline-axis: block;')
+    })
+})
 describe('position-try', () => {
 
     const longhands = shorthands.get('position-try')
@@ -4621,9 +4671,9 @@ describe('CSSFontFaceDescriptors', () => {
             // Element-dependent substitution
             ['attr(name)'],
             ['random-item(--key, 1)', 'random-item(--key, 1%)'],
-            ['mix(0, 1, 1)', 'mix(0, 1%, 1%)'],
+            ['interpolate(0, 0: 1, 1: 1)', 'interpolate(0, 0: 1%, 1: 1%)'],
             ['toggle(1)', 'toggle(1%)'],
-            ['calc-mix(0, 1, 1)', 'calc-mix(0, 1%, 1%)'],
+            ['calc-interpolate(0, 0: 1, 1: 1)', 'calc-interpolate(0, 0: 1%, 1: 1%)'],
             ['random(1, 1)', 'random(1%, 1%)'],
             ['sibling-count()', 'calc(1% * sibling-count())'],
         ]
@@ -4745,12 +4795,12 @@ describe('CSSKeyframeProperties', () => {
         expect(style.fontWeight).toBe('attr(name)')
         style.fontWeight = 'random-item(--key, 1)'
         expect(style.fontWeight).toBe('random-item(--key, 1)')
-        style.fontWeight = 'mix(0, 1, 1)'
-        expect(style.fontWeight).toBe('mix(0, 1, 1)')
+        style.fontWeight = 'interpolate(0, 0: 1, 1: 1)'
+        expect(style.fontWeight).toBe('interpolate(0, 0: 1, 1: 1)')
         style.fontWeight = 'toggle(1)'
         expect(style.fontWeight).toBe('toggle(1)')
-        style.fontWeight = 'calc-mix(0, 1, 1)'
-        expect(style.fontWeight).toBe('calc-mix(0, 1, 1)')
+        style.fontWeight = 'calc-interpolate(0, 0: 1, 1: 1)'
+        expect(style.fontWeight).toBe('calc-interpolate(0, 0: 1, 1: 1)')
         style.fontWeight = 'random(1, 1)'
         expect(style.fontWeight).toBe('random(1, 1)')
         style.fontWeight = 'sibling-count()'
@@ -4772,9 +4822,9 @@ describe('CSSMarginDescriptors', () => {
             'attr(name)',
             'env(attr(name))',
             'random-item(--key, 1)',
-            'mix(0, 1, 1)',
+            'interpolate(0, 0: 1, 1: 1)',
             'toggle(1)',
-            'calc-mix(0, 1, 1)',
+            'calc-interpolate(0, 0: 1, 1: 1)',
             'random(1, 1)',
             'sibling-count()',
         ]
@@ -4831,9 +4881,9 @@ describe('CSSPageDescriptors', () => {
             // Element-dependent substitution
             ['attr(name)'],
             ['random-item(--key, 1)', 'random-item(--key, 1px)'],
-            ['mix(0, 1, 1)', 'mix(0, 1px, 1px)'],
+            ['interpolate(0, 0: 1, 1: 1)', 'interpolate(0, 0: 1px, 1: 1px)'],
             ['toggle(1)', 'toggle(1px)'],
-            ['calc-mix(0, 1, 1)', 'calc-mix(0, 1px, 1px)'],
+            ['calc-interpolate(0, 0: 1, 1: 1)', 'calc-interpolate(0, 0: 1px, 1: 1px)'],
             ['random(1, 1)', 'random(1px, 1px)'],
             ['sibling-count()', 'calc(1px * sibling-count())'],
         ]
@@ -4943,12 +4993,12 @@ describe('CSSPositionTryDescriptors', () => {
         expect(style.top).toBe('attr(name)')
         style.top = 'random-item(--key, 1px)'
         expect(style.top).toBe('random-item(--key, 1px)')
-        style.top = 'mix(0, 1px, 1px)'
-        expect(style.top).toBe('mix(0, 1px, 1px)')
+        style.top = 'interpolate(0, 0: 1px, 1: 1px)'
+        expect(style.top).toBe('interpolate(0, 0: 1px, 1: 1px)')
         style.top = 'toggle(1px)'
         expect(style.top).toBe('toggle(1px)')
-        style.top = 'calc-mix(0, 1px, 1px)'
-        expect(style.top).toBe('calc-mix(0, 1px, 1px)')
+        style.top = 'calc-interpolate(0, 0: 1px, 1: 1px)'
+        expect(style.top).toBe('calc-interpolate(0, 0: 1px, 1: 1px)')
         style.top = 'random(1px, 1px)'
         expect(style.top).toBe('random(1px, 1px)')
         style.top = 'calc(1px * sibling-count())'
