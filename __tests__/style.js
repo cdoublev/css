@@ -506,7 +506,7 @@ describe('--*', () => {
             ],
             // Substitution
             ['var(  --PROPerty, /**/ 1e0 /**/  )  ', 'var(  --PROPerty, /**/ 1e0 /**/  )'],
-            ['interpolate(0, 0:/**/, 1: 1e0 )  ', 'interpolate(0, 0:/**/, 1: 1e0 )'],
+            ['interpolate(0, 0: 0, 1: 1) 1'],
             ['initial'],
             ['initial initial'],
         ]
@@ -4664,8 +4664,8 @@ describe('CSSFontFaceDescriptors', () => {
         const invalid = [
             // Cascade or element-dependent value
             ['initial'],
-            ['inherit(--custom)'],
             // Cascade-dependent value
+            ['inherit(--custom)'],
             ['var(--custom)'],
             ['--custom()'],
             // Element-dependent value
@@ -4781,10 +4781,10 @@ describe('CSSKeyframeProperties', () => {
         // Cascade or element-dependent value
         style.fontWeight = 'initial'
         expect(style.fontWeight).toBe('initial')
-        style.fontWeight = 'inherit(--custom)'
-        expect(style.fontWeight).toBe('inherit(--custom)')
 
         // Cascade-dependent value
+        style.fontWeight = 'inherit(--custom)'
+        expect(style.fontWeight).toBe('inherit(--custom)')
         style.fontWeight = 'var(--custom)'
         expect(style.fontWeight).toBe('var(--custom)')
         style.fontWeight = '--custom()'
@@ -4860,10 +4860,10 @@ describe('CSSMarginDescriptors', () => {
         // Cascade or element-dependent value
         style.fontWeight = 'initial'
         expect(style.fontWeight).toBe('initial')
-        style.fontWeight = 'inherit(--custom)'
-        expect(style.fontWeight).toBe('inherit(--custom)')
 
         // Cascade-dependent value
+        style.fontWeight = 'inherit(--custom)'
+        expect(style.fontWeight).toBe('inherit(--custom)')
         style.fontWeight = 'var(--custom)'
         expect(style.fontWeight).toBe('var(--custom)')
         style.fontWeight = '--custom()'
@@ -4935,12 +4935,12 @@ describe('CSSPageDescriptors', () => {
         style.size = 'initial'
         expect(style.fontWeight).toBe('initial')
         expect(style.size).toBe('initial')
+
+        // Cascade-dependent value
         style.fontWeight = 'inherit(--custom)'
         style.size = 'inherit(--custom)'
         expect(style.fontWeight).toBe('inherit(--custom)')
         expect(style.size).toBe('inherit(--custom)')
-
-        // Cascade-dependent value
         style.fontWeight = 'var(--custom)'
         style.size = 'var(--custom)'
         expect(style.fontWeight).toBe('var(--custom)')
@@ -4988,10 +4988,10 @@ describe('CSSPositionTryDescriptors', () => {
         // Cascade or element-dependent value
         style.top = 'initial'
         expect(style.top).toBe('initial')
-        style.top = 'inherit(--custom)'
-        expect(style.top).toBe('inherit(--custom)')
 
         // Cascade-dependent value
+        style.top = 'inherit(--custom)'
+        expect(style.top).toBe('inherit(--custom)')
         style.top = 'var(--custom)'
         expect(style.top).toBe('var(--custom)')
         style.top = '--custom()'

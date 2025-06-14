@@ -1247,7 +1247,6 @@ describe('CSS grammar - semantic', () => {
                 color: red;
 
                 components: none;
-                components: inherit(--custom);
                 components: var(--custom);
                 components: attr(name);
                 components: toggle(name);
@@ -1321,7 +1320,6 @@ describe('CSS grammar - semantic', () => {
                 color: red;
 
                 pad: initial;
-                pad: inherit(--custom);
                 pad: var(--custom);
                 pad: attr(name);
                 pad: toggle(symbolic);
@@ -1359,8 +1357,6 @@ describe('CSS grammar - semantic', () => {
 
                 font-weight: initial;
                 size-adjust: initial;
-                font-weight: inherit(--custom);
-                size-adjust: inherit(--custom);
                 font-weight: var(--custom);
                 size-adjust: var(--custom);
                 font-weight: attr(name);
@@ -1425,7 +1421,6 @@ describe('CSS grammar - semantic', () => {
                 color: red;
 
                 font-display: initial;
-                font-display: inherit(--custom);
                 font-display: var(--custom);
                 font-display: attr(name);
                 font-display: toggle(name);
@@ -1477,7 +1472,6 @@ describe('CSS grammar - semantic', () => {
                 override-colors: 0 device-cmyk(0 0 0 0);
 
                 base-palette: initial;
-                base-palette: inherit(--custom);
                 base-palette: var(--custom);
                 base-palette: attr(name);
                 base-palette: toggle(1);
@@ -1730,16 +1724,14 @@ describe('CSS grammar - semantic', () => {
         const contents = [
             '@top-left {}',
             '--custom: 1;',
-            'MARGIN-TOP: { env(name) };',
-            'SIZE: { env(name) };',
-            'margin-top: first-valid(1px);',
-            'size: first-valid(1px);',
-            'margin-top: initial;',
-            'size: initial;',
-            'margin-top: inherit(--custom);',
-            'size: inherit(--custom);',
+            'MARGIN-TOP: initial;',
+            'SIZE: initial;',
+            'margin-top: { env(name) };',
+            'size: { env(name) };',
             'margin-top: var(--custom);',
             'size: var(--custom);',
+            'margin-top: first-valid(1px);',
+            'size: first-valid(1px);',
             'margin-top: 1px !important;',
             'size: 1px !important;',
         ]
@@ -1764,12 +1756,11 @@ describe('CSS grammar - semantic', () => {
     })
     test('@position-try - valid block contents', () => {
         const declarations = [
-            'TOP: { env(name) }',
-            'top: first-valid(1px)',
-            'top: initial',
-            'top: inherit(--custom)',
+            'TOP: initial',
+            'top: { env(name) }',
             'top: var(--custom)',
             'top: attr(name)',
+            'top: first-valid(1px)',
             'top: toggle(1px)',
             'top: calc-interpolate(0, 0: 1px, 1: 1px)',
             'top: calc(1px * sibling-count())',
@@ -1798,7 +1789,6 @@ describe('CSS grammar - semantic', () => {
 
                 syntax: "initial";
                 inherits: initial;
-                inherits: inherit(--custom);
                 inherits: var(--custom);
                 inherits: attr(name);
                 inherits: false !important;
@@ -2033,7 +2023,6 @@ describe('CSS grammar - semantic', () => {
                 color: red;
 
                 types: initial;
-                types: inherit(--custom);
                 types: var(--custom);
                 types: attr(name);
                 types: toggle(name);
@@ -2064,7 +2053,6 @@ describe('CSS grammar - semantic', () => {
                     color: red;
 
                     name: initial;
-                    name: inherit(--custom);
                     name: var(--custom);
                     name: attr(name);
                     name: toggle(name);
@@ -2131,12 +2119,11 @@ describe('CSS grammar - semantic', () => {
     test('keyframe rule - valid block contents', () => {
         const declarations = [
             '--custom: 1',
-            'TOP: { env(name) }',
-            'top: first-valid(1px)',
-            'top: initial',
-            'top: inherit(--custom)',
+            'TOP: initial',
+            'top: { env(name) }',
             'top: var(--custom)',
             'top: attr(name)',
+            'top: first-valid(1px)',
             'top: toggle(1px)',
             'top: calc-interpolate(0, 0: 1px, 1: 1px)',
             'top: calc(1px * sibling-count())',
@@ -2169,11 +2156,10 @@ describe('CSS grammar - semantic', () => {
     test('margin rule - valid block contents', () => {
         const declarations = [
             '--custom: {} var(--custom)',
-            'MARGIN-TOP: { env(name) }',
-            'margin-top: first-valid(1px)',
-            'margin-top: initial',
-            'margin-top: inherit(--custom)',
+            'MARGIN-TOP: initial',
+            'margin-top: { env(name) }',
             'margin-top: var(--custom)',
+            'margin-top: first-valid(1px)',
         ]
         declarations.forEach(declaration => {
             const input = `@page { @TOP-LEFT { ${declaration}; } }`
@@ -2231,12 +2217,11 @@ describe('CSS grammar - semantic', () => {
 
         const declarations = [
             '--custom: 1',
-            'TOP: { env(name) }',
-            'top: first-valid(1px)',
-            'top: initial',
-            'top: inherit(--custom)',
+            'TOP: initial',
+            'top: { env(name) }',
             'top: var(--custom)',
             'top: attr(name)',
+            'top: first-valid(1px)',
             'top: toggle(1px)',
             'top: calc-interpolate(0, 0: 1px, 1: 1px)',
             'top: calc(1px * sibling-count())',
@@ -2299,12 +2284,11 @@ describe('CSS grammar - semantic', () => {
 
         const declarations = [
             '--custom: 1',
-            'TOP: { env(name) }',
-            'top: first-valid(1px)',
-            'top: initial',
-            'top: inherit(--custom)',
+            'TOP: initial',
+            'top: { env(name) }',
             'top: var(--custom)',
             'top: attr(name)',
+            'top: first-valid(1px)',
             'top: toggle(1px)',
             'top: calc-interpolate(0, 0: 1px, 1: 1px)',
             'top: calc(1px * sibling-count())',
@@ -2401,12 +2385,11 @@ describe('CSS grammar - semantic', () => {
 
         const declarations = [
             '--custom: 1',
-            'TOP: { env(name) }',
-            'top: first-valid(1px)',
-            'top: initial',
-            'top: inherit(--custom)',
+            'TOP: initial',
+            'top: { env(name) }',
             'top: var(--custom)',
             'top: attr(name)',
+            'top: first-valid(1px)',
             'top: toggle(1px)',
             'top: calc-interpolate(0, 0: 1px, 1: 1px)',
             'top: calc(1px * sibling-count())',
