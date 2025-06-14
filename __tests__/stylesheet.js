@@ -1469,6 +1469,7 @@ describe('CSS grammar - semantic', () => {
 
                 style {}
                 color: red;
+                override-colors: 0 color-interpolate(0, 0: red, 1: red);
                 override-colors: 0 currentcolor;
                 override-colors: 0 AccentColor;
                 override-colors: 0 light-dark(red, red);
@@ -2139,6 +2140,7 @@ describe('CSS grammar - semantic', () => {
             'top: toggle(1px)',
             'top: calc-interpolate(0, 0: 1px, 1: 1px)',
             'top: calc(1px * sibling-count())',
+            'color: color-interpolate(0, 0: green, 1: green)',
         ]
         declarations.forEach(declaration => {
             const styleSheet = createStyleSheet(`@keyframes name { FROM { ${declaration}; } }`)
@@ -2238,6 +2240,7 @@ describe('CSS grammar - semantic', () => {
             'top: toggle(1px)',
             'top: calc-interpolate(0, 0: 1px, 1: 1px)',
             'top: calc(1px * sibling-count())',
+            'color: color-interpolate(0, 0: green, 1: green)',
             'top: 1px !important',
         ]
         declarations.forEach(declaration => {
@@ -2305,6 +2308,7 @@ describe('CSS grammar - semantic', () => {
             'top: toggle(1px)',
             'top: calc-interpolate(0, 0: 1px, 1: 1px)',
             'top: calc(1px * sibling-count())',
+            'color: color-interpolate(0, 0: green, 1: green)',
             'top: 1px !important',
         ]
         declarations.forEach(declaration => {

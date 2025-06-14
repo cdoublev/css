@@ -3066,7 +3066,7 @@ describe('<color>', () => {
     })
     test('valid <color-interpolate()>', () => {
         // Preserve color components except <hue> and <alpha-value>
-        expect(parse('<color>', 'color-interpolate(0, 0: rgba(-100% 200% 0 / 101%), 1: hsla(540deg -1% 0 / 50%))'))
+        expect(parse('<color>', 'color-interpolate(0, 0: rgba(-100% 200% 0 / 101%), 1: hsla(540deg -1% 0 / 50%))', true, styleRule))
             .toBe('color-interpolate(0, 0: rgb(-255 510 0), 1: hsl(180 -1 0 / 0.5))')
     })
     test('valid <color-mix()>', () => {

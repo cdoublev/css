@@ -4662,13 +4662,13 @@ describe('CSSFontFaceDescriptors', () => {
         expect(style.sizeAdjust).toBe('')
 
         const invalid = [
-            // Cascade or element-dependent substitution
+            // Cascade or element-dependent value
             ['initial'],
             ['inherit(--custom)'],
-            // Cascade-dependent substitution
+            // Cascade-dependent value
             ['var(--custom)'],
             ['--custom()'],
-            // Element-dependent substitution
+            // Element-dependent value
             ['attr(name)'],
             ['random-item(--key, 1)', 'random-item(--key, 1%)'],
             ['interpolate(0, 0: 1, 1: 1)', 'interpolate(0, 0: 1%, 1: 1%)'],
@@ -4778,19 +4778,19 @@ describe('CSSKeyframeProperties', () => {
         style.fontWeight = 'calc(progress(1, 0, 1))'
         expect(style.fontWeight).toBe('calc(1)')
 
-        // Cascade or element-dependent substitution
+        // Cascade or element-dependent value
         style.fontWeight = 'initial'
         expect(style.fontWeight).toBe('initial')
         style.fontWeight = 'inherit(--custom)'
         expect(style.fontWeight).toBe('inherit(--custom)')
 
-        // Cascade-dependent substitution
+        // Cascade-dependent value
         style.fontWeight = 'var(--custom)'
         expect(style.fontWeight).toBe('var(--custom)')
         style.fontWeight = '--custom()'
         expect(style.fontWeight).toBe('--custom()')
 
-        // Element-dependent substitution
+        // Element-dependent value
         style.fontWeight = 'attr(name)'
         expect(style.fontWeight).toBe('attr(name)')
         style.fontWeight = 'random-item(--key, 1)'
@@ -4805,6 +4805,8 @@ describe('CSSKeyframeProperties', () => {
         expect(style.fontWeight).toBe('random(1, 1)')
         style.fontWeight = 'sibling-count()'
         expect(style.fontWeight).toBe('sibling-count()')
+        style.color = 'color-interpolate(0, 0: green, 1: green)'
+        expect(style.color).toBe('color-interpolate(0, 0: green, 1: green)')
     })
 })
 describe('CSSMarginDescriptors', () => {
@@ -4818,19 +4820,20 @@ describe('CSSMarginDescriptors', () => {
         expect(style.top).toBeUndefined()
 
         const invalid = [
-            // Element-dependent substitution
-            'attr(name)',
-            'env(attr(name))',
-            'random-item(--key, 1)',
-            'interpolate(0, 0: 1, 1: 1)',
-            'toggle(1)',
-            'calc-interpolate(0, 0: 1, 1: 1)',
-            'random(1, 1)',
-            'sibling-count()',
+            // Element-dependent value
+            ['attr(name)'],
+            ['env(attr(name))'],
+            ['random-item(--key, 1)'],
+            ['interpolate(0, 0: 1, 1: 1)'],
+            ['toggle(1)'],
+            ['calc-interpolate(0, 0: 1, 1: 1)'],
+            ['random(1, 1)'],
+            ['sibling-count()'],
+            ['color-interpolate(0, 0: red, 1: red)', 'color'],
         ]
-        invalid.forEach(input => {
-            style.fontWeight = input
-            expect(style.fontWeight).toBe('')
+        invalid.forEach(([input, descriptor = 'font-weight']) => {
+            style[descriptor] = input
+            expect(style[descriptor]).toBe('')
         })
     })
     test('valid', () => {
@@ -4854,13 +4857,13 @@ describe('CSSMarginDescriptors', () => {
         style.fontWeight = 'calc(progress(1, 0, 1))'
         expect(style.fontWeight).toBe('calc(1)')
 
-        // Cascade or element-dependent substitution
+        // Cascade or element-dependent value
         style.fontWeight = 'initial'
         expect(style.fontWeight).toBe('initial')
         style.fontWeight = 'inherit(--custom)'
         expect(style.fontWeight).toBe('inherit(--custom)')
 
-        // Cascade-dependent substitution
+        // Cascade-dependent value
         style.fontWeight = 'var(--custom)'
         expect(style.fontWeight).toBe('var(--custom)')
         style.fontWeight = '--custom()'
@@ -4878,20 +4881,26 @@ describe('CSSPageDescriptors', () => {
         expect(style.top).toBeUndefined()
 
         const invalid = [
-            // Element-dependent substitution
-            ['attr(name)'],
-            ['random-item(--key, 1)', 'random-item(--key, 1px)'],
-            ['interpolate(0, 0: 1, 1: 1)', 'interpolate(0, 0: 1px, 1: 1px)'],
-            ['toggle(1)', 'toggle(1px)'],
-            ['calc-interpolate(0, 0: 1, 1: 1)', 'calc-interpolate(0, 0: 1px, 1: 1px)'],
-            ['random(1, 1)', 'random(1px, 1px)'],
-            ['sibling-count()', 'calc(1px * sibling-count())'],
+            // Element-dependent value
+            ['attr(name)', 'font-weight'],
+            ['attr(name)', 'size'],
+            ['random-item(--key, 1)', 'font-weight'],
+            ['random-item(--key, 1px)', 'size'],
+            ['interpolate(0, 0: 1, 1: 1)', 'font-weight'],
+            ['interpolate(0, 0: 1px, 1: 1px)', 'size'],
+            ['toggle(1)', 'font-weight'],
+            ['toggle(1px)', 'size'],
+            ['calc-interpolate(0, 0: 1, 1: 1)', 'font-weight'],
+            ['calc-interpolate(0, 0: 1px, 1: 1px)', 'size'],
+            ['random(1, 1)', 'font-weight'],
+            ['random(1px, 1px)', 'size'],
+            ['sibling-count()', 'font-weight'],
+            ['calc(1px * sibling-count())', 'size'],
+            ['color-interpolate(0, 0: red, 1: red)', 'color'],
         ]
-        invalid.forEach(([fontWeight, size = fontWeight]) => {
-            style.fontWeight = fontWeight
-            style.size = size
-            expect(style.fontWeight).toBe('')
-            expect(style.size).toBe('')
+        invalid.forEach(([input, descriptor]) => {
+            style[descriptor] = input
+            expect(style[descriptor]).toBe('')
         })
     })
     test('valid', () => {
@@ -4921,7 +4930,7 @@ describe('CSSPageDescriptors', () => {
         expect(style.fontWeight).toBe('calc(1)')
         expect(style.size).toBe('calc(1px)')
 
-        // Cascade or element-dependent substitution
+        // Cascade or element-dependent value
         style.fontWeight = 'initial'
         style.size = 'initial'
         expect(style.fontWeight).toBe('initial')
@@ -4931,7 +4940,7 @@ describe('CSSPageDescriptors', () => {
         expect(style.fontWeight).toBe('inherit(--custom)')
         expect(style.size).toBe('inherit(--custom)')
 
-        // Cascade-dependent substitution
+        // Cascade-dependent value
         style.fontWeight = 'var(--custom)'
         style.size = 'var(--custom)'
         expect(style.fontWeight).toBe('var(--custom)')
@@ -4976,19 +4985,19 @@ describe('CSSPositionTryDescriptors', () => {
         style.top = 'calc(1px * progress(1, 0, 1))'
         expect(style.top).toBe('calc(1px)')
 
-        // Cascade or element-dependent substitution
+        // Cascade or element-dependent value
         style.top = 'initial'
         expect(style.top).toBe('initial')
         style.top = 'inherit(--custom)'
         expect(style.top).toBe('inherit(--custom)')
 
-        // Cascade-dependent substitution
+        // Cascade-dependent value
         style.top = 'var(--custom)'
         expect(style.top).toBe('var(--custom)')
         style.top = '--custom()'
         expect(style.top).toBe('--custom()')
 
-        // Element-dependent substitution
+        // Element-dependent value
         style.top = 'attr(name)'
         expect(style.top).toBe('attr(name)')
         style.top = 'random-item(--key, 1px)'
