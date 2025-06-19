@@ -2428,6 +2428,10 @@ describe('<calc-interpolate()>', () => {
             // Type checking and simplification of <calc-sum> and <calc-interpolate()>
             ['<length-percentage>', 'calc-interpolate(0%, 0: 1px * 1, 1: 1% + 1px)', 'calc-interpolate(0%, 0: 1px, 1: 1% + 1px)'],
             ['<length-percentage>', 'calc(1px * calc-interpolate(0%, 0: 1% / 1px, 1: (1% + 1px) / 1px))'],
+            // Omitted component values
+            ['<number>', 'calc-interpolate(0 by linear linear, 0: 1, linear, 1: 1)', 'calc-interpolate(0, 0: 1, 1: 1)'],
+            // Implicit interpolation stop
+            ['<number>', 'calc-interpolate(0, 0 0.5: 0, 0.5 1: 1)', 'calc-interpolate(0, 0: 0, 0.5: 0, 0.5: 1, 1: 1)'],
         ]
         valid.forEach(([definition, input, expected = input]) => expect(parse(definition, input, true, styleRule)).toBe(expected))
     })
