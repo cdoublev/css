@@ -1565,6 +1565,9 @@ describe('<calc()>', () => {
             ['<length>', 'calc(1px * 1%)'],
             ['<length>', 'calc(1px / 1%)'],
             ['<length>', 'calc(1% / 1px)'],
+            ['<dimension>', 'calc(1n)'],
+            ['<dimension>', 'calc(1px + 1s)'],
+            ['<dimension> | <percentage>', 'calc(1px + 1%)'],
             ['<percentage>', 'calc(1)'],
             ['<percentage>', 'calc(1px)'],
             ['<percentage>', 'calc(1% + 1)'],
@@ -1572,8 +1575,6 @@ describe('<calc()>', () => {
             ['<percentage>', 'calc(1 / 1%)'],
             ['<percentage>', 'calc(1% * 1%)'],
             ['<percentage>', 'calc(1% / 1%)'],
-            // <dimension> does not match a type that a math function can resolve to
-            ['<dimension>', 'calc(1n)'],
             // 0 is parsed as <number> in calculations
             ['<length>', 'calc(0 + 1px)'],
             ['<length>', 'calc(0 - 1px)'],
@@ -1641,6 +1642,7 @@ describe('<calc()>', () => {
             // <number>, <dimension>, <percentage>
             ['<number>', 'CALC(1)', 'calc(1)'],
             ['<length>', 'calc(1px)'],
+            ['<dimension>', 'calc(1px)'],
             ['<percentage>', 'calc(1%)'],
             // <calc-keyword>
             ['<number>', 'calc(e)', `calc(${Math.E.toFixed(6)})`],
