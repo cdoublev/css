@@ -3499,20 +3499,16 @@ describe('<image-set()>', () => {
 })
 describe('<input-position>', () => {
     test('invalid', () => {
-        expect(parse('<input-position>', '(1% + 1px) / 1px', false)).toBeNull()
+        expect(parse('<input-position>', 'calc((1% + 1px) / 1px)', false)).toBeNull()
         expect(parse('<input-position>', 'progress(1%, 1px, 1px)', false)).toBeNull()
     })
     test('representation', () => {
-        const progress = percentage(50, ['<calc-value>', '<input-position>'])
+        const progress = percentage(50, ['<input-position>'])
         expect(parse('<input-position>', '50%', false)).toMatchObject(progress)
     })
     test('valid', () => {
-        const valid = [
-            ['100% / 2', '50%'],
-            ['calc(100% / 2)', '50%'],
-            ['progress(0%, 0%, 1%)', 'progress(0%, 0%, 1%)'],
-        ]
-        valid.forEach(([input, expected]) => expect(parse('<input-position>', input)).toBe(expected))
+        expect(parse('<input-position>', 'calc(100% / 2)')).toBe('calc(50%)')
+        expect(parse('<input-position>', 'progress(0%, 0%, 1%)')).toBe('progress(0%, 0%, 1%)')
     })
 })
 describe('<keyframe-selector>', () => {
@@ -3772,7 +3768,7 @@ describe('<progress-source>', () => {
     test('invalid', () => {
         const invalid = [
             // Invalid <calc-sum>
-            '(1% + 1px) / 1px',
+            'calc((1% + 1px) / 1px)',
             'progress(1%, 1px, 1px)',
             // Invalid <'animation-timeline'>
             'auto',
@@ -3781,16 +3777,12 @@ describe('<progress-source>', () => {
         invalid.forEach(input => expect(parse('<progress-source>', input, false)).toBeNull())
     })
     test('representation', () => {
-        const progress = percentage(50, ['<calc-value>', '<progress-source>'])
+        const progress = percentage(50, ['<progress-source>'])
         expect(parse('<progress-source>', '50%', false)).toMatchObject(progress)
     })
     test('valid', () => {
-        const valid = [
-            ['100% / 2', '50%'],
-            ['calc(100% / 2)', '50%'],
-            ['progress(0%, 0%, 1%)', 'progress(0%, 0%, 1%)'],
-        ]
-        valid.forEach(([input, expected]) => expect(parse('<progress-source>', input)).toBe(expected))
+        expect(parse('<progress-source>', 'calc(100% / 2)')).toBe('calc(50%)')
+        expect(parse('<progress-source>', 'progress(0%, 0%, 1%)')).toBe('progress(0%, 0%, 1%)')
     })
 })
 describe('<pt-name-and-class-selector>', () => {

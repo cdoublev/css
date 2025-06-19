@@ -135,7 +135,7 @@ const replaced = {
         '<hex-color>': '<hash-token>',
         '<id>': '<id-selector>',
         '<ident>': '<ident-token>',
-        '<input-position>': '<calc-sum>',
+        '<input-position>': '<percentage> | <number> | <dimension>',
         '<integer>': '<number-token>',
         '<length>': '<dimension>',
         '<mq-boolean>': '<integer [0,1]>',
@@ -191,8 +191,6 @@ const replaced = {
         // https://github.com/w3c/csswg-drafts/pull/10131
         '<media-feature>': '<mf-plain> | <mf-boolean> | <mf-range>',
         '<media-in-parens>': '(<media-condition>) | (<media-feature>) | <general-enclosed>',
-        // https://github.com/w3c/csswg-drafts/issues/10797
-        '<progress-source>': "<calc-sum> | <'animation-timeline'>",
         // TODO: fix `value` of `<pseudo-page>`
         '<pseudo-page>': ': [left | right | first | blank | nth(<an+b> [of <custom-ident>]?)]',
         // https://github.com/w3c/csswg-drafts/pull/12280
