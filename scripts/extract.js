@@ -580,7 +580,7 @@ const excluded = {
         ],
         'pointer-animations': [
             // https://github.com/w3c/csswg-drafts/issues/12285
-            '<axis>'
+            '<axis>',
         ],
     },
 }
