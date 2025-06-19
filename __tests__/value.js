@@ -2394,16 +2394,16 @@ describe('<calc-interpolate()>', () => {
     test('invalid', () => {
         const invalid = [
             // Invalid <progress-source> type
-            ['<number> | <length>', 'calc-interpolate(1px, 0: 1, 1: 1)'],
-            ['<length-percentage>', 'calc-interpolate(calc(1% / 1px), 0: 1px, 1: 1px)'],
-            ['<length-percentage>', 'calc-interpolate(calc((1% + 1px) / 1px), 0: 1px, 1: 1px)'],
-            ['<length-percentage>', 'calc-interpolate(progress(1%, 1px, 1px), 0: 1px, 1: 1px)'],
+            ['<number> | <length>', 'calc-interpolate(1px, 0: 1)'],
+            ['<length-percentage>', 'calc-interpolate(calc(1% / 1px), 0: 1px)'],
+            ['<length-percentage>', 'calc-interpolate(calc((1% + 1px) / 1px), 0: 1px)'],
+            ['<length-percentage>', 'calc-interpolate(progress(1%, 1px, 1px), 0: 1px)'],
             // Invalid <input-position> type
-            ['<length-percentage>', 'calc-interpolate(0, calc(1% / 1px): 0px, 1: 1px)'],
-            ['<length-percentage>', 'calc-interpolate(0, calc((1% + 1px) / 1px): 0px, 1: 1px)'],
-            ['<length-percentage>', 'calc-interpolate(0, progress(1%, 1px, 1px): 0px, 1: 1px)'],
+            ['<length-percentage>', 'calc-interpolate(0, calc(1% / 1px): 0px)'],
+            ['<length-percentage>', 'calc-interpolate(0, calc((1% + 1px) / 1px): 0px)'],
+            ['<length-percentage>', 'calc-interpolate(0, progress(1%, 1px, 1px): 0px)'],
             // Missing absolute <input-source> type
-            ['<length>', 'calc-interpolate(1px, 0: 1px, 1: 1px)'],
+            ['<length>', 'calc-interpolate(1px, 0: 1px)'],
             // Inconsistent absolute <progress-source> and <input-position> types
             ['<length>', 'calc-interpolate(0deg, 0px: 1px, 1px: 1px)'],
             ['<length>', 'calc-interpolate(0px, 0deg: 1px, 1px: 1px)'],
@@ -2411,8 +2411,8 @@ describe('<calc-interpolate()>', () => {
             ['<number> | <length>', 'calc-interpolate(0, 0: 1, 1: 1px)'],
             ['<number> | <percentage>', 'calc-interpolate(0, 0: 1, 1: 1%)'],
             // Result type mismatch
-            ['<number> | <percentage>', 'calc-interpolate(0, 0: 1, 1: (1% + 1px) / 1px)'],
-            ['<length>', 'calc-interpolate(0, 0: 1px, 1: 1% + 1px)'],
+            ['<number> | <percentage>', 'calc-interpolate(0, 0: (1% + 1px) / 1px)'],
+            ['<length>', 'calc-interpolate(0, 0: 1% + 1px)'],
         ]
         invalid.forEach(([definition, input]) => expect(parse(definition, input, false, styleRule)).toBeNull())
     })
@@ -2424,16 +2424,16 @@ describe('<calc-interpolate()>', () => {
             ['<number>', 'calc-interpolate(0%, 0px: 1, 1: 1)'],
             ['<number>', 'calc-interpolate(0px, 0px: 1, 1: 1)'],
             // Type checking <percentage> in nested <progress-source> or <input-position> contexts
-            ['<number>', 'calc-interpolate(progress(0%, 0%, 1%), progress(0%, 0%, 1%): 1, progress(0%, 1%, 1%): 1)'],
-            ['<length-percentage>', 'calc-interpolate(progress(0%, 0%, 1%), progress(0%, 0%, 1%): 1px, progress(0%, 1%, 1%): 1px)'],
-            ['<length-percentage>', 'calc-interpolate(0%, 0%: 1px, 100%: 1px)'],
+            ['<number>', 'calc-interpolate(progress(0%, 0%, 1%), progress(0%, 0%, 1%): 1)'],
+            ['<length-percentage>', 'calc-interpolate(progress(0%, 0%, 1%), progress(0%, 0%, 1%): 1px)'],
+            ['<length-percentage>', 'calc-interpolate(0%, 0%: 1px)'],
             // Type checking and simplification of <calc-sum> and <calc-interpolate()>
             ['<length-percentage>', 'calc-interpolate(0%, 0: 1px * 1, 1: 1% + 1px)', 'calc-interpolate(0%, 0: 1px, 1: 1% + 1px)'],
             ['<length-percentage>', 'calc(1px * calc-interpolate(0%, 0: 1% / 1px, 1: (1% + 1px) / 1px))'],
             // Omitted component values
             ['<number>', 'calc-interpolate(0 by linear linear, 0: 1, linear, 1: 1)', 'calc-interpolate(0, 0: 1, 1: 1)'],
             // Implicit interpolation stop
-            ['<number>', 'calc-interpolate(0, 0 0.5: 0, 0.5 1: 1)', 'calc-interpolate(0, 0: 0, 0.5: 0, 0.5: 1, 1: 1)'],
+            ['<number>', 'calc-interpolate(0, 0 1: 0)', 'calc-interpolate(0, 0: 0, 1: 0)'],
         ]
         valid.forEach(([definition, input, expected = input]) => expect(parse(definition, input, true, styleRule)).toBe(expected))
     })
@@ -3522,7 +3522,7 @@ describe('<keyframe-selector>', () => {
             ['from', '0%'],
             ['to', '100%'],
             // Element-dependent numeric substitution
-            ['calc-interpolate(0, 0: 1%, 1: 1%)'],
+            ['calc-interpolate(0, 0: 1%)'],
             ['random(1%, 1%)'],
             ['calc(1% * sibling-count())'],
         ]
@@ -3643,7 +3643,7 @@ describe('<mf-plain>', () => {
             'min-orientation: landscape',
             'color: red',
             // Element-dependent numeric substitution
-            'color: calc-interpolate(0, 0: 1, 1: 1)',
+            'color: calc-interpolate(0, 0: 1)',
             'color: random(1, 1)',
             'color: sibling-count()',
         ]
@@ -3680,7 +3680,7 @@ describe('<mf-range>', () => {
             '1 < color < 1px',
             '1px < color < 1',
             // Element-dependent numeric substitutions
-            'color < calc-interpolate(0, 0: 1, 1: 1)',
+            'color < calc-interpolate(0, 0: 1)',
             'color < random(1, 1)',
             'color < sibling-count()',
         ]
@@ -3927,10 +3927,10 @@ describe('<size-feature>', () => {
     test('valid', () => {
         const valid = [
             // Element-dependent numeric substitution
-            'width: calc-interpolate(0, 0: 1px, 1: 1px)',
+            'width: calc-interpolate(0, 0: 1px)',
             'width: random(1px, 1px)',
             'width: calc(1px * sibling-count())',
-            'width < calc-interpolate(0, 0: 1px, 1: 1px)',
+            'width < calc-interpolate(0, 0: 1px)',
             'width < random(1px, 1px)',
             'width < calc(1px * sibling-count())',
         ]
@@ -4028,7 +4028,7 @@ describe('<style-feature>', () => {
             // Element-dependent substitution
             ['width: attr(name)'],
             ['width: random-item(--key, 1px)'],
-            ['width: interpolate(0, 0: 1px, 1: 1px)'],
+            ['width: interpolate(0, 0: 1px)'],
             ['width: toggle(1px)'],
             ['width: calc-interpolate(0, 0: random(1px, 1px), 1: 1px * sibling-count())'],
             // Cascade-dependent substitution
@@ -4090,7 +4090,7 @@ describe('<supports-decl>', () => {
             // Element-dependent substitution
             ['(width: attr(name))'],
             ['(width: random-item(--key, 1px))'],
-            ['(width: interpolate(0, 0: 1px, 1: 1px))'],
+            ['(width: interpolate(0, 0: 1px))'],
             ['(width: toggle(1px))'],
             ['(width: calc-interpolate(0, 0: random(1px, 1px), 1: 1px * sibling-count()))'],
             // Cascade-dependent substitution

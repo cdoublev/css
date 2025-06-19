@@ -44,6 +44,7 @@ const initial = {
     },
     types: {
         // Missing definitions
+        '<input-position>': '<percentage> | <number> | <dimension>',
         '<x>': '<number>',
         '<y>': '<number>',
         '<whole-value>': '<declaration-value>?',
@@ -135,7 +136,6 @@ const replaced = {
         '<hex-color>': '<hash-token>',
         '<id>': '<id-selector>',
         '<ident>': '<ident-token>',
-        '<input-position>': '<percentage> | <number> | <dimension>',
         '<integer>': '<number-token>',
         '<length>': '<dimension>',
         '<mq-boolean>': '<integer [0,1]>',
@@ -181,7 +181,7 @@ const replaced = {
         '<radial-gradient-syntax>': '[[[<radial-shape> || <radial-size>]? [at <position>]?]! || <color-interpolation-method>]? , <color-stop-list>',
         '<radial-size>': 'closest-corner | farthest-corner | <radial-radius>{1,2}',
         // https://github.com/w3c/csswg-drafts/pull/12329
-        '<color-interpolate()>': 'color-interpolate([<progress-source> && [by <easing-function>]? && <easing-function>? && <color-interpolation-method>?] , <input-position>{1,2} : <color> , [[<easing-function> || <color-interpolation-method>]? , <input-position>{1,2} : <color>]#)',
+        '<color-interpolate()>': 'color-interpolate([<progress-source> && [by <easing-function>]? && <easing-function>? && <color-interpolation-method>?] , <input-position>{1,2} : <color> , [[<easing-function> || <color-interpolation-method>]? , <input-position>{1,2} : <color>]#?)',
         // https://github.com/w3c/csswg-drafts/issues/11842
         '<control-value()>': 'control-value(<syntax-type-name>?)',
         // https://github.com/w3c/csswg-drafts/pull/12263
@@ -193,8 +193,6 @@ const replaced = {
         '<media-in-parens>': '(<media-condition>) | (<media-feature>) | <general-enclosed>',
         // TODO: fix `value` of `<pseudo-page>`
         '<pseudo-page>': ': [left | right | first | blank | nth(<an+b> [of <custom-ident>]?)]',
-        // https://github.com/w3c/csswg-drafts/pull/12280
-        '<shape()>': "shape(<'fill-rule'>? from <position> , <shape-command>#)",
         // https://github.com/w3c/csswg-drafts/issues/7897
         '<single-transition>': '<time> || <easing-function> || <time> || <transition-behavior-value> || [none | <single-transition-property>]',
     },
@@ -573,6 +571,8 @@ const excluded = {
             '<if()>',
             '<if-condition>',
             '<if-test>',
+            // https://github.com/w3c/csswg-drafts/pull/12349
+            '<input-position>{1,2} : <output-value>',
         ],
         'filter-effects': [
             // Duplicate of CSS Values
@@ -593,6 +593,7 @@ const reportErrors = process.env.NODE_ENV === 'development'
 
 // TODO: periodically review this list to remove errors that no longer occur
 const errors = {
+    '@apply': { cause: 'It is not yet supported.' },
     '@charset': {
         cause: 'It should always be ignored in a CSS input.',
         link: ['https://drafts.csswg.org/css-syntax-3/#charset-rule'],
@@ -601,15 +602,18 @@ const errors = {
         cause: 'It should be defined with <rule-list> instead of <block-contents>.',
         links: ['https://github.com/w3c/csswg-drafts/pull/9215'],
     },
+    '@contents': { cause: 'It is not yet supported.' },
     '@custom-media': { cause: 'It is not yet supported.' },
     '@custom-selector': { cause: 'It is not yet supported.' },
     '@else': { cause: 'It is not yet supported.' },
+    '@env': { cause: 'It is not yet supported.' },
     '@function': { cause: 'In this library, its prelude value definition is folded into a production to allow validating the rule before creating CSSFunctionRule.' },
     '@historical-forms': {
         cause: 'It should be removed.',
         links: ['https://github.com/w3c/csswg-drafts/issues/9926'],
     },
     '@layer': { cause: 'It is the only rule with alternative definitions therefore only the first (block) definition is correctly checked.' },
+    '@mixin': { cause: 'It is not yet supported.' },
     '@when': { cause: 'It is not yet supported.' },
     '<boolean-expr>': { cause: 'It is not yet supported.' },
     '<box>': {

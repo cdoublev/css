@@ -448,16 +448,16 @@ describe('<whole-value>', () => {
         const invalid = [
             // Not the <whole-value>
             ['first-valid(0) 0', 'margin'],
-            ['interpolate(0, 0: 0, 1: 0) 0', 'margin'],
-            ['interpolate(0, 0: 0, 1: first-valid(0) 0)', 'margin'],
+            ['interpolate(0, 0: 0) 0', 'margin'],
+            ['interpolate(0, 0: first-valid(0) 0)', 'margin'],
             ['toggle(0) 0', 'margin'],
             ['toggle(first-valid(0) 0)', 'margin'],
             // Invalid <whole-value> argument for the property
             ['first-valid(first-valid(invalid))', 'color'],
-            ['interpolate(0, 0: interpolate(0, 0: invalid, 1: red), 1: red)', 'color'],
+            ['interpolate(0, 0: interpolate(0, 0: invalid))', 'color'],
             ['toggle(invalid)', 'color'],
             // interpolate() for non-animatable property
-            ['interpolate(0, 0: 0s, 1: 0s)', 'animation-duration'],
+            ['interpolate(0, 0: 0s)', 'animation-duration'],
             // toggle() nested inside itself
             ['toggle(toggle(1))', 'opacity'],
         ]
@@ -472,17 +472,17 @@ describe('<whole-value>', () => {
             // Resolved at parse time
             ['FIRST-VALID(1)', '1', 'opacity'],
             // Serialize the list of tokens
-            ['  /**/  INTERPOLATE(  0, 0: 1, 1: /**/ 1e0 /**/  ', 'interpolate(0, 0: 1, 1: 1)', 'opacity'],
+            ['  /**/  INTERPOLATE(  0, 0: /**/ 1e0 /**/  ', 'interpolate(0, 0: 1)', 'opacity'],
             ['  /**/  TOGGLE(  /**/ 1e0 /**/  ', 'toggle(1)', 'opacity'],
             // Nested inside itself
             ['first-valid(toggle(first-valid(1)))', 'toggle(1)', 'opacity'],
-            ['interpolate(0, 0: 1, 1: toggle(interpolate(0, 0: 1, 1: 1)))', 'interpolate(0, 0: 1, 1: toggle(interpolate(0, 0: 1, 1: 1)))', 'opacity'],
+            ['interpolate(0, 0: toggle(interpolate(0, 0: 1)))', 'interpolate(0, 0: toggle(interpolate(0, 0: 1)))', 'opacity'],
             // Omitted value
-            ['interpolate(0, 0:, 1:)', 'interpolate(0, 0:, 1:)', '--custom'],
+            ['interpolate(0, 0:)', 'interpolate(0, 0:)', '--custom'],
             ['toggle(,)', 'toggle(,)', '--custom'],
             // Priority to the declaration value range
             ['first-valid(1) 1', 'first-valid(1) 1', '--custom'],
-            ['interpolate(0, 0: 1, 1: 1) 1', 'interpolate(0, 0: 1, 1: 1) 1', '--custom'],
+            ['interpolate(0, 0: 1) 1', 'interpolate(0, 0: 1) 1', '--custom'],
             ['toggle(1) 1', 'toggle(1) 1', '--custom'],
             ['toggle(toggle(1))', 'toggle(toggle(1))', '--custom'],
         ]
@@ -506,7 +506,7 @@ describe('--*', () => {
             ],
             // Substitution
             ['var(  --PROPerty, /**/ 1e0 /**/  )  ', 'var(  --PROPerty, /**/ 1e0 /**/  )'],
-            ['interpolate(0, 0: 0, 1: 1) 1'],
+            ['interpolate(0, 0: 0) 1'],
             ['initial'],
             ['initial initial'],
         ]
@@ -4671,9 +4671,9 @@ describe('CSSFontFaceDescriptors', () => {
             // Element-dependent value
             ['attr(name)'],
             ['random-item(--key, 1)', 'random-item(--key, 1%)'],
-            ['interpolate(0, 0: 1, 1: 1)', 'interpolate(0, 0: 1%, 1: 1%)'],
+            ['interpolate(0, 0: 1)', 'interpolate(0, 0: 1%)'],
             ['toggle(1)', 'toggle(1%)'],
-            ['calc-interpolate(0, 0: 1, 1: 1)', 'calc-interpolate(0, 0: 1%, 1: 1%)'],
+            ['calc-interpolate(0, 0: 1)', 'calc-interpolate(0, 0: 1%)'],
             ['random(1, 1)', 'random(1%, 1%)'],
             ['sibling-count()', 'calc(1% * sibling-count())'],
         ]
@@ -4795,18 +4795,18 @@ describe('CSSKeyframeProperties', () => {
         expect(style.fontWeight).toBe('attr(name)')
         style.fontWeight = 'random-item(--key, 1)'
         expect(style.fontWeight).toBe('random-item(--key, 1)')
-        style.fontWeight = 'interpolate(0, 0: 1, 1: 1)'
-        expect(style.fontWeight).toBe('interpolate(0, 0: 1, 1: 1)')
+        style.fontWeight = 'interpolate(0, 0: 1)'
+        expect(style.fontWeight).toBe('interpolate(0, 0: 1)')
         style.fontWeight = 'toggle(1)'
         expect(style.fontWeight).toBe('toggle(1)')
-        style.fontWeight = 'calc-interpolate(0, 0: 1, 1: 1)'
-        expect(style.fontWeight).toBe('calc-interpolate(0, 0: 1, 1: 1)')
+        style.fontWeight = 'calc-interpolate(0, 0: 1)'
+        expect(style.fontWeight).toBe('calc-interpolate(0, 0: 1)')
         style.fontWeight = 'random(1, 1)'
         expect(style.fontWeight).toBe('random(1, 1)')
         style.fontWeight = 'sibling-count()'
         expect(style.fontWeight).toBe('sibling-count()')
-        style.color = 'color-interpolate(0, 0: green, 1: green)'
-        expect(style.color).toBe('color-interpolate(0, 0: green, 1: green)')
+        style.color = 'color-interpolate(0, 0: green)'
+        expect(style.color).toBe('color-interpolate(0, 0: green)')
     })
 })
 describe('CSSMarginDescriptors', () => {
@@ -4824,12 +4824,12 @@ describe('CSSMarginDescriptors', () => {
             ['attr(name)'],
             ['env(attr(name))'],
             ['random-item(--key, 1)'],
-            ['interpolate(0, 0: 1, 1: 1)'],
+            ['interpolate(0, 0: 1)'],
             ['toggle(1)'],
-            ['calc-interpolate(0, 0: 1, 1: 1)'],
+            ['calc-interpolate(0, 0: 1)'],
             ['random(1, 1)'],
             ['sibling-count()'],
-            ['color-interpolate(0, 0: red, 1: red)', 'color'],
+            ['color-interpolate(0, 0: red)', 'color'],
         ]
         invalid.forEach(([input, descriptor = 'font-weight']) => {
             style[descriptor] = input
@@ -4886,17 +4886,17 @@ describe('CSSPageDescriptors', () => {
             ['attr(name)', 'size'],
             ['random-item(--key, 1)', 'font-weight'],
             ['random-item(--key, 1px)', 'size'],
-            ['interpolate(0, 0: 1, 1: 1)', 'font-weight'],
-            ['interpolate(0, 0: 1px, 1: 1px)', 'size'],
+            ['interpolate(0, 0: 1)', 'font-weight'],
+            ['interpolate(0, 0: 1px)', 'size'],
             ['toggle(1)', 'font-weight'],
             ['toggle(1px)', 'size'],
-            ['calc-interpolate(0, 0: 1, 1: 1)', 'font-weight'],
-            ['calc-interpolate(0, 0: 1px, 1: 1px)', 'size'],
+            ['calc-interpolate(0, 0: 1)', 'font-weight'],
+            ['calc-interpolate(0, 0: 1px)', 'size'],
             ['random(1, 1)', 'font-weight'],
             ['random(1px, 1px)', 'size'],
             ['sibling-count()', 'font-weight'],
             ['calc(1px * sibling-count())', 'size'],
-            ['color-interpolate(0, 0: red, 1: red)', 'color'],
+            ['color-interpolate(0, 0: red)', 'color'],
         ]
         invalid.forEach(([input, descriptor]) => {
             style[descriptor] = input
@@ -5002,12 +5002,12 @@ describe('CSSPositionTryDescriptors', () => {
         expect(style.top).toBe('attr(name)')
         style.top = 'random-item(--key, 1px)'
         expect(style.top).toBe('random-item(--key, 1px)')
-        style.top = 'interpolate(0, 0: 1px, 1: 1px)'
-        expect(style.top).toBe('interpolate(0, 0: 1px, 1: 1px)')
+        style.top = 'interpolate(0, 0: 1px)'
+        expect(style.top).toBe('interpolate(0, 0: 1px)')
         style.top = 'toggle(1px)'
         expect(style.top).toBe('toggle(1px)')
-        style.top = 'calc-interpolate(0, 0: 1px, 1: 1px)'
-        expect(style.top).toBe('calc-interpolate(0, 0: 1px, 1: 1px)')
+        style.top = 'calc-interpolate(0, 0: 1px)'
+        expect(style.top).toBe('calc-interpolate(0, 0: 1px)')
         style.top = 'random(1px, 1px)'
         expect(style.top).toBe('random(1px, 1px)')
         style.top = 'calc(1px * sibling-count())'

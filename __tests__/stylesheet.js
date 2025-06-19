@@ -1323,7 +1323,7 @@ describe('CSS grammar - semantic', () => {
                 pad: var(--custom);
                 pad: attr(name);
                 pad: toggle(symbolic);
-                pad: calc-interpolate(0, 0: 1, 1: 1) ' ';
+                pad: calc-interpolate(0, 0: 1) ' ';
                 pad: sibling-count() ' ';
                 pad: 1 ' ' !important;
                 range: 1 0;
@@ -1363,8 +1363,8 @@ describe('CSS grammar - semantic', () => {
                 size-adjust: attr(name);
                 font-weight: toggle(1);
                 size-adjust: toggle(1%);
-                font-weight: calc-interpolate(0, 0: 1, 1: 1);
-                size-adjust: calc-interpolate(0, 0: 1%, 1: 1%);
+                font-weight: calc-interpolate(0, 0: 1);
+                size-adjust: calc-interpolate(0, 0: 1%);
                 font-weight: sibling-count();
                 size-adjust: calc(1% * sibling-count());
                 font-weight: 1 !important;
@@ -1464,7 +1464,7 @@ describe('CSS grammar - semantic', () => {
 
                 style {}
                 color: red;
-                override-colors: 0 color-interpolate(0, 0: red, 1: red);
+                override-colors: 0 color-interpolate(0, 0: red);
                 override-colors: 0 currentcolor;
                 override-colors: 0 AccentColor;
                 override-colors: 0 light-dark(red, red);
@@ -1475,7 +1475,7 @@ describe('CSS grammar - semantic', () => {
                 base-palette: var(--custom);
                 base-palette: attr(name);
                 base-palette: toggle(1);
-                base-palette: calc-interpolate(0, 0: 1, 1: 1);
+                base-palette: calc-interpolate(0, 0: 1);
                 base-palette: sibling-count();
                 base-palette: 1 !important;
 
@@ -1712,7 +1712,7 @@ describe('CSS grammar - semantic', () => {
 
                 margin-top: attr(name);
                 margin-top: toggle(1px);
-                margin-top: calc-interpolate(0, 0: 1px, 1: 1px);
+                margin-top: calc-interpolate(0, 0: 1pxpx);
                 margin-top: calc(1px * sibling-count());
 
                 @top-left {}
@@ -1762,7 +1762,7 @@ describe('CSS grammar - semantic', () => {
             'top: attr(name)',
             'top: first-valid(1px)',
             'top: toggle(1px)',
-            'top: calc-interpolate(0, 0: 1px, 1: 1px)',
+            'top: calc-interpolate(0, 0: 1px)',
             'top: calc(1px * sibling-count())',
         ]
         declarations.forEach(declaration => {
@@ -1819,7 +1819,7 @@ describe('CSS grammar - semantic', () => {
             ['random-item(--key, 1px)', '<length>'],
             ['var(--custom)', '<length>'],
             ['first-valid(1px)', '<length>'],
-            ['interpolate(0, 0: 1px, 1: 1px)', '<length>'],
+            ['interpolate(0, 0: 1px)', '<length>'],
             ['toggle(1px)', '<length>'],
             // Computationally dependent
             ['1em', '<length>'],
@@ -1837,7 +1837,7 @@ describe('CSS grammar - semantic', () => {
             ['1in', '<length>'],
             ['1%', '<length-percentage>'],
             ['calc(1% + 1px)', '<length-percentage>'],
-            ['calc-interpolate(0, 0: 1px, 1: 1px)', '<length>'],
+            ['calc-interpolate(0, 0: 1px)', '<length>'],
             ['random(1px, 1px)', '<length>'],
             ['calc(1px * sibling-count())', '<length>'],
             ['translate(1px)', '<transform-function>'],
@@ -1915,7 +1915,7 @@ describe('CSS grammar - semantic', () => {
             'top: var(--custom)',
             'top: attr(name)',
             'top: toggle(1px)',
-            'top: calc-interpolate(0, 0: 1px, 1: 1px)',
+            'top: calc-interpolate(0, 0: 1px)',
             'top: calc(1px * sibling-count())',
             'top: 1px !important',
         ]
@@ -2056,7 +2056,7 @@ describe('CSS grammar - semantic', () => {
                     name: var(--custom);
                     name: attr(name);
                     name: toggle(name);
-                    name: calc-interpolate(0, 0: 1, 1: 1) 1;
+                    name: calc-interpolate(0, 0: 1) 1;
                     name: sibling-count() 1;
                     name: 0 !important;
 
@@ -2125,9 +2125,9 @@ describe('CSS grammar - semantic', () => {
             'top: attr(name)',
             'top: first-valid(1px)',
             'top: toggle(1px)',
-            'top: calc-interpolate(0, 0: 1px, 1: 1px)',
+            'top: calc-interpolate(0, 0: 1px)',
             'top: calc(1px * sibling-count())',
-            'color: color-interpolate(0, 0: green, 1: green)',
+            'color: color-interpolate(0, 0: green)',
         ]
         declarations.forEach(declaration => {
             const styleSheet = createStyleSheet(`@keyframes name { FROM { ${declaration}; } }`)
@@ -2144,7 +2144,7 @@ describe('CSS grammar - semantic', () => {
 
                     margin-top: attr(name);
                     margin-top: toggle(1px);
-                    margin-top: calc-interpolate(0, 0: 1px, 1: 1px);
+                    margin-top: calc-interpolate(0, 0: 1px);
                     margin-top: calc(1px * sibling-count());
 
                     margin-bottom: 1px;
@@ -2223,9 +2223,9 @@ describe('CSS grammar - semantic', () => {
             'top: attr(name)',
             'top: first-valid(1px)',
             'top: toggle(1px)',
-            'top: calc-interpolate(0, 0: 1px, 1: 1px)',
+            'top: calc-interpolate(0, 0: 1px)',
             'top: calc(1px * sibling-count())',
-            'color: color-interpolate(0, 0: green, 1: green)',
+            'color: color-interpolate(0, 0: green)',
             'top: 1px !important',
         ]
         declarations.forEach(declaration => {
@@ -2290,9 +2290,9 @@ describe('CSS grammar - semantic', () => {
             'top: attr(name)',
             'top: first-valid(1px)',
             'top: toggle(1px)',
-            'top: calc-interpolate(0, 0: 1px, 1: 1px)',
+            'top: calc-interpolate(0, 0: 1px)',
             'top: calc(1px * sibling-count())',
-            'color: color-interpolate(0, 0: green, 1: green)',
+            'color: color-interpolate(0, 0: green)',
             'top: 1px !important',
         ]
         declarations.forEach(declaration => {
@@ -2391,7 +2391,7 @@ describe('CSS grammar - semantic', () => {
             'top: attr(name)',
             'top: first-valid(1px)',
             'top: toggle(1px)',
-            'top: calc-interpolate(0, 0: 1px, 1: 1px)',
+            'top: calc-interpolate(0, 0: 1px)',
             'top: calc(1px * sibling-count())',
             'top: 1px !important',
         ]
