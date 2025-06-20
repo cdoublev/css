@@ -4029,9 +4029,8 @@ describe('<style-feature>', () => {
             ['width: initial'],
             ['width: inherit(--custom)'],
             ['width: var(--custom)'],
-            // Cascade-dependent substitution
-            ['width: --custom()'],
             // Element-dependent substitution
+            ['width: --custom()'],
             ['width: attr(name)'],
             ['width: random-item(--key, 1px)'],
             ['width: interpolate(0, 0: 1px)'],
@@ -4094,9 +4093,8 @@ describe('<supports-decl>', () => {
             ['(width: initial)'],
             ['(width: inherit(--custom))'],
             ['(width: var(--custom))'],
-            // Cascade-dependent substitution
-            ['(width: --custom())'],
             // Element-dependent substitution
+            ['(width: --custom())'],
             ['(width: attr(name))'],
             ['(width: random-item(--key, 1px))'],
             ['(width: interpolate(0, 0: 1px))'],

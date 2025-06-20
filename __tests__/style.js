@@ -4656,9 +4656,8 @@ describe('CSSFontFaceDescriptors', () => {
             ['initial'],
             ['inherit(--custom)'],
             ['var(--custom)'],
-            // Cascade dependent value
-            ['--custom()'],
             // Element-dependent value
+            ['--custom()'],
             ['attr(name)'],
             ['random-item(--key, 1)', 'random-item(--key, 1%)'],
             ['interpolate(0, 0: 1)', 'interpolate(0, 0: 1%)'],
@@ -4776,11 +4775,9 @@ describe('CSSKeyframeProperties', () => {
         style.fontWeight = 'var(--custom)'
         expect(style.fontWeight).toBe('var(--custom)')
 
-        // Cascade-dependent value
+        // Element-dependent value
         style.fontWeight = '--custom()'
         expect(style.fontWeight).toBe('--custom()')
-
-        // Element-dependent value
         style.fontWeight = 'attr(name)'
         expect(style.fontWeight).toBe('attr(name)')
         style.fontWeight = 'random-item(--key, 1)'
@@ -4855,7 +4852,7 @@ describe('CSSMarginDescriptors', () => {
         style.fontWeight = 'var(--custom)'
         expect(style.fontWeight).toBe('var(--custom)')
 
-        // Cascade-dependent value
+        // Element-dependent value
         style.fontWeight = '--custom()'
         expect(style.fontWeight).toBe('--custom()')
     })
@@ -4934,7 +4931,7 @@ describe('CSSPageDescriptors', () => {
         expect(style.fontWeight).toBe('var(--custom)')
         expect(style.size).toBe('var(--custom)')
 
-        // Cascade-dependent value
+        // Element-dependent value
         style.fontWeight = '--custom()'
         style.size = '--custom()'
         expect(style.fontWeight).toBe('--custom()')
@@ -4983,11 +4980,9 @@ describe('CSSPositionTryDescriptors', () => {
         style.top = 'var(--custom)'
         expect(style.top).toBe('var(--custom)')
 
-        // Cascade-dependent value
+        // Element-dependent value
         style.top = '--custom()'
         expect(style.top).toBe('--custom()')
-
-        // Element-dependent value
         style.top = 'attr(name)'
         expect(style.top).toBe('attr(name)')
         style.top = 'random-item(--key, 1px)'
