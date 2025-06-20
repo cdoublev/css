@@ -1540,7 +1540,7 @@ describe('CSS grammar - semantic', () => {
             '@container name {}',
             '@media {}',
             '@supports (color: green) {}',
-            '--custom: {} var(--custom);',
+            '--custom: 1;',
             'RESULT: { env(name) };',
         ]
         const input = `@FUNCTION --name() { ${contents.join(' ')} }`
@@ -2155,7 +2155,7 @@ describe('CSS grammar - semantic', () => {
     })
     test('margin rule - valid block contents', () => {
         const declarations = [
-            '--custom: {} var(--custom)',
+            '--custom: 1',
             'MARGIN-TOP: initial',
             'margin-top: { env(name) }',
             'margin-top: var(--custom)',

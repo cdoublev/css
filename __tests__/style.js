@@ -366,15 +366,6 @@ describe('CSSStyleDeclaration.setProperty(), CSSStyleDeclaration.getPropertyValu
     })
 })
 
-describe('CSS-wide keyword', () => {
-    test('valid', () => {
-        const style = createStyleBlock()
-        substitutions.keywords.forEach(input => {
-            style.opacity = input.toUpperCase()
-            expect(style.opacity).toBe(input)
-        })
-    })
-})
 describe('arbitrary substitution', () => {
     test('invalid', () => {
         const style = createStyleBlock()
@@ -389,15 +380,15 @@ describe('arbitrary substitution', () => {
             ['env(name) !'],
             ['env(name) {}', 'color'],
             ['{} env(name)', 'color'],
-            ['env(name) !important', 'color'],
-            ['!important env(name)', 'color'],
+            ['env(name) !important'],
+            ['!important env(name)'],
             // Nested
+            ['--custom(--custom(!))'],
             ['attr(name, attr())'],
             ['env(name, env())'],
             ['inherit(--custom, inherit())'],
             ['random-item(--key, random-item())'],
             ['var(--custom, var())'],
-            ['--custom(--custom(!))'],
         ]
         invalid.forEach(([input, property = '--custom']) => {
             style.setProperty(property, input)
@@ -408,30 +399,30 @@ describe('arbitrary substitution', () => {
         const style = createStyleBlock()
         const valid = [
             // Valid at parse time
+            ['unknown(--custom())'],
             ['unknown(ATTR(name))'],
             ['unknown(ENV(name))'],
             ['unknown(INHERIT(--custom))'],
             ['unknown(RANDOM-ITEM(--key, 1))'],
             ['unknown(VAR(--custom))'],
-            ['unknown(--custom())'],
             // Nested inside itself
+            ['--custom(--custom())'],
             ['attr(name, attr(name))'],
             ['env(name, env(name))'],
             ['inherit(--custom, inherit(--custom))'],
             ['random-item(--key, random-item(--key, 1))'],
             ['var(--custom, var(--custom))'],
-            ['--custom(--custom())'],
             // Non-strict comma-containing production
             ['var(--custom,,)'],
             ['var(--custom, 1 {})'],
             // Custom function name with escaped characters
             ['--cust\\ om()'],
             // Serialize the list of tokens
+            ['  /**/ @1/**/1e0 --custom(  /**/ 1e0 /**/  ', '@1 1 --custom(1)'],
             ['  /**/ @1/**/1e0 attr(  name, /**/ 1e0 /**/  ', '@1 1 attr(name, 1)'],
             ['  /**/ @1/**/1e0 env(  name, /**/ 1e0 /**/  ', '@1 1 env(name, 1)'],
             ['  /**/ @1/**/1e0 random-item(  --key, /**/ 1e0 /**/  ', '@1 1 random-item(--key, 1)'],
             ['  /**/ @1/**/1e0 var(  --custom, /**/ 1e0 /**/  ', '@1 1 var(--custom, 1)'],
-            ['  /**/ @1/**/1e0 --custom(  /**/ 1e0 /**/  ', '@1 1 --custom(1)'],
             // Omitted component value
             ['attr(name raw-string)'],
             ['attr(name raw-string, "")', 'attr(name)'],
@@ -447,6 +438,7 @@ describe('<whole-value>', () => {
         const style = createStyleBlock()
         const invalid = [
             // Not the <whole-value>
+            ['initial initial', 'margin'],
             ['first-valid(0) 0', 'margin'],
             ['interpolate(0, 0: 0) 0', 'margin'],
             ['interpolate(0, 0: first-valid(0) 0)', 'margin'],
@@ -469,6 +461,8 @@ describe('<whole-value>', () => {
     test('valid', () => {
         const style = createStyleBlock()
         const valid = [
+            // CSS-wide keywords
+            ...substitutions.keywords.map(keyword => [keyword.toUpperCase(), keyword, 'opacity']),
             // Resolved at parse time
             ['FIRST-VALID(1)', '1', 'opacity'],
             // Serialize the list of tokens
@@ -506,9 +500,8 @@ describe('--*', () => {
             ],
             // Substitution
             ['var(  --PROPerty, /**/ 1e0 /**/  )  ', 'var(  --PROPerty, /**/ 1e0 /**/  )'],
-            ['interpolate(0, 0: 0) 1'],
-            ['initial'],
             ['initial initial'],
+            ['toggle(1) 1'],
         ]
         valid.forEach(([input, expected = input]) => {
             style.cssText = `--custom: ${input}`
@@ -1089,9 +1082,6 @@ describe('voice-pitch, voice-range', () => {
         const style = createStyleBlock()
         style.voicePitch = 'x-low 100%'
         expect(style.voicePitch).toBe('x-low')
-        // tmp
-        style.voicePitch = '100%'
-        expect(style.voicePitch).toBe('100%')
     })
 })
 describe('voice-rate', () => {
@@ -4664,9 +4654,9 @@ describe('CSSFontFaceDescriptors', () => {
         const invalid = [
             // Cascade or element-dependent value
             ['initial'],
-            // Cascade-dependent value
             ['inherit(--custom)'],
             ['var(--custom)'],
+            // Cascade dependent value
             ['--custom()'],
             // Element-dependent value
             ['attr(name)'],
@@ -4781,12 +4771,12 @@ describe('CSSKeyframeProperties', () => {
         // Cascade or element-dependent value
         style.fontWeight = 'initial'
         expect(style.fontWeight).toBe('initial')
-
-        // Cascade-dependent value
         style.fontWeight = 'inherit(--custom)'
         expect(style.fontWeight).toBe('inherit(--custom)')
         style.fontWeight = 'var(--custom)'
         expect(style.fontWeight).toBe('var(--custom)')
+
+        // Cascade-dependent value
         style.fontWeight = '--custom()'
         expect(style.fontWeight).toBe('--custom()')
 
@@ -4860,12 +4850,12 @@ describe('CSSMarginDescriptors', () => {
         // Cascade or element-dependent value
         style.fontWeight = 'initial'
         expect(style.fontWeight).toBe('initial')
-
-        // Cascade-dependent value
         style.fontWeight = 'inherit(--custom)'
         expect(style.fontWeight).toBe('inherit(--custom)')
         style.fontWeight = 'var(--custom)'
         expect(style.fontWeight).toBe('var(--custom)')
+
+        // Cascade-dependent value
         style.fontWeight = '--custom()'
         expect(style.fontWeight).toBe('--custom()')
     })
@@ -4935,8 +4925,6 @@ describe('CSSPageDescriptors', () => {
         style.size = 'initial'
         expect(style.fontWeight).toBe('initial')
         expect(style.size).toBe('initial')
-
-        // Cascade-dependent value
         style.fontWeight = 'inherit(--custom)'
         style.size = 'inherit(--custom)'
         expect(style.fontWeight).toBe('inherit(--custom)')
@@ -4945,6 +4933,8 @@ describe('CSSPageDescriptors', () => {
         style.size = 'var(--custom)'
         expect(style.fontWeight).toBe('var(--custom)')
         expect(style.size).toBe('var(--custom)')
+
+        // Cascade-dependent value
         style.fontWeight = '--custom()'
         style.size = '--custom()'
         expect(style.fontWeight).toBe('--custom()')
@@ -4988,12 +4978,12 @@ describe('CSSPositionTryDescriptors', () => {
         // Cascade or element-dependent value
         style.top = 'initial'
         expect(style.top).toBe('initial')
-
-        // Cascade-dependent value
         style.top = 'inherit(--custom)'
         expect(style.top).toBe('inherit(--custom)')
         style.top = 'var(--custom)'
         expect(style.top).toBe('var(--custom)')
+
+        // Cascade-dependent value
         style.top = '--custom()'
         expect(style.top).toBe('--custom()')
 

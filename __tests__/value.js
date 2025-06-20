@@ -4025,15 +4025,18 @@ describe('<style-feature>', () => {
             // Dependency-free substitution
             ['width: env(name)'],
             ['width: first-valid(1px)', 'width: 1px'],
+            // Cascade or element-dependent substitution
+            ['width: initial'],
+            ['width: inherit(--custom)'],
+            ['width: var(--custom)'],
+            // Cascade-dependent substitution
+            ['width: --custom()'],
             // Element-dependent substitution
             ['width: attr(name)'],
             ['width: random-item(--key, 1px)'],
             ['width: interpolate(0, 0: 1px)'],
             ['width: toggle(1px)'],
             ['width: calc-interpolate(0, 0: random(1px, 1px), 1: 1px * sibling-count())'],
-            // Cascade-dependent substitution
-            ['width: initial'],
-            ['width: var(--custom)'],
         ]
         valid.forEach(([input, expected = input]) =>
             expect(parse('<style-feature>', input, true, containerRule)).toBe(expected))
@@ -4087,15 +4090,18 @@ describe('<supports-decl>', () => {
             // Dependency-free substitution
             ['(width: env(name))'],
             ['(width: first-valid(1px))', '(width: 1px)'],
+            // Cascade or element-dependent substitution
+            ['(width: initial)'],
+            ['(width: inherit(--custom))'],
+            ['(width: var(--custom))'],
+            // Cascade-dependent substitution
+            ['(width: --custom())'],
             // Element-dependent substitution
             ['(width: attr(name))'],
             ['(width: random-item(--key, 1px))'],
             ['(width: interpolate(0, 0: 1px))'],
             ['(width: toggle(1px))'],
             ['(width: calc-interpolate(0, 0: random(1px, 1px), 1: 1px * sibling-count()))'],
-            // Cascade-dependent substitution
-            ['(width: initial)'],
-            ['(width: var(--custom))'],
         ]
         valid.forEach(([input, expected = input]) =>
             expect(parse('<supports-decl>', input, true, supportsRule)).toBe(expected))
