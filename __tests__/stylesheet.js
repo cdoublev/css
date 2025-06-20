@@ -1710,11 +1710,6 @@ describe('CSS grammar - semantic', () => {
 
                 top: 1px;
 
-                margin-top: attr(name);
-                margin-top: toggle(1px);
-                margin-top: calc-interpolate(0, 0: 1pxpx);
-                margin-top: calc(1px * sibling-count());
-
                 @top-left {}
             }
         `)
@@ -1730,8 +1725,16 @@ describe('CSS grammar - semantic', () => {
             'size: { env(name) };',
             'margin-top: var(--custom);',
             'size: var(--custom);',
+            'margin-top: attr(name);',
+            'size: attr(name);',
             'margin-top: first-valid(1px);',
             'size: first-valid(1px);',
+            'margin-top: toggle(1px);',
+            'size: toggle(1px);',
+            'margin-top: calc-interpolate(0, 0: 1px);',
+            'size: calc-interpolate(0, 0: 1px);',
+            'margin-top: calc(1px * sibling-count());',
+            'size: calc(1px * sibling-count());',
             'margin-top: 1px !important;',
             'size: 1px !important;',
         ]
@@ -2138,15 +2141,8 @@ describe('CSS grammar - semantic', () => {
         const styleSheet = createStyleSheet(`
             @page {
                 @top-left {
-
                     style {}
                     top: 1px;
-
-                    margin-top: attr(name);
-                    margin-top: toggle(1px);
-                    margin-top: calc-interpolate(0, 0: 1px);
-                    margin-top: calc(1px * sibling-count());
-
                     margin-bottom: 1px;
                 }
             }
@@ -2159,7 +2155,12 @@ describe('CSS grammar - semantic', () => {
             'MARGIN-TOP: initial',
             'margin-top: { env(name) }',
             'margin-top: var(--custom)',
+            'margin-top: attr(name)',
             'margin-top: first-valid(1px)',
+            'margin-top: toggle(1px)',
+            'margin-top: calc-interpolate(0, 0: 1px)',
+            'margin-top: calc(1px * sibling-count())',
+            'margin-top: 1px !important',
         ]
         declarations.forEach(declaration => {
             const input = `@page { @TOP-LEFT { ${declaration}; } }`

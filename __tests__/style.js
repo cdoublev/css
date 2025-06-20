@@ -4805,23 +4805,6 @@ describe('CSSMarginDescriptors', () => {
         style.setProperty('top', '1px')
         expect(style.getPropertyValue('top')).toBe('')
         expect(style.top).toBeUndefined()
-
-        const invalid = [
-            // Element-dependent value
-            ['attr(name)'],
-            ['env(attr(name))'],
-            ['random-item(--key, 1)'],
-            ['interpolate(0, 0: 1)'],
-            ['toggle(1)'],
-            ['calc-interpolate(0, 0: 1)'],
-            ['random(1, 1)'],
-            ['sibling-count()'],
-            ['color-interpolate(0, 0: red)', 'color'],
-        ]
-        invalid.forEach(([input, descriptor = 'font-weight']) => {
-            style[descriptor] = input
-            expect(style[descriptor]).toBe('')
-        })
     })
     test('valid', () => {
 
@@ -4855,6 +4838,22 @@ describe('CSSMarginDescriptors', () => {
         // Element-dependent value
         style.fontWeight = '--custom()'
         expect(style.fontWeight).toBe('--custom()')
+        style.fontWeight = 'attr(name)'
+        expect(style.fontWeight).toBe('attr(name)')
+        style.fontWeight = 'random-item(--key, 1)'
+        expect(style.fontWeight).toBe('random-item(--key, 1)')
+        style.fontWeight = 'interpolate(0, 0: 1)'
+        expect(style.fontWeight).toBe('interpolate(0, 0: 1)')
+        style.fontWeight = 'toggle(1)'
+        expect(style.fontWeight).toBe('toggle(1)')
+        style.fontWeight = 'calc-interpolate(0, 0: 1)'
+        expect(style.fontWeight).toBe('calc-interpolate(0, 0: 1)')
+        style.fontWeight = 'random(1, 1)'
+        expect(style.fontWeight).toBe('random(1, 1)')
+        style.fontWeight = 'sibling-count()'
+        expect(style.fontWeight).toBe('sibling-count()')
+        style.color = 'color-interpolate(0, 0: red)'
+        expect(style.color).toBe('color-interpolate(0, 0: red)')
     })
 })
 describe('CSSPageDescriptors', () => {
@@ -4866,29 +4865,6 @@ describe('CSSPageDescriptors', () => {
         style.setProperty('top', '1px')
         expect(style.getPropertyValue('top')).toBe('')
         expect(style.top).toBeUndefined()
-
-        const invalid = [
-            // Element-dependent value
-            ['attr(name)', 'font-weight'],
-            ['attr(name)', 'size'],
-            ['random-item(--key, 1)', 'font-weight'],
-            ['random-item(--key, 1px)', 'size'],
-            ['interpolate(0, 0: 1)', 'font-weight'],
-            ['interpolate(0, 0: 1px)', 'size'],
-            ['toggle(1)', 'font-weight'],
-            ['toggle(1px)', 'size'],
-            ['calc-interpolate(0, 0: 1)', 'font-weight'],
-            ['calc-interpolate(0, 0: 1px)', 'size'],
-            ['random(1, 1)', 'font-weight'],
-            ['random(1px, 1px)', 'size'],
-            ['sibling-count()', 'font-weight'],
-            ['calc(1px * sibling-count())', 'size'],
-            ['color-interpolate(0, 0: red)', 'color'],
-        ]
-        invalid.forEach(([input, descriptor]) => {
-            style[descriptor] = input
-            expect(style[descriptor]).toBe('')
-        })
     })
     test('valid', () => {
 
@@ -4936,6 +4912,36 @@ describe('CSSPageDescriptors', () => {
         style.size = '--custom()'
         expect(style.fontWeight).toBe('--custom()')
         expect(style.size).toBe('--custom()')
+        style.fontWeight = 'attr(name)'
+        style.size = 'attr(name)'
+        expect(style.fontWeight).toBe('attr(name)')
+        expect(style.size).toBe('attr(name)')
+        style.fontWeight = 'random-item(--key, 1)'
+        style.size = 'random-item(--key, 1px)'
+        expect(style.fontWeight).toBe('random-item(--key, 1)')
+        expect(style.size).toBe('random-item(--key, 1px)')
+        style.fontWeight = 'interpolate(0, 0: 1)'
+        style.size = 'interpolate(0, 0: 1px)'
+        expect(style.fontWeight).toBe('interpolate(0, 0: 1)')
+        expect(style.size).toBe('interpolate(0, 0: 1px)')
+        style.fontWeight = 'toggle(1)'
+        style.size = 'toggle(1px)'
+        expect(style.fontWeight).toBe('toggle(1)')
+        expect(style.size).toBe('toggle(1px)')
+        style.fontWeight = 'calc-interpolate(0, 0: 1)'
+        style.size = 'calc-interpolate(0, 0: 1px)'
+        expect(style.fontWeight).toBe('calc-interpolate(0, 0: 1)')
+        expect(style.size).toBe('calc-interpolate(0, 0: 1px)')
+        style.fontWeight = 'random(1, 1)'
+        style.size = 'random(1px, 1px)'
+        expect(style.fontWeight).toBe('random(1, 1)')
+        expect(style.size).toBe('random(1px, 1px)')
+        style.fontWeight = 'sibling-count()'
+        style.size = 'calc(1px * sibling-count())'
+        expect(style.fontWeight).toBe('sibling-count()')
+        expect(style.size).toBe('calc(1px * sibling-count())')
+        style.color = 'color-interpolate(0, 0: red)'
+        expect(style.color).toBe('color-interpolate(0, 0: red)')
 
         // Specific serialization rule
         style.size = '1px 1px'
