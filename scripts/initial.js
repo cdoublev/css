@@ -7,7 +7,7 @@
  */
 const { install } = require('../lib/index.js')
 // Do not import CSSOM implementations before the above import
-const { isList, isOmitted } = require('../lib/utils/value.js')
+const { isFailure, isList, isOmitted } = require('../lib/utils/value.js')
 const { logError, quote, tab } = require('../lib/utils/string.js')
 const descriptors = require('../lib/descriptors/definitions.js')
 const fs = require('node:fs/promises')
@@ -89,11 +89,11 @@ function serializeComponentValue(object, depth) {
  * @returns {string[]}
  */
 function getInitialValue(name, value, context, depth) {
-    if (value === null) {
+    if (!value) {
         return [null, '']
     }
     value = parseCSSDeclaration(name, value, false, context)
-    if (value === null) {
+    if (isFailure(value)) {
         console.error(`Parse error: cannot parse initial value of "${name}"`)
         return ''
     }

@@ -30,6 +30,7 @@ const { cssom, install } = require('../lib/index.js')
 const { createContext, parseCSSGrammar } = require('../lib/parse/parser.js')
 const { toDegrees, toRadians } = require('../lib/utils/math.js')
 const { keywords: cssWideKeywords } = require('../lib/values/substitutions.js')
+const { isFailure } = require('../lib/utils/value.js')
 const { serializeCSSComponentValue } = require('../lib/serialize.js')
 
 /**
@@ -41,11 +42,14 @@ const { serializeCSSComponentValue } = require('../lib/serialize.js')
  */
 function parse(definition, value, serialize = true, context) {
     value = parseCSSGrammar(value, definition, context)
-    if (serialize) {
-        if (value) {
-            return serializeCSSComponentValue(value)
+    if (isFailure(value)) {
+        if (serialize) {
+            return ''
         }
-        return ''
+        return null
+    }
+    if (serialize) {
+        return serializeCSSComponentValue(value)
     }
     return value
 }
