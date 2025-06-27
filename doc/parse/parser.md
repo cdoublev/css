@@ -161,7 +161,7 @@ A CSS rule definition must define:
   - whether declarations cascade
   - whether it applies to elements
 
-The grammar may be extended depending on the context. CSS-wide keywords, arbitrary and whole value substitutions, are not part of a specific property grammar but are accepted for any property, and for descriptors in some contexts. Similarly, some numeric substitutions are only valid in contexts applying to an element.
+The grammar may be extended depending on the context. Arbitrary and whole value substitutions are not part of a specific property grammar but are accepted for any property, and for descriptors in some contexts. Similarly, some numeric substitutions are only valid in contexts applying to an element.
 
 `Element.style`, `Element.sizes`, `CanvasTextDrawingStyles.font`, `CSSFontFeatureValuesMap.set()`, etc, use parser entry points that take a grammar but no context. However, since CSS Syntax often requires validating values *"in the context"*, it is implicitly required, and the `grammar` argument can remain context-free. It cannot represent a style rule by default, since none of the above interfaces are associated to a style rule.
 
