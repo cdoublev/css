@@ -867,10 +867,10 @@ describe('<declaration>', () => {
             '--custom: }',
             '--custom: !',
         ]
-        invalid.forEach(input => expect(parse('<declaration>', input, false)).toBeNull())
+        invalid.forEach(input => expect(parse('<declaration>', input, false, styleRule)).toBeNull())
     })
     test('representation', () => {
-        expect(parse('<declaration>', 'color: green !important', false)).toMatchObject({
+        expect(parse('<declaration>', 'color: green !important', false, styleRule)).toMatchObject({
             important: true,
             name: 'color',
             types: ['<declaration>'],
@@ -878,9 +878,9 @@ describe('<declaration>', () => {
         })
     })
     test('valid', () => {
-        expect(parse('<declaration>', '--custom:  /**/  {} 1e0 {} !important  /**/  '))
+        expect(parse('<declaration>', '--custom:  /**/  {} 1e0 {} !important  /**/  ', true, styleRule))
             .toBe('--custom: {} 1e0 {} !important')
-        expect(parse('<declaration>', '--custom:'))
+        expect(parse('<declaration>', '--custom:', true, styleRule))
             .toBe('--custom: ')
     })
 })
@@ -3160,7 +3160,8 @@ describe('<counter>', () => {
         })
     })
     test('valid', () => {
-        const context = { ...createContext(styleRule), declaration: { definition: { name: 'any-property' } } }
+        let context = createContext(styleRule)
+        context = { ...context, context, definition: { name: 'any-property', type: 'declaration' } }
         expect(parse('<counter>', 'counter(chapters, decimal)', true, context)).toBe('counter(chapters)')
         expect(parse('<counter>', 'counters(chapters, "-", decimal)', true, context)).toBe('counters(chapters, "-")')
     })
@@ -3183,7 +3184,8 @@ describe('<counter-style-name>', () => {
             .toMatchObject(customIdent('custom', ['<counter-style-name>']))
     })
     test('valid', () => {
-        const context = { ...createContext(styleRule), declaration: { definition: { name: 'any-property' } } }
+        let context = createContext(styleRule)
+        context = { ...context, context, definition: { name: 'any-property', type: 'declaration' } }
         expect(parse('<counter-style-name>', 'DECIMAL', true, context)).toBe('decimal')
         expect(parse('<counter-style-name>', 'NAME')).toBe('NAME')
     })
@@ -3222,22 +3224,24 @@ describe('<family-name>', () => {
         const invalid = [
             [
                 [
-                    { declaration: { definition: { name: 'font-family' } } },
-                    { declaration: { definition: { name: 'src' } } },
-                    { rule: { definition: { name: '@font-feature-values', type: 'rule' } } },
+                    [createContext(styleRule), 'font-family'],
+                    [createContext('@font-face'), 'src'],
+                    [createContext('@font-feature-values')],
                 ],
                 // <generic-family>, <system-family-name>
                 ['SERIF', 'caption'],
             ],
             [
-                [{ declaration: { definition: { name: 'voice-family' } } }],
+                [[createContext(styleRule), 'voice-family']],
                 // <gender>, preserve
                 ['MALE', 'preserve'],
             ],
         ]
         invalid.forEach(([contexts, inputs]) =>
-            contexts.forEach(context => {
-                context = { ...createContext(), ...context }
+            contexts.forEach(([context, name]) => {
+                if (name) {
+                    context = { ...context, context, definition: { name, type: 'declaration' } }
+                }
                 inputs.forEach(input => expect(parse('<family-name>', input, false, context)).toBeNull())
             }))
     })
