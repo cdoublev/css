@@ -567,7 +567,7 @@ const excluded = {
             '<mask-source>',
         ],
         'css-values-5': [
-            // TODO: add support for `<boolean-expr[<test>]`
+            // TODO: add support for `<boolean-expr[<test>]>`
             '<if()>',
             '<if-condition>',
             '<if-test>',

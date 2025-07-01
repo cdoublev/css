@@ -46,4 +46,4 @@ CSS values are currently represented either as a `List` or a plain object, with 
   > 4. Replace each component value in components with the result of invoking *serialize a CSS component value*.
   > 5. Join the items of components into a single string, inserting `" "` (U+0020 SPACE) between each pair of items unless the second item is a `","` (U+002C COMMA). Return the result.
 
-Step 3 is skipped since `<whitespace-token>`s are already removed from the representation of all productions but arbitrary ones (this could otherwise prevent validating a parent production like `<whole-value>`), which are represented with a `List` whose `separator` is an empty string.
+Step 3 is skipped since leading and trailing `<whitespace-token>`s are already removed while consuming a list of component values and in the parse result, except for arbitrary substitution containing values, which are represented with a `List` whose `separator` is an empty string.
