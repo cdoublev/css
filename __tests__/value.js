@@ -4017,7 +4017,7 @@ describe('<style-feature>', () => {
         expect(parse('<style-feature>', 'color: green !important', false, containerRule)).toMatchObject({
             important: true,
             name: 'color',
-            types: ['<declaration>', '<style-feature>'],
+            types: ['<declaration>', '<style-feature-plain>', '<style-feature>'],
             value: keyword('green', ['<named-color>', '<color-base>', '<color>', 'color']),
         })
     })
@@ -4044,6 +4044,8 @@ describe('<style-feature>', () => {
             ['width: interpolate(0, 0: 1px)'],
             ['width: toggle(1px)'],
             ['width: calc-interpolate(0, 0: random(1px, 1px), 1: 1px * sibling-count())'],
+            // Arbitrary substitution of range values
+            ['var(--custom) < 1px'],
         ]
         valid.forEach(([input, expected = input]) =>
             expect(parse('<style-feature>', input, true, containerRule)).toBe(expected))

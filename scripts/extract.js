@@ -165,7 +165,7 @@ const replaced = {
         '<size-feature>': '<media-feature>',
         '<size-keyword>': '<ident>',
         '<string>': '<string-token>',
-        '<style-feature>': '<declaration> | <ident>',
+        '<style-feature-name>': '<ident>',
         '<system-color>': colors.system.join(' | '),
         '<target-name>': '<string>',
         '<time>': '<dimension>',
@@ -180,8 +180,6 @@ const replaced = {
         '<conic-gradient-syntax>': '[[[from [<angle> | <zero>]]? [at <position>]?]! || <color-interpolation-method>]? , <angular-color-stop-list>',
         '<radial-gradient-syntax>': '[[[<radial-shape> || <radial-size>]? [at <position>]?]! || <color-interpolation-method>]? , <color-stop-list>',
         '<radial-size>': 'closest-corner | farthest-corner | <radial-radius>{1,2}',
-        // https://github.com/w3c/csswg-drafts/pull/12329
-        '<color-interpolate()>': 'color-interpolate([<progress-source> && [by <easing-function>]? && <easing-function>? && <color-interpolation-method>?] , <input-position>{1,2} : <color> , [[<easing-function> || <color-interpolation-method>]? , <input-position>{1,2} : <color>]#?)',
         // https://github.com/w3c/csswg-drafts/issues/11842
         '<control-value()>': 'control-value(<syntax-type-name>?)',
         // https://github.com/w3c/csswg-drafts/pull/12263
@@ -195,6 +193,8 @@ const replaced = {
         '<pseudo-page>': ': [left | right | first | blank | nth(<an+b> [of <custom-ident>]?)]',
         // https://github.com/w3c/csswg-drafts/issues/7897
         '<single-transition>': '<time> || <easing-function> || <time> || <transition-behavior-value> || [none | <single-transition-property>]',
+        // https://github.com/w3c/csswg-drafts/issues/12425
+        '<style-range-value>': '<custom-property-name> | <number> | <percentage> | <dimension>',
     },
 }
 const excluded = {
@@ -551,6 +551,10 @@ const excluded = {
             // Prefer CSS Color HDR
             '<color-function>',
             '<predefined-rgb>',
+        ],
+        'css-conditional-5': [
+            // https://github.com/w3c/csswg-drafts/issues/12425, https://github.com/w3c/csswg-drafts/issues/12426
+            '<style-feature-value>',
         ],
         'css-images': [
             // TODO: fix parsing/serializing `<radial-gradient-syntax>`, `<radial-size>`
