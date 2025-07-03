@@ -3544,9 +3544,7 @@ describe('<keyframe-selector>', () => {
             ['from', '0%'],
             ['to', '100%'],
             // Element-dependent numeric substitution
-            ['calc-interpolate(0, 0: 1%)'],
-            ['random(1%, 1%)'],
-            ['calc(1% * sibling-count())'],
+            ['calc-interpolate(0, 0: 1% * sibling-count())'],
         ]
         valid.forEach(([input, expected = input]) =>
             expect(parse('<keyframe-selector>', input, true, keyframeRule)).toBe(expected))
@@ -3661,15 +3659,8 @@ describe('<mf-name>', () => {
 })
 describe('<mf-plain>', () => {
     test('invalid', () => {
-        const invalid = [
-            'min-orientation: landscape',
-            'color: red',
-            // Element-dependent numeric substitution
-            'color: calc-interpolate(0, 0: 1)',
-            'color: random(1, 1)',
-            'color: sibling-count()',
-        ]
-        invalid.forEach(input => expect(parse('<mf-plain>', input, false, mediaRule)).toBeNull())
+        expect(parse('<mf-plain>', 'min-orientation: landscape', false, mediaRule)).toBeNull()
+        expect(parse('<mf-plain>', 'color: red', false, mediaRule)).toBeNull()
     })
     test('representation', () => {
         const name = ident('color', ['<mf-name>'])
@@ -3701,10 +3692,6 @@ describe('<mf-range>', () => {
             'color = 1px',
             '1 < color < 1px',
             '1px < color < 1',
-            // Element-dependent numeric substitutions
-            'color < calc-interpolate(0, 0: 1)',
-            'color < random(1, 1)',
-            'color < sibling-count()',
         ]
         invalid.forEach(input => expect(parse('<mf-range>', input, false, mediaRule)).toBeNull())
     })
@@ -3722,6 +3709,31 @@ describe('<mf-range>', () => {
             ['0 < aspect-ratio < 1', '0 / 1 < aspect-ratio < 1 / 1'],
         ]
         valid.forEach(([input, expected]) => expect(parse('<mf-range>', input, true, mediaRule)).toBe(expected))
+    })
+})
+describe('<mf-value>', () => {
+    test('invalid', () => {
+        const invalid = [
+            [mediaRule, 'var(--custom)'],
+            [mediaRule, 'attr(name)'],
+            [mediaRule, 'calc-interpolate(0, 0: 1)'],
+            [mediaRule, 'sibling-count()'],
+        ]
+        invalid.forEach(([context, input]) => expect(parse('<mf-value>', input, false, context)).toBeNull())
+    })
+    test('representation', () => {
+        expect(parse('<mf-value>', '1', false)).toMatchObject(number(1, ['<mf-value>']))
+    })
+    test('valid', () => {
+        const valid = [
+            [mediaRule, 'env(name)'],
+            [containerRule, 'env(name)'],
+            [containerRule, 'var(--custom)'],
+            [containerRule, 'attr(name)'],
+            [containerRule, 'calc-interpolate(0, 0: 1 * sibling-count())'],
+        ]
+        valid.forEach(([context, input, expected = input]) =>
+            expect(parse('<mf-value>', input, true, context)).toBe(expected))
     })
 })
 describe('<opentype-tag>', () => {
@@ -3939,26 +3951,6 @@ describe('<shape()>', () => {
             .toBe('shape(from 0px 0px, move by 0px 0px)')
     })
 })
-describe('<size-feature>', () => {
-    test('representation', () => {
-        const name = ident('width', ['<mf-name>'])
-        const value = length(1, 'px', ['<mf-value>'])
-        const feature = list([name, delimiter(':'), value], ' ', ['<mf-plain>', '<media-feature>', '<size-feature>'])
-        expect(parse('<size-feature>', 'width: 1px', false)).toMatchObject(feature)
-    })
-    test('valid', () => {
-        const valid = [
-            // Element-dependent numeric substitution
-            'width: calc-interpolate(0, 0: 1px)',
-            'width: random(1px, 1px)',
-            'width: calc(1px * sibling-count())',
-            'width < calc-interpolate(0, 0: 1px)',
-            'width < random(1px, 1px)',
-            'width < calc(1px * sibling-count())',
-        ]
-        valid.forEach(input => expect(parse('<size-feature>', input, true, containerRule)).toBe(input))
-    })
-})
 describe('<skew()>', () => {
     test('representation', () => {
         expect(parse('<skew()>', 'skew(1deg)', false)).toMatchObject({
@@ -4044,21 +4036,15 @@ describe('<style-feature>', () => {
             ['-webkit-box-align'],
             // Custom property
             ['--custom: fn(  /**/  1e0  /**/  )'],
-            // Dependency-free substitution
+            // Substitution of a declaration value
             ['width: env(name)'],
             ['width: first-valid(1px)', 'width: 1px'],
-            // Cascade or element-dependent substitution
-            ['width: initial'],
-            ['width: inherit(--custom)'],
             ['width: var(--custom)'],
-            // Element-dependent substitution
-            ['width: --custom()'],
+            ['width: initial'],
             ['width: attr(name)'],
-            ['width: random-item(--key, 1px)'],
             ['width: interpolate(0, 0: 1px)'],
-            ['width: toggle(1px)'],
-            ['width: calc-interpolate(0, 0: random(1px, 1px), 1: 1px * sibling-count())'],
-            // Arbitrary substitution of range values
+            ['width: calc-interpolate(0, 0: 1px * sibling-count())'],
+            // Arbitrary substitution of a range value
             ['var(--custom) < 1px'],
         ]
         valid.forEach(([input, expected = input]) =>
@@ -4110,19 +4096,13 @@ describe('<supports-decl>', () => {
         const valid = [
             // Custom property
             ['(--custom: fn(  /**/  1e0  /**/  ))'],
-            // Dependency-free substitution
+            // Substitution
             ['(width: env(name))'],
             ['(width: first-valid(1px))', '(width: 1px)'],
-            // Cascade or element-dependent substitution
-            ['(width: initial)'],
-            ['(width: inherit(--custom))'],
             ['(width: var(--custom))'],
-            // Element-dependent substitution
-            ['(width: --custom())'],
+            ['(width: initial)'],
             ['(width: attr(name))'],
-            ['(width: random-item(--key, 1px))'],
             ['(width: interpolate(0, 0: 1px))'],
-            ['(width: toggle(1px))'],
             ['(width: calc-interpolate(0, 0: random(1px, 1px), 1: 1px * sibling-count()))'],
         ]
         valid.forEach(([input, expected = input]) =>
