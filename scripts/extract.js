@@ -59,6 +59,8 @@ const initial = {
             },
         },
         '<custom-function-definition>': '<function-token> <function-parameter>#? ) [returns <css-type>]?',
+        // https://github.com/w3c/csswg-drafts/issues/12440
+        '<env-args>': 'env(<declaration-value> , <declaration-value>?)',
         // TODO: fix parsing/serializing `<radial-gradient-syntax>`, `<radial-size>`
         '<radial-radius>': 'closest-side | farthest-side | <length-percentage [0,∞]>',
         // https://github.com/w3c/csswg-drafts/issues/8835

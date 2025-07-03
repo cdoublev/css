@@ -370,7 +370,6 @@ describe('arbitrary substitution', () => {
     test('invalid', () => {
         const style = createStyleBlock()
         const invalid = [
-            // Invalid component value
             ['env(name) "\n'],
             ['env(name) url(bad .url)'],
             ['env(name) ]'],
@@ -382,13 +381,6 @@ describe('arbitrary substitution', () => {
             ['{} env(name)', 'color'],
             ['env(name) !important'],
             ['!important env(name)'],
-            // Nested
-            ['--custom(--custom(!))'],
-            ['attr(name, attr())'],
-            ['env(name, env())'],
-            ['inherit(--custom, inherit())'],
-            ['random-item(--key, random-item())'],
-            ['var(--custom, var())'],
         ]
         invalid.forEach(([input, property = '--custom']) => {
             style.setProperty(property, input)
@@ -399,33 +391,20 @@ describe('arbitrary substitution', () => {
         const style = createStyleBlock()
         const valid = [
             // Valid at parse time
-            ['unknown(--custom())'],
-            ['unknown(ATTR(name))'],
-            ['unknown(ENV(name))'],
-            ['unknown(INHERIT(--custom))'],
-            ['unknown(RANDOM-ITEM(--key, 1))'],
-            ['unknown(VAR(--custom))'],
-            // Nested inside itself
-            ['--custom(--custom())'],
-            ['attr(name, attr(name))'],
-            ['env(name, env(name))'],
-            ['inherit(--custom, inherit(--custom))'],
-            ['random-item(--key, random-item(--key, 1))'],
-            ['var(--custom, var(--custom))'],
-            // Non-strict comma-containing production
-            ['var(--custom,,)'],
-            ['var(--custom, 1 {})'],
+            ['--custom(--custom(!))'],
+            ['attr(name, attr())', 'attr(name, attr())'],
+            ['env(name, env())', 'env(name, env())'],
+            ['inherit(--custom, inherit())', 'inherit(--custom, inherit())'],
+            ['random-item(--key, random-item())', 'random-item(--key, random-item())'],
+            ['var(--custom, var())', 'var(--custom, var())'],
             // Custom function name with escaped characters
             ['--cust\\ om()'],
             // Serialize the list of tokens
-            ['  /**/ @1/**/1e0 --custom(  /**/ 1e0 /**/  ', '@1 1 --custom(1)'],
-            ['  /**/ @1/**/1e0 attr(  name, /**/ 1e0 /**/  ', '@1 1 attr(name, 1)'],
-            ['  /**/ @1/**/1e0 env(  name, /**/ 1e0 /**/  ', '@1 1 env(name, 1)'],
-            ['  /**/ @1/**/1e0 random-item(  --key, /**/ 1e0 /**/  ', '@1 1 random-item(--key, 1)'],
-            ['  /**/ @1/**/1e0 var(  --custom, /**/ 1e0 /**/  ', '@1 1 var(--custom, 1)'],
-            // Omitted component value
-            ['attr(name raw-string)'],
-            ['attr(name raw-string, "")', 'attr(name)'],
+            ['  /**/ @1/**/1e0 --CUSTOM(  /**/ 1e0 /**/  ', '@1 1 --CUSTOM(1)'],
+            ['  /**/ @1/**/1e0 ATTR(  name, /**/ 1e0 /**/  ', '@1 1 attr(name, 1)'],
+            ['  /**/ @1/**/1e0 ENV(  name, /**/ 1e0 /**/  ', '@1 1 env(name, 1)'],
+            ['  /**/ @1/**/1e0 RANDOM-ITEM(  --key, /**/ 1e0 /**/  ', '@1 1 random-item(--key, 1)'],
+            ['  /**/ @1/**/1e0 VAR(  --custom, /**/ 1e0 /**/  ', '@1 1 var(--custom, 1)'],
         ]
         valid.forEach(([input, expected = input]) => {
             style.opacity = input

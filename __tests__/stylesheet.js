@@ -2310,7 +2310,7 @@ describe('CSS grammar - semantic', () => {
 
                 @media;
                 . {}
-                --custom: { var(1) };
+                --custom: { var() };
 
                 color: green;
             }

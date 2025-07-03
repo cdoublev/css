@@ -847,7 +847,7 @@ describe('<declaration-value>', () => {
         expect(parse('<declaration-value>', 'declaration value', false)).toMatchObject(value)
     })
     test('valid', () => {
-        expect(parse('<declaration-value>', 'positioned {} var(1)')).toBe('positioned {} var(1)')
+        expect(parse('<declaration-value>', 'positioned {} var()')).toBe('positioned {} var()')
         expect(parse('<declaration-value>', '  /**/  1/**/1e0  /**/  ')).toBe('1 1')
     })
 })
@@ -2559,6 +2559,20 @@ describe('<arc-command>', () => {
     })
     test('valid', () => {
         expect(parse('<arc-command>', 'arc by 0px 0px of 0px 0px ccw small rotate 0deg')).toBe('arc by 0px 0px of 0px')
+    })
+})
+describe('<attr()>', () => {
+    test('representation', () => {
+        const name = list([omitted, identToken('name')], '', ['<attr-name>'])
+        expect(parse('<attr()>', 'attr(name)', false)).toMatchObject({
+            name: 'attr',
+            types: ['<function>', '<attr()>'],
+            value: list([name, omitted, omitted, omitted]),
+        })
+    })
+    test('valid', () => {
+        expect(parse('<attr()>', 'attr(name raw-string)')).toBe('attr(name raw-string)')
+        expect(parse('<attr()>', 'attr(name raw-string, "")')).toBe('attr(name)')
     })
 })
 describe('<attr-matcher>', () => {
