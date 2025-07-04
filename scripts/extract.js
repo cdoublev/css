@@ -196,6 +196,8 @@ const replaced = {
         '<pseudo-page>': ': [left | right | first | blank | nth(<an+b> [of <custom-ident>]?)]',
         // https://github.com/w3c/csswg-drafts/issues/7897
         '<single-transition>': '<time> || <easing-function> || <time> || <transition-behavior-value> || [none | <single-transition-property>]',
+        // https://github.com/w3c/csswg-drafts/issues/12426
+        '<style-feature-plain>': '<declaration>',
         // https://github.com/w3c/csswg-drafts/issues/12425
         '<style-range-value>': '<custom-property-name> | <number> | <percentage> | <dimension>',
     },
