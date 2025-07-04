@@ -114,6 +114,7 @@ const replaced = {
         // Extensions (https://github.com/w3c/reffy/issues/1647)
         '<color>': '<color-base> | currentColor | <system-color> | <contrast-color()> | <device-cmyk()> | <light-dark()> | <color-interpolate()>',
         '<keyframe-selector>': 'from | to | <percentage [0,100]> | <timeline-range-name> <percentage>',
+        '<image>': '<url> | <image()> | <image-set()> | <cross-fade()> | <element()> | <gradient> | <paint()>',
         '<single-animation-timeline>': 'auto | none | <dashed-ident> | <pointer()> | <scroll()> | <view()>',
         '<transform-list>': '<transform-function>+ | <transform-mix()> | <transform-interpolate()>',
         // Missing production rules
@@ -533,6 +534,24 @@ const excluded = {
             '<right>',
             '<top>',
         ],
+        'css-color': [
+            // Dangling
+            '<color-space>',
+            // Prefer CSS Color HDR
+            '<color-function>',
+            '<predefined-rgb>',
+        ],
+        'css-color-5': [
+            // Dangling
+            '<color-space>',
+            // Prefer CSS Color HDR
+            '<color-function>',
+            '<predefined-rgb>',
+        ],
+        'css-conditional-5': [
+            // https://github.com/w3c/csswg-drafts/issues/12425, https://github.com/w3c/csswg-drafts/issues/12426
+            '<style-feature-value>',
+        ],
         'css-forms': [
             // https://github.com/w3c/csswg-drafts/issues/11842
             '<type>',
@@ -544,21 +563,9 @@ const excluded = {
             // https://github.com/w3c/csswg-drafts/issues/1981
             '<element()>',
         ],
-        'css-color': [
-            // Prefer CSS Color HDR
-            '<color-function>',
-            '<predefined-rgb>',
-        ],
-        'css-color-5': [
-            // Prefer CSS Color HDR
-            '<color-function>',
-            '<predefined-rgb>',
-        ],
-        'css-conditional-5': [
-            // https://github.com/w3c/csswg-drafts/issues/12425, https://github.com/w3c/csswg-drafts/issues/12426
-            '<style-feature-value>',
-        ],
         'css-images': [
+            // Dangling
+            '<color-stop>',
             // TODO: fix parsing/serializing `<radial-gradient-syntax>`, `<radial-size>`
             '<radial-extent>',
         ],
@@ -575,6 +582,9 @@ const excluded = {
         'css-values-5': [
             // TODO: add support for `<boolean-expr[<test>]>`
             '<if()>',
+            '<if-args>',
+            '<if-args-branch>',
+            '<if-branch>',
             '<if-condition>',
             '<if-test>',
             // https://github.com/w3c/csswg-drafts/pull/12349
