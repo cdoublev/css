@@ -185,8 +185,6 @@ const replaced = {
         '<radial-size>': 'closest-corner | farthest-corner | <radial-radius>{1,2}',
         // https://github.com/w3c/csswg-drafts/issues/11842
         '<control-value()>': 'control-value(<syntax-type-name>?)',
-        // https://github.com/w3c/csswg-drafts/pull/12263
-        '<corner-shape-value>': 'round | scoop | bevel | notch | square | squircle | <superellipse()>',
         // https://github.com/w3c/fxtf-drafts/issues/532
         '<mask-reference>': 'none | <image>',
         // https://github.com/w3c/csswg-drafts/pull/10131
