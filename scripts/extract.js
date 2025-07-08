@@ -1052,9 +1052,7 @@ function build(specifications) {
         addProperties(properties, key)
         addTypes(values, key)
         addRules(atrules, key)
-        if (reportErrors) {
-            reportMissingPseudoSelectors(selectors, key)
-        }
+        reportMissingPseudoSelectors(selectors, key)
     })
 
     return Promise.all([
