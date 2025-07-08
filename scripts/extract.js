@@ -75,7 +75,7 @@ const replaced = {
         },
         '@property': {
             // https://github.com/w3c/webref/issues/707
-            'initial-value': { initial: '' },
+            'initial-value': { initial: null },
         },
     },
     properties: {
