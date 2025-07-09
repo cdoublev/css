@@ -113,6 +113,7 @@ const replaced = {
     types: {
         // Extensions (https://github.com/w3c/reffy/issues/1647)
         '<color>': '<color-base> | currentColor | <system-color> | <contrast-color()> | <device-cmyk()> | <light-dark()> | <color-interpolate()>',
+        '<display-inside>': 'flow | flow-root | table | flex | grid | ruby | math | layout(<ident>)',
         '<keyframe-selector>': 'from | to | <percentage [0,100]> | <timeline-range-name> <percentage>',
         '<image>': '<url> | <image()> | <image-set()> | <cross-fade()> | <element()> | <gradient> | <paint()>',
         '<single-animation-timeline>': 'auto | none | <dashed-ident> | <pointer()> | <scroll()> | <view()>',
@@ -451,6 +452,10 @@ const excluded = {
         'css-ui': [
             // Prefer SVG
             'pointer-events',
+        ],
+        'mathml-core': [
+            // https://github.com/w3c/csswg-drafts/issues/9399, https://github.com/w3c/css-houdini-drafts/issues/1074
+            'display',
         ],
     },
     rules: {},
