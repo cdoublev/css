@@ -200,6 +200,11 @@ describe('CSSStyleDeclaration.cssText', () => {
         style.cssText = 'color: green; @page { color: red }; .selector { color: red }; font-size: 12px'
         expect(style.cssText).toBe('color: green; font-size: 12px;')
     })
+    it('ignores an orphan }', () => {
+        const style = createStyleBlock()
+        style.cssText = 'color: green; } font-size: 12px'
+        expect(style.cssText).toBe('color: green; font-size: 12px;')
+    })
 })
 describe('CSSStyleDeclaration.setProperty(), CSSStyleDeclaration.getPropertyValue(), CSSStyleDeclaration.removeProperty()', () => {
     it('does not store a declaration with an invalid name', () => {
