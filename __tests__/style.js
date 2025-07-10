@@ -4340,7 +4340,7 @@ describe('text-box', () => {
         expect(style.textBox).toBe('normal')
         expect(style.cssText).toBe('text-box: normal;')
 
-        // All longhands cannot be represented
+        // All longhands cannot always be represented
         style.textBoxEdge = 'text'
         expect(style.textBox).toBe('')
         expect(style.cssText).toBe('text-box-trim: none; text-box-edge: text;')

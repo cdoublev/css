@@ -43,10 +43,8 @@ const initial = {
         '--*': { initial: null, value: '<declaration-value>?' },
     },
     types: {
-        // Missing definitions
-        '<input-position>': '<percentage> | <number> | <dimension>',
-        '<whole-value>': '<declaration-value>?',
         // https://github.com/w3c/csswg-drafts/issues/10558
+        '<custom-function-definition>': '<function-token> <function-parameter>#? ) [returns <css-type>]?',
         '<dashed-function>': {
             name: '<dashed-function>',
             type: 'non-terminal',
@@ -56,13 +54,16 @@ const initial = {
                 value: '<declaration-value>#?',
             },
         },
-        '<custom-function-definition>': '<function-token> <function-parameter>#? ) [returns <css-type>]?',
         // https://github.com/w3c/csswg-drafts/issues/12440
         '<env-args>': 'env(<declaration-value> , <declaration-value>?)',
+        // https://github.com/w3c/csswg-drafts/pull/12349
+        '<input-position>': '<percentage> | <number> | <dimension>',
         // TODO: fix parsing/serializing `<radial-gradient-syntax>`, `<radial-size>`
         '<radial-radius>': 'closest-side | farthest-side | <length-percentage [0,∞]>',
         // https://github.com/w3c/csswg-drafts/issues/8835
         '<urange>': "u '+' <ident-token> '?'* | u <dimension-token> '?'* | u <number-token> '?'* | u <number-token> <dimension-token> | u <number-token> <number-token> | u '+' '?'+",
+        // https://github.com/w3c/csswg-drafts/issues/12458
+        '<whole-value>': '<declaration-value>?',
     },
 }
 const replaced = {
