@@ -782,8 +782,8 @@ describe('flow-into', () => {
 describe('font-style', () => {
     test('valid', () => {
         const style = createStyleBlock()
-        style.fontStyle = 'oblique 14deg'
-        expect(style.fontStyle).toBe('oblique')
+        style.fontStyle = 'oblique 0deg'
+        expect(style.fontStyle).toBe('normal')
     })
 })
 describe('glyph-orientation-vertical, text-orientation', () => {
@@ -4690,8 +4690,8 @@ describe('CSSFontFaceDescriptors', () => {
         expect(style.fontSize).toBe('1')
         style.fontWidth = 'normal normal'
         expect(style.fontWidth).toBe('normal')
-        style.fontStyle = 'oblique 14deg'
-        expect(style.fontStyle).toBe('oblique')
+        style.fontStyle = 'oblique 0deg'
+        expect(style.fontStyle).toBe('normal')
         style.fontStyle = 'oblique 1deg 1deg'
         expect(style.fontStyle).toBe('oblique 1deg')
         style.fontWeight = 'normal normal'
