@@ -45,8 +45,6 @@ const initial = {
     types: {
         // Missing definitions
         '<input-position>': '<percentage> | <number> | <dimension>',
-        '<x>': '<number>',
-        '<y>': '<number>',
         '<whole-value>': '<declaration-value>?',
         // https://github.com/w3c/csswg-drafts/issues/10558
         '<dashed-function>': {
@@ -95,9 +93,6 @@ const replaced = {
         // TODO: fix `value` of `fill-opacity`, `stroke-opacity`
         'fill-opacity': { value: "<'opacity'>" },
         'stroke-opacity': { value: "<'opacity'>" },
-        // https://github.com/w3c/csswg-drafts/issues/9160
-        'flow-from': { value: 'none | <custom-ident>' },
-        'flow-into': { value: 'none | <custom-ident> [element | content]?' },
         // TODO: fix `value` of `voice-family`
         // Implementation dependent
         'font-family': { initial: 'monospace' },
@@ -199,6 +194,8 @@ const replaced = {
         '<style-feature-plain>': '<declaration>',
         // https://github.com/w3c/csswg-drafts/issues/12425
         '<style-range-value>': '<custom-property-name> | <number> | <percentage> | <dimension>',
+        // https://github.com/w3c/csswg-drafts/pull/12460
+        '<superellipse()>': 'superellipse(<number> | infinity | -infinity)',
     },
 }
 const excluded = {

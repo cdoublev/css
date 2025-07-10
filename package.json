@@ -42,11 +42,11 @@
     "webidl2js": "^18.0.0"
   },
   "devDependencies": {
-    "@cdoublev/eslint-config": "^0.11.0",
+    "@cdoublev/eslint-config": "^0.12.0",
     "eslint": "^9.0.0",
     "jest": "^30.0.0",
     "jest-junit": "^16.0.0",
-    "webref": "w3c/webref#482971b4769ccbfa9d590db058d7e349fff3c9bb"
+    "webref": "w3c/webref#454666be3846cd621ec76983cc80da0e79eb2c8d"
   },
   "publishConfig": {
     "access": "public"

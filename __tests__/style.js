@@ -3259,6 +3259,36 @@ describe('inset-block, inset-inline', () => {
         expect(style.cssText).toBe('inset-block: auto;')
     })
 })
+describe('interest-delay', () => {
+
+    const longhands = shorthands.get('interest-delay')
+
+    test('shorthand expansion', () => {
+
+        const style = createStyleBlock()
+
+        // Initial longhand values
+        style.interestDelay = 'normal'
+        expect(style).toHaveLength(longhands.length)
+        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
+        expect(style.interestDelay).toBe('normal')
+        expect(style.cssText).toBe('interest-delay: normal;')
+    })
+    test('shorthand reification', () => {
+
+        const style = createStyleBlock()
+
+        // Initial longhand values
+        longhands.forEach(longhand => style[longhand] = initial(longhand))
+        expect(style.interestDelay).toBe('normal')
+        expect(style.cssText).toBe('interest-delay: normal;')
+
+        // Not all equal longhand values
+        style.interestDelayStart = '1s'
+        expect(style.interestDelay).toBe('')
+        expect(style.cssText).toBe('interest-delay-start: 1s; interest-delay-end: normal;')
+    })
+})
 describe('line-clamp', () => {
 
     const longhands = shorthands.get('line-clamp')
