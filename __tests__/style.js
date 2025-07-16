@@ -397,11 +397,11 @@ describe('arbitrary substitution', () => {
         const valid = [
             // Valid at parse time
             ['--custom(--custom(!))'],
-            ['attr(name, attr())', 'attr(name, attr())'],
-            ['env(name, env())', 'env(name, env())'],
-            ['inherit(--custom, inherit())', 'inherit(--custom, inherit())'],
-            ['random-item(--key, random-item())', 'random-item(--key, random-item())'],
-            ['var(--custom, var())', 'var(--custom, var())'],
+            ['attr(name, attr())'],
+            ['env(name, env())'],
+            ['inherit(--custom, inherit())'],
+            ['random-item(--key, random-item())'],
+            ['var(--custom, var())'],
             // Custom function name with escaped characters
             ['--cust\\ om()'],
             // Serialize the list of tokens
