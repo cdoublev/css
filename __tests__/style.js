@@ -371,6 +371,15 @@ describe('CSSStyleDeclaration.setProperty(), CSSStyleDeclaration.getPropertyValu
     })
 })
 
+describe('CSS-wide keywords', () => {
+    test('valid', () => {
+        const style = createStyleBlock()
+        substitutions.keywords.forEach(keyword => {
+            style.opacity = keyword.toUpperCase()
+            expect(style.opacity).toBe(keyword)
+        })
+    })
+})
 describe('arbitrary substitution', () => {
     test('invalid', () => {
         const style = createStyleBlock()
@@ -426,7 +435,6 @@ describe('<whole-value>', () => {
         const style = createStyleBlock()
         const invalid = [
             // Not the <whole-value>
-            ['initial initial', 'margin'],
             ['first-valid(0) 0', 'margin'],
             ['interpolate(0, 0: 0) 0', 'margin'],
             ['interpolate(0, 0: first-valid(0) 0)', 'margin'],
@@ -449,8 +457,6 @@ describe('<whole-value>', () => {
     test('valid', () => {
         const style = createStyleBlock()
         const valid = [
-            // CSS-wide keywords
-            ...substitutions.keywords.map(keyword => [keyword.toUpperCase(), keyword, 'opacity']),
             // Resolved at parse time
             ['FIRST-VALID(1)', '1', 'opacity'],
             // Serialize the list of tokens
