@@ -4289,6 +4289,20 @@ describe('<url-set>', () => {
         })
     })
 })
+describe('<var()>', () => {
+    test('representation', () => {
+        const property = dashedIdent('--custom', ['<custom-property-name>'])
+        expect(parse('<var()>', 'var(--custom)', false)).toMatchObject({
+            name: 'var',
+            value: list([property, omitted, omitted]),
+            types: ['<function>', '<var()>'],
+        })
+    })
+    test('valid', () => {
+        expect(parse('<var()>', 'var(--custom,,)')).toBe('var(--custom,,)')
+        expect(parse('<var()>', 'var(--custom, 1 {})')).toBe('var(--custom, 1 {})')
+    })
+})
 describe('<view()>', () => {
     test('representation', () => {
         expect(parse('<view()>', 'view()', false)).toMatchObject({

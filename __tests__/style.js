@@ -375,6 +375,7 @@ describe('arbitrary substitution', () => {
     test('invalid', () => {
         const style = createStyleBlock()
         const invalid = [
+            // Invalid component value
             ['env(name) "\n'],
             ['env(name) url(bad .url)'],
             ['env(name) ]'],
@@ -386,6 +387,9 @@ describe('arbitrary substitution', () => {
             ['{} env(name)', 'color'],
             ['env(name) !important'],
             ['!important env(name)'],
+            // Nested
+            ['fn(env())'],
+            ['{env()}'],
         ]
         invalid.forEach(([input, property = '--custom']) => {
             style.setProperty(property, input)
