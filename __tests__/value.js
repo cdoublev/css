@@ -31,6 +31,7 @@ const { createContext, parseCSSGrammar } = require('../lib/parse/parser.js')
 const { toDegrees, toRadians } = require('../lib/utils/math.js')
 const { keywords: cssWideKeywords } = require('../lib/values/substitutions.js')
 const { isFailure } = require('../lib/utils/value.js')
+const properties = require('../lib/properties/definitions.js')
 const { serializeCSSComponentValue } = require('../lib/serialize.js')
 
 /**
@@ -2701,6 +2702,44 @@ describe('<brightness()>, <contrast()>, <grayscale()>, <invert()>, <opacity()>, 
     })
     test('valid', () => {
         expect(parse('<brightness()>', 'brightness(1)')).toBe('brightness()')
+    })
+})
+describe('<calc-size()>', () => {
+
+    let context = createContext(styleRule)
+    context = {
+        ...context,
+        context,
+        definition: {
+            name: 'width',
+            type: 'declaration',
+            value: properties.width.value,
+        },
+    }
+
+    test('invalid', () => {
+        const invalid = [
+            // Invalid basis
+            'calc-size(none)',
+            'calc-size(1, 1px)',
+            // Invalid calculation
+            'calc-size(any, size)',
+            'calc-size(1px, 1)',
+        ]
+        invalid.forEach(input => expect(parse('<calc-size()>', input, false, context)).toBeNull())
+    })
+    test('representation', () => {
+        const any = keyword('any', ['<calc-size-basis>'])
+        const px = dimension(1, 'px', ['<calc-value>'])
+        expect(parse('<calc-size()>', 'calc-size(any, 1px)', false, context)).toMatchObject({
+            name: 'calc-size',
+            types: ['<function>', '<calc-size()>'],
+            value: list([any, comma, px]),
+        })
+    })
+    test('valid', () => {
+        expect(parse('<calc-size()>', 'CALC-SIZE(auto, 1 * 1% + 1px + size)', true, context))
+            .toBe('calc-size(auto, 1% + 1px + size)')
     })
 })
 describe('<color>', () => {
