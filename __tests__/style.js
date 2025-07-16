@@ -412,6 +412,7 @@ describe('arbitrary substitution', () => {
             ['--custom(--custom(!))'],
             ['attr(name, attr())'],
             ['env(name, env())'],
+            ['if(if())', 'if(if())'],
             ['inherit(--custom, inherit())'],
             ['random-item(--key, random-item())'],
             ['var(--custom, var())'],
@@ -421,6 +422,7 @@ describe('arbitrary substitution', () => {
             ['  /**/ @1/**/1e0 --CUSTOM(  /**/ 1e0 /**/  ', '@1 1 --CUSTOM(1)'],
             ['  /**/ @1/**/1e0 ATTR(  name, /**/ 1e0 /**/  ', '@1 1 attr(name, 1)'],
             ['  /**/ @1/**/1e0 ENV(  name, /**/ 1e0 /**/  ', '@1 1 env(name, 1)'],
+            ['  /**/ @1/**/1e0 IF(  if(): /**/ 1e0 /**/  ', '@1 1 if(if(): 1)'],
             ['  /**/ @1/**/1e0 RANDOM-ITEM(  --key, /**/ 1e0 /**/  ', '@1 1 random-item(--key, 1)'],
             ['  /**/ @1/**/1e0 VAR(  --custom, /**/ 1e0 /**/  ', '@1 1 var(--custom, 1)'],
         ]
@@ -4712,6 +4714,10 @@ describe('CSSFontFaceDescriptors', () => {
         style.sizeAdjust = 'env(name, attr(name))'
         expect(style.fontWeight).toBe('env(name, attr(name))')
         expect(style.sizeAdjust).toBe('env(name, attr(name))')
+        style.fontWeight = 'if(media(width): 1)'
+        style.sizeAdjust = 'if(media(width): 1%)'
+        expect(style.fontWeight).toBe('if(media(width): 1)')
+        expect(style.sizeAdjust).toBe('if(media(width): 1%)')
         style.fontWeight = 'first-valid(1)'
         style.sizeAdjust = 'first-valid(1%)'
         expect(style.fontWeight).toBe('1')
@@ -4786,6 +4792,8 @@ describe('CSSKeyframeProperties', () => {
         // Dependency-free substitution
         style.fontWeight = 'env(name)'
         expect(style.fontWeight).toBe('env(name)')
+        style.fontWeight = 'if(media(width): 1)'
+        expect(style.fontWeight).toBe('if(media(width): 1)')
         style.fontWeight = 'first-valid(1)'
         expect(style.fontWeight).toBe('1')
         style.fontWeight = 'calc(progress(1, 0, 1))'
@@ -4846,6 +4854,8 @@ describe('CSSMarginDescriptors', () => {
         // Dependency-free substitution
         style.fontWeight = 'env(name)'
         expect(style.fontWeight).toBe('env(name)')
+        style.fontWeight = 'if(media(width): 1)'
+        expect(style.fontWeight).toBe('if(media(width): 1)')
         style.fontWeight = 'first-valid(1)'
         expect(style.fontWeight).toBe('1')
         style.fontWeight = 'calc(progress(1, 0, 1))'
@@ -4908,6 +4918,10 @@ describe('CSSPageDescriptors', () => {
         style.size = 'env(name, attr(name))'
         expect(style.fontWeight).toBe('env(name, attr(name))')
         expect(style.size).toBe('env(name, attr(name))')
+        style.fontWeight = 'if(media(width): 1)'
+        style.size = 'if(media(width): 1px)'
+        expect(style.fontWeight).toBe('if(media(width): 1)')
+        expect(style.size).toBe('if(media(width): 1px)')
         style.fontWeight = 'first-valid(1)'
         style.size = 'first-valid(1px)'
         expect(style.fontWeight).toBe('1')
@@ -4997,6 +5011,8 @@ describe('CSSPositionTryDescriptors', () => {
         // Dependency-free substitution
         style.top = 'env(name)'
         expect(style.top).toBe('env(name)')
+        style.top = 'if(media(width): 1px)'
+        expect(style.top).toBe('if(media(width): 1px)')
         style.top = 'first-valid(1px)'
         expect(style.top).toBe('1px')
         style.top = 'calc(1px * progress(1, 0, 1))'

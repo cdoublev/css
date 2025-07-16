@@ -186,6 +186,8 @@ const replaced = {
         '<radial-size>': 'closest-corner | farthest-corner | <radial-radius>{1,2}',
         // https://github.com/w3c/csswg-drafts/issues/11842
         '<control-value()>': 'control-value(<syntax-type-name>?)',
+        // https://github.com/w3c/csswg-drafts/issues/12487
+        '<if-args-branch>': '<declaration-value> [: <declararion-value>?]?',
         // https://github.com/w3c/fxtf-drafts/issues/532
         '<mask-reference>': 'none | <image>',
         // https://github.com/w3c/csswg-drafts/pull/10131
@@ -587,13 +589,6 @@ const excluded = {
             '<mask-source>',
         ],
         'css-values-5': [
-            // TODO: add support for `<boolean-expr[<test>]>`
-            '<if()>',
-            '<if-args>',
-            '<if-args-branch>',
-            '<if-branch>',
-            '<if-condition>',
-            '<if-test>',
             // https://github.com/w3c/csswg-drafts/pull/12349
             '<input-position>{1,2} : <output-value>',
         ],
