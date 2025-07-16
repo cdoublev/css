@@ -250,6 +250,12 @@ describe('symbols', () => {
         expect(parse('<length>', parsed)).toEqual({ ...type('<length>'), max: Infinity, min: 0 })
         expect(serialize(parsed)).toBe(input)
     })
+    test('<boolean-expr[<number>]>', () => {
+        const input = '<boolean-expr[<number>]>'
+        const parsed = { ...type('<boolean-expr>'), test: '<number>' }
+        expect(parse(input)).toEqual(parsed)
+        expect(serialize(parsed)).toEqual(input)
+    })
     test('<rotate()>', () => {
         const input = '<rotate()>'
         const parsed = type('<rotate()>')

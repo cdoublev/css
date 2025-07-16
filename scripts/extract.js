@@ -16,6 +16,7 @@ const { quote, tab } = require('../lib/utils/string.js')
 const arbitrary = require('../lib/parse/arbitrary.js')
 const colors = require('../lib/values/colors.js')
 const compatibility = require('../lib/compatibility.js')
+const contextSensitiveTypes = require('../lib/values/context-sensitive.js')
 const { definitions: dimensions } = require('../lib/values/dimensions.js')
 const forgiving = require('../lib/values/forgiving.js')
 const fs = require('node:fs/promises')
@@ -176,6 +177,9 @@ const replaced = {
         '<url-modifier>': '<request-url-modifier> | <ident> | <function-token> <any-value>? )',
         '<url-set>': '<image-set()>',
         '<zero>': '<number-token>',
+        // https://github.com/w3c/reffy/issues/1878
+        '<boolean-expr>': 'not <boolean-expr-group> | <boolean-expr-group> [[and <boolean-expr-group>]* | [or <boolean-expr-group>]*]',
+        '<boolean-expr-group>': '<test> | (<boolean-expr[<test>]>) | <general-enclosed>',
         // https://github.com/w3c/csswg-drafts/pull/8367#issuecomment-1408147460, https://github.com/w3c/csswg-drafts/issues/9729, https://github.com/w3c/csswg-drafts/issues/10833
         '<conic-gradient-syntax>': '[[[from [<angle> | <zero>]]? [at <position>]?]! || <color-interpolation-method>]? , <angular-color-stop-list>',
         '<radial-gradient-syntax>': '[[[<radial-shape> || <radial-size>]? [at <position>]?]! || <color-interpolation-method>]? , <color-stop-list>',
@@ -634,7 +638,6 @@ const errors = {
     '@layer': { cause: 'It is the only rule with alternative definitions therefore only the first (block) definition is correctly checked.' },
     '@mixin': { cause: 'It is not yet supported.' },
     '@when': { cause: 'It is not yet supported.' },
-    '<boolean-expr>': { cause: 'It is not yet supported.' },
     '<box>': {
         cause: 'It is a generic type that is not used anywhere, and should not be exported.',
         links: [
@@ -755,6 +758,8 @@ function findRule(type, rules = [], depth = 1) {
  */
 function serializeValueDefinition(value, depth = 1) {
     switch (typeof value) {
+        case 'function':
+            return value
         case 'object': {
             value = Object.entries(value).reduce(
                 (string, [key, value]) => {
@@ -783,7 +788,7 @@ function serializeTypes(types) {
     return types.reduce(
         (string, [type, value]) =>
             `${string}${tab(1)}${quote(type)}: ${serializeValueDefinition(value)},\n`,
-        '')
+        `${tab(1)}...require('./context-sensitive.js'),\n`)
 }
 
 /**
@@ -877,9 +882,9 @@ function addTypes(definitions = [], key) {
                 addTypes(values, key)
                 return
             }
-            if (initial.types[name]) {
+            if (initial.types[name] || contextSensitiveTypes[name]) {
                 if (value && reportErrors) {
-                    reportError(key, name, `${name} is now extracted`)
+                    reportError(key, name, `${name} is now assigned a value definition`)
                 }
                 return
             }

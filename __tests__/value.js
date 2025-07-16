@@ -2679,6 +2679,16 @@ describe('<basic-shape>', () => {
         valid.forEach(([input, expected = input]) => expect(parse('<basic-shape>', input)).toBe(expected))
     })
 })
+describe('<boolean-expr>', () => {
+    test('invalid', () => {
+        expect(parse('<boolean-expr[<number>]>', '1px', false)).toBeNull()
+    })
+    test('representation', () => {
+        const test = number(1, ['<test>', '<boolean-expr-group>'])
+        const expression = list([test, list()], ' ', ['<boolean-expr>'])
+        expect(parse('<boolean-expr[<number>]>', '1', false)).toMatchObject(expression)
+    })
+})
 describe('<blur()>', () => {
     test('representation', () => {
         expect(parse('<blur()>', 'blur()', false)).toMatchObject({
