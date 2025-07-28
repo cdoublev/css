@@ -216,7 +216,7 @@ describe('media', () => {
             ['(-webkit-transform-3d = 1)', false],
             ['(min-color = 24)', false],
             ['(max-color = 24)', false],
-            // Guinea-pig for all range features
+            // Guinea pig for all range features
             ['(color = 24)'],
             ['(color < 23)', false],
             ['(color < 24)', false],

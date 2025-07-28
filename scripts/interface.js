@@ -158,7 +158,7 @@ function createInterfaces() {
         processReflect(idl, implName) {
             const reflectStyle = idl.extAttrs.find(extAttr => extAttr.name === 'ReflectStyle')
             if (reflectStyle?.rhs?.type !== 'string') {
-                throw new Error(`Internal error: Invalid [ReflectStyle] for attribute ${idl.name}`)
+                throw Error(`Internal error: Invalid [ReflectStyle] for attribute ${idl.name}`)
             }
             return {
                 get: `return ${implName}.getPropertyValue(${reflectStyle.rhs.value});`,

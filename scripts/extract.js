@@ -187,7 +187,7 @@ const replaced = {
         // https://github.com/w3c/csswg-drafts/issues/11842
         '<control-value()>': 'control-value(<syntax-type-name>?)',
         // https://github.com/w3c/csswg-drafts/issues/12487
-        '<if-args-branch>': '<declaration-value> [: <declararion-value>?]?',
+        '<if-args-branch>': '<declaration-value> [: <declaration-value>?]?',
         // https://github.com/w3c/fxtf-drafts/issues/532
         '<mask-reference>': 'none | <image>',
         // https://github.com/w3c/csswg-drafts/pull/10131

@@ -1082,7 +1082,7 @@ describe('CSS grammar - syntax', () => {
         `)
         expect(styleSheet.cssRules[0].cssText).toBe('style { & style {} }')
     })
-    test('nested - declaration not for a custom property with a value containing a positioned {}-block', () => {
+    test('nested - declaration not for a custom property with a value containing a positioned {} block', () => {
         // It is always consumed as a rule
         const styleSheet = createStyleSheet(`
             style {
@@ -1094,7 +1094,7 @@ describe('CSS grammar - syntax', () => {
         `)
         expect(styleSheet.cssRules[0].cssText).toBe('style { & style:hover {} }')
     })
-    test('nested - declaration for a custom property with a value containing a positioned {}-block', () => {
+    test('nested - declaration for a custom property with a value containing a positioned {} block', () => {
         // It is never consumed as a qualified rule in a nested context
         const styleSheet = createStyleSheet(`
             style {

@@ -101,7 +101,7 @@ Their respective steps, *match `list` against the grammar for the property `prop
 To overcome these challenges, this library defines the following requirements for the CSS parser:
 
   - a component value and a list of component values must be implemented with a property assigned a list of the matched production(s) (learn more about the [data structure used to represent a CSS value](value-data-structure.md))
-  - the input list of component values must be replaced by the result of parsing against the grammar¹, in which omitted values² must be represented and component values must be sorted according to their position in the value definition
+  - the input list of component values must be replaced with the result of parsing against the grammar¹, in which omitted values² must be represented and component values must be sorted according to their position in the value definition
   - production specific rules must be processed either before or after matching the value definition, to discard an invalid value according to the rule, or to create a specific representation of the input value
 
 ¹ Therefore the result can be a single component value instead of a list, which is a deviation from *parse a CSS value* but *serialize a CSS value* somewhat handles this with *represent the value of the declaration as a list*, and this is an implementation detail that may change later.

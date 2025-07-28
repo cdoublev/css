@@ -4294,8 +4294,8 @@ describe('<var()>', () => {
         const property = dashedIdent('--custom', ['<custom-property-name>'])
         expect(parse('<var()>', 'var(--custom)', false)).toMatchObject({
             name: 'var',
-            value: list([property, omitted, omitted]),
             types: ['<function>', '<var()>'],
+            value: list([property, omitted, omitted]),
         })
     })
     test('valid', () => {
