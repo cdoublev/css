@@ -126,7 +126,6 @@ const replaced = {
         '<decibel>': '<dimension>',
         '<deprecated-color>': colors.deprecated.join(' | '),
         '<dimension>': '<dimension-token>',
-        '<extension-name>': '<dashed-ident>',
         '<flex>': '<dimension>',
         '<frequency>': '<dimension>',
         '<gender>': 'male | female | neutral',
@@ -475,6 +474,7 @@ const excluded = {
         // Not ready
         'css-color-6',
         'css-conditional-values',
+        'css-extensions',
         'css-gaps',
         'css-grid-3',
         'webvtt',

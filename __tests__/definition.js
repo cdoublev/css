@@ -293,6 +293,7 @@ describe('multipliers', () => {
         const input = 'a{1,2}'
         const parsed = repeat(a, 1, 2)
         expect(parse(input)).toEqual(parsed)
+        expect(parse('[a]{1,2}')).toEqual(parsed)
         expect(serialize(parsed)).toBe(input)
     })
     test('a{2}', () => {
@@ -311,6 +312,13 @@ describe('multipliers', () => {
         const parsed = repeat(a, 2, 20)
         expect(parse('a{2,}')).toEqual(parsed)
         expect(serialize(parsed)).toBe('a{2,∞}')
+    })
+    test('a{2}?', () => {
+        const input = 'a{2}?'
+        const parsed = optional(repeat(a, 2, 2))
+        expect(parse(input)).toEqual(parsed)
+        expect(parse('[a{2}]?')).toEqual(parsed)
+        expect(serialize(parsed)).toBe(input)
     })
     test('a?', () => {
         const input = 'a?'
@@ -361,17 +369,37 @@ describe('multipliers', () => {
         const input = 'a#?'
         const parsed = optional(repeat(a, 1, 20, ','))
         expect(parse(input)).toEqual(parsed)
+        expect(parse('[a#]?')).toEqual(parsed)
+        expect(serialize(parsed)).toBe(input)
+    })
+    test('a#{2}?', () => {
+        const input = 'a#{2}?'
+        const parsed = optional(repeat(a, 2, 2, ','))
+        expect(parse(input)).toEqual(parsed)
         expect(serialize(parsed)).toBe(input)
     })
     test('a+#', () => {
         const input = 'a+#'
         const parsed = repeat(repeat(a, 1, 20), 1, 20, ',')
         expect(parse(input)).toEqual(parsed)
+        expect(parse('[a+]#')).toEqual(parsed)
+        expect(serialize(parsed)).toBe(input)
+    })
+    test('a+#{2}', () => {
+        const input = 'a+#{2}'
+        const parsed = repeat(repeat(a, 1, 20), 2, 2, ',')
+        expect(parse(input)).toEqual(parsed)
         expect(serialize(parsed)).toBe(input)
     })
     test('a+#?', () => {
         const input = 'a+#?'
         const parsed = optional(repeat(repeat(a, 1, 20), 1, 20, ','))
+        expect(parse(input)).toEqual(parsed)
+        expect(serialize(parsed)).toBe(input)
+    })
+    test('a+#{2}?', () => {
+        const input = 'a+#{2}?'
+        const parsed = optional(repeat(repeat(a, 1, 20), 2, 2, ','))
         expect(parse(input)).toEqual(parsed)
         expect(serialize(parsed)).toBe(input)
     })
@@ -490,9 +518,9 @@ describe('groups', () => {
         expect(parse('[a]')).toEqual(a)
         expect(parse('[ a ]')).toEqual(a)
     })
-    test('[a{2}]?', () => {
-        const input = '[a{2}]?'
-        const parsed = optional(repeat(a, 2, 2))
+    test('[a#]{2}', () => {
+        const input = '[a#]{2}'
+        const parsed = repeat(repeat(a, 1, 20, ','), 2, 2)
         expect(parse(input)).toEqual(parsed)
         expect(serialize(parsed)).toBe(input)
     })
@@ -562,5 +590,55 @@ describe('context rules', () => {
     test('<calc-sum># produced by <hypoth()>, <max()>, <min()>', () => {
         const production = parse('<hypoth()>')
         expect(parse('<calc-sum>#', production)).toEqual(repeat(type('<calc-sum>'), 1, 32, ','))
+    })
+})
+
+describe('errors', () => {
+    test('symbols', () => {
+        expect(() => parse('1')).toThrow()
+    })
+    test('combinators', () => {
+        expect(() => parse('a & b')).toThrow()
+        expect(() => parse('a . b')).toThrow()
+    })
+    test('multipliers', () => {
+        const invalid = [
+            'a!',
+            'a{2}{2}',
+            'a{2}*',
+            'a{2}+',
+            'a{2}#',
+            'a{2}!',
+            'a{0,∞}?',
+            'a{1,∞}?',
+            `a?{2}`,
+            `a??`,
+            `a?*`,
+            `a?+`,
+            `a?#`,
+            `a?!`,
+            'a*{2}',
+            'a*?',
+            'a**',
+            'a*+',
+            'a*#',
+            'a*!',
+            'a+{2}',
+            'a+?',
+            'a+*',
+            'a++',
+            'a+!',
+            'a#*',
+            'a#+',
+            'a##',
+            'a#!',
+            `a!{2}`,
+            `a!?`,
+            `a!*`,
+            `a!+`,
+            `a!#`,
+            `a!!`,
+        ]
+        invalid.forEach(input => expect(() => parse(input)).toThrow())
     })
 })
