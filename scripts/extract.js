@@ -57,14 +57,10 @@ const initial = {
         },
         // https://github.com/w3c/csswg-drafts/issues/12440
         '<env-args>': 'env(<declaration-value> , <declaration-value>?)',
-        // https://github.com/w3c/csswg-drafts/pull/12349
-        '<input-position>': '<percentage> | <number> | <dimension>',
         // TODO: fix parsing/serializing `<radial-gradient-syntax>`, `<radial-size>`
         '<radial-radius>': 'closest-side | farthest-side | <length-percentage [0,∞]>',
         // https://github.com/w3c/csswg-drafts/issues/8835
         '<urange>': "u '+' <ident-token> '?'* | u <dimension-token> '?'* | u <number-token> '?'* | u <number-token> <dimension-token> | u <number-token> <number-token> | u '+' '?'+",
-        // https://github.com/w3c/csswg-drafts/issues/12458
-        '<whole-value>': '<declaration-value>?',
     },
 }
 const replaced = {
@@ -174,11 +170,11 @@ const replaced = {
         '<timeline-range-name>': 'contain | cover | entry | entry-crossing | exit | exit-crossing | fill | fit',
         '<transform-function>': '<matrix()> | <matrix3d()> | <perspective()> | <translate()> | <translateX()> | <translateY()> | <translateZ()> | <translate3d()> | <scale()> | <scaleX()> | <scaleY()> | <scaleZ()> | <scale3d()> | <rotate()> | <rotateX()> | <rotateY()> | <rotateZ()> | <rotate3d()> | <skew()> | <skewX()> | <skewY()>',
         '<uri>': '<url>',
-        '<url-modifier>': '<request-url-modifier> | <ident> | <function-token> <any-value>? )',
+        '<url-modifier>': '<request-url-modifier> | <param()> | <ident> | <function-token> <any-value>? )',
         '<url-set>': '<image-set()>',
+        '<whole-value>': '<declaration-value>?',
         '<zero>': '<number-token>',
         // https://github.com/w3c/reffy/issues/1878
-        '<boolean-expr>': 'not <boolean-expr-group> | <boolean-expr-group> [[and <boolean-expr-group>]* | [or <boolean-expr-group>]*]',
         '<boolean-expr-group>': '<test> | (<boolean-expr[<test>]>) | <general-enclosed>',
         // https://github.com/w3c/csswg-drafts/pull/8367#issuecomment-1408147460, https://github.com/w3c/csswg-drafts/issues/9729, https://github.com/w3c/csswg-drafts/issues/10833
         '<conic-gradient-syntax>': '[[[from [<angle> | <zero>]]? [at <position>]?]! || <color-interpolation-method>]? , <angular-color-stop-list>',
@@ -589,8 +585,8 @@ const excluded = {
             '<mask-source>',
         ],
         'css-values-5': [
-            // https://github.com/w3c/csswg-drafts/pull/12349
-            '<input-position>{1,2} : <output-value>',
+            // https://github.com/w3c/csswg-drafts/issues/6245#issuecomment-2955775713
+            '<output-value>',
         ],
         'filter-effects': [
             // Duplicate of CSS Values

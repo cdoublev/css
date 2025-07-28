@@ -3280,9 +3280,15 @@ describe('interest-delay', () => {
         const style = createStyleBlock()
 
         // Initial longhand values
-        style.interestDelay = 'normal'
+        style.interestDelay = 'normal normal'
         expect(style).toHaveLength(longhands.length)
         longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
+        expect(style.interestDelay).toBe('normal')
+        expect(style.cssText).toBe('interest-delay: normal;')
+
+        // Missing longhand values
+        style.interestDelay = 'normal'
+        longhands.forEach(longhand => expect(style[longhand]).toBe('normal'))
         expect(style.interestDelay).toBe('normal')
         expect(style.cssText).toBe('interest-delay: normal;')
     })
@@ -3294,11 +3300,6 @@ describe('interest-delay', () => {
         longhands.forEach(longhand => style[longhand] = initial(longhand))
         expect(style.interestDelay).toBe('normal')
         expect(style.cssText).toBe('interest-delay: normal;')
-
-        // Not all equal longhand values
-        style.interestDelayStart = '1s'
-        expect(style.interestDelay).toBe('')
-        expect(style.cssText).toBe('interest-delay-start: 1s; interest-delay-end: normal;')
     })
 })
 describe('line-clamp', () => {

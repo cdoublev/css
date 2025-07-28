@@ -46,7 +46,7 @@
     "eslint": "^9.0.0",
     "jest": "^30.0.0",
     "jest-junit": "^16.0.0",
-    "webref": "w3c/webref#454666be3846cd621ec76983cc80da0e79eb2c8d"
+    "webref": "w3c/webref#d5712c019c67e55859bce6e3b654529d86ef994a"
   },
   "publishConfig": {
     "access": "public"
