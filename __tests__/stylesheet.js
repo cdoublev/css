@@ -1033,39 +1033,71 @@ test('Setting CSSRule.cssText does nothing', () => {
 })
 
 describe('CSS grammar - syntax', () => {
-    test('top-level - malformed structure', () => {
-        // Only rules are consumed
+    test('top-level - nothing between the start and end of a rule breaks consuming', () => {
         const { cssRules } = createStyleSheet(`
-            color; {}
-            color: red; {}
-            --custom: hover {} style {}
-        `)
-        expect(cssRules).toHaveLength(1)
-        expect(cssRules[0].cssText).toBe('style {}')
-    })
-    test('top-level - orphan } in a rule prelude', () => {
-        // It does not stop consuming a top-level rule
-        const { cssRules } = createStyleSheet(`
-            @invalid } style {}
+            color; style {}
+            color: red; style {}
+            @invalid;
             style-1 {}
-            @invalid } @layer name;
+            @invalid } style {}
             style-2 {}
-            invalid } style {}
+            @invalid } @layer name;
             style-3 {}
+            invalid } style {}
+            style-4 {}
         `)
-        expect(cssRules).toHaveLength(3)
+        expect(cssRules).toHaveLength(4)
         expect(cssRules[0].cssText).toBe('style-1 {}')
         expect(cssRules[1].cssText).toBe('style-2 {}')
         expect(cssRules[2].cssText).toBe('style-3 {}')
+        expect(cssRules[3].cssText).toBe('style-4 {}')
+    })
+    test('top-level - rule starting like a custom property declaration', () => {
+        const { cssRules } = createStyleSheet(`
+            --custom:hover {}
+            --custom: hover {}
+            --custom :hover {}
+            --custom a:hover {}
+        `)
+        expect(cssRules).toHaveLength(1)
+        expect(cssRules[0].cssText).toBe('--custom a:hover {}')
     })
     test('top-level - unclosed rule', () => {
-        const { cssRules } = createStyleSheet('style { --custom: }')
+        const { cssRules } = createStyleSheet('style { --custom:')
         expect(cssRules).toHaveLength(1)
         expect(cssRules[0].cssText).toBe('style { --custom: ; }')
     })
-    test('nested - malformed structure', () => {
-        const styleSheet = createStyleSheet('style { color; }')
-        expect(styleSheet.cssRules[0].cssText).toBe('style {}')
+    test('nested - top-level ; breaks consuming a declaration and a rule', () => {
+        const styleSheet = createStyleSheet(`
+            style {
+                color;
+                color: orange;
+                style: ; color: green; {}
+                style (; color: red;) {}
+                --custom: (;) 1;
+            }
+        `)
+        expect(styleSheet.cssRules[0].cssText).toBe('style { color: green; --custom: (;) 1; }')
+    })
+    test('nested - top-level } breaks consuming block contents', () => {
+        const { cssRules } = createStyleSheet(`
+            style-1 {
+                --custom: };
+            } {}
+            style-2 {
+                style } {}
+                style-3 {
+                    style (}) {};
+                    color: green;
+                }
+                style-4 {}
+            }
+        `)
+        expect(cssRules).toHaveLength(4)
+        expect(cssRules[0].cssText).toBe('style-1 { --custom: ; }')
+        expect(cssRules[1].cssText).toBe('style-2 {}')
+        expect(cssRules[2].cssText).toBe('style-3 { color: green; }')
+        expect(cssRules[3].cssText).toBe('style-4 {}')
     })
     test('nested - declaration with a value containing a bad token', () => {
         // It is always invalid... except with forgiving grammar?
