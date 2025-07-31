@@ -27,25 +27,23 @@
     ".": "./lib/index.js"
   },
   "scripts": {
+    "build": "npm run build:interface && npm run build:definitions",
     "build:definitions": "npm run build:definitions:extract && npm run build:definitions:initial",
     "build:definitions:extract": "node ./scripts/extract.js",
     "build:definitions:initial": "node ./scripts/initial.js",
     "build:interface": "node ./scripts/interface.js",
     "lint": "eslint",
-    "prepare": "npm run build:interface",
-    "safe-publish": "npm run lint && npm run test && npm publish",
+    "safe-publish": "npm run build && npm run lint && npm run test && npm publish",
     "test": "jest",
     "test:inspect": "node --inspect-brk=0.0.0.0:9222 ./node_modules/.bin/jest --runInBand --watchAll -b",
     "test:watch": "jest --watchAll -b"
-  },
-  "dependencies": {
-    "webidl2js": "^18.0.0"
   },
   "devDependencies": {
     "@cdoublev/eslint-config": "^0.12.0",
     "eslint": "^9.0.0",
     "jest": "^30.0.0",
     "jest-junit": "^16.0.0",
+    "webidl2js": "^18.0.0",
     "webref": "w3c/webref#d5712c019c67e55859bce6e3b654529d86ef994a"
   },
   "publishConfig": {
