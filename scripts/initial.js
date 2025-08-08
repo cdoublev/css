@@ -5,17 +5,16 @@
  *   - `parsed` to the result from parsing `initial`
  *   - `serialized` to the result from serializing `parsed`
  */
-const { install } = require('../lib/index.js')
-// Do not import CSSOM implementations before the above import
-const { isFailure, isList, isOmitted } = require('../lib/utils/value.js')
-const { logError, quote, tab } = require('../lib/utils/string.js')
-const descriptors = require('../lib/descriptors/definitions.js')
-const fs = require('node:fs/promises')
-const { parseCSSDeclaration } = require('../lib/parse/parser.js')
-const path = require('node:path')
-const properties = require('../lib/properties/definitions.js')
-const { serializeCSSValue } = require('../lib/serialize.js')
-const shorthands = require('../lib/properties/shorthands.js')
+import { isFailure, isList, isOmitted } from '../lib/utils/value.js'
+import { quote, tab } from '../lib/utils/string.js'
+import descriptors from '../lib/descriptors/definitions.js'
+import fs from 'node:fs/promises'
+import { install } from '../lib/index.js'
+import { parseCSSDeclaration } from '../lib/parse/parser.js'
+import path from 'node:path'
+import properties from '../lib/properties/definitions.js'
+import { serializeCSSValue } from '../lib/serialize.js'
+import shorthands from '../lib/properties/shorthands.js'
 
 install()
 
@@ -109,7 +108,7 @@ function serializePropertyDefinitions(properties) {
     return Object.entries(properties).reduce(
         (string, [property, { animate, group, initial, value }]) => {
             string += `${tab(1)}${quote(property)}: {\n`
-            if (animate === false || shorthands.get(property)?.every(name => properties[name]?.animate === false)) {
+            if (animate === false || shorthands.get(property)?.flat().every(name => properties[name]?.animate === false)) {
                 string += `${tab(2)}animate: false,\n`
             }
             if (group) {
@@ -161,16 +160,21 @@ function serializeDescriptorDefinitions(descriptors) {
  * @returns {Promise}
  */
 function serializeDefinitions() {
-    const dependency = "const { list, omitted } = require('../values/value.js')"
-    const header = `\n${dependency}\n\nmodule.exports = {\n`
+    const dependency = "import { list, omitted } from '../values/value.js'"
+    const header = `\n${dependency}\n\nexport default {\n`
     return Promise.all([
         fs.writeFile(
-            path.join(__dirname, '..', 'lib', 'descriptors', 'definitions.js'),
+            path.join(import.meta.dirname, '..', 'lib', 'descriptors', 'definitions.js'),
             `${header}${serializeDescriptorDefinitions(descriptors)}}\n`),
         fs.writeFile(
-            path.join(__dirname, '..', 'lib', 'properties', 'definitions.js'),
+            path.join(import.meta.dirname, '..', 'lib', 'properties', 'definitions.js'),
             `${header}${serializePropertyDefinitions(properties)}}\n`),
     ])
 }
 
-serializeDefinitions().catch(logError)
+try {
+    await serializeDefinitions()
+} catch (error) {
+    console.log('Please report this issue: https://github.com/cdoublev/css/issues/new')
+    throw error
+}

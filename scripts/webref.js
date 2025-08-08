@@ -1,10 +1,11 @@
 
-const { basename, dirname, join } = require('node:path')
-const { promises: { readFile, readdir } } = require('node:fs')
+import { basename, dirname, join } from 'node:path'
+import { readFile, readdir } from 'node:fs/promises'
 
-const inputPath = join(dirname(require.resolve(join('webref/package.json'))), 'ed', 'css')
+const webrefPath = dirname(import.meta.resolve(join('webref', 'package.json'))).replace('file://', '')
+const inputPath = join(webrefPath, 'ed', 'css')
 
-async function listAll() {
+export async function listAll() {
     const all = []
     for (const filename of await readdir(inputPath)) {
         const file = await readFile(join(inputPath, filename), 'utf8')
@@ -12,5 +13,3 @@ async function listAll() {
     }
     return Object.fromEntries(all)
 }
-
-module.exports = { listAll }

@@ -1,5 +1,5 @@
 
-const { createPermutationIterator, getNthPermutation, getPermutationIndex } = require('../lib/parse/permutation.js')
+import { createPermutationIterator, getNthPermutation, getPermutationIndex } from '../lib/parse/permutation.js'
 
 const a = { type: 'keyword', value: 'a' }
 const b = { type: 'keyword', value: 'b' }

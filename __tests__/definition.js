@@ -1,8 +1,8 @@
 
-const nonTerminal = require('../lib/values/definitions.js')
-const parseDefinition = require('../lib/parse/definition.js')
-const properties = require('../lib/properties/definitions.js')
-const { serializeDefinition: serialize } = require('../lib/serialize.js')
+import nonTerminal from '../lib/values/definitions.js'
+import parseDefinition from '../lib/parse/definition.js'
+import properties from '../lib/properties/definitions.js'
+import { serializeDefinition as serialize } from '../lib/serialize.js'
 
 /**
  * @param {...object} value
@@ -611,12 +611,12 @@ describe('errors', () => {
             'a{2}!',
             'a{0,∞}?',
             'a{1,∞}?',
-            `a?{2}`,
-            `a??`,
-            `a?*`,
-            `a?+`,
-            `a?#`,
-            `a?!`,
+            'a?{2}',
+            'a??',
+            'a?*',
+            'a?+',
+            'a?#',
+            'a?!',
             'a*{2}',
             'a*?',
             'a**',
@@ -632,12 +632,12 @@ describe('errors', () => {
             'a#+',
             'a##',
             'a#!',
-            `a!{2}`,
-            `a!?`,
-            `a!*`,
-            `a!+`,
-            `a!#`,
-            `a!!`,
+            'a!{2}',
+            'a!?',
+            'a!*',
+            'a!+',
+            'a!#',
+            'a!!',
         ]
         invalid.forEach(input => expect(() => parse(input)).toThrow())
     })

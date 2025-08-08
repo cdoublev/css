@@ -1,5 +1,5 @@
 
-const Stream = require('../lib/parse/stream.js')
+import Stream from '../lib/parse/stream.js'
 
 const string = 'hello'
 const stream = new Stream(string)

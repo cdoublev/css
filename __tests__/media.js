@@ -1,7 +1,6 @@
 
-const { cssom, install } = require('../lib/index.js')
-// Do not import CSSOM implementations before the above import
-const { DELETE_UNEXISTENT_MEDIUM_ERROR } = require('../lib/cssom/MediaList-impl.js')
+import { cssom, install } from '../lib/index.js'
+import { DELETE_UNEXISTENT_MEDIUM_ERROR } from '../lib/error.js'
 
 install()
 

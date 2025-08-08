@@ -12,22 +12,22 @@
  *   - ./lib/rules/definitions.js
  *   - ./lib/values/pseudos.js
  */
-const { quote, tab } = require('../lib/utils/string.js')
-const arbitrary = require('../lib/parse/arbitrary.js')
-const colors = require('../lib/values/colors.js')
-const compatibility = require('../lib/compatibility.js')
-const contextSensitiveTypes = require('../lib/values/context-sensitive.js')
-const { definitions: dimensions } = require('../lib/values/dimensions.js')
-const forgiving = require('../lib/values/forgiving.js')
-const fs = require('node:fs/promises')
-const logical = require('../lib/properties/logical.js')
-const parseDefinition = require('../lib/parse/definition.js')
-const path = require('node:path')
-const pseudos = require('../lib/values/pseudos.js')
-const { rules } = require('../lib/rules/definitions.js')
-const { serializeDefinition } = require('../lib/serialize.js')
-const shorthands = require('../lib/properties/shorthands.js')
-const webref = require('./webref.js')
+import * as colors from '../lib/values/colors.js'
+import * as compatibility from '../lib/compatibility.js'
+import * as pseudos from '../lib/values/pseudos.js'
+import * as webref from './webref.js'
+import { quote, tab } from '../lib/utils/string.js'
+import arbitrary from '../lib/parse/arbitrary.js'
+import contextSensitiveTypes from '../lib/values/context-sensitive.js'
+import { definitions as dimensions } from '../lib/values/dimensions.js'
+import forgiving from '../lib/values/forgiving.js'
+import fs from 'node:fs/promises'
+import logical from '../lib/properties/logical.js'
+import parseDefinition from '../lib/parse/definition.js'
+import path from 'node:path'
+import root from '../lib/rules/definitions.js'
+import { serializeDefinition } from '../lib/serialize.js'
+import shorthands from '../lib/properties/shorthands.js'
 
 const logicalGroups = Object.keys(logical)
 
@@ -776,10 +776,12 @@ function serializeValueDefinition(value, depth = 1) {
  * @returns {string}
  */
 function serializeTypes(types) {
-    return types.reduce(
+    const imports = ["import definitions from './context-sensitive.js'"]
+    types = types.reduce(
         (string, [type, value]) =>
             `${string}${tab(1)}${quote(type)}: ${serializeValueDefinition(value)},\n`,
-        `${tab(1)}...require('./context-sensitive.js'),\n`)
+        `${tab(1)}...definitions,\n`)
+    return `\n${imports.join('\n')}\n\nexport default {\n${types}}\n`
 }
 
 /**
@@ -787,7 +789,7 @@ function serializeTypes(types) {
  * @returns {string}
  */
 function serializeProperties(properties) {
-    return properties.reduce(
+    properties = properties.reduce(
         (string, [property, { animationType, initial, logicalPropertyGroup, value }, key]) => {
             string += `${tab(1)}${quote(property)}: {\n`
             if (animationType === 'not animatable') {
@@ -810,6 +812,7 @@ function serializeProperties(properties) {
             return string
         },
         '')
+    return `\nexport default {\n${properties}}\n`
 }
 
 /**
@@ -817,7 +820,7 @@ function serializeProperties(properties) {
  * @returns {string}
  */
 function serializeDescriptors(descriptors) {
-    return descriptors.reduce(
+    descriptors = descriptors.reduce(
         (string, [rule, definitions]) => {
             string += `${tab(1)}${quote(rule)}: {\n`
             definitions.sort(sortByName).forEach(([descriptor, { initial, type, value }]) => {
@@ -833,6 +836,7 @@ function serializeDescriptors(descriptors) {
             return string
         },
         '')
+    return `\nexport default {\n${descriptors}}\n`
 }
 
 /**
@@ -1024,7 +1028,7 @@ function addRules(definitions = [], key) {
         if (aliases.has(name) || mappings.has(name)) {
             return
         }
-        const rule = findRule(name, rules)
+        const rule = findRule(name, root.rules)
         if (rule) {
             if (reportErrors && value && isUpdatedRule(name, value, rule)) {
                 reportError(key, name, `${name} has a new definition`)
@@ -1054,20 +1058,21 @@ function build(specifications) {
 
     return Promise.all([
         fs.writeFile(
-            path.join(__dirname, '..', 'lib', 'descriptors', 'definitions.js'),
-            `\nmodule.exports = {\n${serializeDescriptors(descriptors.sort(sortByName))}}\n`),
+            path.join(import.meta.dirname, '..', 'lib', 'descriptors', 'definitions.js'),
+            serializeDescriptors(descriptors.sort(sortByName))),
         fs.writeFile(
-            path.join(__dirname, '..', 'lib', 'properties', 'definitions.js'),
-            `\nmodule.exports = {\n${serializeProperties(properties.sort(sortByName))}}\n`),
+            path.join(import.meta.dirname, '..', 'lib', 'properties', 'definitions.js'),
+            serializeProperties(properties.sort(sortByName))),
         fs.writeFile(
-            path.join(__dirname, '..', 'lib', 'values', 'definitions.js'),
-            `\nmodule.exports = {\n${serializeTypes(types.sort(sortByName))}}\n`),
+            path.join(import.meta.dirname, '..', 'lib', 'values', 'definitions.js'),
+            serializeTypes(types.sort(sortByName))),
     ])
 }
 
-webref.listAll()
-    .then(build)
-    .catch(error => {
-        console.log('Please report this issue: https://github.com/cdoublev/css/issues/new')
-        throw error
-    })
+try {
+    const specifications = await webref.listAll()
+    await build(specifications)
+} catch (error) {
+    console.log('Please report this issue: https://github.com/cdoublev/css/issues/new')
+    throw error
+}

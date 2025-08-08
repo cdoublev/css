@@ -1,8 +1,6 @@
 
-module.exports = [
-    require('@cdoublev/eslint-config'),
-    require('@cdoublev/eslint-config/jest'),
-    require('@cdoublev/eslint-config/node'),
-    { languageOptions: { sourceType: 'commonjs' } },
-    { ignores: ['lib/cssom/*.js', '!lib/cssom/*-impl.js'] },
-]
+import base from '@cdoublev/eslint-config'
+import jest from '@cdoublev/eslint-config/jest'
+import node from '@cdoublev/eslint-config/node'
+
+export default [base, jest, node, { ignores: ['lib/cssom/*.js', '!lib/cssom/*-impl.js'] }]
