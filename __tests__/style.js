@@ -1046,6 +1046,13 @@ describe('text-align-all', () => {
         expect(style.textAlignAll).toBe('')
     })
 })
+describe('text-decoration-trim', () => {
+    test('valid', () => {
+        const style = createStyleBlock()
+        style.textDecorationTrim = '1px 1px'
+        expect(style.textDecorationTrim).toBe('1px')
+    })
+})
 describe('text-justify', () => {
     test('valid', () => {
         const style = createStyleBlock()
