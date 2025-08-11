@@ -1,9 +1,8 @@
 
-const { install } = require('../lib/index.js')
-// Do not import CSSOM implementations before the above import
-const matchMediaQueryList = require('../lib/match/media.js')
-const matchSupport = require('../lib/match/support.js')
-const { parseCSSGrammar } = require('../lib/parse/parser.js')
+import { install } from '../lib/index.js'
+import matchMediaQueryList from '../lib/match/media.js'
+import matchSupport from '../lib/match/support.js'
+import { parseCSSGrammar } from '../lib/parse/parser.js'
 
 install()
 

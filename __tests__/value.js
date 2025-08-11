@@ -1,6 +1,6 @@
 
-const { MAX_INTEGER, MIN_INTEGER } = require('../lib/values/integers.js')
-const {
+import { MAX_INTEGER, MIN_INTEGER } from '../lib/values/integers.js'
+import {
     angle,
     customIdent,
     dashedIdent,
@@ -25,14 +25,15 @@ const {
     semitones,
     string,
     time,
-} = require('../lib/values/value.js')
-const { cssom, install } = require('../lib/index.js')
-const { createContext, parseCSSGrammar } = require('../lib/parse/parser.js')
-const { toDegrees, toRadians } = require('../lib/utils/math.js')
-const { keywords: cssWideKeywords } = require('../lib/values/substitutions.js')
-const { isFailure } = require('../lib/utils/value.js')
-const properties = require('../lib/properties/definitions.js')
-const { serializeCSSComponentValue } = require('../lib/serialize.js')
+} from '../lib/values/value.js'
+import { createContext, parseCSSGrammar } from '../lib/parse/parser.js'
+import { toDegrees, toRadians } from '../lib/utils/math.js'
+import { CSSStyleSheet } from '../lib/cssom/index.js'
+import { keywords as cssWideKeywords } from '../lib/values/substitutions.js'
+import { install } from '../lib/index.js'
+import { isFailure } from '../lib/utils/value.js'
+import properties from '../lib/properties/definitions.js'
+import { serializeCSSComponentValue } from '../lib/serialize.js'
 
 /**
  * @param {string} definition
@@ -58,7 +59,7 @@ function parse(definition, value, serialize = true, context) {
 install()
 globalThis.document = { href: 'https://github.com/cdoublev/' }
 
-const styleSheet = cssom.CSSStyleSheet.createImpl(globalThis, [{ media: '' }])
+const styleSheet = CSSStyleSheet.createImpl(globalThis, [{ media: '' }])
 
 styleSheet.replaceSync(`
     @namespace html "https://www.w3.org/1999/xhtml/";

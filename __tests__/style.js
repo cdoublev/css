@@ -1,26 +1,23 @@
 
-const {
-    cssom: {
-        CSSFontFaceDescriptors,
-        CSSFunctionDescriptors,
-        CSSKeyframeProperties,
-        CSSMarginDescriptors,
-        CSSPageDescriptors,
-        CSSPositionTryDescriptors,
-        CSSStyleProperties,
-        CSSStyleSheet,
-    },
-    install,
-} = require('../lib/index.js')
-// Do not import CSSOM implementations before the above import
-const { UPDATE_COMPUTED_STYLE_DECLARATION_ERROR } = require('../lib/cssom/CSSStyleDeclaration-impl.js')
-const compatibility = require('../lib/compatibility.js')
-const { cssPropertyToIDLAttribute } = require('../lib/utils/string.js')
-const display = require('../lib/values/display.js')
-const properties = require('../lib/properties/definitions.js')
-const shorthands = require('../lib/properties/shorthands.js')
-const substitutions = require('../lib/values/substitutions.js')
-const whiteSpace = require('../lib/values/white-space.js')
+import * as compatibility from '../lib/compatibility.js'
+import * as display from '../lib/values/display.js'
+import * as substitutions from '../lib/values/substitutions.js'
+import * as whiteSpace from '../lib/values/white-space.js'
+import {
+    CSSFontFaceDescriptors,
+    CSSFunctionDescriptors,
+    CSSKeyframeProperties,
+    CSSMarginDescriptors,
+    CSSPageDescriptors,
+    CSSPositionTryDescriptors,
+    CSSStyleProperties,
+    CSSStyleSheet,
+} from '../lib/cssom/index.js'
+import { UPDATE_COMPUTED_STYLE_DECLARATION_ERROR } from '../lib/error.js'
+import { install } from '../lib/index.js'
+import properties from '../lib/properties/definitions.js'
+import shorthands from '../lib/properties/shorthands.js'
+import { toIDLAttribute } from '../lib/utils/string.js'
 
 /**
  * @param {object} [privateData]
@@ -66,11 +63,11 @@ describe('CSSStyleDeclaration / CSSStyleProperties', () => {
                 return
             }
             const prefixed = dashed.startsWith('-webkit-')
-            const camel = cssPropertyToIDLAttribute(dashed, prefixed)
+            const camel = toIDLAttribute(dashed, prefixed)
             expect(Object.hasOwn(prototype, dashed)).toBeTruthy()
             expect(Object.hasOwn(prototype, camel)).toBeTruthy()
             if (prefixed) {
-                const webkit = cssPropertyToIDLAttribute(dashed)
+                const webkit = toIDLAttribute(dashed)
                 expect(Object.hasOwn(prototype, webkit)).toBeTruthy()
             }
         })
@@ -1092,7 +1089,7 @@ describe('voice-rate', () => {
 
 describe('-webkit-line-clamp', () => {
 
-    const longhands = shorthands.get('-webkit-line-clamp')
+    const longhands = shorthands.get('-webkit-line-clamp')[0]
 
     test('shorthand expansion', () => {
 
@@ -1141,7 +1138,7 @@ describe('-webkit-line-clamp', () => {
 })
 describe('-webkit-text-stroke', () => {
 
-    const longhands = shorthands.get('-webkit-text-stroke')
+    const longhands = shorthands.get('-webkit-text-stroke')[0]
 
     test('shorthand expansion', () => {
 
@@ -1172,7 +1169,7 @@ describe('-webkit-text-stroke', () => {
 })
 describe('all', () => {
 
-    const longhands = shorthands.get('all')
+    const longhands = shorthands.get('all')[0]
 
     test('shorthand expansion', () => {
 
@@ -1204,7 +1201,8 @@ describe('all', () => {
                 if (represented.has(property)) {
                     return properties
                 }
-                for (const [shorthand, longhands] of shorthands) {
+                for (const [shorthand, subProperties] of shorthands) {
+                    const longhands = subProperties.flat()
                     if (shorthand === 'all' || longhands.length === 1) {
                         continue
                     }
@@ -1225,7 +1223,9 @@ describe('all', () => {
 })
 describe('animation', () => {
 
-    const longhands = shorthands.get('animation')
+    const subProperties = shorthands.get('animation')
+    const [, resetOnly] = subProperties
+    const longhands = subProperties.flat()
     const animation = 'auto ease 0s 1 normal none running none auto'
 
     test('shorthand expansion', () => {
@@ -1249,7 +1249,7 @@ describe('animation', () => {
         const repeated = `${animation}, ${animation}`
         style.animation = repeated
         longhands.forEach(longhand =>
-            expect(style[longhand]).toBe(shorthands.resetOnly.animation.includes(longhand)
+            expect(style[longhand]).toBe(resetOnly.includes(longhand)
                 ? initial(longhand)
                 : `${initial(longhand)}, ${initial(longhand)}`))
         expect(style.animation).toBe(repeated)
@@ -1272,7 +1272,7 @@ describe('animation', () => {
 })
 describe('animation-range', () => {
 
-    const longhands = shorthands.get('animation-range')
+    const longhands = shorthands.get('animation-range')[0]
 
     test('shorthand expansion', () => {
 
@@ -1340,7 +1340,7 @@ describe('animation-range', () => {
 })
 describe('animation-trigger', () => {
 
-    const longhands = shorthands.get('animation-trigger')
+    const longhands = shorthands.get('animation-trigger')[0]
 
     test('shorthand expansion', () => {
 
@@ -1461,7 +1461,7 @@ describe('animation-trigger', () => {
 })
 describe('animation-trigger-exit-range', () => {
 
-    const longhands = shorthands.get('animation-trigger-exit-range')
+    const longhands = shorthands.get('animation-trigger-exit-range')[0]
 
     test('shorthand expansion', () => {
 
@@ -1529,7 +1529,7 @@ describe('animation-trigger-exit-range', () => {
 })
 describe('animation-trigger-range', () => {
 
-    const longhands = shorthands.get('animation-trigger-range')
+    const longhands = shorthands.get('animation-trigger-range')[0]
 
     test('shorthand expansion', () => {
 
@@ -1597,7 +1597,9 @@ describe('animation-trigger-range', () => {
 })
 describe('background', () => {
 
-    const longhands = shorthands.get('background')
+    const subProperties = shorthands.get('background')
+    const [, resetOnly] = subProperties
+    const longhands = subProperties.flat()
 
     test('shorthand expansion', () => {
 
@@ -1647,7 +1649,7 @@ describe('background', () => {
         style.background = `${background.replace(' transparent', '')}, ${background}`
         longhands.forEach(longhand =>
             expect(style[longhand]).toBe(
-                (longhand === 'background-color' || shorthands.resetOnly.background.includes(longhand))
+                (longhand === 'background-color' || resetOnly.includes(longhand))
                     ? initial(longhand)
                     : `${initial(longhand)}, ${initial(longhand)}`))
         expect(style.background).toBe('none, none')
@@ -1751,7 +1753,7 @@ describe('background', () => {
 })
 describe('background-repeat', () => {
 
-    const longhands = shorthands.get('background-repeat')
+    const longhands = shorthands.get('background-repeat')[0]
 
     test('shorthand expansion', () => {
 
@@ -1794,7 +1796,7 @@ describe('background-repeat', () => {
 })
 describe('block-step', () => {
 
-    const longhands = shorthands.get('block-step')
+    const longhands = shorthands.get('block-step')[0]
 
     test('shorthand expansion', () => {
 
@@ -1825,7 +1827,7 @@ describe('block-step', () => {
 })
 describe('border', () => {
 
-    const longhands = shorthands.get('border')
+    const longhands = shorthands.get('border').flat()
 
     test('shorthand expansion', () => {
 
@@ -1877,7 +1879,7 @@ describe('border', () => {
 })
 describe('border-block, border-inline', () => {
 
-    const longhands = shorthands.get('border-block')
+    const longhands = shorthands.get('border-block')[0]
 
     test('shorthand expansion', () => {
 
@@ -1921,7 +1923,7 @@ describe('border-block, border-inline', () => {
 })
 describe('border-block-color, border-inline-color', () => {
 
-    const longhands = shorthands.get('border-block-color')
+    const longhands = shorthands.get('border-block-color')[0]
 
     test('shorthand expansion', () => {
 
@@ -1952,7 +1954,7 @@ describe('border-block-color, border-inline-color', () => {
 })
 describe('border-block-end-radius, border-block-start-radius, border-bottom-radius, border-inline-end-radius, border-inline-start-radius, border-left-radius, border-right-radius, border-top-radius', () => {
 
-    const longhands = shorthands.get('border-block-end-radius')
+    const longhands = shorthands.get('border-block-end-radius')[0]
 
     test('shorthand expansion', () => {
 
@@ -1996,7 +1998,7 @@ describe('border-block-end-radius, border-block-start-radius, border-bottom-radi
 })
 describe('border-block-style, border-inline-style', () => {
 
-    const longhands = shorthands.get('border-block-style')
+    const longhands = shorthands.get('border-block-style')[0]
 
     test('shorthand expansion', () => {
 
@@ -2027,7 +2029,7 @@ describe('border-block-style, border-inline-style', () => {
 })
 describe('border-block-width, border-inline-width', () => {
 
-    const longhands = shorthands.get('border-block-width')
+    const longhands = shorthands.get('border-block-width')[0]
 
     test('shorthand expansion', () => {
 
@@ -2058,7 +2060,7 @@ describe('border-block-width, border-inline-width', () => {
 })
 describe('border-bottom, border-left, border-right, border-top', () => {
 
-    const longhands = shorthands.get('border-top')
+    const longhands = shorthands.get('border-top')[0]
 
     test('shorthand expansion', () => {
 
@@ -2089,7 +2091,7 @@ describe('border-bottom, border-left, border-right, border-top', () => {
 })
 describe('border-clip', () => {
 
-    const longhands = shorthands.get('border-clip')
+    const longhands = shorthands.get('border-clip')[0]
 
     test('shorthand expansion', () => {
 
@@ -2118,7 +2120,7 @@ describe('border-clip', () => {
 })
 describe('border-color', () => {
 
-    const longhands = shorthands.get('border-color')
+    const longhands = shorthands.get('border-color')[0]
 
     test('shorthand expansion', () => {
 
@@ -2166,7 +2168,7 @@ describe('border-color', () => {
 })
 describe('border-image', () => {
 
-    const longhands = shorthands.get('border-image')
+    const longhands = shorthands.get('border-image')[0]
 
     test('shorthand expansion', () => {
 
@@ -2197,7 +2199,7 @@ describe('border-image', () => {
 })
 describe('border-radius', () => {
 
-    const longhands = shorthands.get('border-radius')
+    const longhands = shorthands.get('border-radius')[0]
 
     test('shorthand expansion', () => {
 
@@ -2243,7 +2245,7 @@ describe('border-radius', () => {
 })
 describe('border-style', () => {
 
-    const longhands = shorthands.get('border-style')
+    const longhands = shorthands.get('border-style')[0]
 
     test('shorthand expansion', () => {
 
@@ -2283,7 +2285,7 @@ describe('border-style', () => {
 })
 describe('border-width', () => {
 
-    const longhands = shorthands.get('border-width')
+    const longhands = shorthands.get('border-width')[0]
 
     test('shorthand expansion', () => {
 
@@ -2323,7 +2325,7 @@ describe('border-width', () => {
 })
 describe('box-shadow', () => {
 
-    const longhands = shorthands.get('box-shadow')
+    const longhands = shorthands.get('box-shadow')[0]
     const shadow = 'currentcolor none 0px 0px outset'
 
     test('shorthand expansion', () => {
@@ -2380,7 +2382,7 @@ describe('box-shadow', () => {
 })
 describe('caret', () => {
 
-    const longhands = shorthands.get('caret')
+    const longhands = shorthands.get('caret')[0]
 
     test('shorthand expansion', () => {
 
@@ -2411,7 +2413,7 @@ describe('caret', () => {
 })
 describe('column-rule', () => {
 
-    const longhands = shorthands.get('column-rule')
+    const longhands = shorthands.get('column-rule')[0]
 
     test('shorthand expansion', () => {
 
@@ -2442,7 +2444,7 @@ describe('column-rule', () => {
 })
 describe('columns', () => {
 
-    const longhands = shorthands.get('columns')
+    const longhands = shorthands.get('columns')[0]
 
     test('shorthand expansion', () => {
 
@@ -2478,7 +2480,7 @@ describe('columns', () => {
 })
 describe('contain-intrinsic-size', () => {
 
-    const longhands = shorthands.get('contain-intrinsic-size')
+    const longhands = shorthands.get('contain-intrinsic-size')[0]
 
     test('shorthand expansion', () => {
 
@@ -2509,7 +2511,7 @@ describe('contain-intrinsic-size', () => {
 })
 describe('container', () => {
 
-    const longhands = shorthands.get('container')
+    const longhands = shorthands.get('container')[0]
 
     test('shorthand expansion', () => {
 
@@ -2540,7 +2542,7 @@ describe('container', () => {
 })
 describe('corner-shape', () => {
 
-    const longhands = shorthands.get('corner-shape')
+    const longhands = shorthands.get('corner-shape')[0]
 
     test('shorthand expansion', () => {
 
@@ -2580,7 +2582,7 @@ describe('corner-shape', () => {
 })
 describe('corner-block-end-shape, corner-bottom-shape, corner-block-start-shape, corner-inline-end-shape, corner-inline-start-shape, corner-left-shape, corner-right-shape, corner-top-shape', () => {
 
-    const longhands = shorthands.get('corner-block-end-shape')
+    const longhands = shorthands.get('corner-block-end-shape')[0]
 
     test('shorthand expansion', () => {
 
@@ -2611,7 +2613,7 @@ describe('corner-block-end-shape, corner-bottom-shape, corner-block-start-shape,
 })
 describe('cue, pause, rest', () => {
 
-    const longhands = shorthands.get('cue')
+    const longhands = shorthands.get('cue')[0]
 
     test('shorthand expansion', () => {
 
@@ -2642,7 +2644,7 @@ describe('cue, pause, rest', () => {
 })
 describe('flex', () => {
 
-    const longhands = shorthands.get('flex')
+    const longhands = shorthands.get('flex')[0]
 
     test('shorthand expansion', () => {
 
@@ -2697,7 +2699,7 @@ describe('flex', () => {
 })
 describe('flex-flow', () => {
 
-    const longhands = shorthands.get('flex-flow')
+    const longhands = shorthands.get('flex-flow')[0]
 
     test('shorthand expansion', () => {
 
@@ -2728,7 +2730,9 @@ describe('flex-flow', () => {
 })
 describe('font', () => {
 
-    const longhands = shorthands.get('font')
+    const subProperties = shorthands.get('font')
+    const [, resetOnly] = subProperties
+    const longhands = subProperties.flat()
 
     test('shorthand expansion', () => {
 
@@ -2751,7 +2755,7 @@ describe('font', () => {
         style.font = 'caption'
         longhands.forEach(longhand =>
             expect(style[longhand])
-                .toBe(shorthands.resetOnly.font.includes(longhand)
+                .toBe(resetOnly.includes(longhand)
                     ? initial(longhand)
                     : ''))
         expect(style.font).toBe('caption')
@@ -2783,7 +2787,7 @@ describe('font', () => {
 })
 describe('font-variant', () => {
 
-    const longhands = shorthands.get('font-variant')
+    const longhands = shorthands.get('font-variant')[0]
 
     test('shorthand expansion', () => {
 
@@ -2824,7 +2828,7 @@ describe('font-variant', () => {
 })
 describe('font-synthesis', () => {
 
-    const longhands = shorthands.get('font-synthesis')
+    const longhands = shorthands.get('font-synthesis')[0]
 
     test('shorthand expansion', () => {
 
@@ -2879,7 +2883,7 @@ describe('font-synthesis', () => {
 })
 describe('gap', () => {
 
-    const longhands = shorthands.get('gap')
+    const longhands = shorthands.get('gap')[0]
 
     test('shorthand expansion', () => {
 
@@ -2910,7 +2914,7 @@ describe('gap', () => {
 })
 describe('grid', () => {
 
-    const longhands = shorthands.get('grid')
+    const longhands = shorthands.get('grid')[0]
 
     test('shorthand expansion', () => {
 
@@ -3007,7 +3011,7 @@ describe('grid', () => {
 })
 describe('grid-area', () => {
 
-    const longhands = shorthands.get('grid-area')
+    const longhands = shorthands.get('grid-area')[0]
 
     test('shorthand expansion', () => {
 
@@ -3053,7 +3057,7 @@ describe('grid-area', () => {
 })
 describe('grid-column, grid-row', () => {
 
-    const longhands = shorthands.get('grid-column')
+    const longhands = shorthands.get('grid-column')[0]
 
     test('shorthand expansion', () => {
 
@@ -3095,7 +3099,7 @@ describe('grid-column, grid-row', () => {
 })
 describe('grid-template', () => {
 
-    const longhands = shorthands.get('grid-template')
+    const longhands = shorthands.get('grid-template')[0]
 
     test('shorthand expansion', () => {
 
@@ -3202,7 +3206,7 @@ describe('grid-template', () => {
 })
 describe('inset', () => {
 
-    const longhands = shorthands.get('inset')
+    const longhands = shorthands.get('inset')[0]
 
     test('shorthand expansion', () => {
 
@@ -3242,7 +3246,7 @@ describe('inset', () => {
 })
 describe('inset-block, inset-inline', () => {
 
-    const longhands = shorthands.get('inset-block')
+    const longhands = shorthands.get('inset-block')[0]
 
     test('shorthand expansion', () => {
 
@@ -3273,7 +3277,7 @@ describe('inset-block, inset-inline', () => {
 })
 describe('interest-delay', () => {
 
-    const longhands = shorthands.get('interest-delay')
+    const longhands = shorthands.get('interest-delay')[0]
 
     test('shorthand expansion', () => {
 
@@ -3304,7 +3308,7 @@ describe('interest-delay', () => {
 })
 describe('line-clamp', () => {
 
-    const longhands = shorthands.get('line-clamp')
+    const longhands = shorthands.get('line-clamp')[0]
 
     test('shorthand expansion', () => {
 
@@ -3371,7 +3375,7 @@ describe('line-clamp', () => {
 })
 describe('list-style', () => {
 
-    const longhands = shorthands.get('list-style')
+    const longhands = shorthands.get('list-style')[0]
 
     test('shorthand expansion', () => {
 
@@ -3422,7 +3426,7 @@ describe('list-style', () => {
 })
 describe('margin', () => {
 
-    const longhands = shorthands.get('margin')
+    const longhands = shorthands.get('margin')[0]
 
     test('shorthand expansion', () => {
 
@@ -3462,7 +3466,7 @@ describe('margin', () => {
 })
 describe('margin-block, margin-inline', () => {
 
-    const longhands = shorthands.get('margin-block')
+    const longhands = shorthands.get('margin-block')[0]
 
     test('shorthand expansion', () => {
 
@@ -3493,7 +3497,7 @@ describe('margin-block, margin-inline', () => {
 })
 describe('marker', () => {
 
-    const longhands = shorthands.get('marker')
+    const longhands = shorthands.get('marker')[0]
 
     test('shorthand expansion', () => {
 
@@ -3522,7 +3526,9 @@ describe('marker', () => {
 })
 describe('mask', () => {
 
-    const longhands = shorthands.get('mask')
+    const subProperties = shorthands.get('mask')
+    const [, resetOnly] = subProperties
+    const longhands = subProperties.flat()
 
     test('shorthand expansion', () => {
 
@@ -3545,7 +3551,7 @@ describe('mask', () => {
         // Coordinated value list
         style.mask = `${mask}, ${mask}`
         longhands.forEach(longhand =>
-            expect(style[longhand]).toBe(shorthands.resetOnly.mask.includes(longhand)
+            expect(style[longhand]).toBe(resetOnly.includes(longhand)
                 ? initial(longhand)
                 : `${initial(longhand)}, ${initial(longhand)}`))
         expect(style.mask).toBe('none, none')
@@ -3598,7 +3604,7 @@ describe('mask', () => {
 })
 describe('mask-border', () => {
 
-    const longhands = shorthands.get('mask-border')
+    const longhands = shorthands.get('mask-border')[0]
 
     test('shorthand expansion', () => {
 
@@ -3629,7 +3635,7 @@ describe('mask-border', () => {
 })
 describe('offset', () => {
 
-    const longhands = shorthands.get('offset')
+    const longhands = shorthands.get('offset')[0]
 
     test('shorthand expansion', () => {
 
@@ -3667,7 +3673,7 @@ describe('offset', () => {
 })
 describe('outline', () => {
 
-    const longhands = shorthands.get('outline')
+    const longhands = shorthands.get('outline')[0]
 
     test('shorthand expansion', () => {
 
@@ -3709,7 +3715,7 @@ describe('outline', () => {
 })
 describe('overflow', () => {
 
-    const longhands = shorthands.get('overflow')
+    const longhands = shorthands.get('overflow')[0]
 
     test('shorthand expansion', () => {
 
@@ -3746,7 +3752,7 @@ describe('overflow', () => {
 })
 describe('overflow-clip-margin, overflow-clip-margin-block, overflow-clip-margin-inline', () => {
 
-    const longhands = shorthands.get('overflow-clip-margin')
+    const longhands = shorthands.get('overflow-clip-margin')[0]
 
     test('shorthand expansion', () => {
 
@@ -3782,7 +3788,7 @@ describe('overflow-clip-margin, overflow-clip-margin-block, overflow-clip-margin
 })
 describe('overflow-clip-margin-block, overflow-clip-margin-inline', () => {
 
-    const longhands = shorthands.get('overflow-clip-margin-block')
+    const longhands = shorthands.get('overflow-clip-margin-block')[0]
 
     test('shorthand expansion', () => {
 
@@ -3807,7 +3813,7 @@ describe('overflow-clip-margin-block, overflow-clip-margin-inline', () => {
 })
 describe('overscroll-behavior', () => {
 
-    const longhands = shorthands.get('overscroll-behavior')
+    const longhands = shorthands.get('overscroll-behavior')[0]
 
     test('shorthand expansion', () => {
 
@@ -3838,7 +3844,7 @@ describe('overscroll-behavior', () => {
 })
 describe('padding', () => {
 
-    const longhands = shorthands.get('padding')
+    const longhands = shorthands.get('padding')[0]
 
     test('shorthand expansion', () => {
 
@@ -3878,7 +3884,7 @@ describe('padding', () => {
 })
 describe('padding-block, padding-inline', () => {
 
-    const longhands = shorthands.get('padding-block')
+    const longhands = shorthands.get('padding-block')[0]
 
     test('shorthand expansion', () => {
 
@@ -3909,7 +3915,7 @@ describe('padding-block, padding-inline', () => {
 })
 describe('place-content', () => {
 
-    const longhands = shorthands.get('place-content')
+    const longhands = shorthands.get('place-content')[0]
 
     test('shorthand expansion', () => {
 
@@ -3952,7 +3958,7 @@ describe('place-content', () => {
 })
 describe('place-items', () => {
 
-    const longhands = shorthands.get('place-items')
+    const longhands = shorthands.get('place-items')[0]
 
     test('shorthand expansion', () => {
 
@@ -3983,7 +3989,7 @@ describe('place-items', () => {
 })
 describe('place-self', () => {
 
-    const longhands = shorthands.get('place-self')
+    const longhands = shorthands.get('place-self')[0]
 
     test('shorthand expansion', () => {
 
@@ -4014,7 +4020,7 @@ describe('place-self', () => {
 })
 describe('pointer-timeline', () => {
 
-    const longhands = shorthands.get('pointer-timeline')
+    const longhands = shorthands.get('pointer-timeline')[0]
 
     test('shorthand expansion', () => {
 
@@ -4057,7 +4063,7 @@ describe('pointer-timeline', () => {
 })
 describe('position-try', () => {
 
-    const longhands = shorthands.get('position-try')
+    const longhands = shorthands.get('position-try')[0]
 
     test('shorthand expansion', () => {
 
@@ -4088,7 +4094,7 @@ describe('position-try', () => {
 })
 describe('scroll-margin', () => {
 
-    const longhands = shorthands.get('scroll-margin')
+    const longhands = shorthands.get('scroll-margin')[0]
 
     test('shorthand expansion', () => {
 
@@ -4128,7 +4134,7 @@ describe('scroll-margin', () => {
 })
 describe('scroll-margin-block, scroll-margin-inline', () => {
 
-    const longhands = shorthands.get('scroll-margin-block')
+    const longhands = shorthands.get('scroll-margin-block')[0]
 
     test('shorthand expansion', () => {
 
@@ -4159,7 +4165,7 @@ describe('scroll-margin-block, scroll-margin-inline', () => {
 })
 describe('scroll-padding', () => {
 
-    const longhands = shorthands.get('scroll-padding')
+    const longhands = shorthands.get('scroll-padding')[0]
 
     test('shorthand expansion', () => {
 
@@ -4199,7 +4205,7 @@ describe('scroll-padding', () => {
 })
 describe('scroll-padding-block, scroll-padding-inline', () => {
 
-    const longhands = shorthands.get('scroll-padding-block')
+    const longhands = shorthands.get('scroll-padding-block')[0]
 
     test('shorthand expansion', () => {
 
@@ -4230,7 +4236,7 @@ describe('scroll-padding-block, scroll-padding-inline', () => {
 })
 describe('scroll-timeline', () => {
 
-    const longhands = shorthands.get('scroll-timeline')
+    const longhands = shorthands.get('scroll-timeline')[0]
 
     test('shorthand expansion', () => {
 
@@ -4273,7 +4279,7 @@ describe('scroll-timeline', () => {
 })
 describe('text-align', () => {
 
-    const longhands = shorthands.get('text-align')
+    const longhands = shorthands.get('text-align')[0]
 
     test('shorthand expansion', () => {
 
@@ -4319,7 +4325,7 @@ describe('text-align', () => {
 })
 describe('text-box', () => {
 
-    const longhands = shorthands.get('text-box')
+    const longhands = shorthands.get('text-box')[0]
 
     test('shorthand expansion', () => {
 
@@ -4361,7 +4367,7 @@ describe('text-box', () => {
 })
 describe('text-emphasis', () => {
 
-    const longhands = shorthands.get('text-emphasis')
+    const longhands = shorthands.get('text-emphasis')[0]
 
     test('shorthand expansion', () => {
 
@@ -4392,7 +4398,7 @@ describe('text-emphasis', () => {
 })
 describe('text-decoration', () => {
 
-    const longhands = shorthands.get('text-decoration')
+    const longhands = shorthands.get('text-decoration')[0]
 
     test('shorthand expansion', () => {
 
@@ -4427,7 +4433,7 @@ describe('text-decoration-skip', () => {
 })
 describe('text-spacing', () => {
 
-    const longhands = shorthands.get('text-spacing')
+    const longhands = shorthands.get('text-spacing')[0]
 
     test('shorthand expansion', () => {
 
@@ -4466,7 +4472,7 @@ describe('text-spacing', () => {
 })
 describe('text-wrap', () => {
 
-    const longhands = shorthands.get('text-wrap')
+    const longhands = shorthands.get('text-wrap')[0]
 
     test('shorthand expansion', () => {
 
@@ -4497,7 +4503,7 @@ describe('text-wrap', () => {
 })
 describe('transition', () => {
 
-    const longhands = shorthands.get('transition')
+    const longhands = shorthands.get('transition')[0]
 
     test('shorthand expansion', () => {
 
@@ -4540,7 +4546,7 @@ describe('transition', () => {
 })
 describe('vertical-align', () => {
 
-    const longhands = shorthands.get('vertical-align')
+    const longhands = shorthands.get('vertical-align')[0]
 
     test('shorthand expansion', () => {
 
@@ -4576,7 +4582,7 @@ describe('vertical-align', () => {
 })
 describe('view-timeline', () => {
 
-    const longhands = shorthands.get('view-timeline')
+    const longhands = shorthands.get('view-timeline')[0]
 
     test('shorthand expansion', () => {
 
@@ -4619,7 +4625,7 @@ describe('view-timeline', () => {
 })
 describe('white-space', () => {
 
-    const longhands = shorthands.get('white-space')
+    const longhands = shorthands.get('white-space')[0]
 
     test('shorthand expansion', () => {
 
@@ -4640,7 +4646,7 @@ describe('white-space', () => {
         expect(style.cssText).toBe('white-space: normal;')
 
         // normal, pre, pre-line, pre-wrap
-        whiteSpace.forEach((mapping, keyword) => {
+        whiteSpace.mapping.forEach((mapping, keyword) => {
             style.whiteSpace = keyword
             longhands.forEach((longhand, index) => expect(style[longhand]).toBe(mapping[index].value))
             expect(style.whiteSpace).toBe(keyword)

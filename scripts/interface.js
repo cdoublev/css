@@ -12,15 +12,16 @@
  *
  * Then it generates the wrapper classes from all lib/cssom/*.webidl.
  */
-const { cssPropertyToIDLAttribute, tab } = require('../lib/utils/string.js')
-const Transformer = require('webidl2js')
-const compatibility = require('../lib/compatibility.js')
-const fs = require('node:fs/promises')
-const path = require('node:path')
-const { rules } = require('../lib/rules/definitions.js')
+import * as compatibility from '../lib/compatibility.js'
+import { tab, toIDLAttribute } from '../lib/utils/string.js'
+import Transformer from 'webidl2js'
+import fs from 'node:fs/promises'
+import path from 'node:path'
+import root from '../lib/rules/definitions.js'
 
-const targetDir = path.join(__dirname, '..', 'lib', 'cssom')
+const targetDir = path.join(import.meta.dirname, '..', 'lib', 'cssom')
 
+const { rules } = root
 const fontFaceRule = rules.find(rule => rule.name === '@font-face')
 const functionRule = rules.find(rule => rule.name === '@function')
 const keyframeRule = rules.find(rule => rule.name === '@keyframes').value.rules.find(rule => rule.name === '@keyframe')
@@ -104,9 +105,9 @@ function createStyleDeclarationChildInterface({ extensions = [], link, name, rul
     for (let attribute of getRuleAttributes(rule)) {
         const prelude = [...extensions, `ReflectStyle="${attribute}"`]
         if (attribute.includes('-')) {
-            content += `${tab(1)}[${prelude}] attribute [LegacyNullToEmptyString] CSSOMString ${cssPropertyToIDLAttribute(attribute)};\n`
+            content += `${tab(1)}[${prelude}] attribute [LegacyNullToEmptyString] CSSOMString ${toIDLAttribute(attribute)};\n`
             if (attribute.startsWith('-webkit-')) {
-                content += `${tab(1)}[${prelude}] attribute [LegacyNullToEmptyString] CSSOMString ${cssPropertyToIDLAttribute(attribute, true)};\n`
+                content += `${tab(1)}[${prelude}] attribute [LegacyNullToEmptyString] CSSOMString ${toIDLAttribute(attribute, true)};\n`
             }
         } else if (reserved.includes(attribute)) {
             attribute = `_${attribute}`
@@ -177,9 +178,10 @@ function createDefinitions() {
     return Promise.all(definitions.map(createStyleDeclarationChildInterface))
 }
 
-createDefinitions()
-    .then(createInterfaces)
-    .catch(error => {
-        console.log('Please report this issue: https://github.com/cdoublev/css/issues/new')
-        throw error
-    })
+try {
+    await createDefinitions()
+    createInterfaces()
+} catch (error) {
+    console.log('Please report this issue: https://github.com/cdoublev/css/issues/new')
+    throw error
+}

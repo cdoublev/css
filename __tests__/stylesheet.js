@@ -1,24 +1,22 @@
 
-const { cssom, install } = require('../lib/index.js')
-// Do not import CSSOM implementations before the above import
-const { ACCESS_THIRD_PARTY_STYLESHEET_ERROR, UPDATE_LOCKED_STYLESHEET_ERROR } = require('../lib/cssom/CSSStyleSheet-impl.js')
-const {
+import {
+    ACCESS_THIRD_PARTY_STYLESHEET_ERROR,
     EXTRA_RULE_ERROR,
     INSERT_INVALID_IMPORT_ERROR,
+    INVALID_FONT_FEATURE_VALUE_ERROR,
     INVALID_NAMESPACE_STATE_ERROR,
     INVALID_RULE_INDEX_ERROR,
     INVALID_RULE_POSITION_ERROR,
     INVALID_RULE_SYNTAX_ERROR,
     MISSING_RULE_ERROR,
-} = require('../lib/parse/parser.js')
-const { SET_INVALID_KEY_TEXT_ERROR } = require('../lib/cssom/CSSKeyframeRule-impl.js')
-const { SET_INVALID_NAME_ERROR } = require('../lib/cssom/CSSKeyframesRule-impl.js')
-const { INVALID_FONT_FEATURE_VALUE_ERROR } = require('../lib/cssom/CSSFontFeatureValuesMap-impl.js')
-
-const {
-    CSSImportRule,
+    SET_INVALID_KEY_TEXT_ERROR,
+    SET_INVALID_NAME_ERROR,
+    UPDATE_LOCKED_STYLESHEET_ERROR,
+} from '../lib/error.js'
+import {
     CSSFontFaceDescriptors,
     CSSFunctionDescriptors,
+    CSSImportRule,
     CSSKeyframeProperties,
     CSSKeyframesRule,
     CSSLayerStatementRule,
@@ -31,7 +29,8 @@ const {
     CSSStyleRule,
     CSSStyleSheet,
     MediaList,
-} = cssom
+} from '../lib/cssom/index.js'
+import { install } from '../lib/index.js'
 
 /**
  * @param {string} [rules]
@@ -1024,12 +1023,11 @@ describe('CSSViewTransitionRule', () => {
  * subclass: in strict mode, this throws an error.
  *
  * Instead, CSSRule.cssText is defined as read-only, which produces the expected
- * behavior, but throw an error in strict mode.
+ * behavior, but throws an error in strict mode.
  */
 test('Setting CSSRule.cssText does nothing', () => {
     const rule = createStyleSheet('style {}').cssRules[0]
-    rule.cssText = 'override {}'
-    expect(rule.cssText).toBe('style {}')
+    expect(() => rule.cssText = 'override {}').toThrow()
 })
 
 describe('CSS grammar - syntax', () => {

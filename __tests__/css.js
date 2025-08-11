@@ -1,13 +1,13 @@
 
-const { install } = require('../lib/index.js')
-const {
+import {
     INVALID_CUSTOM_PROPERTY_NAME,
     INVALID_CUSTOM_PROPERTY_OVERRIDE,
     INVALID_CUSTOM_PROPERTY_SYNTAX,
     INVALID_INITIAL_CUSTOM_PROPERTY_VALUE,
     INVALID_INITIAL_CUSTOM_PROPERTY_VALUE_UNIVERSAL,
     MISSING_INITIAL_CUSTOM_PROPERTY_VALUE,
-} = require('../lib/cssom/CSS-impl.js')
+} from '../lib/error.js'
+import { install } from '../lib/index.js'
 
 install()
 globalThis.document = { _registeredPropertySet: [] }
