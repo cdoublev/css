@@ -1028,7 +1028,7 @@ function addRules(definitions = [], key) {
         if (aliases.has(name) || mappings.has(name)) {
             return
         }
-        const rule = findRule(name, root.rules)
+        const rule = findRule(name, root.value.rules)
         if (rule) {
             if (reportErrors && value && isUpdatedRule(name, value, rule)) {
                 reportError(key, name, `${name} has a new definition`)

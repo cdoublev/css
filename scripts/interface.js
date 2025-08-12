@@ -21,7 +21,7 @@ import root from '../lib/rules/definitions.js'
 
 const targetDir = path.join(import.meta.dirname, '..', 'lib', 'cssom')
 
-const { rules } = root
+const { value: { rules } } = root
 const fontFaceRule = rules.find(rule => rule.name === '@font-face')
 const functionRule = rules.find(rule => rule.name === '@function')
 const keyframeRule = rules.find(rule => rule.name === '@keyframes').value.rules.find(rule => rule.name === '@keyframe')
