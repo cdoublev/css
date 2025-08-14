@@ -2,7 +2,7 @@
 import { install } from '../lib/index.js'
 import matchMediaQueryList from '../lib/match/media.js'
 import matchSupport from '../lib/match/support.js'
-import { parseCSSGrammar } from '../lib/parse/parser.js'
+import { parseGrammar } from '../lib/parse/parser.js'
 
 install()
 
@@ -21,7 +21,7 @@ describe('media', () => {
     }
 
     function match(query, window) {
-        return matchMediaQueryList(parseCSSGrammar(query, '<media-query-list>'), window)
+        return matchMediaQueryList(parseGrammar(query, '<media-query-list>'), window)
     }
 
     test('types', () => {
@@ -302,7 +302,7 @@ describe('media', () => {
 describe('support', () => {
 
     function match(query) {
-        return matchSupport(parseCSSGrammar(`(${query})`, '<supports-condition>'))
+        return matchSupport(parseGrammar(`(${query})`, '<supports-condition>'))
     }
 
     test('declaration', () => {

@@ -481,9 +481,32 @@ describe('<whole-value>', () => {
 })
 
 describe('--*', () => {
+    test('invalid', () => {
+        const style = createStyleBlock()
+        const invalid = [
+            // Nested bad token
+            '[}]',
+            '(})',
+            'fn(})',
+        ]
+        invalid.forEach(input => {
+            style.setProperty('--custom', input)
+            expect(style.getPropertyValue('--custom')).toBe('')
+        })
+    })
     test('valid', () => {
         const style = createStyleBlock()
         const valid = [
+            // Nested end token
+            ['{!}'],
+            ['(!)'],
+            ['fn(!)'],
+            ['{;}'],
+            ['(;)'],
+            ['fn(;)'],
+            // Positioned {}-block
+            ['positioned {}'],
+            ['{} block'],
             // Whitespaces and comments
             ['', ' '],
             ['  /**/  ', ' '],
@@ -1030,6 +1053,31 @@ describe('shape-outside', () => {
         const style = createStyleBlock()
         style.shapeOutside = 'inset(1px) margin-box'
         expect(style.shapeOutside).toBe('inset(1px)')
+    })
+})
+describe('@font-face/src', () => {
+    test('invalid', () => {
+        const style = CSSFontFaceDescriptors.create(globalThis, undefined, { parentRule: fontFaceRule })
+        const invalid = [
+            '{]}, local("serif")',
+            'local("serif"), {]}',
+        ]
+        invalid.forEach(input => {
+            style.src = input
+            expect(style.src).toBe('')
+        })
+    })
+    test('valid', () => {
+        const style = CSSFontFaceDescriptors.create(globalThis, undefined, { parentRule: fontFaceRule })
+        const valid = [
+            '!, local("serif")',
+            ';, local("serif")',
+            '}, local("serif")',
+        ]
+        valid.forEach(input => {
+            style.src = input
+            expect(style.src).toBe('local("serif")')
+        })
     })
 })
 describe('text-emphasis-position', () => {

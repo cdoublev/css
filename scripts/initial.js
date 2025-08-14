@@ -10,7 +10,7 @@ import { quote, tab } from '../lib/utils/string.js'
 import descriptors from '../lib/descriptors/definitions.js'
 import fs from 'node:fs/promises'
 import { install } from '../lib/index.js'
-import { parseCSSDeclaration } from '../lib/parse/parser.js'
+import { parseDeclarationValue } from '../lib/parse/parser.js'
 import path from 'node:path'
 import properties from '../lib/properties/definitions.js'
 import { serializeCSSValue } from '../lib/serialize.js'
@@ -91,7 +91,7 @@ function getInitialValue(name, value, context, depth) {
     if (!value) {
         return [null, '']
     }
-    value = parseCSSDeclaration(name, value, false, context)
+    value = parseDeclarationValue(value, name, context)
     if (isFailure(value)) {
         console.error(`Parse error: cannot parse initial value of "${name}"`)
         return ''

@@ -145,6 +145,17 @@ describe('prev(size, offset = 0)', () => {
         expect(stream.index).toBe(string.length)
         expect(stream.prev(Infinity)).toBe('hello')
         expect(stream.prev(Infinity, 1)).toBe('hell')
+        // Kept for reference but not comitted nor promoted as part of the interface
+        expect(stream.prev(-1)).toBeUndefined()
+    })
+})
+
+describe('peek(predicate)', () => {
+    it('returns whether the next item satisfies the given predicate', () => {
+        expect(stream.peek(char => char === '.')).toBeFalsy()
+        expect(stream.peek(char => char === 'h')).toBeTruthy()
+        stream.moveToEnd()
+        expect(stream.peek(_ => true)).toBeFalsy()
     })
 })
 

@@ -26,7 +26,7 @@ import {
     string,
     time,
 } from '../lib/values/value.js'
-import { createContext, parseCSSGrammar } from '../lib/parse/parser.js'
+import { createContext, parseGrammar } from '../lib/parse/parser.js'
 import { toDegrees, toRadians } from '../lib/utils/math.js'
 import { CSSStyleSheet } from '../lib/cssom/index.js'
 import { keywords as cssWideKeywords } from '../lib/values/substitutions.js'
@@ -43,7 +43,7 @@ import { serializeCSSComponentValue } from '../lib/serialize.js'
  * @returns {object|object[]|string|null}
  */
 function parse(definition, value, serialize = true, context) {
-    value = parseCSSGrammar(value, definition, context)
+    value = parseGrammar(value, definition, context)
     if (isFailure(value)) {
         if (serialize) {
             return ''
