@@ -2299,6 +2299,16 @@ describe('CSS grammar - semantic', () => {
             expect(styleSheet.cssRules[0].cssText).toBe(normalizeText(input))
         })
     })
+    test('nested style rule - invalid prelude containing an undeclared namespace prefix', () => {
+        const styleSheet = createStyleSheet(`
+            @namespace svg "http://www.w3.org/2000/svg";
+            style {
+                html|nested {}
+                svg|nested {}
+            }
+        `)
+        expect(styleSheet.cssRules[1].cssText).toBe('style { & svg|nested {} }')
+    })
     test('nested style rule - invalid block contents', () => {
         const styleSheet = createStyleSheet(`
             style {
