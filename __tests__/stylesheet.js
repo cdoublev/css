@@ -1031,26 +1031,30 @@ test('Setting CSSRule.cssText does nothing', () => {
 })
 
 describe('CSS grammar - syntax', () => {
-    test('top-level - nothing between the start and end of a rule breaks consuming', () => {
+    test('at-rule start with <at-keyword-token> and only end with ; or {} block', () => {
         const { cssRules } = createStyleSheet(`
-            color; style {}
-            color: red; style {}
-            @invalid;
+            @media ; {}
             style-1 {}
-            @invalid } style {}
+            @media } style {}
             style-2 {}
-            @invalid } @layer name;
-            style-3 {}
-            invalid } style {}
-            style-4 {}
         `)
-        expect(cssRules).toHaveLength(4)
+        expect(cssRules).toHaveLength(3)
+        expect(cssRules[0].cssText).toBe('style-1 {}')
+        expect(cssRules[1].cssText).toBe('@media not all {}')
+        expect(cssRules[2].cssText).toBe('style-2 {}')
+    })
+    test('qualified rules start with anything but <at-keyword-token> and only end with {} block', () => {
+        const { cssRules } = createStyleSheet(`
+            color: red ; style {}
+            style-1 {}
+            color: red } style {}
+            style-2 {}
+        `)
+        expect(cssRules).toHaveLength(2)
         expect(cssRules[0].cssText).toBe('style-1 {}')
         expect(cssRules[1].cssText).toBe('style-2 {}')
-        expect(cssRules[2].cssText).toBe('style-3 {}')
-        expect(cssRules[3].cssText).toBe('style-4 {}')
     })
-    test('top-level - rule starting like a custom property declaration', () => {
+    test('top-level rule starting like a custom property declaration', () => {
         const { cssRules } = createStyleSheet(`
             --custom:hover {}
             --custom: hover {}
@@ -1060,24 +1064,7 @@ describe('CSS grammar - syntax', () => {
         expect(cssRules).toHaveLength(1)
         expect(cssRules[0].cssText).toBe('--custom a:hover {}')
     })
-    test('top-level - unclosed rule', () => {
-        const { cssRules } = createStyleSheet('style { --custom:')
-        expect(cssRules).toHaveLength(1)
-        expect(cssRules[0].cssText).toBe('style { --custom: ; }')
-    })
-    test('nested - top-level ; breaks consuming a declaration and a rule', () => {
-        const styleSheet = createStyleSheet(`
-            style {
-                color;
-                color: orange;
-                style: ; color: green; {}
-                style (; color: red;) {}
-                --custom: (;) 1;
-            }
-        `)
-        expect(styleSheet.cssRules[0].cssText).toBe('style { color: green; --custom: (;) 1; }')
-    })
-    test('nested - top-level } breaks consuming block contents', () => {
+    test('} breaks consuming a declaration and a nested rule prelude', () => {
         const { cssRules } = createStyleSheet(`
             style-1 {
                 --custom: };
@@ -1087,54 +1074,99 @@ describe('CSS grammar - syntax', () => {
                 style-3 {
                     style (}) {};
                     color: green;
-                }
+                    @media } {}
                 style-4 {}
+            } {}
+            @font-face {
+                src: }, local("monospace");
             }
         `)
-        expect(cssRules).toHaveLength(4)
+        expect(cssRules).toHaveLength(5)
         expect(cssRules[0].cssText).toBe('style-1 { --custom: ; }')
         expect(cssRules[1].cssText).toBe('style-2 {}')
         expect(cssRules[2].cssText).toBe('style-3 { color: green; }')
         expect(cssRules[3].cssText).toBe('style-4 {}')
+        expect(cssRules[4].cssText).toBe('@font-face {}')
     })
-    test('nested - declaration with a value containing a bad token', () => {
-        // It is always invalid... except with forgiving grammar?
+    test('; breaks consuming a declaration and a nested rule prelude', () => {
+        const { cssRules } = createStyleSheet(`
+            style {
+                color;
+                color: orange;
+                style: ; color: green; {}
+                style (; color: red;) {}
+                @media ; {}
+            }
+            @font-face {
+                src: ;, local("serif");
+            }
+        `)
+        expect(cssRules).toHaveLength(2)
+        expect(cssRules[0].cssText).toBe('style { color: green; }')
+        expect(cssRules[1].cssText).toBe('@font-face {}')
+    })
+    test('! does not break consuming a declaration value', () => {
+        // but is interpreted as a bad token if not followed by `important`
+        // or if followed by `important` followed by other tokens than `;` or `}`.
         const styleSheet = createStyleSheet(`
             style {
-                color: var(--custom) "\n;
-                color: var(--custom) url(bad .url);
-                color: var(--custom) ];
-                color: var(--custom) );
                 color: var(--custom) !;
                 color: !important var(--custom);
-                style {}
+                --custom: ! important;
+            }
+            @font-face {
+                src: !, !important, local("serif");
             }
         `)
-        expect(styleSheet.cssRules[0].cssText).toBe('style { & style {} }')
+        expect(styleSheet.cssRules[0].cssText).toBe('style { --custom:  !important; }')
+        expect(styleSheet.cssRules[1].cssText).toBe('@font-face { src: local("serif"); }')
     })
-    test('nested - declaration not for a custom property with a value containing a positioned {} block', () => {
+    test('! and ; are not interpreted as bad tokens when nested in a block or function', () => {
+
+        const values = ['fn(!)', '[!]', '{!}', 'fn(;)', '[;]', '{;}']
+        const declarations = values.map((value, index) => `--custom-${index}: ${value}`).join('; ')
+        const { cssRules } = createStyleSheet(`
+            style { ${declarations}; }
+            @media (;) {}
+        `)
+
+        expect(cssRules[0].cssText).toBe(`style { ${declarations}; }`)
+        expect(cssRules[1].cssText).toBe(`@media (;) {}`)
+    })
+    test('positioned {} block in a declaration value not for a custom property', () => {
         // It is always consumed as a rule
-        const styleSheet = createStyleSheet(`
+        const { cssRules } = createStyleSheet(`
             style {
+                color: ({} 1) var(--custom) (1 {});
                 color: {} var(--custom);
                 color:var(--custom) {}
-                color: ] {}
+                color: ] style {}
                 style:hover {}
             }
+            @font-face {
+                src: local("serif");
+                src: {}, local("monospace");
+            }
         `)
-        expect(styleSheet.cssRules[0].cssText).toBe('style { & style:hover {} }')
+        expect(cssRules[0].cssText).toBe('style { color: ({} 1) var(--custom) (1 {}); & style:hover {} }')
+        expect(cssRules[1].cssText).toBe('@font-face { src: local("serif"); }')
     })
-    test('nested - declaration for a custom property with a value containing a positioned {} block', () => {
+    test('positioned {} block in a declaration value for a custom property', () => {
         // It is never consumed as a qualified rule in a nested context
         const styleSheet = createStyleSheet(`
             style {
-                --custom-1: {} 1;
-                --custom-2: 1 {};
-                --custom-3: ] {}
+                --custom: 1 {} 1;
+                --custom: ] style {}
                 style:hover {}
             }
         `)
-        expect(styleSheet.cssRules[0].cssText).toBe('style { --custom-1: {} 1; --custom-2: 1 {}; }')
+        expect(styleSheet.cssRules[0].cssText).toBe('style { --custom: 1 {} 1; }')
+    })
+    test('unclosed rule, declaration, function', () => {
+        let styleSheet = createStyleSheet('style { & { color: var(--custom) fn(')
+        expect(styleSheet.cssRules[0].cssText).toBe('style { & { color: var(--custom) fn(); } }')
+        styleSheet = createStyleSheet('style { & { color: var(--custom, fn(')
+        expect(styleSheet.cssRules[0].cssText).toBe('style { & { color: var(--custom, fn()); } }')
     })
 })
 
@@ -1290,7 +1322,7 @@ describe('CSS grammar - semantic', () => {
     test('@color-profile - valid block contents', () => {
         const input = `
             @COLOR-PROFILE --name {
-                COMPONENTS: { env(name) };
+                COMPONENTS: {env(name)};
                 src: first-valid(url("profile.icc"));
             }
         `
@@ -1371,7 +1403,7 @@ describe('CSS grammar - semantic', () => {
     test('@counter-style - valid block contents', () => {
         const input = `
             @COUNTER-STYLE name {
-                PAD: { env(name) };
+                PAD: {env(name)};
                 system: first-valid(numeric);
             }
         `
@@ -1407,8 +1439,8 @@ describe('CSS grammar - semantic', () => {
     })
     test('@font-face - valid block contents', () => {
         const declarations = [
-            'FONT-WEIGHT: { env(name) }',
-            'SIZE-ADJUST: { env(name) }',
+            'FONT-WEIGHT: {env(name)}',
+            'SIZE-ADJUST: {env(name)}',
             'font-weight: first-valid(1)',
             'size-adjust: first-valid(1%)',
         ]
@@ -1476,7 +1508,7 @@ describe('CSS grammar - semantic', () => {
         expect(styleSheet.cssRules[0].cssText).toBe(input.toLowerCase())
 
         const declarations = [
-            'FONT-DISPLAY: { env(name) }',
+            'FONT-DISPLAY: {env(name)}',
             'font-display: first-valid(block)',
         ]
         declarations.forEach(declaration => {
@@ -1517,7 +1549,7 @@ describe('CSS grammar - semantic', () => {
     test('@font-palette-values - valid block contents', () => {
         const input = `
             @FONT-PALETTE-VALUES --name {
-                BASE-PALETTE: { env(name) };
+                BASE-PALETTE: {env(name)};
                 font-family: first-valid(name);
             }
         `
@@ -1571,7 +1603,7 @@ describe('CSS grammar - semantic', () => {
             '@media {}',
             '@supports (color: green) {}',
             '--custom: 1;',
-            'RESULT: { env(name) };',
+            'RESULT: {env(name)};',
         ]
         const input = `@FUNCTION --name() { ${contents.join(' ')} }`
         const styleSheet = createStyleSheet(input)
@@ -1751,8 +1783,8 @@ describe('CSS grammar - semantic', () => {
             '--custom: 1;',
             'MARGIN-TOP: initial;',
             'SIZE: initial;',
-            'margin-top: { env(name) };',
-            'size: { env(name) };',
+            'margin-top: {env(name)};',
+            'size: {env(name)};',
             'margin-top: var(--custom);',
             'size: var(--custom);',
             'margin-top: attr(name);',
@@ -1790,7 +1822,7 @@ describe('CSS grammar - semantic', () => {
     test('@position-try - valid block contents', () => {
         const declarations = [
             'TOP: initial',
-            'top: { env(name) }',
+            'top: {env(name)}',
             'top: var(--custom)',
             'top: attr(name)',
             'top: first-valid(1px)',
@@ -1831,7 +1863,7 @@ describe('CSS grammar - semantic', () => {
     })
     test('@property - valid block contents', () => {
         const declarations = [
-            'INHERITS: { env(name) }',
+            'INHERITS: {env(name)}',
             'inherits: first-valid(false)',
         ]
         declarations.forEach(declaration => {
@@ -1866,6 +1898,8 @@ describe('CSS grammar - semantic', () => {
             // Empty value
             ['', '*'],
             [' ', '*'],
+            // Positioned {} block
+            ['1 {}', '*'],
             // Computationally independent
             ['1in', '<length>'],
             ['1%', '<length-percentage>'],
@@ -1941,7 +1975,7 @@ describe('CSS grammar - semantic', () => {
 
         const declarations = [
             '--custom: 1',
-            'TOP: { env(name) }',
+            'TOP: {env(name)}',
             'top: first-valid(1px)',
             'top: initial',
             'top: inherit(--custom)',
@@ -2068,7 +2102,7 @@ describe('CSS grammar - semantic', () => {
     })
     test('@view-transition - valid block contents', () => {
         const declarations = [
-            'NAVIGATION: { env(name) }',
+            'NAVIGATION: {env(name)}',
             'navigation: first-valid(auto)',
         ]
         declarations.forEach(declaration => {
@@ -2153,7 +2187,7 @@ describe('CSS grammar - semantic', () => {
         const declarations = [
             '--custom: 1',
             'TOP: initial',
-            'top: { env(name) }',
+            'top: {env(name)}',
             'top: var(--custom)',
             'top: attr(name)',
             'top: first-valid(1px)',
@@ -2183,7 +2217,7 @@ describe('CSS grammar - semantic', () => {
         const declarations = [
             '--custom: 1',
             'MARGIN-TOP: initial',
-            'margin-top: { env(name) }',
+            'margin-top: {env(name)}',
             'margin-top: var(--custom)',
             'margin-top: attr(name)',
             'margin-top: first-valid(1px)',
@@ -2249,7 +2283,7 @@ describe('CSS grammar - semantic', () => {
         const declarations = [
             '--custom: 1',
             'TOP: initial',
-            'top: { env(name) }',
+            'top: {env(name)}',
             'top: var(--custom)',
             'top: attr(name)',
             'top: first-valid(1px)',
@@ -2316,7 +2350,7 @@ describe('CSS grammar - semantic', () => {
         const declarations = [
             '--custom: 1',
             'TOP: initial',
-            'top: { env(name) }',
+            'top: {env(name)}',
             'top: var(--custom)',
             'top: attr(name)',
             'top: first-valid(1px)',
@@ -2417,7 +2451,7 @@ describe('CSS grammar - semantic', () => {
         const declarations = [
             '--custom: 1',
             'TOP: initial',
-            'top: { env(name) }',
+            'top: {env(name)}',
             'top: var(--custom)',
             'top: attr(name)',
             'top: first-valid(1px)',

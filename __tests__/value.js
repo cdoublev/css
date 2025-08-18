@@ -26,14 +26,14 @@ import {
     string,
     time,
 } from '../lib/values/value.js'
-import { createContext, parseCSSGrammar } from '../lib/parse/parser.js'
+import { createContext, parseGrammar } from '../lib/parse/parser.js'
 import { toDegrees, toRadians } from '../lib/utils/math.js'
 import { CSSStyleSheet } from '../lib/cssom/index.js'
 import { keywords as cssWideKeywords } from '../lib/values/substitutions.js'
 import { install } from '../lib/index.js'
 import { isFailure } from '../lib/utils/value.js'
 import properties from '../lib/properties/definitions.js'
-import { serializeCSSComponentValue } from '../lib/serialize.js'
+import { serializeComponentValue } from '../lib/serialize.js'
 
 /**
  * @param {string} definition
@@ -43,7 +43,7 @@ import { serializeCSSComponentValue } from '../lib/serialize.js'
  * @returns {object|object[]|string|null}
  */
 function parse(definition, value, serialize = true, context) {
-    value = parseCSSGrammar(value, definition, context)
+    value = parseGrammar(value, definition, context)
     if (isFailure(value)) {
         if (serialize) {
             return ''
@@ -51,7 +51,7 @@ function parse(definition, value, serialize = true, context) {
         return null
     }
     if (serialize) {
-        return serializeCSSComponentValue(value)
+        return serializeComponentValue(value)
     }
     return value
 }
@@ -810,12 +810,12 @@ describe('<any-value>', () => {
         const invalid = [
             // One or more tokens
             '',
-            // Invalid token
-            '"bad\nstring"',
-            'url(bad .url)',
-            ']',
-            ')',
-            '}',
+            // Top-level or nested <bad-*-token>, ), ], }
+            'fn("\n)',
+            '(url(bad .url))',
+            '(])',
+            '[)]',
+            '(})',
         ]
         invalid.forEach(input => expect(parse('<any-value>', input, false)).toBeNull())
     })
@@ -832,12 +832,13 @@ describe('<declaration-value>', () => {
         const invalid = [
             // One or more tokens
             '',
-            // Invalid token
-            '"bad\nstring"',
-            'url(bad .url)',
-            ']',
-            ')',
-            '}',
+            // Top-level or nested <bad-*-token>, ), ], }
+            'fn("\n)',
+            '(url(bad .url))',
+            '(])',
+            '[)]',
+            '(})',
+            // Top-level ; and !
             ';',
             '!',
         ]
@@ -849,25 +850,30 @@ describe('<declaration-value>', () => {
         expect(parse('<declaration-value>', 'declaration value', false)).toMatchObject(value)
     })
     test('valid', () => {
-        expect(parse('<declaration-value>', 'positioned {} var()')).toBe('positioned {} var()')
-        expect(parse('<declaration-value>', '  /**/  1/**/1e0  /**/  ')).toBe('1 1')
+        expect(parse('<declaration-value>', '  /**/  (;) {} 1/**/1e0  /**/  ')).toBe('(;) {} 1 1')
     })
 })
 describe('<declaration>', () => {
     test('invalid', () => {
         const invalid = [
-            // Invalid structure
-            'color red',
-            'color: red;',
-            // Invalid value
+            // Top-level or nested <bad-*-token>, ), ], }
+            'color: var(--custom) fn("\n)',
+            'color: var(--custom) (url(bad .url))',
+            'color: var(--custom) [)]',
+            'color: var(--custom) (])',
+            'color: var(--custom) (})',
+            '--custom: fn("\n)',
+            '--custom: (url(bad .url))',
+            '--custom: [)]',
+            '--custom: (])',
+            '--custom: (})',
+            // Top-level ; and !
+            'color: var(--custom) ;',
+            'color: var(--custom) !',
+            '--custom: ;',
+            // Positioned {} block
             'color: var(--custom) {}',
             'color: {} var(--custom)',
-            '--custom: "bad\nstring"',
-            '--custom: url(bad .url)',
-            '--custom: ]',
-            '--custom: )',
-            '--custom: }',
-            '--custom: !',
         ]
         invalid.forEach(input => expect(parse('<declaration>', input, false, styleRule)).toBeNull())
     })
@@ -880,10 +886,8 @@ describe('<declaration>', () => {
         })
     })
     test('valid', () => {
-        expect(parse('<declaration>', '--custom:  /**/  {} 1e0 {} !important  /**/  ', true, styleRule))
-            .toBe('--custom: {} 1e0 {} !important')
-        expect(parse('<declaration>', '--custom:', true, styleRule))
-            .toBe('--custom: ')
+        expect(parse('<declaration>', '--custom:  /**/  (;) {} 1e0 !important  /**/  ', true, styleRule))
+            .toBe('--custom: (;) {} 1e0 !important')
     })
 })
 

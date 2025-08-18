@@ -148,6 +148,15 @@ describe('prev(size, offset = 0)', () => {
     })
 })
 
+describe('peek(predicate)', () => {
+    it('returns whether the next item satisfies the given predicate', () => {
+        expect(stream.peek(char => char === '.')).toBeFalsy()
+        expect(stream.peek(char => char === 'h')).toBeTruthy()
+        stream.moveToEnd()
+        expect(stream.peek(_ => true)).toBeFalsy()
+    })
+})
+
 describe('atEnd(offset = 0)', () => {
     it('returns false when some items have not been consumed', () => {
         expect(stream.atEnd()).toBeFalsy()

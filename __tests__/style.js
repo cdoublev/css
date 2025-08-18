@@ -381,30 +381,34 @@ describe('arbitrary substitution', () => {
     test('invalid', () => {
         const style = createStyleBlock()
         const invalid = [
-            // Invalid component value
-            ['env(name) "\n'],
-            ['env(name) url(bad .url)'],
-            ['env(name) ]'],
-            ['env(name) )'],
-            ['env(name) }'],
-            ['env(name) ;'],
-            ['env(name) !'],
-            ['env(name) {}', 'color'],
-            ['{} env(name)', 'color'],
-            ['env(name) !important'],
-            ['!important env(name)'],
+            // Top-level or nested <bad-*-token>, ), ], }
+            'env(name) fn("\n)',
+            'env(name) (url(bad .url))',
+            'env(name) [)]',
+            'env(name) (])',
+            'env(name) (})',
+            // Top-level ; and !
+            'env(name) ;',
+            'env(name) !',
+            'env(name) !important',
+            // Positioned {} block
+            'env(name) {}',
+            '{} env(name)',
             // Nested
-            ['fn(env())'],
-            ['{env()}'],
+            'fn(env())',
+            '{env()}',
         ]
-        invalid.forEach(([input, property = '--custom']) => {
-            style.setProperty(property, input)
-            expect(style.getPropertyValue(property)).toBe('')
+        invalid.forEach(input => {
+            style.color = input
+            expect(style.color).toBe('')
         })
     })
     test('valid', () => {
         const style = createStyleBlock()
         const valid = [
+            // Nested ; and !
+            ['env(name) (;)'],
+            ['env(name) (!)'],
             // Valid at parse time
             ['--custom(--custom(!))'],
             ['attr(name, attr())'],
@@ -481,16 +485,40 @@ describe('<whole-value>', () => {
 })
 
 describe('--*', () => {
+    test('invalid', () => {
+        const style = createStyleBlock()
+        const invalid = [
+            // Top-level or nested <bad-*-token>, ), ], }
+            'fn("\n)',
+            '(url(bad .url))',
+            '[)]',
+            '(])',
+            '(})',
+            // Top-level ; and !
+            ';',
+            '!important',
+        ]
+        invalid.forEach(input => {
+            style.setProperty('--custom', input)
+            expect(style.getPropertyValue('--custom')).toBe('')
+        })
+    })
     test('valid', () => {
         const style = createStyleBlock()
         const valid = [
-            // Whitespaces and comments
-            ['', ' '],
-            ['  /**/  ', ' '],
+            // Nested ; and !
+            ['(;)'],
+            ['(!)'],
+            // Positioned {}-block
+            ['positioned {} block'],
+            // Serialize exactly as specified but without leading and trailing whitespaces
             [
                 '  /**/  Red  ,  (  orange  /**/  )  ,  green  /**/  ! /**/ important',
                 'Red  ,  (  orange  /**/  )  ,  green !important',
             ],
+            // Empty value
+            ['', ' '],
+            ['  /**/  ', ' '],
             // Substitution
             ['var(  --PROPerty, /**/ 1e0 /**/  )  ', 'var(  --PROPerty, /**/ 1e0 /**/  )'],
             ['initial initial'],
@@ -1030,6 +1058,35 @@ describe('shape-outside', () => {
         const style = createStyleBlock()
         style.shapeOutside = 'inset(1px) margin-box'
         expect(style.shapeOutside).toBe('inset(1px)')
+    })
+})
+describe('@font-face/src', () => {
+    test('invalid', () => {
+        const style = CSSFontFaceDescriptors.create(globalThis, undefined, { parentRule: fontFaceRule })
+        const invalid = [
+            '{]}, local("serif")',
+            'local("serif"), {]}',
+        ]
+        invalid.forEach(input => {
+            style.src = input
+            expect(style.src).toBe('')
+        })
+    })
+    test('valid', () => {
+        const style = CSSFontFaceDescriptors.create(globalThis, undefined, { parentRule: fontFaceRule })
+        const valid = [
+            'local("serif"), "\n',
+            'local("serif"), url(bad .url)',
+            'local("serif"), )',
+            'local("serif"), ]',
+            'local("serif"), }',
+            'local("serif"), ;',
+            'local("serif"), !',
+        ]
+        valid.forEach(input => {
+            style.src = input
+            expect(style.src).toBe('local("serif")')
+        })
     })
 })
 describe('text-emphasis-position', () => {
