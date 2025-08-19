@@ -96,7 +96,6 @@ function getInitialValue(name, value, context, depth) {
         console.error(`Parse error: cannot parse initial value of "${name}"`)
         return ''
     }
-    ({ value } = value)
     return [serializeComponentValue(value, depth), serializeValue({ name, value })]
 }
 
