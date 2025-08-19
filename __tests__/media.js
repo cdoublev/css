@@ -1,11 +1,12 @@
 
-import { cssom, install } from '../lib/index.js'
 import { DELETE_UNEXISTENT_MEDIUM_ERROR } from '../lib/error.js'
+import { MediaList } from '../lib/cssom/index.js'
+import { install } from '../lib/index.js'
 
 install()
 
 function createMediaList(text) {
-    const media = cssom.MediaList.create(globalThis)
+    const media = MediaList.create(globalThis)
     if (text) {
         media.mediaText = text
     }
