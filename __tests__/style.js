@@ -14,7 +14,7 @@ import {
     CSSStyleSheet,
 } from '../lib/cssom/index.js'
 import { UPDATE_COMPUTED_STYLE_DECLARATION_ERROR } from '../lib/error.js'
-import { install } from '../lib/index.js'
+import { install } from '@cdoublev/css'
 import properties from '../lib/properties/definitions.js'
 import shorthands from '../lib/properties/shorthands.js'
 import { toIDLAttribute } from '../lib/utils/string.js'

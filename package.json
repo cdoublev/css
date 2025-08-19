@@ -24,7 +24,7 @@
   ],
   "type": "module",
   "exports": {
-    ".": "./lib/index.js"
+    ".": "./index.js"
   },
   "scripts": {
     "build": "npm run build:interface && npm run build:definitions",

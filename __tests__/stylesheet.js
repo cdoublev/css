@@ -30,7 +30,7 @@ import {
     CSSStyleSheet,
     MediaList,
 } from '../lib/cssom/index.js'
-import { install } from '../lib/index.js'
+import { install } from '@cdoublev/css'
 
 /**
  * @param {string} [rules]

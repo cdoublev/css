@@ -7,7 +7,7 @@ import {
     INVALID_INITIAL_CUSTOM_PROPERTY_VALUE_UNIVERSAL,
     MISSING_INITIAL_CUSTOM_PROPERTY_VALUE,
 } from '../lib/error.js'
-import { install } from '../lib/index.js'
+import { install } from '@cdoublev/css'
 
 install()
 globalThis.document = { _registeredPropertySet: [] }

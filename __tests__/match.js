@@ -1,5 +1,5 @@
 
-import { install } from '../lib/index.js'
+import { install } from '@cdoublev/css'
 import matchMediaQueryList from '../lib/match/media.js'
 import matchSupport from '../lib/match/support.js'
 import { parseGrammar } from '../lib/parse/parser.js'

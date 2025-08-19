@@ -1,7 +1,7 @@
 
 import { DELETE_UNEXISTENT_MEDIUM_ERROR } from '../lib/error.js'
 import { MediaList } from '../lib/cssom/index.js'
-import { install } from '../lib/index.js'
+import { install } from '@cdoublev/css'
 
 install()
 

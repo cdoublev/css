@@ -1,5 +1,5 @@
 
-import * as cssom from './cssom/index.js'
+import * as cssom from './lib/cssom/index.js'
 
 /**
  * @param {DocumentOrShadowRoot} globalObject
@@ -19,6 +19,6 @@ function install(globalObject = globalThis) {
     globalObject.CSS = cssom.CSS.create(globalObject)
 }
 
-export { CSSStyleDeclaration, CSSStyleSheet } from './cssom/index.js'
-export { parseGrammar, parseGrammarList } from './parse/parser.js'
+export { CSSStyleDeclaration, CSSStyleSheet } from './lib/cssom/index.js'
+export { parseGrammar, parseGrammarList } from './lib/parse/parser.js'
 export { install }

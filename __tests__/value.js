@@ -1,4 +1,5 @@
 
+import { CSSStyleSheet, install } from '@cdoublev/css'
 import { MAX_INTEGER, MIN_INTEGER } from '../lib/values/integers.js'
 import {
     angle,
@@ -28,9 +29,7 @@ import {
 } from '../lib/values/value.js'
 import { createContext, parseGrammar } from '../lib/parse/parser.js'
 import { toDegrees, toRadians } from '../lib/utils/math.js'
-import { CSSStyleSheet } from '../lib/cssom/index.js'
 import { keywords as cssWideKeywords } from '../lib/values/substitutions.js'
-import { install } from '../lib/index.js'
 import { isFailure } from '../lib/utils/value.js'
 import properties from '../lib/properties/definitions.js'
 import { serializeComponentValue } from '../lib/serialize.js'
