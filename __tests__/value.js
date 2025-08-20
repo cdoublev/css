@@ -550,7 +550,7 @@ describe('backtracking', () => {
      * 1. Replacing must only apply once (ie. not after backtracking).
      * 2. The list index must backtrack to a location stored in state instead of
      * from the index of a component value in the list.
-     * 3. The list must not be updated with the result from parsing because it
+     * 3. The list must not be updated with the result of parsing because it
      * may be different depending on the context production.
      */
     test('replaced value', () => {

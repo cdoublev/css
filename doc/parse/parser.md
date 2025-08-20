@@ -179,7 +179,7 @@ A more generic solution is `preprocess(node)` executing any sub-routine associat
 
 There are many semantic rules that can only be applied after matching the value definition, to validate the result against the context, or to create a different representation (eg. math functions and `<an+b>`). This can be achieved with `postprocess(node)` (or `validate(node)` and `represent(node)`).
 
-All numeric values can be replaced with a math function. This can be achieved with `replace(node)` returning the result from parsing the alternative grammar.
+All numeric values can be replaced with a math function. This can be achieved with `replace(node)` returning the result of parsing the alternative grammar.
 
 
 ## Implementation

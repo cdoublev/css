@@ -2,8 +2,8 @@
  * This script rewrites property and descriptor definition files by replacing
  * their `initial` value with an object associating:
  *
- *   - `parsed` to the result from parsing `initial`
- *   - `serialized` to the result from serializing `parsed`
+ *   - `parsed` to the result of parsing `initial`
+ *   - `serialized` to the result of serializing `parsed`
  */
 import { isFailure, isList, isOmitted } from '../lib/utils/value.js'
 import { quote, tab } from '../lib/utils/string.js'

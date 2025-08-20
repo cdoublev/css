@@ -173,7 +173,7 @@ const replaced = {
         '<url-set>': '<image-set()>',
         '<whole-value>': '<declaration-value>?',
         '<zero>': '<number-token>',
-        // https://github.com/w3c/reffy/issues/1878
+        // https://github.com/w3c/csswg-drafts/issues/10457#issuecomment-3126400963
         '<boolean-expr-group>': '<test> | (<boolean-expr[<test>]>) | <general-enclosed>',
         // https://github.com/w3c/csswg-drafts/pull/8367#issuecomment-1408147460, https://github.com/w3c/csswg-drafts/issues/9729, https://github.com/w3c/csswg-drafts/issues/10833
         '<conic-gradient-syntax>': '[[[from [<angle> | <zero>]]? [at <position>]?]! || <color-interpolation-method>]? , <angular-color-stop-list>',
