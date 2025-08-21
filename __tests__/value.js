@@ -2826,14 +2826,9 @@ describe('<color>', () => {
             // Out of range arguments
             ['rgb(-1 0 0 / -1)', 'rgba(0, 0, 0, 0)'],
             ['rgb(256 0 0 / 2)', 'rgb(255, 0, 0)'],
-            ['rgb(calc(-infinity) calc(-infinity) calc(infinity))', 'rgb(0, 0, 255)'],
-            ['rgb(calc(infinity) calc(infinity) calc(-infinity))', 'rgb(255, 255, 0)'],
-            // Map <percentage> to <number>
-            ['rgb(-1% 0% 0% / -1%)', 'rgba(0, 0, 0, 0)'],
-            ['rgb(101% 100% 100% / 101%)', 'rgb(255, 255, 255)'],
-            // Map `none` to `0`
-            ['rgb(none 0 0 / none)', 'rgba(0, 0, 0, 0)'],
-            ['rgb(none 0% 0%)', 'rgb(0, 0, 0)'],
+            // Map <percentage> and `none` to <number>
+            ['rgba(50% -1% 101% / 101%)', 'rgb(128, 0, 255)'],
+            ['rgb(none none none / none)', 'rgba(0, 0, 0, 0)'],
             // Precision (at least 8 bit integers)
             ['rgb(127.499 0 0 / 0.498)', 'rgba(127, 0, 0, 0.498)'],
             ['rgb(127.501 0 0 / 0.499)', 'rgba(128, 0, 0, 0.498)'],
@@ -2841,12 +2836,11 @@ describe('<color>', () => {
             ['rgb(49.9% 50.1% 0% / 49.9%)', 'rgba(127, 128, 0, 0.498)'],
             ['rgb(0.501 0.499 0 / 50.1%)', 'rgba(1, 0, 0, 0.5)'],
             // Numeric substitution function
-            ['rgb(calc(-1) 0 0 / calc(-1))', 'rgba(0, 0, 0, 0)'],
-            ['rgb(calc(256) 0 0 / calc(2))', 'rgb(255, 0, 0)'],
-            ['rgb(calc(-1%) 0% 0% / calc(-1%))', 'rgba(0, 0, 0, 0)'],
-            ['rgb(calc(101%) 0% 0% / calc(101%))', 'rgb(255, 0, 0)'],
-            ['rgba(-1 calc(1em / 1px) 101% / 1)', 'rgb(0 calc(1em / 1px) 255)'],
-            ['rgb(calc(1) sibling-count() progress(1, 0, 2))', 'rgb(1 sibling-count() 0.5)'],
+            ['rgb(calc(50%) calc(-1%) calc(101%) / calc(-1%))', 'rgba(128, 0, 255, 0)'],
+            ['rgb(calc(-infinity) calc(-infinity) calc(infinity))', 'rgb(0, 0, 255)'],
+            ['rgb(calc(infinity) calc(infinity) calc(-infinity))', 'rgb(255, 255, 0)'],
+            ['rgba(calc(1em / 1px) -1% 101% / -1%)', 'rgb(calc(1em / 1px) 0 255 / 0)'],
+            ['rgb(sibling-count() calc(-1) calc(256) / calc(2))', 'rgb(sibling-count() 0 255)'],
             // Relative color
             ['rgb(from green alpha calc(r) calc(g * 1%) / calc(b + 1 + 1))', 'rgb(from green alpha calc(r) calc(1% * g) / calc(2 + b))'],
             ['rgba(from rgba(-1 256 0 / -1) -100% 200% 0% / 101%)', 'rgb(from rgb(-1 256 0 / 0) -255 510 0)'],
@@ -2871,19 +2865,12 @@ describe('<color>', () => {
             ['hsla(0, 0%, 0%, 1)', 'rgb(0, 0, 0)'],
             // Out of range arguments
             ['hsl(-540 -1 50 / -1)', 'rgba(128, 128, 128, 0)'],
-            ['hsl(540 101 50 / 2)', 'rgb(0, 255, 255)'],
-            ['hsl(0 0 -1)', 'rgb(0, 0, 0)'],
-            ['hsl(0 0 101)', 'rgb(255, 255, 255)'],
-            ['hsl(calc(-infinity) calc(-infinity) calc(infinity))', 'rgb(255, 255, 255)'],
-            ['hsl(calc(infinity) calc(infinity) calc(-infinity))', 'rgb(0, 0, 0)'],
-            // Map <angle> and <percentage> to <number>
-            ['hsl(-1.5turn -1% 50% / -1%)', 'rgba(128, 128, 128, 0)'],
-            ['hsl(1.5turn 101% 50% / 101%)', 'rgb(0, 255, 255)'],
-            ['hsl(0deg 0% -1%)', 'rgb(0, 0, 0)'],
-            ['hsl(0deg 0% 101%)', 'rgb(255, 255, 255)'],
-            // Map `none` to `0`
-            ['hsl(none 100 50 / none)', 'rgba(255, 0, 0, 0)'],
-            ['hsl(0 none none)', 'rgb(0, 0, 0)'],
+            ['hsl(540 101 49 / 2)', 'rgb(0, 251, 251)'],
+            ['hsl(0 150 -1)', 'rgb(0, 1, 1)'],
+            ['hsl(0 -150 101)', 'rgb(255, 255, 255)'],
+            // Map <angle>, <percentage>, `none`, to <number>
+            ['hsla(-1.5turn -1% 50% / 101%)', 'rgb(128, 128, 128)'],
+            ['hsl(none none 50 / none)', 'rgba(128, 128, 128, 0)'],
             // Precision (at least 8 bit integers)
             ['hsl(0.498 100% 49.8% / 0.498)', 'rgba(254, 2, 0, 0.498)'],
             ['hsl(0.499 100% 49.9% / 0.499)', 'rgba(254, 2, 0, 0.498)'],
@@ -2891,12 +2878,13 @@ describe('<color>', () => {
             ['hsl(0 100% 50% / 49.9%)', 'rgba(255, 0, 0, 0.498)'],
             ['hsl(0 100% 50% / 50.1%)', 'rgba(255, 0, 0, 0.5)'],
             // Numeric substitution function
-            ['hsl(calc(-540) calc(101%) calc(50%) / calc(-1))', 'rgba(0, 255, 255, 0)'],
-            ['hsl(calc(540) 100% 50% / calc(2))', 'rgb(0, 255, 255)'],
-            ['hsl(calc(-540deg) 100% 50% / calc(-1%))', 'rgba(0, 255, 255, 0)'],
-            ['hsl(calc(540deg) 100% 50% / 101%)', 'rgb(0, 255, 255)'],
-            ['hsla(-540 calc(1em / 1px) 101% / 1)', 'hsl(180 calc(1em / 1px) 100)'],
-            ['hsl(calc(1) sibling-count() progress(1, 0, 2))', 'hsl(1 sibling-count() 0.5)'],
+            ['hsl(calc(-1.5turn) calc(-1%) calc(50%) / calc(-1%))', 'rgba(128, 128, 128, 0)'],
+            ['hsl(calc(-infinity) calc(-infinity) 1)', 'rgb(3, 3, 3)'],
+            ['hsl(calc(infinity) calc(infinity) 0)', 'rgb(0, 0, 0)'],
+            ['hsl(0 0 calc(-infinity))', 'rgb(0, 0, 0)'],
+            ['hsl(0 0 calc(infinity))', 'rgb(255, 255, 255)'],
+            ['hsla(calc(1em / 1px) -1% 101% / -1%)', 'hsl(calc(1em / 1px) 0 101 / 0)'],
+            ['hsl(sibling-count() calc(-1) calc(101) / calc(2))', 'hsl(sibling-count() 0 101)'],
             // Relative color
             ['hsl(from green alpha calc(h) calc(s * 1%) / calc(l + 1 + 1))', 'hsl(from green alpha calc(h) calc(1% * s) / calc(2 + l))'],
             ['hsla(from hsla(540 -1 0 / -1) 540deg 101% 0% / 101%)', 'hsl(from hsl(180 -1 0 / 0) 180 101 0)'],
@@ -2912,23 +2900,13 @@ describe('<color>', () => {
             // Out of range arguments
             ['hwb(-540 0 0 / -1)', 'rgba(0, 255, 255, 0)'],
             ['hwb(540 0 0 / 2)', 'rgb(0, 255, 255)'],
-            ['hwb(0 -1 100)', 'rgb(0, 0, 0)'],
-            ['hwb(0 100 -1)', 'rgb(255, 255, 255)'],
-            ['hwb(0 1000 1)', 'rgb(252, 252, 252)'],
-            ['hwb(0 1 1000)', 'rgb(3, 3, 3)'],
-            ['hwb(calc(-infinity) calc(-infinity) calc(infinity))', 'rgb(0, 0, 0)'],
-            ['hwb(calc(infinity) calc(infinity) calc(-infinity))', 'rgb(255, 255, 255)'],
-            ['hwb(0 calc(infinity) calc(infinity))', 'rgb(128, 128, 128)'],
-            // Map <angle> and <percentage> to <number>
-            ['hwb(-1.5turn 0% 0% / -1%)', 'rgba(0, 255, 255, 0)'],
-            ['hwb(-1.5turn 0% 0% / 101%)', 'rgb(0, 255, 255)'],
-            ['hwb(0 -1% 100%)', 'rgb(0, 0, 0)'],
-            ['hwb(0 100% -1%)', 'rgb(255, 255, 255)'],
-            ['hwb(0 1000% -1%)', 'rgb(255, 255, 255)'],
-            ['hwb(0 1% 1000%)', 'rgb(3, 3, 3)'],
-            // Map `none` to `0`
+            ['hwb(90 -1 0)', 'rgb(126, 255, 0)'],
+            ['hwb(0 101 50)', 'rgb(171, 171, 171)'],
+            ['hwb(90 0 -1)', 'rgb(129, 255, 0)'],
+            ['hwb(0 50 101)', 'rgb(84, 84, 84)'],
+            // Map <angle>, <percentage>, `none`, to <number>
+            ['hwb(-1.5turn -1% 50% / 101%)', 'rgb(0, 128, 128)'],
             ['hwb(none none none / none)', 'rgba(255, 0, 0, 0)'],
-            ['hwb(0 none none)', 'rgb(255, 0, 0)'],
             // Precision (at least 8 bit integers)
             ['hwb(0.498 0% 49.8% / 0.498)', 'rgba(128, 1, 0, 0.498)'],
             ['hwb(0.499 0% 49.9% / 0.499)', 'rgba(128, 1, 0, 0.498)'],
@@ -2937,12 +2915,15 @@ describe('<color>', () => {
             ['hwb(0 0% 0% / 49.9%)', 'rgba(255, 0, 0, 0.498)'],
             ['hwb(0 0% 0% / 50.1%)', 'rgba(255, 0, 0, 0.5)'],
             // Numeric substitution functions
-            ['hwb(calc(-540) calc(0%) calc(0%) / calc(-1))', 'rgba(0, 255, 255, 0)'],
-            ['hwb(calc(540) 0% 0% / calc(2))', 'rgb(0, 255, 255)'],
-            ['hwb(calc(-540deg) 0% 0% / calc(-1%))', 'rgba(0, 255, 255, 0)'],
-            ['hwb(calc(540deg) 0% 0% / calc(101%))', 'rgb(0, 255, 255)'],
-            ['hwb(-540 calc(1em / 1px) 101% / 1)', 'hwb(180 calc(1em / 1px) 100)'],
-            ['hwb(calc(1) sibling-count() progress(1, 0, 2))', 'hwb(1 sibling-count() 0.5)'],
+            ['hwb(calc(-1.5turn) calc(-1%) calc(50%) / calc(-1%))', 'rgba(0, 128, 128, 0)'],
+            ['hwb(calc(-infinity) 0 0)', 'rgb(255, 0, 0)'],
+            ['hwb(calc(infinity) 0 0)', 'rgb(255, 0, 0)'],
+            ['hwb(90 calc(-infinity) 0)', 'rgb(0, 255, 0)'],
+            ['hwb(0 calc(infinity) 50)', 'rgb(255, 255, 255)'],
+            ['hwb(90 0 calc(-infinity))', 'rgb(255, 255, 0)'],
+            ['hwb(0 50 calc(infinity))', 'rgb(0, 0, 0)'],
+            ['hwb(calc(1em / 1px) -1% 101% / -1%)', 'hwb(calc(1em / 1px) -1 101 / 0)'],
+            ['hwb(sibling-count() calc(-1) calc(101) / calc(101))', 'hwb(sibling-count() -1 101)'],
             // Relative color
             ['hwb(from green alpha calc(h) calc(w * 1%) / calc(b + 1 + 1))', 'hwb(from green alpha calc(h) calc(1% * w) / calc(2 + b))'],
             ['hwb(from hwb(540 -1 0 / -1) 540deg -1% 0% / 101%)', 'hwb(from hwb(180 -1 0 / 0) 180 -1 0)'],
