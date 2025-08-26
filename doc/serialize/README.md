@@ -40,7 +40,7 @@ CSS values are currently represented either as a `List` or a plain object, with 
 
 *Serialize a CSS value* accepts a single longhand declaration, or a list of declarations for a shorthand that must be reduced into a single declaration. Then the declaration value is represented as a list (plain array) of CSS component values (step 2), simplified according to the shortest serialization principle.
 
-`serializeCSSComponentValueList()` is a custom abstraction of steps 4 to 5 that can be used by other specific serialization functions, and serializes the provided list ignoring its `types` and using its `separator` (default: whitespace), whereas `serializeCSSComponentValue()` is the implementation of *serialize a CSS component value*, and run any specific serialization function according to its `types`:
+`serializeComponentValueList()` is a custom abstraction of steps 4 to 5 that can be used by other specific serialization functions, and serializes the provided list ignoring its `types` and using its `separator` (default: whitespace), whereas `serializeComponentValue()` is the implementation of *serialize a CSS component value*, and run any specific serialization function according to its `types`:
 
   > 3. Remove any `<whitespace-token>`s from components.
   > 4. Replace each component value in components with the result of invoking *serialize a CSS component value*.

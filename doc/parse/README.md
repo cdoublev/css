@@ -84,7 +84,7 @@ Tokens are either preserved as "primitive" component values, or consumed into st
   >
   > Consume a token from `input`, and let `function` be a new function with its name equal the returned token’s value, and a value set to an empty list.
 
-`CSSStyleDeclaration` does not store CSS declarations for shorthands. The result from parsing a shorthand value must be expanded to a CSS declaration for each of its longhands. CSSOM is [rather hand-wavy](https://github.com/w3c/csswg-drafts/issues/6451) about this in the procedure for `CSSStyleDeclaration.setProperty()` and `CSSStyleDeclaration.cssText`.
+`CSSStyleDeclaration` does not store CSS declarations for shorthands. The result of parsing a shorthand value must be expanded to a CSS declaration for each of its longhands. CSSOM is [rather hand-wavy](https://github.com/w3c/csswg-drafts/issues/6451) about this in the procedure for `CSSStyleDeclaration.setProperty()` and `CSSStyleDeclaration.cssText`.
 
 ---
 

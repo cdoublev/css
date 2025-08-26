@@ -5,12 +5,12 @@ import {
     INSERT_INVALID_IMPORT_ERROR,
     INVALID_FONT_FEATURE_VALUE_ERROR,
     INVALID_NAMESPACE_STATE_ERROR,
+    INVALID_RULE_ERROR,
     INVALID_RULE_INDEX_ERROR,
     INVALID_RULE_POSITION_ERROR,
-    INVALID_RULE_SYNTAX_ERROR,
     MISSING_RULE_ERROR,
-    SET_INVALID_KEY_TEXT_ERROR,
-    SET_INVALID_NAME_ERROR,
+    SET_INVALID_KEYFRAME_SELECTOR_ERROR,
+    SET_INVALID_KEYFRAMES_NAME_ERROR,
     UPDATE_LOCKED_STYLESHEET_ERROR,
 } from '../lib/error.js'
 import {
@@ -150,10 +150,10 @@ describe('CSSStyleSheet.insertRule(), CSSStyleSheet.deleteRule()', () => {
     it('throws an error when trying to insert an invalid rule according to the CSS grammar', () => {
         const styleSheet = createStyleSheet()
         expect(() => styleSheet.insertRule(' ')).toThrow(MISSING_RULE_ERROR)
-        expect(() => styleSheet.insertRule('@charset "utf-8";')).toThrow(INVALID_RULE_SYNTAX_ERROR)
-        expect(() => styleSheet.insertRule('@top-left {}')).toThrow(INVALID_RULE_SYNTAX_ERROR)
-        expect(() => styleSheet.insertRule('@media;')).toThrow(INVALID_RULE_SYNTAX_ERROR)
-        expect(() => styleSheet.insertRule('style;')).toThrow(INVALID_RULE_SYNTAX_ERROR)
+        expect(() => styleSheet.insertRule('@charset "utf-8";')).toThrow(INVALID_RULE_ERROR)
+        expect(() => styleSheet.insertRule('@top-left {}')).toThrow(INVALID_RULE_ERROR)
+        expect(() => styleSheet.insertRule('@media;')).toThrow(INVALID_RULE_ERROR)
+        expect(() => styleSheet.insertRule('style;')).toThrow(INVALID_RULE_ERROR)
         expect(() => styleSheet.insertRule('style {};')).toThrow(EXTRA_RULE_ERROR)
     })
     it('throws an error when trying to insert @import in a constructed style sheet', () => {
@@ -599,7 +599,7 @@ describe('CSSKeyframeRule', () => {
         rule.keyText = 'from'
         expect(rule.keyText).toBe('0%')
         expect(rule.cssText).toBe('0% { color: green; }')
-        expect(() => rule.keyText = '101%').toThrow(SET_INVALID_KEY_TEXT_ERROR)
+        expect(() => rule.keyText = '101%').toThrow(SET_INVALID_KEYFRAME_SELECTOR_ERROR)
         expect(CSSKeyframeProperties.is(rule.style)).toBeTruthy()
     })
 })
@@ -622,7 +622,7 @@ describe('CSSKeyframesRule', () => {
         rule.name = '\n'
         expect(rule.name).toBe('\\a')
         expect(rule.cssText).toBe('@keyframes \\a { 100% {} }')
-        expect(() => rule.name = '').toThrow(SET_INVALID_NAME_ERROR)
+        expect(() => rule.name = '').toThrow(SET_INVALID_KEYFRAMES_NAME_ERROR)
     })
     test('methods', () => {
 
@@ -637,7 +637,7 @@ describe('CSSKeyframesRule', () => {
         expect(rule.findRule('100%')).toBe(keyframes[0])
         expect(keyframes).toHaveLength(1)
         expect(keyframes[0].style.color).toBe('orange')
-        expect(() => rule.appendRule('invalid')).toThrow(INVALID_RULE_SYNTAX_ERROR)
+        expect(() => rule.appendRule('invalid')).toThrow(INVALID_RULE_ERROR)
 
         rule.appendRule('to { color: green }')
         const to = keyframes[1]
@@ -950,10 +950,10 @@ describe('CSSStyleRule', () => {
         expect(() => rule.insertRule('style {}', -1)).toThrow(INVALID_RULE_INDEX_ERROR)
         expect(() => rule.insertRule(' ')).toThrow(MISSING_RULE_ERROR)
         expect(() => rule.insertRule('style {};')).toThrow(EXTRA_RULE_ERROR)
-        expect(() => rule.insertRule('style;')).toThrow(INVALID_RULE_SYNTAX_ERROR)
-        expect(() => rule.insertRule('@charset "utf-8";')).toThrow(INVALID_RULE_SYNTAX_ERROR)
-        expect(() => rule.insertRule('@import "./global.css";')).toThrow(INVALID_RULE_SYNTAX_ERROR)
-        expect(() => rule.insertRule('@media screen;')).toThrow(INVALID_RULE_SYNTAX_ERROR)
+        expect(() => rule.insertRule('style;')).toThrow(INVALID_RULE_ERROR)
+        expect(() => rule.insertRule('@charset "utf-8";')).toThrow(INVALID_RULE_ERROR)
+        expect(() => rule.insertRule('@import "./global.css";')).toThrow(INVALID_RULE_ERROR)
+        expect(() => rule.insertRule('@media screen;')).toThrow(INVALID_RULE_ERROR)
 
         rule.insertRule('@media print {}')
 
