@@ -2237,6 +2237,16 @@ describe('border-image', () => {
         longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
         expect(style.borderImage).toBe('none')
         expect(style.cssText).toBe('border-image: none;')
+        style.borderImage = '100% / 0'
+        longhands.forEach(longhand =>
+            expect(style[longhand]).toBe(longhand === 'border-image-width' ? '0' : initial(longhand)))
+        expect(style.borderImage).toBe('100% / 0')
+        expect(style.cssText).toBe('border-image: 100% / 0;')
+        style.borderImage = '100% / / 1'
+        longhands.forEach(longhand =>
+            expect(style[longhand]).toBe(longhand === 'border-image-outset' ? '1' : initial(longhand)))
+        expect(style.borderImage).toBe('100% / 1 / 1')
+        expect(style.cssText).toBe('border-image: 100% / 1 / 1;')
     })
     test('shorthand reification', () => {
 
@@ -2793,6 +2803,11 @@ describe('font', () => {
         longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
         expect(style.font).toBe('medium monospace')
         expect(style.cssText).toBe('font: medium monospace;')
+        style.font = 'medium / 1 monospace'
+        longhands.forEach(longhand =>
+            expect(style[longhand]).toBe(longhand === 'line-height' ? '1' : initial(longhand)))
+        expect(style.font).toBe('medium / 1 monospace')
+        expect(style.cssText).toBe('font: medium / 1 monospace;')
 
         // System font
         style.font = 'caption'
@@ -3589,6 +3604,13 @@ describe('mask', () => {
         expect(style.mask).toBe('no-clip')
         expect(style.cssText).toBe('mask: no-clip;')
 
+        // mask-position mask-size
+        style.mask = '0% 0% / cover'
+        longhands.forEach(longhand =>
+            expect(style[longhand]).toBe(longhand === 'mask-size' ? 'cover' : initial(longhand)))
+        expect(style.mask).toBe('0% 0% / cover')
+        expect(style.cssText).toBe('mask: 0% 0% / cover;')
+
         // mask-origin mask-clip
         style.mask = 'fill-box'
         longhands.forEach(longhand =>
@@ -3651,6 +3673,16 @@ describe('mask-border', () => {
         longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
         expect(style.maskBorder).toBe('none')
         expect(style.cssText).toBe('mask-border: none;')
+        style.maskBorder = '0 / 1'
+        longhands.forEach(longhand =>
+            expect(style[longhand]).toBe(longhand === 'mask-border-width' ? '1' : initial(longhand)))
+        expect(style.maskBorder).toBe('0 / 1')
+        expect(style.cssText).toBe('mask-border: 0 / 1;')
+        style.maskBorder = '0 / / 1'
+        longhands.forEach(longhand =>
+            expect(style[longhand]).toBe(longhand === 'mask-border-outset' ? '1' : initial(longhand)))
+        expect(style.maskBorder).toBe('0 / auto / 1')
+        expect(style.cssText).toBe('mask-border: 0 / auto / 1;')
     })
     test('shorthand reification', () => {
 
@@ -3682,6 +3714,21 @@ describe('offset', () => {
         longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
         expect(style.offset).toBe('normal')
         expect(style.cssText).toBe('offset: normal;')
+        style.offset = 'circle()'
+        longhands.forEach(longhand =>
+            expect(style[longhand]).toBe(longhand === 'offset-path' ? 'circle()' : initial(longhand)))
+        expect(style.offset).toBe('circle()')
+        expect(style.cssText).toBe('offset: circle();')
+        style.offset = 'none 1px'
+        longhands.forEach(longhand =>
+            expect(style[longhand]).toBe(longhand === 'offset-distance' ? '1px' : initial(longhand)))
+        expect(style.offset).toBe('none 1px')
+        expect(style.cssText).toBe('offset: none 1px;')
+        style.offset = 'none reverse'
+        longhands.forEach(longhand =>
+            expect(style[longhand]).toBe(longhand === 'offset-rotate' ? 'reverse' : initial(longhand)))
+        expect(style.offset).toBe('none reverse')
+        expect(style.cssText).toBe('offset: none reverse;')
         style.offset = 'normal / left'
         longhands.forEach(longhand =>
             expect(style[longhand]).toBe(longhand === 'offset-anchor' ? 'left center' : initial(longhand)))
