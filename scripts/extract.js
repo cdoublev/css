@@ -224,9 +224,9 @@ const excluded = {
         ],
         'css-values-5': [
             // Defined inline
-            'crossorigin()',
+            'cross-origin()',
             'integrity()',
-            'referrerpolicy()',
+            'referrer-policy()',
         ],
     },
     properties: {
@@ -554,6 +554,8 @@ const excluded = {
             '<predefined-rgb>',
         ],
         'css-conditional-5': [
+            // https://github.com/w3c/csswg-drafts/pull/12640
+            '<boolean-condition>',
             // https://github.com/w3c/csswg-drafts/issues/12425, https://github.com/w3c/csswg-drafts/issues/12426
             '<style-feature-value>',
         ],

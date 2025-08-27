@@ -3014,6 +3014,27 @@ describe('<color>', () => {
         ]
         valid.forEach(([input, expected = input]) => expect(parse('<color>', input)).toBe(expected))
     })
+    test('valid <alpha()>', () => {
+        const valid = [
+            // Relative component keyword
+            ['alpha(from green / alpha)'],
+            ['alpha(from green / calc(alpha + 1 + 1))', 'alpha(from green / calc(2 + alpha))'],
+            // Out of range arguments
+            ['alpha(from green / -1)', 'alpha(from green / 0)'],
+            ['alpha(from green / 2)', 'alpha(from green)'],
+            // Map <percentage> to <number>
+            ['alpha(from green / -1%)', 'alpha(from green / 0)'],
+            ['alpha(from green / 101%)', 'alpha(from green)'],
+            // Preserve `none`
+            ['alpha(from green / none)', 'alpha(from green / none)'],
+            // Precision (at least 16 bits)
+            ['alpha(from green / 0.499)', 'alpha(from green / 0.498)'],
+            ['alpha(from green / 0.501)', 'alpha(from green / 0.5)'],
+            ['alpha(from green / 49.9%)', 'alpha(from green / 0.498)'],
+            ['alpha(from green / 50.1%)', 'alpha(from green / 0.5)'],
+        ]
+        valid.forEach(([input, expected = input]) => expect(parse('<color>', input)).toBe(expected))
+    })
     test('valid <color()>', () => {
         const valid = [
             // Explicit `xyz` color space

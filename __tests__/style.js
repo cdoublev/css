@@ -1197,7 +1197,7 @@ describe('-webkit-line-clamp', () => {
         style.blockEllipsis = initial('block-ellipsis')
         style.continue = '-webkit-legacy'
         expect(style.webkitLineClamp).toBe('')
-        expect(style.cssText).toBe('line-clamp: 1 none -webkit-legacy;')
+        expect(style.cssText).toBe('line-clamp: 1 no-ellipsis -webkit-legacy;')
     })
 })
 describe('-webkit-text-stroke', () => {
@@ -2515,6 +2515,16 @@ describe('columns', () => {
         longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
         expect(style.columns).toBe('auto')
         expect(style.cssText).toBe('columns: auto;')
+        style.columns = '1'
+        longhands.forEach(longhand =>
+            expect(style[longhand]).toBe(longhand === 'column-count' ? '1' : initial(longhand)))
+        expect(style.columns).toBe('1')
+        expect(style.cssText).toBe('columns: 1;')
+        style.columns = 'auto / 1px'
+        longhands.forEach(longhand =>
+            expect(style[longhand]).toBe(longhand === 'column-height' ? '1px' : initial(longhand)))
+        expect(style.columns).toBe('auto / 1px')
+        expect(style.cssText).toBe('columns: auto / 1px;')
     })
     test('shorthand reification', () => {
 
@@ -2524,11 +2534,6 @@ describe('columns', () => {
         longhands.forEach(longhand => style[longhand] = initial(longhand))
         expect(style.columns).toBe('auto')
         expect(style.cssText).toBe('columns: auto;')
-
-        // Explicit initial column-count value
-        style.columnHeight = '1px'
-        expect(style.columns).toBe('auto auto / 1px')
-        expect(style.cssText).toBe('columns: auto auto / 1px;')
     })
 })
 describe('contain-intrinsic-size', () => {
@@ -3389,12 +3394,12 @@ describe('line-clamp', () => {
         expect(style.continue).toBe('-webkit-legacy')
         expect(style.lineClamp).toBe('1 -webkit-legacy')
         expect(style.cssText).toBe('line-clamp: 1 -webkit-legacy;')
-        style.lineClamp = 'none -webkit-legacy'
+        style.lineClamp = 'no-ellipsis -webkit-legacy'
         expect(style.maxLines).toBe('none')
-        expect(style.blockEllipsis).toBe('none')
+        expect(style.blockEllipsis).toBe('no-ellipsis')
         expect(style.continue).toBe('-webkit-legacy')
-        expect(style.lineClamp).toBe('none -webkit-legacy')
-        expect(style.cssText).toBe('line-clamp: none -webkit-legacy;')
+        expect(style.lineClamp).toBe('no-ellipsis -webkit-legacy')
+        expect(style.cssText).toBe('line-clamp: no-ellipsis -webkit-legacy;')
     })
     test('shorthand reification', () => {
 
@@ -3408,7 +3413,7 @@ describe('line-clamp', () => {
         // All longhands cannot be represented
         style.maxLines = '1'
         expect(style.lineClamp).toBe('')
-        expect(style.cssText).toBe('max-lines: 1; block-ellipsis: none; continue: auto;')
+        expect(style.cssText).toBe('max-lines: 1; block-ellipsis: no-ellipsis; continue: auto;')
         style.maxLines = initial('max-lines')
         style.blockEllipsis = 'auto'
         expect(style.lineClamp).toBe('')
@@ -3416,10 +3421,10 @@ describe('line-clamp', () => {
         style.blockEllipsis = initial('block-ellipsis')
         style.continue = 'collapse'
         expect(style.lineClamp).toBe('')
-        expect(style.cssText).toBe('max-lines: none; block-ellipsis: none; continue: collapse;')
+        expect(style.cssText).toBe('max-lines: none; block-ellipsis: no-ellipsis; continue: collapse;')
         style.continue = 'discard'
         expect(style.lineClamp).toBe('')
-        expect(style.cssText).toBe('max-lines: none; block-ellipsis: none; continue: discard;')
+        expect(style.cssText).toBe('max-lines: none; block-ellipsis: no-ellipsis; continue: discard;')
     })
 })
 describe('list-style', () => {
