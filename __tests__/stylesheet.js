@@ -9,8 +9,8 @@ import {
     INVALID_RULE_INDEX_ERROR,
     INVALID_RULE_POSITION_ERROR,
     MISSING_RULE_ERROR,
-    SET_INVALID_KEYFRAME_SELECTOR_ERROR,
     SET_INVALID_KEYFRAMES_NAME_ERROR,
+    SET_INVALID_KEYFRAME_SELECTOR_ERROR,
     UPDATE_LOCKED_STYLESHEET_ERROR,
 } from '../lib/error.js'
 import {
@@ -1131,7 +1131,7 @@ describe('CSS grammar - syntax', () => {
         `)
 
         expect(cssRules[0].cssText).toBe(`style { ${declarations}; }`)
-        expect(cssRules[1].cssText).toBe(`@media (;) {}`)
+        expect(cssRules[1].cssText).toBe('@media (;) {}')
     })
     test('positioned {} block in a declaration value not for a custom property', () => {
         // It is always consumed as a rule

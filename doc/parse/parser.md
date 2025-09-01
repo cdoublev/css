@@ -110,9 +110,9 @@ A CSS parser must backtrack after failing to match a component value or when the
 
 It must successfully parse `a a b` against `[a | a a] b`, or `a a` against `a | a a`, by backtracking, instead of failing to find a match after the first choice in `a | a a` (greedy parser), or instead of looking ahead or re-ordering `a | a a` to `a a | a` to find the longest match (maximal munch parser).
 
-**Note:** an obvious requirement that follows is that an input component value must not be tagged with the name of a production that was matched before backtracking.
+**Note:** an obvious requirement that follows is that an input token must not be tagged with the name of a production that was matched before backtracking.
 
-Backtracking requires saving the index in the input list of component values, before parsing a node. If the tail node fails to be parsed and cannot yield an alternative result, it must be removed from the tree before backtracking again. Any sequence of symbols combined with `|`, `||`, `&&`, or any symbol qualified by a multiplier where `min < max`, yield alternatives.
+Backtracking requires saving the index in the input list of tokens, before parsing a node. If the tail node fails to be parsed and cannot yield an alternative result, it must be removed from the tree before backtracking again. Any sequence of symbols combined with `|`, `||`, `&&`, or any symbol qualified by a multiplier where `min < max`, yield alternatives.
 
 One would expect to read combined symbols in the same direction as the input. For example, `a a` would match the first alternative in `[a | a a] a?` (`a?` would not be omitted). But the specifications do not define such priority in alternations (`|`) and arrangements (`||`).
 
@@ -171,7 +171,7 @@ As an example of a semantic context rule, there must be a whitespace preceding `
 
 A simple solution is to define the nodes representing `+` and `-` with a boolean flag like `requireLeadingWhitespace`.
 
-**Note:** whitespaces are usually optionals between component values, which means that failing to consume a whitespace before matching a component value must not cause a parse failure.
+**Note:** whitespaces are usually optionals between tokens, which means that failing to consume a whitespace before matching a component value must not cause a parse failure.
 
 Other semantic rules can be encoded in nodes. For example, math functions must support at least 32 arguments, which means the default value (20) of the `#` multiplier of `<calc-sum>` must be overriden. `#` must also be ignored in the top-level value definition expanded from a property value range (eg. `<'color'>`).
 
