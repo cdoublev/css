@@ -4391,6 +4391,8 @@ describe('<selector-list>', () => {
             '::before:not(:hover > type)',
             // Invalid functional pseudo argument
             ':has(:not(:has(type)))',
+            ':current(:not(type > type))',
+            ':current(:not(:has(type)))',
             ':host(:not(type > type))',
             ':host(:not(:has(type)))',
             ':host-context(:not(type > type))',
