@@ -4388,7 +4388,7 @@ describe('<selector-list>', () => {
             '::before:not(:only-child)',
             '::before:not(:not(:only-child))',
             '::before:not(type)',
-            '::before:not(:hover > type)',
+            '::before:not(:hover > :hover)',
             '::part(name):only-child',
             '::part(name):empty',
             '::part(name):nth-child(1)',
@@ -4400,6 +4400,7 @@ describe('<selector-list>', () => {
             '::part(name):not(type)',
             '::part(name):has(:hover)',
             '::part(name):not(:has(:hover))',
+            '::part(name):not(:hover > :hover)',
             // Invalid functional pseudo argument
             ':has(:not(:has(type)))',
             ':current(:not(type > type))',
