@@ -4409,6 +4409,10 @@ describe('<selector-list>', () => {
             ':host(:not(:has(type)))',
             ':host-context(:not(type > type))',
             ':host-context(:not(:has(type)))',
+            '::part(name):current(:only-child)',
+            '::part(name):current(type)',
+            '::part(name):not(:current(:only-child))',
+            '::part(name):not(:current(type))',
             '::slotted(:not(type > type))',
             '::slotted(:not(:has(type)))',
             // Invalid sub-pseudo-element
