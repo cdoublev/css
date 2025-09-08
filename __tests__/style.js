@@ -816,6 +816,13 @@ describe('flow-into', () => {
         expect(style.flowInto).toBe('')
     })
 })
+describe('font-size-adjust', () => {
+    test('valid', () => {
+        const style = createStyleBlock()
+        style.fontSizeAdjust = 'ex-height 1'
+        expect(style.fontSizeAdjust).toBe('1')
+    })
+})
 describe('font-style', () => {
     test('valid', () => {
         const style = createStyleBlock()
