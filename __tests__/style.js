@@ -946,6 +946,13 @@ describe('hyphenate-limit-chars', () => {
         expect(style.hyphenateLimitChars).toBe('0')
     })
 })
+describe('image-orientation', () => {
+    test('valid', () => {
+        const style = createStyleBlock()
+        style.imageOrientation = '0deg flip'
+        expect(style.imageOrientation).toBe('flip')
+    })
+})
 describe('image-rendering', () => {
     test('valid', () => {
         const style = createStyleBlock()
