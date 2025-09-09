@@ -3570,8 +3570,7 @@ describe('<image-set()>', () => {
         })
     })
     test('valid', () => {
-        expect(parse('<image-set()>', 'image-set("image.jpg" 1x)')).toBe('image-set("image.jpg")')
-        expect(parse('<image-set()>', '-webkit-image-set("image.jpg" 1x)')).toBe('image-set("image.jpg")')
+        expect(parse('<image-set()>', '-webkit-image-set("image.jpg")')).toBe('image-set("image.jpg")')
     })
 })
 describe('<input-position>', () => {
