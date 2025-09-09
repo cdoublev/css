@@ -738,18 +738,23 @@ describe('color-scheme', () => {
         expect(style.colorScheme).toBe('')
     })
 })
-describe('counter-increment, counter-set', () => {
+describe('counter-increment, counter-set, counter-reset', () => {
     test('valid', () => {
         const style = createStyleBlock()
+        style.counterIncrement = 'counter 0'
+        expect(style.counterIncrement).toBe('counter 0')
         style.counterIncrement = 'counter 1'
         expect(style.counterIncrement).toBe('counter')
-    })
-})
-describe('counter-reset', () => {
-    test('valid', () => {
-        const style = createStyleBlock()
+        style.counterSet = 'counter 0'
+        expect(style.counterSet).toBe('counter')
+        style.counterSet = 'counter 1'
+        expect(style.counterSet).toBe('counter 1')
         style.counterReset = 'counter 0'
         expect(style.counterReset).toBe('counter')
+        style.counterReset = 'counter 1'
+        expect(style.counterReset).toBe('counter 1')
+        style.counterReset = 'reversed(counter) 0'
+        expect(style.counterReset).toBe('reversed(counter) 0')
     })
 })
 describe('container-name', () => {
