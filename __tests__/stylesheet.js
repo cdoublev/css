@@ -71,7 +71,10 @@ function normalizeText(text) {
 }
 
 install()
-globalThis.document = { href: 'https://github.com/cdoublev/' }
+globalThis.document = {
+    _registeredPropertySet: [],
+    href: 'https://github.com/cdoublev/',
+}
 
 describe('CSSStyleSheet', () => {
     it('creates a constructed CSSStyleSheet', () => {
