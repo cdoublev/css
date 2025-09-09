@@ -1192,8 +1192,8 @@ describe('<integer>', () => {
             ['1e1', '10'],
             ['1e+1', '10'],
             // 8 bits signed integer (browser conformance)
-            [`${MIN_INTEGER - 1}`, MIN_INTEGER],
-            [`${MAX_INTEGER + 1}`, MAX_INTEGER],
+            [`${MIN_INTEGER - 1}`, `${MIN_INTEGER}`],
+            [`${MAX_INTEGER + 1}`, `${MAX_INTEGER}`],
             // Priority over <length> in "either" combination type
             ['0', '0', '<length> | <integer>'],
             ['0', '0', '<length> || <integer>'],
