@@ -1389,7 +1389,6 @@ describe('animation-range', () => {
             ['0%', '0%', 'normal'],
             ['entry'],
             ['entry 10%', 'entry 10%', 'entry'],
-            ['10% entry', '10%', 'entry'],
         ]
         values.forEach(([shorthand, start = shorthand, end = shorthand]) => {
             style.animationRange = shorthand
@@ -1419,13 +1418,16 @@ describe('animation-range', () => {
         expect(style.animationRange).toBe('')
         expect(style.cssText).toBe('animation-range-start: normal, normal; animation-range-end: normal;')
 
-        // Same <timeline-range-name>
-        style.animationRangeStart = 'entry'
-        style.animationRangeEnd = 'entry'
+        // Same <timeline-range-name> + omitted value
+        style.animationRangeStart = 'entry 0%'
+        style.animationRangeEnd = 'entry 100%'
         expect(style.animationRange).toBe('entry')
         expect(style.cssText).toBe('animation-range: entry;')
 
-        // Different <timeline-range-name>
+        // Different <timeline-range-name> + omitted value
+        style.animationRangeEnd = 'exit 100%'
+        expect(style.animationRange).toBe('entry exit')
+        expect(style.cssText).toBe('animation-range: entry exit;')
         style.animationRangeEnd = 'normal'
         expect(style.animationRange).toBe('entry normal')
         expect(style.cssText).toBe('animation-range: entry normal;')
@@ -1572,7 +1574,6 @@ describe('animation-trigger-exit-range', () => {
             ['0%', '0%', 'auto'],
             ['entry'],
             ['entry 10%', 'entry 10%', 'entry'],
-            ['10% entry', '10%', 'entry'],
         ]
         values.forEach(([shorthand, start = shorthand, end = shorthand]) => {
             style.animationTriggerExitRange = shorthand
@@ -1602,13 +1603,16 @@ describe('animation-trigger-exit-range', () => {
         expect(style.animationTriggerExitRange).toBe('')
         expect(style.cssText).toBe('animation-trigger-exit-range-start: auto, auto; animation-trigger-exit-range-end: auto;')
 
-        // Same <timeline-range-name>
-        style.animationTriggerExitRangeStart = 'entry'
-        style.animationTriggerExitRangeEnd = 'entry'
+        // Same <timeline-range-name> + omitted value
+        style.animationTriggerExitRangeStart = 'entry 0%'
+        style.animationTriggerExitRangeEnd = 'entry 100%'
         expect(style.animationTriggerExitRange).toBe('entry')
         expect(style.cssText).toBe('animation-trigger-exit-range: entry;')
 
-        // Different <timeline-range-name>
+        // Different <timeline-range-name> + omitted value
+        style.animationTriggerExitRangeEnd = 'exit 100%'
+        expect(style.animationTriggerExitRange).toBe('entry exit')
+        expect(style.cssText).toBe('animation-trigger-exit-range: entry exit;')
         style.animationTriggerExitRangeEnd = 'normal'
         expect(style.animationTriggerExitRange).toBe('entry normal')
         expect(style.cssText).toBe('animation-trigger-exit-range: entry normal;')
@@ -1640,7 +1644,6 @@ describe('animation-trigger-range', () => {
             ['0%', '0%', 'normal'],
             ['entry'],
             ['entry 10%', 'entry 10%', 'entry'],
-            ['10% entry', '10%', 'entry'],
         ]
         values.forEach(([shorthand, start = shorthand, end = shorthand]) => {
             style.animationTriggerRange = shorthand
@@ -1670,13 +1673,16 @@ describe('animation-trigger-range', () => {
         expect(style.animationTriggerRange).toBe('')
         expect(style.cssText).toBe('animation-trigger-range-start: normal, normal; animation-trigger-range-end: normal;')
 
-        // Same <timeline-range-name>
-        style.animationTriggerRangeStart = 'entry'
-        style.animationTriggerRangeEnd = 'entry'
+        // Same <timeline-range-name> + omitted value
+        style.animationTriggerRangeStart = 'entry 0%'
+        style.animationTriggerRangeEnd = 'entry 100%'
         expect(style.animationTriggerRange).toBe('entry')
         expect(style.cssText).toBe('animation-trigger-range: entry;')
 
-        // Different <timeline-range-name>
+        // Different <timeline-range-name> + omitted value
+        style.animationTriggerRangeEnd = 'exit 100%'
+        expect(style.animationTriggerRange).toBe('entry exit')
+        expect(style.cssText).toBe('animation-trigger-range: entry exit;')
         style.animationTriggerRangeEnd = 'normal'
         expect(style.animationTriggerRange).toBe('entry normal')
         expect(style.cssText).toBe('animation-trigger-range: entry normal;')
