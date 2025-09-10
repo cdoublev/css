@@ -3176,6 +3176,16 @@ describe('<color>', () => {
             .toBe('light-dark(rgb(-255 510 0), hsl(180 -1 0 / 0.5))')
     })
 })
+describe('<color-stripe>', () => {
+    test('representation', () => {
+        const color = keyword('green', ['<named-color>', '<color-base>', '<color>'])
+        const stripe = list([color, omitted], ' ', ['<color-stripe>'])
+        expect(parse('<color-stripe>', 'green', false)).toMatchObject(stripe)
+    })
+    test('valid', () => {
+        expect(parse('<color-stripe>', 'green 1fr')).toBe('green')
+    })
+})
 describe('<combinator>', () => {
     test('invalid', () => {
         expect(parse('<combinator>', '| |', false)).toBeNull()
