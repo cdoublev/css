@@ -1220,6 +1220,9 @@ describe('<signless-integer>', () => {
     test('representation', () => {
         expect(parse('<signless-integer>', '1', false)).toMatchObject(numberToken(1, ['<signless-integer>']))
     })
+    test('valid', () => {
+        expect(parse('<signless-integer>', `${MAX_INTEGER + 1}`)).toBe(`${MAX_INTEGER}`)
+    })
 })
 describe('<signed-integer>', () => {
     test('invalid', () => {
@@ -1235,6 +1238,10 @@ describe('<signed-integer>', () => {
     test('representation', () => {
         expect(parse('<signed-integer>', '+1', false)).toMatchObject(numberToken(1, ['<signed-integer>']))
         expect(parse('<signed-integer>', '-1', false)).toMatchObject(numberToken(-1, ['<signed-integer>']))
+    })
+    test('valid', () => {
+        expect(parse('<signed-integer>', `${MIN_INTEGER - 1}`)).toBe(`${MIN_INTEGER}`)
+        expect(parse('<signed-integer>', `+${MAX_INTEGER + 1}`)).toBe(`+${MAX_INTEGER}`)
     })
 })
 describe('<dimension>', () => {
