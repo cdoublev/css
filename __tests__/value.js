@@ -2304,6 +2304,9 @@ describe('<log()>', () => {
         ]
         valid.forEach(([definition, input, expected = input]) => expect(parse(definition, input)).toBe(expected))
     })
+    test('valid', () => {
+        expect(parse('<length>', 'calc(1px * log(1em / 1px, e))')).toBe('calc(1px * log(1em / 1px))')
+    })
 })
 describe('<exp()>', () => {
     test('invalid', () => {
