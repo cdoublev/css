@@ -1144,6 +1144,13 @@ describe('translate', () => {
         expect(style.translate).toBe('0px')
     })
 })
+describe('view-timeline-inset', () => {
+    test('valid', () => {
+        const style = createStyleBlock()
+        style.viewTimelineInset = 'auto auto'
+        expect(style.viewTimelineInset).toBe('auto')
+    })
+})
 describe('view-transition-name', () => {
     test('invalid', () => {
         const style = createStyleBlock()
