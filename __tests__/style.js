@@ -1163,8 +1163,16 @@ describe('view-transition-name', () => {
 describe('voice-pitch, voice-range', () => {
     test('valid', () => {
         const style = createStyleBlock()
-        style.voicePitch = 'x-low 100%'
-        expect(style.voicePitch).toBe('x-low')
+        const valid = [
+            'x-low 0hz',
+            'x-low 0st',
+            'x-low 100%',
+
+        ]
+        valid.forEach(input => {
+            style.voicePitch = input
+            expect(style.voicePitch).toBe('x-low')
+        })
     })
 })
 describe('voice-rate', () => {
