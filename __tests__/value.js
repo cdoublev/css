@@ -2418,7 +2418,7 @@ describe('<calc-interpolate()>', () => {
             ['<length-percentage>', 'calc-interpolate(0, calc(1% / 1px): 0px)'],
             ['<length-percentage>', 'calc-interpolate(0, calc((1% + 1px) / 1px): 0px)'],
             ['<length-percentage>', 'calc-interpolate(0, progress(1%, 1px, 1px): 0px)'],
-            // Missing absolute <input-source> type
+            // Missing absolute <input-position> type
             ['<length>', 'calc-interpolate(1px, 0: 1px)'],
             // Inconsistent absolute <progress-source> and <input-position> types
             ['<length>', 'calc-interpolate(0deg, 0px: 1px, 1px: 1px)'],
