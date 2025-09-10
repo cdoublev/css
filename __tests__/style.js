@@ -4454,7 +4454,17 @@ describe('text-box', () => {
         expect(style.cssText).toBe('text-box: normal;')
 
         // Omitted longhand values
+        style.textBox = 'none'
+        expect(style.textBoxTrim).toBe('none')
+        expect(style.textBoxEdge).toBe('auto')
+        expect(style.textBox).toBe('normal')
+        expect(style.cssText).toBe('text-box: normal;')
         style.textBox = 'trim-both'
+        expect(style.textBoxTrim).toBe('trim-both')
+        expect(style.textBoxEdge).toBe('auto')
+        expect(style.textBox).toBe('trim-both')
+        expect(style.cssText).toBe('text-box: trim-both;')
+        style.textBox = 'auto'
         expect(style.textBoxTrim).toBe('trim-both')
         expect(style.textBoxEdge).toBe('auto')
         expect(style.textBox).toBe('trim-both')
@@ -4464,6 +4474,13 @@ describe('text-box', () => {
         expect(style.textBoxEdge).toBe('text')
         expect(style.textBox).toBe('text')
         expect(style.cssText).toBe('text-box: text;')
+
+        // normal
+        style.textBox = 'normal'
+        expect(style.textBoxTrim).toBe('none')
+        expect(style.textBoxEdge).toBe('auto')
+        expect(style.textBox).toBe('normal')
+        expect(style.cssText).toBe('text-box: normal;')
     })
     test('shorthand reification', () => {
 
@@ -4473,11 +4490,6 @@ describe('text-box', () => {
         longhands.forEach(longhand => style[longhand] = initial(longhand))
         expect(style.textBox).toBe('normal')
         expect(style.cssText).toBe('text-box: normal;')
-
-        // All longhands cannot be represented
-        style.textBoxEdge = 'text'
-        expect(style.textBox).toBe('')
-        expect(style.cssText).toBe('text-box-trim: none; text-box-edge: text;')
     })
 })
 describe('text-emphasis', () => {
