@@ -1778,6 +1778,11 @@ describe('background', () => {
             expect(style[longhand]).toBe(longhand === 'background-origin' ? 'border-box' : initial(longhand)))
         expect(style.background).toBe('border-box')
         expect(style.cssText).toBe('background: border-box;')
+        style.background = 'padding-box content-box'
+        longhands.forEach(longhand =>
+            expect(style[longhand]).toBe(longhand === 'background-clip' ? 'content-box' : initial(longhand)))
+        expect(style.background).toBe('padding-box content-box')
+        expect(style.cssText).toBe('background: padding-box content-box;')
 
         // Coordinated value list
         style.background = `${background.replace(' transparent', '')}, ${background}`
