@@ -2981,6 +2981,11 @@ describe('font-synthesis', () => {
         longhands.forEach(longhand => style[longhand] = initial(longhand))
         expect(style.fontSynthesis).toBe('weight style small-caps position')
         expect(style.cssText).toBe('font-synthesis: weight style small-caps position;')
+
+        // All longhands cannot be represented
+        style.fontSynthesisStyle = 'oblique-only'
+        expect(style.fontSynthesis).toBe('')
+        expect(style.cssText).toBe('font-synthesis-weight: auto; font-synthesis-style: oblique-only; font-synthesis-small-caps: auto; font-synthesis-position: auto;')
     })
 })
 describe('gap', () => {
