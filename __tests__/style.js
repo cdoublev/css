@@ -3683,6 +3683,11 @@ describe('mask', () => {
                     : initial(longhand)))
         expect(style.mask).toBe('fill-box')
         expect(style.cssText).toBe('mask: fill-box;')
+        style.mask = 'border-box fill-box'
+        longhands.forEach(longhand =>
+            expect(style[longhand]).toBe(longhand === 'mask-clip' ? 'fill-box' : initial(longhand)))
+        expect(style.mask).toBe('border-box fill-box')
+        expect(style.cssText).toBe('mask: border-box fill-box;')
 
         // Coordinated value list
         style.mask = `${mask}, ${mask}`
