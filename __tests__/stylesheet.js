@@ -406,6 +406,10 @@ describe('CSSCounterStyleRule', () => {
         rule = createStyleSheet('@counter-style name { system: additive }').cssRules[0]
         rule.symbols = 'a'
         expect(rule.symbols).toBe('')
+        rule.additiveSymbols = '1 a, 1 b'
+        expect(rule.additiveSymbols).toBe('')
+        rule.additiveSymbols = '1 a, 2 b'
+        expect(rule.additiveSymbols).toBe('')
         rule.additiveSymbols = '1 a'
         expect(rule.additiveSymbols).toBe('1 a')
         rule.system = 'symbolic'
