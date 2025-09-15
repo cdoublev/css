@@ -3930,6 +3930,12 @@ describe('overflow-clip-margin-block, overflow-clip-margin-inline', () => {
         longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
         expect(style.overflowClipMarginBlock).toBe('0px')
         expect(style.cssText).toBe('overflow-clip-margin-block: 0px;')
+
+        // Omitted values
+        style.overflowClipMarginBlock = 'content-box 0px'
+        longhands.forEach(longhand => expect(style[longhand]).toBe('content-box'))
+        expect(style.overflowClipMarginBlock).toBe('content-box')
+        expect(style.cssText).toBe('overflow-clip-margin-block: content-box;')
     })
     test('shorthand reification', () => {
 
