@@ -101,6 +101,7 @@ function parse(definition, production) {
 const a = keyword('a')
 const b = keyword('b')
 const c = keyword('c')
+const d = keyword('d')
 const colon = token(':')
 const comma = token(',')
 const number = type('<number>')
@@ -530,41 +531,135 @@ describe('groups', () => {
         expect(parse(input)).toEqual(parsed)
         expect(serialize(parsed)).toBe(input)
     })
-    test('[a, b], c', () => {
-        const parsed = sequence(a, comma, b, comma, c)
-        expect(parse('[ a , b ] , c')).toEqual(parsed)
-        expect(parse('[a,b],c')).toEqual(parsed)
-        expect(serialize(parsed)).toBe('a , b , c')
+    test('[a b] c', () => {
+        const parsed = sequence(a, b, c)
+        expect(parse('[ a b ] c')).toEqual(parsed)
+        expect(parse('[a b]c')).toEqual(parsed)
+        expect(serialize(parsed)).toBe('a b c')
     })
-    test('[a, b,] c', () => {
-        const parsed = sequence(a, comma, b, comma, c)
-        expect(parse('[ a , b , ] c')).toEqual(parsed)
-        expect(parse('[a,b,]c')).toEqual(parsed)
-        expect(serialize(parsed)).toBe('a , b , c')
+    test('[a && b] && c', () => {
+        const input = '[a && b] && c'
+        const parsed = permutation(permutation(a, b), c)
+        expect(parse(input)).toEqual(parsed)
+        expect(parse('[a && b]&& c')).toEqual(parsed)
+        expect(serialize(parsed)).toBe(input)
     })
-    test('a, [b, c]', () => {
-        const parsed = sequence(a, comma, b, comma, c)
-        expect(parse('a , [ b , c ]')).toEqual(parsed)
-        expect(parse('a,[b,c]')).toEqual(parsed)
-        expect(serialize(parsed)).toBe('a , b , c')
+    test('[a || b] || c', () => {
+        const input = '[a || b] || c'
+        const parsed = arrangement(arrangement(a, b), c)
+        expect(parse(input)).toEqual(parsed)
+        expect(parse('[a || b]|| c')).toEqual(parsed)
+        expect(serialize(parsed)).toBe(input)
     })
-    test('a [, b, c]', () => {
-        const parsed = sequence(a, sequence(comma, b, comma, c))
-        expect(parse('a [ , b , c ]')).toEqual(parsed)
-        expect(parse('a[,b,c]')).toEqual(parsed)
-        expect(serialize(parsed)).toBe('a , b , c')
+    test('[a | b] | c', () => {
+        const parsed = alternation(a, b, c)
+        expect(parse('[a | b] | c')).toEqual(parsed)
+        expect(parse('[a | b]| c')).toEqual(parsed)
+        expect(serialize(parsed)).toBe('a | b | c')
     })
-    test('[a, | b,] c', () => {
-        const parsed = sequence(alternation(sequence(a, comma), sequence(b, comma)), c)
-        expect(parse('[a , | b , ] c')).toEqual(parsed)
-        expect(parse('[a,|b,]c')).toEqual(parsed)
-        expect(serialize(parsed)).toBe('[a , | b ,] c')
+    test('a [b c]', () => {
+        const parsed = sequence(a, b, c)
+        expect(parse('a [ b c ]')).toEqual(parsed)
+        expect(parse('a[b c]')).toEqual(parsed)
+        expect(serialize(parsed)).toBe('a b c')
     })
-    test('a [, b | , c]', () => {
-        const parsed = sequence(a, alternation(sequence(comma, b), sequence(comma, c)))
-        expect(parse('a [ , b | , c ]')).toEqual(parsed)
-        expect(parse('a[,b|,c]')).toEqual(parsed)
-        expect(serialize(parsed)).toBe('a [, b | , c]')
+    test('a && [b && c]', () => {
+        const input = 'a && [b && c]'
+        const parsed = permutation(a, permutation(b, c))
+        expect(parse(input)).toEqual(parsed)
+        expect(parse('a &&[b && c]')).toEqual(parsed)
+        expect(serialize(parsed)).toBe(input)
+    })
+    test('a || [b || c]', () => {
+        const input = 'a || [b || c]'
+        const parsed = arrangement(a, arrangement(b, c))
+        expect(parse(input)).toEqual(parsed)
+        expect(parse('a ||[b || c]')).toEqual(parsed)
+        expect(serialize(parsed)).toBe(input)
+    })
+    test('a | [b | c]', () => {
+        const parsed = alternation(a, b, c)
+        expect(parse('a | [b | c]')).toEqual(parsed)
+        expect(parse('a |[b | c]')).toEqual(parsed)
+        expect(serialize(parsed)).toBe('a | b | c')
+    })
+    test('[a b] [c d]', () => {
+        const parsed = sequence(a, b, c, d)
+        expect(parse('[a b] [c d]')).toEqual(parsed)
+        expect(parse('[a b][c d]')).toEqual(parsed)
+        expect(serialize(parsed)).toBe('a b c d')
+    })
+    test('[a b] [c && d]', () => {
+        const parsed = sequence(a, b, permutation(c, d))
+        expect(parse('[a b] [c && d]')).toEqual(parsed)
+        expect(serialize(parsed)).toBe('a b [c && d]')
+    })
+    test('[a && b] && [c && d]', () => {
+        const input = '[a && b] && [c && d]'
+        const parsed = permutation(permutation(a, b), permutation(c, d))
+        expect(parse(input)).toEqual(parsed)
+        expect(serialize(parsed)).toBe(input)
+    })
+    test('[a && b] && [c || d]', () => {
+        const input = '[a && b] && [c || d]'
+        const parsed = permutation(permutation(a, b), arrangement(c, d))
+        expect(parse(input)).toEqual(parsed)
+        expect(serialize(parsed)).toBe(input)
+    })
+    test('[a | b] | [c | d]', () => {
+        const parsed = alternation(a, b, c, d)
+        expect(parse('[a | b] | [c | d]')).toEqual(parsed)
+        expect(serialize(parsed)).toBe('a | b | c | d')
+    })
+    test('a b [c d]', () => {
+        const parsed = sequence(a, b, c, d)
+        expect(parse('a b [c d]')).toEqual(parsed)
+        expect(serialize(parsed)).toBe('a b c d')
+    })
+    test('a b [c && d]', () => {
+        const input = 'a b [c && d]'
+        const parsed = sequence(a, b, permutation(c, d))
+        expect(parse(input)).toEqual(parsed)
+        expect(serialize(parsed)).toBe(input)
+    })
+    test('a && b && [c && d]', () => {
+        const input = 'a && b && [c && d]'
+        const parsed = permutation(a, b, permutation(c, d))
+        expect(parse(input)).toEqual(parsed)
+        expect(serialize(parsed)).toEqual(input)
+    })
+    test('a && b && [c || d]', () => {
+        const input = 'a && b && [c || d]'
+        const parsed = permutation(a, b, arrangement(c, d))
+        expect(parse(input)).toEqual(parsed)
+        expect(serialize(parsed)).toBe(input)
+    })
+    test('a | b | [c | d]', () => {
+        const parsed = alternation(a, b, c, d)
+        expect(parse('a | b | [c | d]')).toEqual(parsed)
+        expect(serialize(parsed)).toBe('a | b | c | d')
+    })
+    test('[a | b] [a b]', () => {
+        const parsed = sequence(alternation(a, b), a, b)
+        expect(parse('[a | b] [a b]')).toEqual(parsed)
+        expect(serialize(parsed)).toBe('[a | b] a b')
+    })
+    test('[a | b] && [a && b]', () => {
+        const input = '[a | b] && [a && b]'
+        const parsed = permutation(alternation(a, b), permutation(a, b))
+        expect(parse(input)).toEqual(parsed)
+        expect(serialize(parsed)).toBe(input)
+    })
+    test('[a | b] || [a || b]', () => {
+        const input = '[a | b] || [a || b]'
+        const parsed = arrangement(alternation(a, b), arrangement(a, b))
+        expect(parse(input)).toEqual(parsed)
+        expect(serialize(parsed)).toBe(input)
+    })
+    test('[a b] | [a | b]', () => {
+        const parsed = alternation(sequence(a, b), a, b)
+        expect(parse('[a b] | [a | b]')).toEqual(parsed)
+        expect(serialize(parsed)).toBe('a b | a | b')
     })
 })
 describe('context rules', () => {
