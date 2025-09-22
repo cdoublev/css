@@ -3422,10 +3422,13 @@ describe('interest-delay', () => {
         expect(style.cssText).toBe('interest-delay: normal;')
 
         // Omitted longhand values
-        style.interestDelay = 'normal'
-        longhands.forEach(longhand => expect(style[longhand]).toBe('normal'))
-        expect(style.interestDelay).toBe('normal')
-        expect(style.cssText).toBe('interest-delay: normal;')
+        style.interestDelay = '1s'
+        longhands.forEach(longhand => expect(style[longhand]).toBe('1s'))
+        expect(style.interestDelay).toBe('1s')
+        style.interestDelay = 'normal 1s'
+        expect(style.interestDelayStart).toBe(initial('interest-delay-start'))
+        expect(style.interestDelayEnd).toBe('1s')
+        expect(style.interestDelay).toBe('normal 1s')
     })
     test('shorthand reification', () => {
 
