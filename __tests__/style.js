@@ -4799,6 +4799,14 @@ describe('vertical-align', () => {
         longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
         expect(style.verticalAlign).toBe('baseline')
         expect(style.cssText).toBe('vertical-align: baseline;')
+        style.verticalAlign = 'first'
+        longhands.forEach(longhand =>
+            expect(style[longhand]).toBe(longhand === 'baseline-source' ? 'first' : initial(longhand)))
+        expect(style.verticalAlign).toBe('first')
+        style.verticalAlign = '1px'
+        longhands.forEach(longhand =>
+            expect(style[longhand]).toBe(longhand === 'baseline-shift' ? '1px' : initial(longhand)))
+        expect(style.verticalAlign).toBe('1px')
     })
     test('shorthand reification', () => {
 
