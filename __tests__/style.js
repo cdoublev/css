@@ -4651,6 +4651,19 @@ describe('text-spacing', () => {
         expect(style.textSpacing).toBe('normal')
         expect(style.cssText).toBe('text-spacing: normal;')
 
+        // Omitted values
+        style.textSpacing = 'space-all'
+        expect(style.textSpacingTrim).toBe('space-all')
+        expect(style.textAutospace).toBe(initial('text-autospace'))
+        expect(style.textSpacing).toBe('space-all')
+        style.textSpacing = 'no-autospace'
+        expect(style.textSpacingTrim).toBe(initial('text-spacing-trim'))
+        expect(style.textAutospace).toBe('no-autospace')
+        expect(style.textSpacing).toBe('no-autospace')
+        style.textSpacing = 'ideograph-alpha ideograph-numeric'
+        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
+        expect(style.textSpacing).toBe('normal')
+
         // none
         style.textSpacing = 'none'
         expect(style.textAutospace).toBe('no-autospace')
@@ -4673,6 +4686,18 @@ describe('text-spacing', () => {
         longhands.forEach(longhand => style[longhand] = initial(longhand))
         expect(style.textSpacing).toBe('normal')
         expect(style.cssText).toBe('text-spacing: normal;')
+
+        // All longhands cannot be represented
+        style.textSpacingTrim = 'auto'
+        expect(style.textSpacing).toBe('')
+        expect(style.cssText).toBe('text-spacing-trim: auto; text-autospace: normal;')
+        style.textAutospace = 'no-autospace'
+        expect(style.textSpacing).toBe('')
+        expect(style.cssText).toBe('text-spacing-trim: auto; text-autospace: no-autospace;')
+        style.textSpacingTrim = 'space-all'
+        style.textAutospace = 'auto'
+        expect(style.textSpacing).toBe('')
+        expect(style.cssText).toBe('text-spacing-trim: space-all; text-autospace: auto;')
     })
 })
 describe('text-wrap', () => {
