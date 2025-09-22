@@ -4495,6 +4495,18 @@ describe('text-align', () => {
         longhands.forEach(longhand => style[longhand] = initial(longhand))
         expect(style.textAlign).toBe('start')
         expect(style.cssText).toBe('text-align: start;')
+
+        // All longhands cannot be represented
+        style.textAlignAll = 'match-parent'
+        expect(style.textAlign).toBe('')
+        expect(style.cssText).toBe('text-align-all: match-parent; text-align-last: auto;')
+        style.textAlignAll = 'justify'
+        style.textAlignLast = 'start'
+        expect(style.textAlign).toBe('')
+        expect(style.cssText).toBe('text-align-all: justify; text-align-last: start;')
+        style.textAlignAll = initial('text-align-all')
+        expect(style.textAlign).toBe('')
+        expect(style.cssText).toBe('text-align-all: start; text-align-last: start;')
     })
 })
 describe('text-box', () => {
