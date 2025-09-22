@@ -1122,6 +1122,13 @@ describe('text-align-all', () => {
         expect(style.textAlignAll).toBe('')
     })
 })
+describe('text-autospace', () => {
+    test('valid', () => {
+        const style = createStyleBlock()
+        style.textAutospace = 'ideograph-alpha ideograph-numeric'
+        expect(style.textAutospace).toBe('normal')
+    })
+})
 describe('text-decoration-trim', () => {
     test('valid', () => {
         const style = createStyleBlock()
