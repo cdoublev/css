@@ -3164,6 +3164,17 @@ describe('grid-area', () => {
         longhands.forEach(longhand => expect(style[longhand]).toBe('1'))
         expect(style.gridArea).toBe('1 / 1 / 1 / 1')
         expect(style.cssText).toBe('grid-area: 1 / 1 / 1 / 1;')
+        style.gridArea = '1 / auto / 1 / 1'
+        longhands.forEach(longhand =>
+            expect(style[longhand]).toBe(longhand === 'grid-column-start' ? initial(longhand) : '1'))
+        expect(style.gridArea).toBe('1 / auto / 1 / 1')
+        style.gridArea = '1 / 1 / auto / 1'
+        longhands.forEach(longhand =>
+            expect(style[longhand]).toBe(longhand === 'grid-row-end' ? initial(longhand) : '1'))
+        expect(style.gridArea).toBe('1 / 1 / auto / 1')
+        style.gridArea = '1 / 1 / 1 / 1'
+        longhands.forEach(longhand => expect(style[longhand]).toBe('1'))
+        expect(style.gridArea).toBe('1 / 1 / 1 / 1')
     })
     test('shorthand reification', () => {
 
