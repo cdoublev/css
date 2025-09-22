@@ -4205,6 +4205,10 @@ describe('pointer-timeline', () => {
         longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
         expect(style.pointerTimeline).toBe('none')
         expect(style.cssText).toBe('pointer-timeline: none;')
+        style.pointerTimeline = 'none inline'
+        expect(style.pointerTimelineName).toBe(initial('pointer-timeline-name'))
+        expect(style.pointerTimelineAxis).toBe('inline')
+        expect(style.pointerTimeline).toBe('none inline')
 
         // Coordinated value list
         style.pointerTimeline = `${timeline}, ${timeline}`
@@ -4421,6 +4425,10 @@ describe('scroll-timeline', () => {
         longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
         expect(style.scrollTimeline).toBe('none')
         expect(style.cssText).toBe('scroll-timeline: none;')
+        style.scrollTimeline = 'none inline'
+        expect(style.scrollTimelineName).toBe(initial('scroll-timeline-name'))
+        expect(style.scrollTimelineAxis).toBe('inline')
+        expect(style.scrollTimeline).toBe('none inline')
 
         // Coordinated value list
         style.scrollTimeline = `${timeline}, ${timeline}`
@@ -4779,6 +4787,10 @@ describe('view-timeline', () => {
         longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
         expect(style.viewTimeline).toBe('none')
         expect(style.cssText).toBe('view-timeline: none;')
+        style.viewTimeline = 'none inline'
+        expect(style.viewTimelineName).toBe(initial('view-timeline-name'))
+        expect(style.viewTimelineAxis).toBe('inline')
+        expect(style.viewTimeline).toBe('none inline')
 
         // Coordinated value list
         style.viewTimeline = `${timeline}, ${timeline}`
