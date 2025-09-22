@@ -1151,6 +1151,13 @@ describe('view-timeline-inset', () => {
         expect(style.viewTimelineInset).toBe('auto')
     })
 })
+describe('view-transition-class', () => {
+    test('invalid', () => {
+        const style = createStyleBlock()
+        style.viewTransitionClass = 'class NONE'
+        expect(style.viewTransitionClass).toBe('')
+    })
+})
 describe('view-transition-name', () => {
     test('invalid', () => {
         const style = createStyleBlock()
