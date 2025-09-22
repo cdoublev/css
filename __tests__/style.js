@@ -2690,7 +2690,7 @@ describe('corner-shape', () => {
         expect(style.cssText).toBe('corner-shape: round;')
     })
 })
-describe('corner-block-end-shape, corner-bottom-shape, corner-block-start-shape, corner-inline-end-shape, corner-inline-start-shape, corner-left-shape, corner-right-shape, corner-top-shape', () => {
+describe('corner-block-end-shape, corner-block-start-shape, corner-bottom-shape, corner-inline-end-shape, corner-inline-start-shape, corner-left-shape, corner-right-shape, corner-top-shape', () => {
 
     const longhands = shorthands.get('corner-block-end-shape')[0]
 
@@ -2710,6 +2710,10 @@ describe('corner-block-end-shape, corner-bottom-shape, corner-block-start-shape,
         longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
         expect(style.cornerBlockEndShape).toBe('round')
         expect(style.cssText).toBe('corner-block-end-shape: round;')
+        style.cornerBlockEndShape = 'round scoop'
+        expect(style.cornerEndStartShape).toBe(initial('corner-end-start-shape'))
+        expect(style.cornerEndEndShape).toBe('scoop')
+        expect(style.cornerBlockEndShape).toBe('round scoop')
     })
     test('shorthand reification', () => {
 
