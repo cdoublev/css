@@ -548,10 +548,10 @@ describe('backtracking', () => {
      * Requirements:
      *
      * 1. Replacing must only apply once (ie. not after backtracking).
-     * 2. The list index must backtrack to a location stored in state instead of
-     * from the index of a token in the list.
+     * 2. The input index must backtrack to a location stored in state instead
+     * of the first token in the parse result.
      * 3. The list must not be updated with the result of parsing because it
-     * may be different depending on the context production.
+     * can be different depending on the context.
      */
     test('replaced value', () => {
         expect(parse('<angle-percentage>? <length-percentage>', 'calc(1%)')).toBe('calc(1%)')
