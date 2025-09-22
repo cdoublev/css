@@ -2928,6 +2928,11 @@ describe('font-variant', () => {
             expect(style[longhand]).toBe(longhand === 'font-variant-ligatures' ? 'none' : initial(longhand)))
         expect(style.fontVariant).toBe('none')
         expect(style.cssText).toBe('font-variant: none;')
+
+        // All longhands cannot be represented
+        style.fontVariantLigatures = 'none'
+        expect(style.fontVariant).toBe('')
+        expect(style.cssText).toBe('font-variant-ligatures: none; font-variant-caps: small-caps; font-variant-alternates: normal; font-variant-numeric: normal; font-variant-east-asian: normal; font-variant-position: normal; font-variant-emoji: normal;')
     })
     test('shorthand reification', () => {
 
