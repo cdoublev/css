@@ -109,6 +109,7 @@ const replaced = {
         '<display-inside>': 'flow | flow-root | table | flex | grid | ruby | math | layout(<ident>)',
         '<keyframe-selector>': 'from | to | <percentage [0,100]> | <timeline-range-name> <percentage>',
         '<image>': '<url> | <image()> | <image-set()> | <cross-fade()> | <element()> | <gradient> | <paint()>',
+        '<query-in-parens>': '(<container-query>) | (<size-feature>) | anchored(<anchored-query>) | style(<style-query>) | scroll-state(<scroll-state-query>) | <general-enclosed>',
         '<single-animation-timeline>': 'auto | none | <dashed-ident> | <pointer()> | <scroll()> | <view()>',
         '<transform-list>': '<transform-function>+ | <transform-mix()> | <transform-interpolate()>',
         // Missing production rules
@@ -134,6 +135,7 @@ const replaced = {
         '<ident>': '<ident-token>',
         '<integer>': '<number-token>',
         '<length>': '<dimension>',
+        '<level>': '<number-token>',
         '<mq-boolean>': '<integer [0,1]>',
         '<n-dimension>': '<dimension-token>',
         '<named-color>': colors.named.join(' | '),

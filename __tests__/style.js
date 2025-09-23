@@ -2131,6 +2131,121 @@ describe('container', () => {
         expect(style.container).toBe('none / size')
     })
 })
+describe('corner', () => {
+    test('expansion and reification', () => {
+
+        const style = createStyleBlock()
+        const longhands = shorthands.get('corner')[0]
+
+        // Initial longhand values
+        style.corner = '0 0 0 0 / 0 0 0 0 round round round round'
+        expect(style).toHaveLength(longhands.length)
+        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
+        expect(style.corner).toBe('0px')
+
+        // Omitted values
+        const values = [
+            ['1px', {
+                'border-bottom-left-radius': '1px',
+                'border-bottom-right-radius': '1px',
+                'border-top-left-radius': '1px',
+                'border-top-right-radius': '1px',
+            }],
+            ['0px 1px 2px 3px / 0px 1px', {
+                'border-bottom-left-radius': '3px 1px',
+                'border-bottom-right-radius': '2px 0px',
+                'border-top-right-radius': '1px',
+            }],
+            ['0px / 1px', {
+                'border-bottom-left-radius': '0px 1px',
+                'border-bottom-right-radius': '0px 1px',
+                'border-top-left-radius': '0px 1px',
+                'border-top-right-radius': '0px 1px',
+            }],
+            ['scoop', {
+                'corner-bottom-left-shape': 'scoop',
+                'corner-bottom-right-shape': 'scoop',
+                'corner-top-left-shape': 'scoop',
+                'corner-top-right-shape': 'scoop',
+            }],
+            ['round scoop', {
+                'corner-bottom-left-shape': 'scoop',
+                'corner-top-right-shape': 'scoop',
+            }],
+            ['round scoop bevel', {
+                'corner-bottom-left-shape': 'scoop',
+                'corner-bottom-right-shape': 'bevel',
+                'corner-top-right-shape': 'scoop',
+            }],
+        ]
+        values.forEach(([input, declared]) => {
+            style.corner = input
+            longhands.forEach(longhand => expect(style[longhand]).toBe(declared[longhand] ?? initial(longhand)))
+            expect(style.corner).toBe(input)
+        })
+    })
+})
+describe('corner-block-end, corner-block-start, corner-bottom, corner-inline-end, corner-inline-start, corner-left, corner-right, corner-top', () => {
+    test('expansion and reification', () => {
+
+        const style = createStyleBlock()
+        const longhands = shorthands.get('corner-block-end')[0]
+
+        // Initial longhand values
+        style.cornerBlockEnd = '0 0 / 0 0 round round'
+        expect(style).toHaveLength(longhands.length)
+        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
+        expect(style.cornerBlockEnd).toBe('0px')
+
+        // Omitted values
+        style.cornerBlockEnd = '1px'
+        longhands.forEach(longhand =>
+            expect(style[longhand]).toBe(longhand.endsWith('radius') ? '1px' : initial(longhand)))
+        expect(style.cornerBlockEnd).toBe('1px')
+        style.cornerBlockEnd = '0px 1px / 0px'
+        longhands.forEach(longhand =>
+            expect(style[longhand]).toBe(longhand === 'border-end-end-radius' ? '1px 0px' : initial(longhand)))
+        expect(style.cornerBlockEnd).toBe('0px 1px / 0px')
+        style.cornerBlockEnd = '0px / calc(0px)'
+        longhands.forEach(longhand =>
+            expect(style[longhand]).toBe(longhand.includes('radius') ? '0px calc(0px)' : initial(longhand)))
+        expect(style.cornerBlockEnd).toBe('0px / calc(0px)')
+        style.cornerBlockEnd = '0px / 1px'
+        longhands.forEach(longhand =>
+            expect(style[longhand]).toBe(longhand.includes('radius') ? '0px 1px' : initial(longhand)))
+        expect(style.cornerBlockEnd).toBe('0px / 1px')
+        style.cornerBlockEnd = 'scoop'
+        longhands.forEach(longhand =>
+            expect(style[longhand]).toBe(longhand.includes('shape') ? 'scoop' : initial(longhand)))
+        expect(style.cornerBlockEnd).toBe('scoop')
+        style.cornerBlockEnd = 'round scoop'
+        longhands.forEach(longhand =>
+            expect(style[longhand]).toBe(longhand === 'corner-end-end-shape' ? 'scoop' : initial(longhand)))
+        expect(style.cornerBlockEnd).toBe('round scoop')
+    })
+})
+describe('corner-end-end, corner-end-start, corner-bottom-left, corner-bottom-right, corner-start-end, corner-start-start, corner-top-left, corner-top-right', () => {
+    test('expansion and reification', () => {
+
+        const style = createStyleBlock()
+        const longhands = shorthands.get('corner-end-end')[0]
+
+        // Initial longhand values
+        style.cornerEndEnd = '0 0 round'
+        expect(style).toHaveLength(longhands.length)
+        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
+        expect(style.cornerEndEnd).toBe('0px')
+
+        // Omitted values
+        style.cornerEndEnd = '0px'
+        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
+        expect(style.cornerEndEnd).toBe('0px')
+        style.cornerEndEnd = 'scoop'
+        expect(style.borderEndEndRadius).toBe(initial('border-end-end-radius'))
+        expect(style.cornerEndEndShape).toBe('scoop')
+        expect(style.cornerEndEnd).toBe('scoop')
+    })
+})
 describe('corner-shape', () => {
     test('expansion and reification', () => {
 

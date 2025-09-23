@@ -44,7 +44,7 @@
     "jest": "^30.0.0",
     "jest-junit": "^16.0.0",
     "webidl2js": "cdoublev/webidl2js",
-    "webref": "w3c/webref#57fb09f4f349d7f044185ce20025005aa3ac9f34"
+    "webref": "w3c/webref#e62156abb0cfd4472f0174adde3db5e047e79430"
   },
   "publishConfig": {
     "access": "public"

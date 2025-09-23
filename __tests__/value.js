@@ -1155,10 +1155,41 @@ describe('<number>', () => {
             expect(parse(definition, input)).toBe(expected))
     })
 })
+describe('<level>', () => {
+    test('invalid', () => {
+        const invalid = [
+            '1.1',
+            '1e-1',
+            '1px',
+            'calc(1)',
+        ]
+        invalid.forEach(input => expect(parse('<level>', input, false)).toBeNull())
+    })
+    test('representation', () => {
+        expect(parse('<level>', '1', false)).toMatchObject(numberToken(1, ['<level>']))
+    })
+    test('valid', () => {
+        const valid = [
+            // https://github.com/w3c/csswg-drafts/issues/10238
+            ['1.0', '1'],
+            ['1e1', '10'],
+            ['1e+1', '10'],
+            // 8 bits signed integer (browser conformance)
+            [`${MIN_INTEGER - 1}`, `${MIN_INTEGER}`],
+            [`${MAX_INTEGER + 1}`, `${MAX_INTEGER}`],
+        ]
+        valid.forEach(([input, expected = input, definition = '<integer>']) =>
+            expect(parse(definition, input)).toBe(expected))
+    })
+})
 describe('<zero>', () => {
     test('invalid', () => {
-        expect(parse('<zero>', '1', false)).toBeNull()
-        expect(parse('<zero>', '0px', false)).toBeNull()
+        const invalid = [
+            '1',
+            '0px',
+            'calc(0)',
+        ]
+        invalid.forEach(input => expect(parse('<zero>', input, false)).toBeNull())
     })
     test('representation', () => {
         expect(parse('<zero>', '0', false)).toMatchObject(numberToken(0, ['<zero>']))
@@ -3989,7 +4020,6 @@ describe('<shadow>', () => {
                 omitted,
                 list([
                     list([length(1, 'px'), length(1, 'px')]),
-                    omitted,
                     omitted,
                 ]),
                 omitted,
