@@ -1016,8 +1016,9 @@ describe('paint-order', () => {
             ['stroke fill markers', 'stroke'],
             ['markers fill', 'markers'],
             ['markers fill stroke', 'markers'],
+            ['markers stroke fill'],
         ]
-        valid.forEach(([input, expected]) => {
+        valid.forEach(([input, expected = input]) => {
             style.cssText = `paint-order: ${input}`
             expect(style.paintOrder).toBe(expected)
         })

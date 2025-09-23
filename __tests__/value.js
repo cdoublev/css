@@ -4263,6 +4263,15 @@ describe('<translate()>', () => {
         expect(parse('<translate()>', 'translate(1px, 0px)')).toBe('translate(1px)')
     })
 })
+describe('<try-tactic>', () => {
+    test('representation', () => {
+        const tactics = list([keyword('flip-block'), omitted, omitted], ' ', ['<try-tactic>'])
+        expect(parse('<try-tactic>', 'flip-block', false)).toMatchObject(tactics)
+    })
+    test('valid', () => {
+        expect(parse('<try-tactic>', 'flip-start flip-inline flip-block')).toBe('flip-start flip-inline flip-block')
+    })
+})
 describe('<urange>', () => {
     test('invalid', () => {
         const invalid = [
