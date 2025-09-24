@@ -84,6 +84,8 @@ const replaced = {
         'border-start-start-radius': { initial: '0' },
         // TODO: fix `value` of `clip`
         'clip': { value: 'rect([<length> | auto]{4} | [<length> | auto]#{4}) | auto' },
+        // TODO: fix `value` of `container-type`
+        'container-type': 'normal | [size | inline-size] || scroll-state || anchored',
         // TODO: fix `value` of `copy-into`
         'copy-into': { value: 'none | [<custom-ident> <content-level>]#' },
         // https://github.com/w3c/svgwg/issues/320
