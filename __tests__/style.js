@@ -1541,13 +1541,14 @@ describe('background', () => {
         // Omitted values
         const values = [
             ['none'],
+            ['0% 0% / cover', { 'background-size': 'cover' }],
             ['repeat-x', { 'background-repeat-y': 'no-repeat' }],
             ['repeat-y', { 'background-repeat-x': 'no-repeat' }],
             ['space', { 'background-repeat-x': 'space', 'background-repeat-y': 'space' }],
             ['padding-box', { 'background-clip': 'padding-box' }],
             ['border-box', { 'background-origin': 'border-box' }],
             ['padding-box content-box', { 'background-clip': 'content-box' }],
-            ['0% 0% / cover', { 'background-size': 'cover' }],
+            ['border-area', { 'background-clip': 'border-area' }],
         ]
         values.forEach(([input, declared = {}]) => {
             style.background = input
@@ -1558,13 +1559,13 @@ describe('background', () => {
         // All longhands cannot be represented
         style.backgroundImage = 'none, none'
         expect(style.background).toBe('')
-        expect(style.cssText).toBe('background-image: none, none; background-position: 0% 0%; background-size: cover; background-repeat: repeat; background-attachment: scroll; background-origin: padding-box; background-clip: border-box; background-color: transparent; background-blend-mode: normal;')
+        expect(style.cssText).toBe('background-image: none, none; background-position: 0% 0%; background-size: auto; background-repeat: repeat; background-attachment: scroll; background-origin: padding-box; background-clip: border-area; background-color: transparent; background-blend-mode: normal;')
         style.backgroundImage = 'initial'
         expect(style.background).toBe('')
-        expect(style.cssText).toBe('background-image: initial; background-position: 0% 0%; background-size: cover; background-repeat: repeat; background-attachment: scroll; background-origin: padding-box; background-clip: border-box; background-color: transparent; background-blend-mode: normal;')
+        expect(style.cssText).toBe('background-image: initial; background-position: 0% 0%; background-size: auto; background-repeat: repeat; background-attachment: scroll; background-origin: padding-box; background-clip: border-area; background-color: transparent; background-blend-mode: normal;')
         style.setProperty('background-image', 'none', 'important')
         expect(style.background).toBe('')
-        expect(style.cssText).toBe('background-image: none !important; background-position: 0% 0%; background-size: cover; background-repeat: repeat; background-attachment: scroll; background-origin: padding-box; background-clip: border-box; background-color: transparent; background-blend-mode: normal;')
+        expect(style.cssText).toBe('background-image: none !important; background-position: 0% 0%; background-size: auto; background-repeat: repeat; background-attachment: scroll; background-origin: padding-box; background-clip: border-area; background-color: transparent; background-blend-mode: normal;')
         style.background = 'var(--custom)'
         style.backgroundImage = 'var(--custom)'
         expect(style.background).toBe('')
