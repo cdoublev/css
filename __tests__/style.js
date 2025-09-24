@@ -1091,6 +1091,13 @@ describe('text-autospace', () => {
         expect(style.textAutospace).toBe('normal')
     })
 })
+describe('text-decoration-skip-self', () => {
+    test('valid', () => {
+        const style = createStyleBlock()
+        style.textDecorationSkipSelf = 'skip-underline skip-overline skip-line-through'
+        expect(style.textDecorationSkipSelf).toBe('skip-all')
+    })
+})
 describe('text-decoration-trim', () => {
     test('valid', () => {
         const style = createStyleBlock()
