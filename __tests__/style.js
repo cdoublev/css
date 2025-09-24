@@ -3543,8 +3543,28 @@ describe('text-decoration', () => {
     })
 })
 describe('text-decoration-skip', () => {
-    it.todo('parses longhand declarations from a shorthand value')
-    it.todo('serializes a shorthand value from the declarations for its longhands')
+    test('expansion and reification', () => {
+
+        const style = createStyleBlock()
+        const longhands = shorthands.get('text-decoration-skip')[0]
+
+        // All equal longhand values
+        style.textDecorationSkip = 'auto'
+        expect(style).toHaveLength(longhands.length)
+        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
+        expect(style.textDecorationSkip).toBe('auto')
+
+        // none
+        style.textDecorationSkip = 'none'
+        longhands.forEach(longhand =>
+            expect(style[longhand]).toBe(longhand === 'text-decoration-skip-self' ? 'no-skip' : 'none'))
+        expect(style.textDecorationSkip).toBe('none')
+
+        // All longhands cannot be represented
+        style.textDecorationSkipSelf = 'skip-all'
+        expect(style.textDecorationSkip).toBe('')
+        expect(style.cssText).toBe('text-decoration-skip-self: skip-all; text-decoration-skip-box: none; text-decoration-skip-spaces: none; text-decoration-skip-ink: none;')
+    })
 })
 describe('text-emphasis', () => {
     test('expansion and reification', () => {
