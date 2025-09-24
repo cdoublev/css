@@ -2953,9 +2953,10 @@ describe('mask', () => {
         // Omitted values
         const values = [
             ['none'],
+            ['0% 0% / cover', { 'mask-size': 'cover' }],
             ['fill-box', { 'mask-clip': 'fill-box', 'mask-origin': 'fill-box' }],
             ['border-box fill-box', { 'mask-clip': 'fill-box' }],
-            ['0% 0% / cover', { 'mask-size': 'cover' }],
+            ['no-clip', { 'mask-clip': 'no-clip' }],
         ]
         values.forEach(([input, declared = {}]) => {
             style.mask = input
@@ -2966,7 +2967,7 @@ describe('mask', () => {
         // All longhands cannot be represented
         style.maskImage = 'none, none'
         expect(style.mask).toBe('')
-        expect(style.cssText).toBe('mask-image: none, none; mask-position: 0% 0%; mask-size: cover; mask-repeat: repeat; mask-origin: border-box; mask-clip: border-box; mask-composite: add; mask-mode: match-source; mask-border: none;')
+        expect(style.cssText).toBe('mask-image: none, none; mask-position: 0% 0%; mask-size: auto; mask-repeat: repeat; mask-origin: border-box; mask-clip: no-clip; mask-composite: add; mask-mode: match-source; mask-border: none;')
 
         // Coordinated value list
         style.mask = `${mask}, ${mask}`
