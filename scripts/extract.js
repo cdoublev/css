@@ -177,6 +177,9 @@ const replaced = {
         '<url-set>': '<image-set()>',
         '<whole-value>': '<declaration-value>?',
         '<zero>': '<number-token>',
+        // https://github.com/w3c/csswg-drafts/issues/12849
+        '<bg-layer>': "<'background-image'> || <'background-position'> [/ <'background-size'>]? || <'background-repeat'> || <'background-attachment'> || <'background-origin'> || <'background-clip'>",
+        '<final-bg-layer>': "<'background-image'> || <'background-position'> [/ <'background-size'>]? || <'background-repeat'> || <'background-attachment'> || <'background-origin'> || <'background-clip'> || <'background-color'>",
         // https://github.com/w3c/csswg-drafts/issues/10457#issuecomment-3126400963
         '<boolean-expr-group>': '<test> | (<boolean-expr[<test>]>) | <general-enclosed>',
         // https://github.com/w3c/csswg-drafts/pull/8367#issuecomment-1408147460, https://github.com/w3c/csswg-drafts/issues/9729, https://github.com/w3c/csswg-drafts/issues/10833
