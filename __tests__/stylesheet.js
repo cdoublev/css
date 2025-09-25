@@ -135,6 +135,7 @@ describe('CSSStyleSheet', () => {
 
         // CSSStyleSheet properties
         expect(CSSRuleList.is(styleSheet.cssRules)).toBeTruthy()
+        expect(CSSRuleList.is(styleSheet.rules)).toBeTruthy()
         expect(styleSheet.ownerRule).toBeNull()
     })
 })
