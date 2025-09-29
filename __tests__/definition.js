@@ -1,8 +1,8 @@
 
-import nonTerminal from '../lib/values/definitions.js'
 import parseDefinition from '../lib/parse/definition.js'
 import properties from '../lib/properties/definitions.js'
 import { serializeDefinition as serialize } from '../lib/serialize.js'
+import types from '../lib/values/definitions.js'
 
 /**
  * @param {...object} value
@@ -87,7 +87,7 @@ function token(value) {
  * @returns {object}
  */
 function type(name) {
-    return { name, type: 'non-terminal', value: nonTerminal[name] }
+    return { name, type: 'non-terminal', value: types[name] }
 }
 
 /**
@@ -264,7 +264,7 @@ describe('symbols', () => {
         expect(serialize(parsed)).toBe(input)
     })
     test('<dashed-function>', () => {
-        expect(parse('<dashed-function>')).toEqual(nonTerminal['<dashed-function>'])
+        expect(parse('<dashed-function>')).toEqual(types['<dashed-function>'])
     })
     test('<declaration>', () => {
         const input = '<declaration>'
