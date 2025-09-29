@@ -3903,6 +3903,27 @@ describe('<position>', () => {
         valid.forEach(([input, expected]) => expect(parse('<position>', input)).toBe(expected))
     })
 })
+describe('<position-area>', () => {
+    test('representation', () => {
+        const area = list([keyword('left'), omitted], ' ', ['<position-area>'])
+        expect(parse('<position-area>', 'left', false)).toMatchObject(area)
+    })
+    test('valid', () => {
+        const valid = [
+            ['center', 'center center'],
+            ['left', 'left span-all'],
+            ['top', 'span-all top'],
+            ['start', 'start start'],
+            ['x-start', 'x-start span-all'],
+            ['y-start', 'span-all y-start'],
+            ['block-start', 'start span-all'],
+            ['inline-start', 'span-all start'],
+            ['span-self-block-start', 'span-self-start span-all'],
+            ['span-self-inline-end', 'span-all span-self-end'],
+        ]
+        valid.forEach(([input, expected]) => expect(parse('<position-area>', input)).toBe(expected))
+    })
+})
 describe('<progress-source>', () => {
     test('invalid', () => {
         const invalid = [
