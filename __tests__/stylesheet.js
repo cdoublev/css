@@ -584,12 +584,14 @@ describe('CSSImportRule', () => {
         // CSSImportRule
         expect(rule.href).toBe('./global.css')
         expect(rule.layerName).toBeNull()
-        expect(rule.media).toBeNull()
+        expect(MediaList.is(rule.media)).toBeTruthy()
+        expect(rule.media.mediaText).toBe('')
         expect(rule.supportsText).toBeNull()
         // TODO: implement fetching a style sheet referenced by `@import`
         // expect(CSSStyleSheet.is(rule.styleSheet)).toBeTruthy()
         // expect(rule.styleSheet.ownerRule).toBe(rule)
-        // expect(rule.styleSheet.media).toBe(rule.media)
+        // expect(rule.styleSheet.media).not.toBe(rule.media)
+        // expect(rule.styleSheet.media.mediaText).toBe(rule.media.mediaText)
         // expect(rule.styleSheet.parentStyleSheet).toBe(rule.parentStyleSheet)
     })
 })
