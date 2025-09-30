@@ -574,7 +574,7 @@ describe('CSSImportRule', () => {
     test('properties', () => {
 
         const styleSheet = createStyleSheet('@import "./global.css";', { media: 'all' })
-        const rule = styleSheet.cssRules[0]
+        let rule = styleSheet.cssRules[0]
 
         // CSSRule
         expect(rule.cssText).toBe('@import url("./global.css");')
@@ -593,6 +593,16 @@ describe('CSSImportRule', () => {
         // expect(rule.styleSheet.media).not.toBe(rule.media)
         // expect(rule.styleSheet.media.mediaText).toBe(rule.media.mediaText)
         // expect(rule.styleSheet.parentStyleSheet).toBe(rule.parentStyleSheet)
+
+        rule = createStyleSheet('@import url(./global.css) layer supports(color: green) all;').cssRules[0]
+        expect(rule.href).toBe('./global.css')
+        expect(rule.layerName).toBe('')
+        expect(rule.supportsText).toBe('color: green')
+        expect(rule.cssText).toBe('@import url("./global.css") layer supports(color: green);')
+        rule = createStyleSheet('@import url("./global.css") layer(global) all;').cssRules[0]
+        expect(rule.href).toBe('./global.css')
+        expect(rule.layerName).toBe('global')
+        expect(rule.cssText).toBe('@import url("./global.css") layer(global);')
     })
 })
 describe('CSSKeyframeRule', () => {
