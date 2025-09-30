@@ -583,6 +583,9 @@ describe('CSSImportRule', () => {
 
         // CSSImportRule
         expect(rule.href).toBe('./global.css')
+        expect(rule.layerName).toBeNull()
+        expect(rule.media).toBeNull()
+        expect(rule.supportsText).toBeNull()
         // TODO: implement fetching a style sheet referenced by `@import`
         // expect(CSSStyleSheet.is(rule.styleSheet)).toBeTruthy()
         // expect(rule.styleSheet.ownerRule).toBe(rule)
