@@ -3705,6 +3705,25 @@ describe('<linear()>', () => {
         expect(parse('<linear()>', 'linear(0 0% 50%)')).toBe('linear(0 0%, 0 50%)')
     })
 })
+describe('<media-feature>', () => {
+    test('invalid', () => {
+        expect(parse('<media-feature>', 'inline-size', false, mediaRule)).toBeNull()
+        expect(parse('<media-feature>', 'scrollable', false, mediaRule)).toBeNull()
+    })
+    test('representation', () => {
+        const feature = ident('color', ['<mf-name>', '<mf-boolean>', '<media-feature>'])
+        expect(parse('<media-feature>', 'color', false, mediaRule)).toMatchObject(feature)
+    })
+    test('valid', () => {
+        const valid = [
+            ['COLOR', 'color'],
+            ['-webkit-device-pixel-ratio: 1dppx', 'resolution: 1dppx'],
+            ['-webkit-min-device-pixel-ratio: 1dppx', 'min-resolution: 1dppx'],
+            ['-webkit-max-device-pixel-ratio: 1dppx', 'max-resolution: 1dppx'],
+        ]
+        valid.forEach(([input, expected]) => expect(parse('<media-feature>', input, true, mediaRule)).toBe(expected))
+    })
+})
 describe('<media-type>', () => {
     test('invalid', () => {
         const invalid = [
@@ -3741,25 +3760,6 @@ describe('<mf-boolean>', () => {
     })
     test('valid', () => {
         expect(parse('<mf-boolean>', 'orientation', true, mediaRule)).toBe('orientation')
-    })
-})
-describe('<mf-name>', () => {
-    test('invalid', () => {
-        expect(parse('<mf-name>', 'color', false, containerRule)).toBeNull()
-        expect(parse('<mf-name>', 'inline-size', false, mediaRule)).toBeNull()
-    })
-    test('representation', () => {
-        expect(parse('<mf-name>', 'color', false, mediaRule)).toMatchObject(ident('color', ['<mf-name>']))
-    })
-    test('valid', () => {
-        const valid = [
-            ['COLOR', 'color', mediaRule],
-            ['inline-size', 'inline-size', containerRule],
-            ['-webkit-device-pixel-ratio', 'resolution', mediaRule],
-            ['-webkit-min-device-pixel-ratio', 'min-resolution', mediaRule],
-            ['-webkit-max-device-pixel-ratio', 'max-resolution', mediaRule],
-        ]
-        valid.forEach(([input, expected, context]) => expect(parse('<mf-name>', input, true, context)).toBe(expected))
     })
 })
 describe('<mf-plain>', () => {
@@ -3819,12 +3819,12 @@ describe('<mf-range>', () => {
 describe('<mf-value>', () => {
     test('invalid', () => {
         const invalid = [
-            [mediaRule, 'var(--custom)'],
-            [mediaRule, 'attr(name)'],
-            [mediaRule, 'calc-interpolate(0, 0: 1)'],
-            [mediaRule, 'sibling-count()'],
+            'var(--custom)',
+            'attr(name)',
+            'calc-interpolate(0, 0: 1)',
+            'sibling-count()',
         ]
-        invalid.forEach(([context, input]) => expect(parse('<mf-value>', input, false, context)).toBeNull())
+        invalid.forEach(input => expect(parse('<mf-value>', input, false, mediaRule)).toBeNull())
     })
     test('representation', () => {
         expect(parse('<mf-value>', '1', false)).toMatchObject(number(1, ['<mf-value>']))
@@ -4034,6 +4034,16 @@ describe('<scroll()>', () => {
         valid.forEach(([input, expected]) => expect(parse('<scroll()>', input)).toBe(expected))
     })
 })
+describe('<scroll-state-feature>', () => {
+    test('invalid', () => {
+        expect(parse('<scroll-state-feature>', 'color', false, containerRule)).toBeNull()
+        expect(parse('<scroll-state-feature>', 'inline-size', false, containerRule)).toBeNull()
+    })
+    test('representation', () => {
+        const feature = ident('scrollable', ['<mf-name>', '<mf-boolean>', '<media-feature>', '<scroll-state-feature>'])
+        expect(parse('<scroll-state-feature>', 'scrollable', false, containerRule)).toMatchObject(feature)
+    })
+})
 describe('<shadow>', () => {
     test('representation', () => {
         expect(parse('<shadow>', '1px 1px', false)).toMatchObject(list(
@@ -4074,6 +4084,16 @@ describe('<shape()>', () => {
     test('valid', () => {
         expect(parse('<shape()>', 'shape(nonzero from 0px 0px, move by 0px 0px)'))
             .toBe('shape(from 0px 0px, move by 0px 0px)')
+    })
+})
+describe('<size-feature>', () => {
+    test('invalid', () => {
+        expect(parse('<size-feature>', 'color', false, containerRule)).toBeNull()
+        expect(parse('<size-feature>', 'scrollable', false, containerRule)).toBeNull()
+    })
+    test('representation', () => {
+        const feature = ident('inline-size', ['<mf-name>', '<mf-boolean>', '<media-feature>', '<size-feature>'])
+        expect(parse('<size-feature>', 'inline-size', false, containerRule)).toMatchObject(feature)
     })
 })
 describe('<skew()>', () => {
