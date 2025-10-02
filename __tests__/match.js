@@ -24,6 +24,9 @@ describe('media', () => {
         return matchMediaQueryList(parseGrammar(query, '<media-query-list>'), window)
     }
 
+    test('empty', () => {
+        expect(match('')).toBeTruthy()
+    })
     test('types', () => {
         const queries = [
             ['all'],
