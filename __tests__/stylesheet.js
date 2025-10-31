@@ -1,7 +1,4 @@
 
-import fs from 'node:fs/promises'
-import http from 'node:http'
-import path from 'node:path'
 import {
     ACCESS_THIRD_PARTY_STYLESHEET_ERROR,
     EXTRA_RULE_ERROR,
@@ -33,7 +30,10 @@ import {
     CSSStyleSheet,
     MediaList,
 } from '../lib/cssom/index.js'
+import fs from 'node:fs/promises'
+import http from 'node:http'
 import { install } from '@cdoublev/css'
+import path from 'node:path'
 
 /**
  * @param {string} [rules]
@@ -124,7 +124,7 @@ async function serverHandler({ method, url }, response) {
         headers.set('Content-Length', stats.size)
         response.writeHead(200, Object.fromEntries(headers))
         read.pipe(response).on('error', response.end)
-    } catch (error) {
+    } catch {
         response.writeHead(400).end()
     }
 }
@@ -147,7 +147,7 @@ const baseURL = `http://${host}`
 const crossOrigin = `http://${domain}:${port + 1}`
 const servers = [
     http.createServer(createServerHandler(baseURL)).listen(port),
-    http.createServer(createServerHandler(crossOrigin)).listen(port + 1)
+    http.createServer(createServerHandler(crossOrigin)).listen(port + 1),
 ]
 
 install()

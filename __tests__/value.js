@@ -1756,7 +1756,7 @@ describe('<calc()>', () => {
         const valid = [
             // Absolute unit
             ['<angle>', 'calc(1deg + 200grad)', 'calc(181deg)'],
-            ['<angle>', `calc(1deg + ${Math.PI.toString()}rad)`, 'calc(181deg)'],
+            ['<angle>', `calc(1deg + ${Math.PI}rad)`, 'calc(181deg)'],
             ['<angle>', 'calc(1deg + 0.5turn)', 'calc(181deg)'],
             ['<length>', 'calc(1px + 1cm)', `calc(${(1 + (96 / 2.54)).toFixed(6)}px)`],
             ['<length>', 'calc(1px + 1mm)', `calc(${(1 + (96 / 2.54 / 10)).toFixed(6)}px)`],
