@@ -1,4 +1,7 @@
 
+import fs from 'node:fs/promises'
+import http from 'node:http'
+import path from 'node:path'
 import {
     ACCESS_THIRD_PARTY_STYLESHEET_ERROR,
     EXTRA_RULE_ERROR,
@@ -42,7 +45,8 @@ import { install } from '@cdoublev/css'
  */
 function createStyleSheet(rules = '', properties = {}) {
     properties = {
-        location: 'https://github.com/cdoublev/stylesheet.css',
+        encoding: globalThis.document.characterSet,
+        location: baseURL,
         media: '',
         originClean: true,
         rules,
@@ -70,22 +74,105 @@ function normalizeText(text) {
         .trim()
 }
 
+/**
+ * @param {IncomingMessage} request
+ * @param {ServerResponse} response
+ */
+async function serverHandler({ method, url }, response) {
+
+    const { origin, pathname, searchParams } = new URL(url, baseURL)
+    const headers = new Map
+
+    if (origin === crossOrigin) {
+        if (searchParams.has('allow-credentials')) {
+            headers.set('Access-Control-Allow-Credentials', searchParams.get('allow-credentials'))
+        }
+        if (searchParams.has('allow-headers')) {
+            headers.set('Access-Control-Allow-Headers', searchParams.get('allow-headers'))
+        }
+        if (searchParams.has('allow-methods')) {
+            headers.set('Access-Control-Allow-Methods', searchParams.get('allow-methods'))
+        }
+        if (searchParams.has('allow-origin')) {
+            headers.set('Access-Control-Allow-Origin', searchParams.get('allow-origin'))
+            headers.set('Vary', 'Origin')
+        }
+        if (searchParams.has('expose-headers')) {
+            headers.set('Access-Control-Expose-Headers', searchParams.get('expose-headers'))
+        }
+    }
+
+    if (method !== 'GET') {
+        response.writeHead(400).end()
+        return
+    }
+
+    const filePath = path.join(import.meta.dirname, 'imported', pathname.replace(baseURL, ''))
+
+    if (filePath.includes('redirected.css')) {
+        headers.set('Location', searchParams.get('url'))
+        response.writeHead(301, Object.fromEntries(headers)).end()
+        return
+    }
+
+    try {
+        const file = await fs.open(filePath)
+        const stats = await file.stat()
+        const read = file.createReadStream()
+        const charset = searchParams.get('charset')
+        headers.set('Content-Type', charset ? `text/css; charset=${charset}` : 'text/css')
+        headers.set('Content-Length', stats.size)
+        response.writeHead(200, Object.fromEntries(headers))
+        read.pipe(response).on('error', response.end)
+    } catch (error) {
+        response.writeHead(400).end()
+    }
+}
+
+/**
+ * @param {string} origin
+ * @returns {function}
+ */
+function createServerHandler(origin) {
+    return (request, response) => {
+        request.url = `${origin}${request.url}`
+        return serverHandler(request, response)
+    }
+}
+
+const domain = 'localhost'
+const port = 8080
+const host = `${domain}:${port}`
+const baseURL = `http://${host}`
+const crossOrigin = `http://${domain}:${port + 1}`
+const servers = [
+    http.createServer(createServerHandler(baseURL)).listen(port),
+    http.createServer(createServerHandler(crossOrigin)).listen(port + 1)
+]
+
 install()
+
 globalThis.document = {
     _registeredPropertySet: [],
-    href: 'https://github.com/cdoublev/',
+    baseURI: baseURL,
+    characterSet: 'UTF-8',
 }
+globalThis.origin = baseURL
+
+afterAll(() => {
+    servers.forEach(server => server.close())
+})
 
 describe('CSSStyleSheet', () => {
     it('creates a constructed CSSStyleSheet', () => {
 
         const media = 'all'
-        const options = { baseURL: 'css', disabled: true, media }
+        const options = { baseURL, disabled: true, media }
         const styleSheet = new globalThis.CSSStyleSheet(options)
 
         // StyleSheet properties
         expect(styleSheet.disabled).toBeTruthy()
-        expect(styleSheet.href).toBe(document.href)
+        expect(styleSheet.href).toBe(document.baseURI)
         expect(MediaList.is(styleSheet.media)).toBeTruthy()
         expect(styleSheet.media.mediaText).toBe(media)
         expect(styleSheet.ownerNode).toBeNull()
@@ -95,6 +182,8 @@ describe('CSSStyleSheet', () => {
 
         // CSSStyleSheet properties
         expect(styleSheet.ownerRule).toBeNull()
+        expect(CSSRuleList.is(styleSheet.cssRules)).toBeTruthy()
+        expect(CSSRuleList.is(styleSheet.rules)).toBeTruthy()
     })
     it('creates a constructed CSSStyleSheet with a MediaList', () => {
 
@@ -110,7 +199,7 @@ describe('CSSStyleSheet', () => {
     })
     it('creates a non-constructed CSSStyleSheet', () => {
 
-        const location = 'http://github.com/cdoublev/css/'
+        const location = 'http://github.com/w3c/csswg-drafts/style.css'
         const media = 'all'
         const ownerNode = { type: 'HTMLLinkElement' }
         const title = 'Main CSS'
@@ -571,29 +660,39 @@ describe('CSSFunctionRule, CSSFunctionDeclarations', () => {
     })
 })
 describe('CSSImportRule', () => {
-    test('properties', () => {
+    test('properties', async () => {
 
-        const styleSheet = createStyleSheet('@import "./global.css";', { media: 'all' })
+        const styleSheet = createStyleSheet('@import "./sheet.css";')
         let rule = styleSheet.cssRules[0]
 
+        await CSSImportRule.convert(globalThis, rule)._promise
+
         // CSSRule
-        expect(rule.cssText).toBe('@import url("./global.css");')
+        expect(rule.cssText).toBe('@import url("./sheet.css");')
         expect(rule.parentRule).toBeNull()
         expect(rule.parentStyleSheet).toBe(styleSheet)
 
         // CSSImportRule
-        expect(rule.href).toBe('./global.css')
+        expect(rule.href).toBe('./sheet.css')
         expect(rule.layerName).toBeNull()
         expect(MediaList.is(rule.media)).toBeTruthy()
         expect(rule.media.mediaText).toBe('')
         expect(rule.supportsText).toBeNull()
-        // TODO: implement fetching a style sheet referenced by `@import`
-        // expect(CSSStyleSheet.is(rule.styleSheet)).toBeTruthy()
-        // expect(rule.styleSheet.ownerRule).toBe(rule)
-        // expect(rule.styleSheet.media).not.toBe(rule.media)
-        // expect(rule.styleSheet.media.mediaText).toBe(rule.media.mediaText)
-        // expect(rule.styleSheet.parentStyleSheet).toBe(rule.parentStyleSheet)
+        expect(CSSStyleSheet.is(rule.styleSheet)).toBeTruthy()
 
+        // Imported CSSStyleSheet and StyleSheet properties
+        expect(rule.styleSheet.disabled).toBeFalsy()
+        expect(rule.styleSheet.href).toBe(`${baseURL}/sheet.css`)
+        expect(rule.styleSheet.ownerNode).toBeNull()
+        expect(rule.styleSheet.ownerRule).toBe(rule)
+        expect(MediaList.is(rule.styleSheet.media)).toBeTruthy()
+        expect(rule.styleSheet.media).not.toBe(rule.media)
+        expect(rule.styleSheet.media.mediaText).toBe(rule.media.mediaText)
+        expect(rule.styleSheet.parentStyleSheet).toBe(styleSheet)
+        expect(rule.styleSheet.title).toBe('')
+        expect(rule.styleSheet.type).toBe('text/css')
+
+        // Alternative CSSImportRule attribute syntax
         rule = createStyleSheet('@import url(./global.css) layer supports(color: green) all;').cssRules[0]
         expect(rule.href).toBe('./global.css')
         expect(rule.layerName).toBe('')
@@ -603,6 +702,85 @@ describe('CSSImportRule', () => {
         expect(rule.href).toBe('./global.css')
         expect(rule.layerName).toBe('global')
         expect(rule.cssText).toBe('@import url("./global.css") layer(global);')
+
+        await CSSImportRule.convert(globalThis, rule)._promise
+    })
+    test('fetch an @import', async () => {
+
+        const failures = [
+            '@import "sheet.css" supports(unknown)',
+            '@import "sheet.css" not all',
+            '@import "http://invalid:url/sheet.css"',
+            '@import "not-found.css"',
+            `@import url("${crossOrigin}/sheet.css" cross-origin(anonymous))`,
+            `@import url("${crossOrigin}/sheet.css?allow-origin=${crossOrigin}" cross-origin(anonymous))`,
+            `@import url("${crossOrigin}/sheet.css?allow-origin=${baseURL}" cross-origin(use-credentials))`,
+            `@import url("${crossOrigin}/sheet.css?allow-origin=*&allow-credentials=true" cross-origin(use-credentials))`,
+            `@import url("${crossOrigin}/sheet.css?allow-origin=${baseURL}&allow-credentials=true&allow-headers=*" cross-origin(use-credentials))`,
+            `@import url("${crossOrigin}/sheet.css?allow-origin=${baseURL}&allow-credentials=true&allow-methods=*" cross-origin(use-credentials))`,
+            `@import url("${crossOrigin}/sheet.css?allow-origin=${baseURL}&allow-credentials=true&expose-headers=*" cross-origin(use-credentials))`,
+        ]
+        await Promise.all(failures.map(async input => {
+            const rule = createStyleSheet(input).cssRules[0]
+            await CSSImportRule.convert(globalThis, rule)._promise
+            expect(rule.styleSheet).toBeNull()
+        }))
+
+        const successes = [
+            // Absolute and relative paths
+            [`@import "${baseURL}/sheet.css"`],
+            ['@import "sheet.css"'],
+            ['@import "/sheet.css"'],
+            // Redirected
+            // https://github.com/nodejs/undici/issues/4647
+            // [`@import "${crossOrigin}/redirected.css?url=${baseURL}/sheet.css"`],
+            // [`@import "redirected.css?url=${crossOrigin}/sheet.css"`, false],
+            // Encoding
+            ['@import "bom-utf-8.css"'],
+            ['@import "bom-utf-16be.css"'],
+            ['@import "bom-utf-16le.css"'],
+            ['@import "shift-jis.css"', 'style { content: "��"; }'],
+            ['@import "shift-jis.css?charset=shift-jis"', 'style { content: "￥"; }'],
+            ['@import "shift-jis.css"', 'style { content: "￥"; }', 'shift-jis'],
+            ['@import "charset-shift-jis.css"', 'style { content: "￥"; }'],
+            ['@import "charset-utf-16.css"'],
+            ['@import "charset-utf-16be.css"'],
+            ['@import "bom-utf-8.css?charset=shift-jis"'],
+            ['@import "bom-utf-8-charset-shift-jis.css"'],
+            ['@import "charset-utf-16.css?charset=utf-8"'],
+            ['@import "charset-utf-16.css?charset=utf-16"', ''],
+            // Cross-origin
+            [`@import url("${crossOrigin}/sheet.css?allow-origin=${baseURL}" cross-origin(anonymous))`, false],
+            [`@import url("${crossOrigin}/sheet.css?allow-origin=*" cross-origin(anonymous))`, false],
+            [`@import url("${crossOrigin}/sheet.css?allow-origin=${baseURL}&allow-credentials=true" cross-origin(use-credentials))`, false],
+        ]
+        await Promise.all(successes.map(async ([input, expected = 'style { content: "€"; }', encoding]) => {
+            const rule = createStyleSheet(input, { encoding }).cssRules[0]
+            await CSSImportRule.convert(globalThis, rule)._promise
+            expect(CSSStyleSheet.is(rule.styleSheet)).toBeTruthy()
+            if (expected === '') {
+                expect(rule.styleSheet.cssRules[0]?.cssText).toBeUndefined()
+            } else if (expected) {
+                expect(rule.styleSheet.cssRules[0]?.cssText).toBe(expected)
+            } else {
+                expect(() => rule.styleSheet.cssRules).toThrow(ACCESS_THIRD_PARTY_STYLESHEET_ERROR)
+                expect(() => rule.styleSheet.rules).toThrow(ACCESS_THIRD_PARTY_STYLESHEET_ERROR)
+            }
+        }))
+    })
+    test('cicular @import', async () => {
+
+        const styleSheet = createStyleSheet('@import "circular-a.css";')
+
+        const a = styleSheet.cssRules[0]
+        await CSSImportRule.convert(globalThis, a)._promise
+        expect(a.styleSheet).not.toBeNull()
+        const b = a.styleSheet.cssRules[0]
+        await CSSImportRule.convert(globalThis, b)._promise
+        expect(b.styleSheet).not.toBeNull()
+        const circular = b.styleSheet.cssRules[0]
+        await CSSImportRule.convert(globalThis, circular)._promise
+        expect(circular.styleSheet).toBeNull()
     })
 })
 describe('CSSKeyframeRule', () => {

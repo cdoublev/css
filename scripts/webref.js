@@ -8,7 +8,7 @@ const inputPath = join(webrefPath, 'ed', 'css')
 export async function listAll() {
     const all = []
     for (const filename of await readdir(inputPath)) {
-        const file = await readFile(join(inputPath, filename), 'utf8')
+        const file = await readFile(join(inputPath, filename), 'utf-8')
         all.push([basename(filename, '.json'), JSON.parse(file)])
     }
     return Object.fromEntries(all)

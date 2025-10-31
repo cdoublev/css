@@ -14,6 +14,7 @@
  */
 import * as colors from '../lib/values/colors.js'
 import * as compatibility from '../lib/compatibility.js'
+import * as env from '../lib/utils/env.js'
 import * as pseudos from '../lib/values/pseudos.js'
 import * as webref from './webref.js'
 import { quote, tab } from '../lib/utils/string.js'
@@ -612,8 +613,6 @@ const descriptors = [...Object.keys(initial.descriptors).map(rule => [rule, Obje
 const properties = [...Object.entries(initial.properties)]
 const types = [...Object.entries(initial.types), ...Object.entries(replaced.types)]
 
-const reportErrors = process.env.NODE_ENV === 'development'
-
 // TODO: periodically review this list to remove errors that no longer occur
 const errors = {
     '@apply': { cause: 'It is not yet supported.' },
@@ -670,7 +669,7 @@ const errors = {
  * @param {string} message
  */
 function reportError(spec, name, message) {
-    if (reportErrors && !errors[name]) {
+    if (env.development && !errors[name]) {
         console.log(`[${spec}] ${message}`)
     }
 }
@@ -887,13 +886,13 @@ function addTypes(definitions = [], key) {
                 return
             }
             if (initial.types[name] || contextSensitiveTypes[name]) {
-                if (value && reportErrors) {
+                if (value && env.development) {
                     reportError(key, name, `${name} is now assigned a value definition`)
                 }
                 return
             }
             if (!value) {
-                if (reportErrors && !replaced[name]) {
+                if (env.development && !replaced[name]) {
                     reportError(key, name, `${name} is defined in prose and must be replaced with a value definiton`)
                 }
                 return
@@ -928,7 +927,7 @@ function addProperties(definitions = [], key) {
             return
         }
         if (initial.properties[name]) {
-            if (reportErrors) {
+            if (env.development) {
                 reportError(key, name, `${name} (property) is now extracted`)
             }
             return
@@ -981,7 +980,7 @@ function addDescriptors(definitions = [], rule, key) {
             return
         }
         if (initialDescriptors?.[name]) {
-            if (reportErrors) {
+            if (env.development) {
                 reportError(key, name, `${name} (descriptor for ${rule}) is now extracted`)
             }
             return
@@ -1039,11 +1038,11 @@ function addRules(definitions = [], key) {
         }
         const rule = findRule(name, root.value.rules)
         if (rule) {
-            if (reportErrors && value && isUpdatedRule(name, value, rule)) {
+            if (env.development && value && isUpdatedRule(name, value, rule)) {
                 reportError(key, name, `${name} has a new definition`)
             }
             addDescriptors(definitions, name, key)
-        } else if (reportErrors) {
+        } else if (env.development) {
             reportError(key, name, `${name} is a new rule`)
         }
     })
