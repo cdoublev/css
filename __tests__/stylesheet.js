@@ -29,11 +29,13 @@ import {
     CSSStyleRule,
     CSSStyleSheet,
     MediaList,
+    StyleSheetList,
 } from '../lib/cssom/index.js'
 import fs from 'node:fs/promises'
 import http from 'node:http'
 import { install } from '@cdoublev/css'
 import path from 'node:path'
+import { wrapperForImpl } from '../lib/cssom/utils.js'
 
 /**
  * @param {string} [rules]
@@ -52,7 +54,9 @@ function createStyleSheet(rules = '', properties = {}) {
         rules,
         ...properties,
     }
-    return CSSStyleSheet.create(globalThis, undefined, properties)
+    const styleSheet = CSSStyleSheet.create(globalThis, undefined, properties)
+    styleSheets._list.push(styleSheet)
+    return styleSheet
 }
 
 /**
@@ -140,6 +144,8 @@ function createServerHandler(origin) {
     }
 }
 
+install()
+
 const domain = 'localhost'
 const port = 8080
 const host = `${domain}:${port}`
@@ -149,16 +155,20 @@ const servers = [
     http.createServer(createServerHandler(baseURL)).listen(port),
     http.createServer(createServerHandler(crossOrigin)).listen(port + 1),
 ]
-
-install()
+const styleSheets = StyleSheetList.createImpl(globalThis)
 
 globalThis.document = {
     _registeredPropertySet: [],
+    adoptedStyleSheets: [],
     baseURI: baseURL,
     characterSet: 'UTF-8',
+    styleSheets: wrapperForImpl(styleSheets),
 }
 globalThis.origin = baseURL
 
+afterEach(() => {
+    styleSheets._list.splice(0)
+})
 afterAll(() => {
     servers.forEach(server => server.close())
 })
@@ -923,8 +933,8 @@ describe('CSSMarginRule', () => {
 describe('CSSMediaRule', () => {
     test('properties', () => {
 
-        const styleSheet = createStyleSheet('@media all { style {} }')
-        const rule = styleSheet.cssRules[0]
+        let styleSheet = createStyleSheet('@media all { style {} }')
+        let rule = styleSheet.cssRules[0]
 
         // CSSRule
         expect(rule.cssText).toBe('@media all { style {} }')
@@ -939,6 +949,14 @@ describe('CSSMediaRule', () => {
 
         // CSSMediaRule
         expect(MediaList.is(rule.media)).toBeTruthy()
+        expect(rule.matches).toBeTruthy()
+
+        styleSheet = new globalThis.CSSStyleSheet()
+        styleSheet.insertRule('@media all {}')
+        rule = styleSheet.cssRules[0]
+
+        expect(rule.matches).toBeFalsy()
+        document.adoptedStyleSheets.push(styleSheet)
         expect(rule.matches).toBeTruthy()
     })
 })
