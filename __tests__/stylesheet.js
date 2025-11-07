@@ -2517,6 +2517,58 @@ describe('CSS grammar - semantic', () => {
             expect(styleSheet.cssRules[0].cssText).toBe(normalizeText(input))
         })
     })
+    test('nested conditional rule inside @function - invalid block contents', () => {
+
+        const styleSheet = createStyleSheet(`
+            @function --name() {
+                @media {
+
+                    @media;
+
+                    @charset "utf-8";
+                    @import "./global.css";
+                    @namespace svg "http://www.w3.org/2000/svg";
+                    @annotation {}
+                    @color-profile --name {}
+                    @counter-style name {}
+                    @font-face {}
+                    @font-feature-values name {}
+                    @font-palette-values --name { font-family: name }
+                    @function --name() {}
+                    @keyframes name {}
+                    @layer name;
+                    @page {}
+                    @position-try --name {}
+                    @property --name { syntax: "*"; inherits: false }
+                    @top-left {}
+                    @scope {}
+                    @starting-style {}
+                    @view-transition {}
+                    0% {}
+                    style {}
+
+                    color: red;
+
+                    result: 1 !important;
+
+                    @media {}
+                }
+            }
+        `)
+        expect(styleSheet.cssRules[0].cssText).toBe('@function --name() { @media { @media {} } }')
+    })
+    test('nested conditional rule inside @function - valid block contents', () => {
+        const contents = [
+            '@container name {}',
+            '@media {}',
+            '@supports (color: green) {}',
+            '--custom: 1;',
+            'RESULT: {env(name)};',
+        ]
+        const input = `@FUNCTION --name() { @media { ${contents.join(' ')} } }`
+        const styleSheet = createStyleSheet(input)
+        expect(styleSheet.cssRules[0].cssText).toBe(input.toLowerCase())
+    })
     test('nested style rule - invalid prelude containing an undeclared namespace prefix', () => {
         const styleSheet = createStyleSheet(`
             @namespace svg "http://www.w3.org/2000/svg";
