@@ -563,11 +563,11 @@ describe('background-position', () => {
         })
     })
 })
-describe('background-size', () => {
+describe('background-size, mask-size', () => {
     test('valid', () => {
         const style = createStyleBlock()
-        style.backgroundSize = '100% auto'
-        expect(style.backgroundSize).toBe('100%')
+        style.backgroundSize = '100%'
+        expect(style.backgroundSize).toBe('100% auto')
     })
 })
 describe('border-end-end-radius, border-end-start-radius, border-bottom-left-radius, border-bottom-right-radius, border-start-end-radius, border-start-start-radius, border-top-left-radius, border-top-right-radius', () => {
@@ -1367,7 +1367,7 @@ describe('background', () => {
         const subProperties = shorthands.get('background')
         const longhands = subProperties.flat()
         const [, resetOnly] = subProperties
-        const background = 'none 0% 0% / auto repeat repeat scroll padding-box border-box transparent'
+        const background = 'none 0% 0% / auto auto repeat repeat scroll padding-box border-box transparent'
 
         // Initial longhand values + important
         style.cssText = `background: ${background} !important`
@@ -1419,13 +1419,13 @@ describe('background', () => {
         // All longhands cannot be represented
         style.backgroundImage = 'none, none'
         expect(style.background).toBe('')
-        expect(style.cssText).toBe('background-image: none, none; background-position: 0% 0%; background-size: auto; background-repeat: repeat; background-attachment: scroll; background-origin: padding-box; background-clip: border-area; background-color: transparent; background-blend-mode: normal;')
+        expect(style.cssText).toBe('background-image: none, none; background-position: 0% 0%; background-size: auto auto; background-repeat: repeat; background-attachment: scroll; background-origin: padding-box; background-clip: border-area; background-color: transparent; background-blend-mode: normal;')
         style.backgroundImage = 'initial'
         expect(style.background).toBe('')
-        expect(style.cssText).toBe('background-image: initial; background-position: 0% 0%; background-size: auto; background-repeat: repeat; background-attachment: scroll; background-origin: padding-box; background-clip: border-area; background-color: transparent; background-blend-mode: normal;')
+        expect(style.cssText).toBe('background-image: initial; background-position: 0% 0%; background-size: auto auto; background-repeat: repeat; background-attachment: scroll; background-origin: padding-box; background-clip: border-area; background-color: transparent; background-blend-mode: normal;')
         style.setProperty('background-image', 'none', 'important')
         expect(style.background).toBe('')
-        expect(style.cssText).toBe('background-image: none !important; background-position: 0% 0%; background-size: auto; background-repeat: repeat; background-attachment: scroll; background-origin: padding-box; background-clip: border-area; background-color: transparent; background-blend-mode: normal;')
+        expect(style.cssText).toBe('background-image: none !important; background-position: 0% 0%; background-size: auto auto; background-repeat: repeat; background-attachment: scroll; background-origin: padding-box; background-clip: border-area; background-color: transparent; background-blend-mode: normal;')
         style.background = 'var(--custom)'
         style.backgroundImage = 'var(--custom)'
         expect(style.background).toBe('')
@@ -2827,7 +2827,7 @@ describe('mask', () => {
         const subProperties = shorthands.get('mask')
         const [, resetOnly] = subProperties
         const longhands = subProperties.flat()
-        const mask = 'none 0% 0% / auto repeat border-box border-box add match-source'
+        const mask = 'none 0% 0% / auto auto repeat border-box border-box add match-source'
 
         // Initial longhand values
         style.mask = mask
@@ -2852,7 +2852,7 @@ describe('mask', () => {
         // All longhands cannot be represented
         style.maskImage = 'none, none'
         expect(style.mask).toBe('')
-        expect(style.cssText).toBe('mask-image: none, none; mask-position: 0% 0%; mask-size: auto; mask-repeat: repeat; mask-origin: border-box; mask-clip: no-clip; mask-composite: add; mask-mode: match-source; mask-border: none;')
+        expect(style.cssText).toBe('mask-image: none, none; mask-position: 0% 0%; mask-size: auto auto; mask-repeat: repeat; mask-origin: border-box; mask-clip: no-clip; mask-composite: add; mask-mode: match-source; mask-border: none;')
 
         // Coordinated value list
         style.mask = `${mask}, ${mask}`
