@@ -158,7 +158,6 @@ const servers = [
 const styleSheets = StyleSheetList.createImpl(globalThis)
 
 globalThis.document = {
-    _registeredPropertySet: [],
     adoptedStyleSheets: [],
     baseURI: baseURL,
     characterSet: 'UTF-8',

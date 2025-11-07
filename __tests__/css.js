@@ -10,7 +10,9 @@ import {
 import { install } from '@cdoublev/css'
 
 install()
-globalThis.document = { _registeredPropertySet: [] }
+
+const registeredProperties = new Map
+globalThis.document = { _registeredProperties: registeredProperties }
 
 describe('CSS.escape()', () => {
     it('serializes the given value', () => {
@@ -43,12 +45,7 @@ describe('CSS.registerProperty()', () => {
             [{ inherits: true, initialValue: 'calc(1em + 1px)', name: '--custom', syntax: '<length>' }, INVALID_INITIAL_CUSTOM_PROPERTY_VALUE],
             [{ inherits: true, initialValue: 'initial', name: '--custom', syntax: '*' }, INVALID_INITIAL_CUSTOM_PROPERTY_VALUE],
         ]
-        document._registeredPropertySet.push({
-            inherits: true,
-            initialValue: 'green',
-            name: '--registered',
-            syntax: '<color>',
-        })
+        registeredProperties.set('--registered', { inherits: true, initialValue: 'green', syntax: '<color>' })
         invalid.forEach(([definition, error]) => expect(() => CSS.registerProperty(definition)).toThrow(error))
     })
     it('registers a valid definition', () => {
@@ -60,10 +57,9 @@ describe('CSS.registerProperty()', () => {
             { inherits: true, initialValue: 'var(--custom)', name: '--custom-5', syntax: '*' },
             { inherits: true, initialValue: 'first-valid(1px)', name: '--custom-6', syntax: '*' },
         ]
-        const register = globalThis.document._registeredPropertySet
         valid.forEach(property => {
             CSS.registerProperty(property)
-            expect(register.some(definition => definition.name === property.name)).toBeTruthy()
+            expect(registeredProperties.has(property.name)).toBeTruthy()
         })
     })
 })
