@@ -8,7 +8,7 @@
   ],
   "version": "0.1.0",
   "engines": {
-    "node": ">= 22"
+    "node": ">=22"
   },
   "homepage": "https://github.com/cdoublev/css#readme",
   "bugs": "https://github.com/cdoublev/css/issues",
@@ -47,7 +47,7 @@
     "jest": "^30.0.0",
     "jest-junit": "^16.0.0",
     "webidl2js": "cdoublev/webidl2js",
-    "webref": "w3c/webref#e62156abb0cfd4472f0174adde3db5e047e79430"
+    "webref": "w3c/webref#dd2c04823ec5839217bbfa8bf62e7d2ec8e82c1b"
   },
   "publishConfig": {
     "access": "public"

@@ -14,19 +14,19 @@
  */
 import * as colors from '../lib/values/colors.js'
 import * as compatibility from '../lib/compatibility.js'
-import * as env from '../lib/utils/env.js'
+import * as environment from '../lib/utils/environment.js'
 import * as pseudos from '../lib/values/pseudos.js'
 import * as webref from './webref.js'
 import { quote, tab } from '../lib/utils/string.js'
 import arbitrary from '../lib/parse/arbitrary.js'
 import contextSensitiveTypes from '../lib/values/context-sensitive.js'
 import { definitions as dimensions } from '../lib/values/dimensions.js'
+import { findRule } from '../lib/utils/definition.js'
 import forgiving from '../lib/values/forgiving.js'
 import fs from 'node:fs/promises'
 import logical from '../lib/properties/logical.js'
 import parseDefinition from '../lib/parse/definition.js'
 import path from 'node:path'
-import root from '../lib/rules/definitions.js'
 import { serializeDefinition } from '../lib/serialize.js'
 import shorthands from '../lib/properties/shorthands.js'
 
@@ -119,6 +119,7 @@ const replaced = {
         '<absolute-size>': 'xx-small | x-small | small | medium | large | x-large | xx-large',
         '<age>': 'child | young | old',
         '<angle>': '<dimension>',
+        '<animation-action>': 'none | play | play-forwards | play-backwards | pause | reset | replay',
         '<attr-unit>': `"%" | ${[...dimensions.values()].flatMap(dimension => dimension.units).join(' | ')}`,
         '<basic-shape>': '<basic-shape-rect> | <circle()> | <ellipse()> | <polygon()> | <path()> | <shape()>',
         '<counter-name>': '<custom-ident>',
@@ -130,6 +131,7 @@ const replaced = {
         '<decibel>': '<dimension>',
         '<deprecated-color>': colors.deprecated.join(' | '),
         '<dimension>': '<dimension-token>',
+        '<extension-name>': '<dashed-ident>',
         '<flex>': '<dimension>',
         '<frequency>': '<dimension>',
         '<gender>': 'male | female | neutral',
@@ -167,6 +169,7 @@ const replaced = {
         '<size-keyword>': '<ident>',
         '<string>': '<string-token>',
         '<style-feature-name>': '<ident>',
+        '<supports-condition-name>': '<extension-name>',
         '<system-color>': colors.system.join(' | '),
         '<target-name>': '<string>',
         '<time>': '<dimension>',
@@ -189,6 +192,8 @@ const replaced = {
         '<radial-size>': 'closest-corner | farthest-corner | <radial-radius>{1,2}',
         // https://github.com/w3c/csswg-drafts/issues/11842
         '<control-value()>': 'control-value(<syntax-type-name>?)',
+        // https://github.com/w3c/csswg-drafts/issues/13010
+        '<event-trigger-event>': 'activate | click | touch | dblclick | keypress(<string>)',
         // https://github.com/w3c/csswg-drafts/issues/12487
         '<if-args-branch>': '<declaration-value> [: <declaration-value>?]?',
         // https://github.com/w3c/fxtf-drafts/issues/532
@@ -361,6 +366,7 @@ const excluded = {
         ],
         'css-backgrounds': [
             // Superseded by CSS Borders
+            'border',
             'border-color',
             'border-bottom',
             'border-bottom-color',
@@ -368,6 +374,12 @@ const excluded = {
             'border-bottom-right-radius',
             'border-bottom-style',
             'border-bottom-width',
+            'border-image',
+            'border-image-outset',
+            'border-image-repeat',
+            'border-image-slice',
+            'border-image-source',
+            'border-image-width',
             'border-left',
             'border-left-color',
             'border-left-style',
@@ -377,12 +389,14 @@ const excluded = {
             'border-right-color',
             'border-right-style',
             'border-right-width',
+            'border-style',
             'border-top',
             'border-top-color',
             'border-top-left-radius',
             'border-top-right-radius',
             'border-top-style',
             'border-top-width',
+            'border-width',
             'box-shadow',
         ],
         'css-backgrounds-4': [
@@ -547,6 +561,11 @@ const excluded = {
             '<right>',
             '<top>',
         ],
+        'css-backgrounds': [
+            // Superseded by CSS Borders
+            '<line-style>',
+            '<line-width>',
+        ],
         'css-color': [
             // Dangling
             '<color-space>',
@@ -636,6 +655,7 @@ const errors = {
     },
     '@layer': { cause: 'It is the only rule with alternative definitions therefore only the first (block) definition is correctly checked.' },
     '@mixin': { cause: 'It is not yet supported.' },
+    '@supports-condition': { cause: 'It is not yet supported.' },
     '@when': { cause: 'It is not yet supported.' },
     '<box>': {
         cause: 'It is a generic type that is not used anywhere, and should not be exported.',
@@ -669,7 +689,7 @@ const errors = {
  * @param {string} message
  */
 function reportError(spec, name, message) {
-    if (env.development && !errors[name]) {
+    if (environment.development && !errors[name]) {
         console.log(`[${spec}] ${message}`)
     }
 }
@@ -725,30 +745,6 @@ function isUpdatedRule(name, value, { prelude, value: block }) {
         .replace(/[([] | [)\],]/g, match => match.trim())
         .replace('};', '}')
     return value !== definition
-}
-
-/**
- * @param {string} type
- * @param {object[]} [rules]
- * @param {number} [depth]
- * @returns {object|null}
- */
-function findRule(type, rules = [], depth = 1) {
-    if (depth < 3) {
-        for (const rule of rules) {
-            const { name, names, value } = rule
-            if (name === type || names?.includes(type)) {
-                return rule
-            }
-            if (value) {
-                const child = findRule(type, value.rules, depth + 1)
-                if (child) {
-                    return child
-                }
-            }
-        }
-    }
-    return null
 }
 
 /**
@@ -886,13 +882,13 @@ function addTypes(definitions = [], key) {
                 return
             }
             if (initial.types[name] || contextSensitiveTypes[name]) {
-                if (value && env.development) {
+                if (value && environment.development) {
                     reportError(key, name, `${name} is now assigned a value definition`)
                 }
                 return
             }
             if (!value) {
-                if (env.development && !replaced[name]) {
+                if (environment.development && !replaced[name]) {
                     reportError(key, name, `${name} is defined in prose and must be replaced with a value definiton`)
                 }
                 return
@@ -927,7 +923,7 @@ function addProperties(definitions = [], key) {
             return
         }
         if (initial.properties[name]) {
-            if (env.development) {
+            if (environment.development) {
                 reportError(key, name, `${name} (property) is now extracted`)
             }
             return
@@ -980,7 +976,7 @@ function addDescriptors(definitions = [], rule, key) {
             return
         }
         if (initialDescriptors?.[name]) {
-            if (env.development) {
+            if (environment.development) {
                 reportError(key, name, `${name} (descriptor for ${rule}) is now extracted`)
             }
             return
@@ -1036,13 +1032,13 @@ function addRules(definitions = [], key) {
         if (aliases.has(name) || mappings.has(name)) {
             return
         }
-        const rule = findRule(name, root.value.rules)
+        const rule = findRule(name)
         if (rule) {
-            if (env.development && value && isUpdatedRule(name, value, rule)) {
+            if (environment.development && value && isUpdatedRule(name, value, rule)) {
                 reportError(key, name, `${name} has a new definition`)
             }
             addDescriptors(definitions, name, key)
-        } else if (env.development) {
+        } else if (environment.development) {
             reportError(key, name, `${name} is a new rule`)
         }
     })

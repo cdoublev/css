@@ -541,7 +541,7 @@ describe('animation-range-center', () => {
         expect(style.animationRangeCenter).toBe('source')
     })
 })
-describe('animation-range-start, animation-range-end, animation-trigger-exit-range-end, animation-trigger-exit-range-start, animation-trigger-range-end, animation-trigger-range-start', () => {
+describe('animation-range-start, animation-range-end, timeline-trigger-exit-range-end, timeline-trigger-exit-range-start, timeline-trigger-range-end, timeline-trigger-range-start', () => {
     test('valid', () => {
         const style = createStyleBlock()
         style.animationRangeStart = 'entry 0%'
@@ -1307,7 +1307,7 @@ describe('animation', () => {
         // All longhands cannot be represented
         style.animationName = 'none, none'
         expect(style.animation).toBe('')
-        expect(style.cssText).toBe('animation-duration: auto; animation-timing-function: linear; animation-delay: 0s; animation-iteration-count: 1; animation-direction: normal; animation-fill-mode: none; animation-play-state: running; animation-name: none, none; animation-timeline: auto; animation-composition: replace; animation-range: normal; animation-trigger: once;')
+        expect(style.cssText).toBe('animation-duration: auto; animation-timing-function: linear; animation-delay: 0s; animation-iteration-count: 1; animation-direction: normal; animation-fill-mode: none; animation-play-state: running; animation-name: none, none; animation-timeline: auto; animation-composition: replace; animation-range: normal; animation-trigger: none;')
 
         // Coordinated value list
         style.animation = `${animation}, ${animation}`
@@ -1358,153 +1358,6 @@ describe('animation-range', () => {
         style.animationRange = 'normal, normal'
         longhands.forEach(longhand => expect(style[longhand]).toBe(`${initial(longhand)}, ${initial(longhand)}`))
         expect(style.animationRange).toBe('normal, normal')
-    })
-})
-describe('animation-trigger', () => {
-    test('expansion and reification', () => {
-
-        const style = createStyleBlock()
-        const longhands = shorthands.get('animation-trigger')[0]
-
-        // Initial longhand values (not all longhands can be explicitly declared)
-        style.animationTrigger = 'once auto'
-        expect(style).toHaveLength(longhands.length)
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.animationTrigger).toBe('once')
-        style.animationTrigger = 'once --timeline normal normal'
-        longhands.forEach(longhand =>
-            expect(style[longhand]).toBe(longhand === 'animation-trigger-timeline' ? '--timeline' : initial(longhand)))
-        expect(style.animationTrigger).toBe('--timeline')
-
-        // Omitted values
-        const values = [
-            ['once'],
-            ['none', { 'animation-trigger-timeline': 'none' }],
-            ['--timeline 10%', {
-                'animation-trigger-range-start': '10%',
-                'animation-trigger-timeline': '--timeline',
-            }],
-            ['--timeline entry', {
-                'animation-trigger-range-end': 'entry',
-                'animation-trigger-range-start': 'entry',
-                'animation-trigger-timeline': '--timeline',
-            }],
-            ['--timeline normal 10%', {
-                'animation-trigger-range-end': '10%',
-                'animation-trigger-timeline': '--timeline',
-            }],
-            ['--timeline normal normal 10%', {
-                'animation-trigger-exit-range-start': '10%',
-                'animation-trigger-timeline': '--timeline',
-            }],
-            ['--timeline normal normal entry', {
-                'animation-trigger-exit-range-end': 'entry',
-                'animation-trigger-exit-range-start': 'entry',
-                'animation-trigger-timeline': '--timeline',
-            }],
-        ]
-        values.forEach(([input, declared = {}]) => {
-            style.animationTrigger = input
-            longhands.forEach(longhand => expect(style[longhand]).toBe(declared[longhand] ?? initial(longhand)))
-            expect(style.animationTrigger).toBe(input)
-        })
-
-        // All longhands cannot be represented
-        style.animationTriggerTimeline = 'none'
-        expect(style.animationTrigger).toBe('')
-        expect(style.cssText).toBe('animation-trigger-behavior: once; animation-trigger-timeline: none; animation-trigger-range: normal; animation-trigger-exit-range: entry;')
-        style.animationTriggerTimeline = '--timeline, --timeline'
-        expect(style.animationTrigger).toBe('')
-        expect(style.cssText).toBe('animation-trigger-behavior: once; animation-trigger-timeline: --timeline, --timeline; animation-trigger-range: normal; animation-trigger-exit-range: entry;')
-
-        // Coordinated value list
-        style.animationTrigger = 'once, once'
-        longhands.forEach(longhand => expect(style[longhand]).toBe(`${initial(longhand)}, ${initial(longhand)}`))
-        expect(style.animationTrigger).toBe('once, once')
-    })
-})
-describe('animation-trigger-exit-range', () => {
-    test('expansion and reification', () => {
-
-        const style = createStyleBlock()
-        const longhands = shorthands.get('animation-trigger-exit-range')[0]
-
-        // Initial longhand values
-        style.animationTriggerExitRange = 'auto auto'
-        expect(style).toHaveLength(longhands.length)
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.animationTriggerExitRange).toBe('auto')
-
-        // Omitted values
-        const values = [
-            ['auto'],
-            ['0%', '0%', 'auto'],
-            ['auto 0%', 'auto', '0%'],
-            ['entry'],
-            ['entry 10%', 'entry 10%', 'entry'],
-            ['entry 0% entry 100%', 'entry', 'entry', 'entry'],
-            ['entry exit 100%', 'entry', 'exit', 'entry exit'],
-            ['entry 0% 100%', 'entry', '100%', 'entry 0% 100%'],
-            ['entry auto', 'entry', 'auto', 'entry auto'],
-        ]
-        values.forEach(([input, start = input, end = input, expected = input]) => {
-            style.animationTriggerExitRange = input
-            expect(style.animationTriggerExitRangeStart).toBe(start)
-            expect(style.animationTriggerExitRangeEnd).toBe(end)
-            expect(style.animationTriggerExitRange).toBe(expected)
-        })
-
-        // All longhands cannot be represented
-        style.animationTriggerExitRangeStart = 'auto, auto'
-        expect(style.animationRange).toBe('')
-        expect(style.cssText).toBe('animation-trigger-exit-range-start: auto, auto; animation-trigger-exit-range-end: auto;')
-
-        // Coordinated value list
-        style.animationTriggerExitRange = 'auto, auto'
-        longhands.forEach(longhand => expect(style[longhand]).toBe(`${initial(longhand)}, ${initial(longhand)}`))
-        expect(style.animationTriggerExitRange).toBe('auto, auto')
-    })
-})
-describe('animation-trigger-range', () => {
-    test('expansion and reification', () => {
-
-        const style = createStyleBlock()
-        const longhands = shorthands.get('animation-trigger-range')[0]
-
-        // Initial longhand values
-        style.animationTriggerRange = 'normal normal'
-        expect(style).toHaveLength(longhands.length)
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.animationTriggerRange).toBe('normal')
-
-        // Omitted values
-        const values = [
-            ['normal'],
-            ['0%', '0%', 'normal'],
-            ['normal 0%', 'normal', '0%'],
-            ['entry'],
-            ['entry 10%', 'entry 10%', 'entry'],
-            ['entry 0% entry 100%', 'entry', 'entry', 'entry'],
-            ['entry exit 100%', 'entry', 'exit', 'entry exit'],
-            ['entry 0% 100%', 'entry', '100%', 'entry 0% 100%'],
-            ['entry normal', 'entry', 'normal', 'entry normal'],
-        ]
-        values.forEach(([input, start = input, end = input, expected = input]) => {
-            style.animationTriggerRange = input
-            expect(style.animationTriggerRangeStart).toBe(start)
-            expect(style.animationTriggerRangeEnd).toBe(end)
-            expect(style.animationTriggerRange).toBe(expected)
-        })
-
-        // All longhands cannot be represented
-        style.animationTriggerRangeStart = 'normal, normal'
-        expect(style.animationRange).toBe('')
-        expect(style.cssText).toBe('animation-trigger-range-start: normal, normal; animation-trigger-range-end: normal;')
-
-        // Coordinated value list
-        style.animationTriggerRange = 'normal, normal'
-        longhands.forEach(longhand => expect(style[longhand]).toBe(`${initial(longhand)}, ${initial(longhand)}`))
-        expect(style.animationTriggerRange).toBe('normal, normal')
     })
 })
 describe('background', () => {
@@ -1848,9 +1701,9 @@ describe('border-clip', () => {
         expect(style.borderClip).toBe('normal')
 
         // All longhands cannot be represented
-        style.borderClipTop = '1px'
+        style.borderTopClip = '1px'
         expect(style.borderClip).toBe('')
-        expect(style.cssText).toBe('border-clip-top: 1px; border-clip-right: normal; border-clip-bottom: normal; border-clip-left: normal;')
+        expect(style.cssText).toBe('border-top-clip: 1px; border-right-clip: normal; border-bottom-clip: normal; border-left-clip: normal;')
     })
 })
 describe('border-color', () => {
@@ -2322,6 +2175,31 @@ describe('cue, pause, rest', () => {
         expect(style.cueBefore).toBe(initial('cue-before'))
         expect(style.cueAfter).toBe('url("icon.wav")')
         expect(style.cue).toBe('none url("icon.wav")')
+    })
+})
+describe('event-trigger', () => {
+    test('expansion and reification', () => {
+
+        const style = createStyleBlock()
+        const longhands = shorthands.get('event-trigger')[0]
+
+        // Initial longhand values
+        style.eventTrigger = 'none none'
+        expect(style).toHaveLength(longhands.length)
+        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
+        expect(style.eventTrigger).toBe('none')
+
+        // All longhands cannot be represented
+        style.eventTriggerName = '--trigger, --trigger'
+        expect(style.eventTrigger).toBe('')
+        expect(style.cssText).toBe('event-trigger-name: --trigger, --trigger; event-trigger-source: none;')
+
+        // Coordinated value list
+        style.eventTrigger = '--trigger none, --trigger none'
+        longhands.forEach(longhand =>
+            expect(style[longhand])
+                .toBe(longhand === 'event-trigger-name' ? '--trigger, --trigger' : 'none, none'))
+        expect(style.eventTrigger).toBe('--trigger none, --trigger none')
     })
 })
 describe('flex', () => {
@@ -3657,6 +3535,138 @@ describe('text-wrap', () => {
         expect(style.textWrapMode).toBe(initial('text-wrap-mode'))
         expect(style.textWrapStyle).toBe('balance')
         expect(style.textWrap).toBe('balance')
+    })
+})
+describe('timeline-trigger', () => {
+    test('expansion and reification', () => {
+
+        const style = createStyleBlock()
+        const longhands = shorthands.get('timeline-trigger')[0]
+
+        // Initial longhand values
+        style.timelineTrigger = 'none auto normal normal / auto auto'
+        expect(style).toHaveLength(longhands.length)
+        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
+        expect(style.timelineTrigger).toBe('none')
+
+        // Omitted values
+        const values = [
+            ['none'],
+            ['none auto normal', {}, 'none'],
+            ['none auto 10%', { 'timeline-trigger-range-start': '10%' }],
+            ['none auto entry', {
+                'timeline-trigger-range-end': 'entry',
+                'timeline-trigger-range-start': 'entry',
+            }],
+            ['none auto normal 10%', { 'timeline-trigger-range-end': '10%' }],
+            ['none auto normal normal / 10%', { 'timeline-trigger-exit-range-start': '10%' }, 'none auto normal / 10%'],
+            ['none auto normal normal / entry',
+                {
+                    'timeline-trigger-exit-range-end': 'entry',
+                    'timeline-trigger-exit-range-start': 'entry',
+                },
+                'none auto normal / entry',
+            ],
+        ]
+        values.forEach(([input, declared = {}, expected = input]) => {
+            style.timelineTrigger = input
+            longhands.forEach(longhand => expect(style[longhand]).toBe(declared[longhand] ?? initial(longhand)))
+            expect(style.timelineTrigger).toBe(expected)
+        })
+
+        // All longhands cannot be represented
+        style.timelineTriggerName = '--trigger, --trigger'
+        expect(style.timelineTrigger).toBe('')
+        expect(style.cssText).toBe('timeline-trigger-name: --trigger, --trigger; timeline-trigger-source: auto; timeline-trigger-range: normal; timeline-trigger-exit-range: entry;')
+
+        // Coordinated value list
+        style.timelineTrigger = 'none auto normal, none auto normal'
+        longhands.forEach(longhand => expect(style[longhand]).toBe(`${initial(longhand)}, ${initial(longhand)}`))
+        expect(style.timelineTrigger).toBe('none auto normal, none auto normal')
+    })
+})
+describe('timeline-trigger-exit-range', () => {
+    test('expansion and reification', () => {
+
+        const style = createStyleBlock()
+        const longhands = shorthands.get('timeline-trigger-exit-range')[0]
+
+        // Initial longhand values
+        style.timelineTriggerExitRange = 'auto auto'
+        expect(style).toHaveLength(longhands.length)
+        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
+        expect(style.timelineTriggerExitRange).toBe('auto')
+
+        // Omitted values
+        const values = [
+            ['auto'],
+            ['0%', '0%', 'auto'],
+            ['auto 0%', 'auto', '0%'],
+            ['entry'],
+            ['entry 10%', 'entry 10%', 'entry'],
+            ['entry 0% entry 100%', 'entry', 'entry', 'entry'],
+            ['entry exit 100%', 'entry', 'exit', 'entry exit'],
+            ['entry 0% 100%', 'entry', '100%', 'entry 0% 100%'],
+            ['entry auto', 'entry', 'auto', 'entry auto'],
+        ]
+        values.forEach(([input, start = input, end = input, expected = input]) => {
+            style.timelineTriggerExitRange = input
+            expect(style.timelineTriggerExitRangeStart).toBe(start)
+            expect(style.timelineTriggerExitRangeEnd).toBe(end)
+            expect(style.timelineTriggerExitRange).toBe(expected)
+        })
+
+        // All longhands cannot be represented
+        style.timelineTriggerExitRangeStart = 'auto, auto'
+        expect(style.animationRange).toBe('')
+        expect(style.cssText).toBe('timeline-trigger-exit-range-start: auto, auto; timeline-trigger-exit-range-end: auto;')
+
+        // Coordinated value list
+        style.timelineTriggerExitRange = 'auto, auto'
+        longhands.forEach(longhand => expect(style[longhand]).toBe(`${initial(longhand)}, ${initial(longhand)}`))
+        expect(style.timelineTriggerExitRange).toBe('auto, auto')
+    })
+})
+describe('timeline-trigger-range', () => {
+    test('expansion and reification', () => {
+
+        const style = createStyleBlock()
+        const longhands = shorthands.get('timeline-trigger-range')[0]
+
+        // Initial longhand values
+        style.timelineTriggerRange = 'normal normal'
+        expect(style).toHaveLength(longhands.length)
+        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
+        expect(style.timelineTriggerRange).toBe('normal')
+
+        // Omitted values
+        const values = [
+            ['normal'],
+            ['0%', '0%', 'normal'],
+            ['normal 0%', 'normal', '0%'],
+            ['entry'],
+            ['entry 10%', 'entry 10%', 'entry'],
+            ['entry 0% entry 100%', 'entry', 'entry', 'entry'],
+            ['entry exit 100%', 'entry', 'exit', 'entry exit'],
+            ['entry 0% 100%', 'entry', '100%', 'entry 0% 100%'],
+            ['entry normal', 'entry', 'normal', 'entry normal'],
+        ]
+        values.forEach(([input, start = input, end = input, expected = input]) => {
+            style.timelineTriggerRange = input
+            expect(style.timelineTriggerRangeStart).toBe(start)
+            expect(style.timelineTriggerRangeEnd).toBe(end)
+            expect(style.timelineTriggerRange).toBe(expected)
+        })
+
+        // All longhands cannot be represented
+        style.timelineTriggerRangeStart = 'normal, normal'
+        expect(style.animationRange).toBe('')
+        expect(style.cssText).toBe('timeline-trigger-range-start: normal, normal; timeline-trigger-range-end: normal;')
+
+        // Coordinated value list
+        style.timelineTriggerRange = 'normal, normal'
+        longhands.forEach(longhand => expect(style[longhand]).toBe(`${initial(longhand)}, ${initial(longhand)}`))
+        expect(style.timelineTriggerRange).toBe('normal, normal')
     })
 })
 describe('transition', () => {

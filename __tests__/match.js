@@ -308,6 +308,10 @@ describe('support', () => {
         return matchSupport(parseGrammar(`(${query})`, '<supports-condition>'))
     }
 
+    test('at-rule', () => {
+        expect(match('at-rule(@style)')).toBeFalsy()
+        expect(match('at-rule(@ANNOTATION)')).toBeTruthy()
+    })
     test('declaration', () => {
         const declarations = [
             // <general-enclosed>

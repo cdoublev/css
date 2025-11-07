@@ -68,7 +68,7 @@ function createStyleSheet(rules = '', properties = {}) {
  *
  * This abstraction is not great but probably the best way to avoid increasing
  * code complexity in tests, until first-valid() can be replaced with another
- * <whole-value> substitution that do not require to be resolved at parse time.
+ * <whole-value> substitution that does not resolve at parse time.
  */
 function normalizeText(text) {
     return text
@@ -1415,7 +1415,7 @@ describe('CSS grammar - semantic', () => {
         expect(cssRules).toHaveLength(2)
         expect(cssRules[1].style.color).toBe('green')
     })
-    test('top-level - ignored @import following any other non-ignored rule than @layer', () => {
+    test('top-level - ignored @import following any non-ignored rule other than @layer', () => {
 
         const { cssRules } = createStyleSheet(`
             @namespace svg "http://www.w3.org/2000/svg";
@@ -1461,7 +1461,7 @@ describe('CSS grammar - semantic', () => {
         expect(cssRules).toHaveLength(2)
         expect(CSSImportRule.is(cssRules[1])).toBeTruthy()
     })
-    test('top-level - ignored @namespace following any other non-ignored rule than @import or @layer', () => {
+    test('top-level - ignored @namespace following any non-ignored rule other than @import or @layer', () => {
 
         const { cssRules } = createStyleSheet(`
             style {}
@@ -1493,7 +1493,7 @@ describe('CSS grammar - semantic', () => {
         expect(cssRules).toHaveLength(2)
         expect(CSSLayerStatementRule.is(cssRules[1])).toBeTruthy()
     })
-    test('top-level - @namespace following @import, @layer, or ignored rule(s)', () => {
+    test('top-level - @namespace following @import, @layer, ignored rules', () => {
 
         const { cssRules } = createStyleSheet(`
             @layer name;
@@ -1511,7 +1511,7 @@ describe('CSS grammar - semantic', () => {
             @namespace html "https://www.w3.org/1999/xhtml/";
             @charset "utf-8";
             @import <bad-string-or-url>;
-            @layer <bad-string-or-url>;
+            @layer <bad-ident>;
             @namespace svg "http://www.w3.org/2000/svg";
         `)
 

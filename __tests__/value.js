@@ -3924,6 +3924,27 @@ describe('<position-area>', () => {
         valid.forEach(([input, expected]) => expect(parse('<position-area>', input)).toBe(expected))
     })
 })
+describe('<position-area-query>', () => {
+    test('representation', () => {
+        const area = list([keyword('left'), omitted], ' ', ['<position-area-query>'])
+        expect(parse('<position-area-query>', 'left', false)).toMatchObject(area)
+    })
+    test('valid', () => {
+        const valid = [
+            ['center', 'center center'],
+            ['left', 'left any'],
+            ['top', 'any top'],
+            ['start', 'start start'],
+            ['x-start', 'x-start any'],
+            ['y-start', 'any y-start'],
+            ['block-start', 'start any'],
+            ['inline-start', 'any start'],
+            ['span-self-block-start', 'span-self-start any'],
+            ['span-self-inline-end', 'any span-self-end'],
+        ]
+        valid.forEach(([input, expected]) => expect(parse('<position-area-query>', input)).toBe(expected))
+    })
+})
 describe('<progress-source>', () => {
     test('invalid', () => {
         const invalid = [
@@ -4306,7 +4327,7 @@ describe('<translate()>', () => {
 })
 describe('<try-tactic>', () => {
     test('representation', () => {
-        const tactics = list([keyword('flip-block'), omitted, omitted], ' ', ['<try-tactic>'])
+        const tactics = list([keyword('flip-block'), omitted, omitted, omitted, omitted], ' ', ['<try-tactic>'])
         expect(parse('<try-tactic>', 'flip-block', false)).toMatchObject(tactics)
     })
     test('valid', () => {
