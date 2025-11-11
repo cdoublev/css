@@ -267,12 +267,13 @@ describe('CSSStyleSheet.insertRule(), CSSStyleSheet.deleteRule()', () => {
         expect(() => styleSheet.insertRule('style {}', 1)).toThrow(INVALID_RULE_INDEX_ERROR)
         expect(() => styleSheet.deleteRule(0)).toThrow(INVALID_RULE_INDEX_ERROR)
     })
-    it('throws an error when trying to insert any other rule than @import or @layer before @import', () => {
+    it('throws an error when trying to insert any other rule than @import or @layer before @import', async () => {
         const styleSheet = createStyleSheet('@import "./global.css";')
         expect(() => styleSheet.insertRule('@namespace svg "http://www.w3.org/2000/svg";'))
             .toThrow(INVALID_RULE_POSITION_ERROR)
         expect(() => styleSheet.insertRule('style {}'))
             .toThrow(INVALID_RULE_POSITION_ERROR)
+        await CSSImportRule.convert(globalThis, styleSheet.cssRules[0])._promise
     })
     it('throws an error when trying to insert any other rule than @import, @layer, @namespace, before @namespace', () => {
         const styleSheet = createStyleSheet('@namespace svg "http://www.w3.org/2000/svg";')
@@ -282,19 +283,22 @@ describe('CSSStyleSheet.insertRule(), CSSStyleSheet.deleteRule()', () => {
         const styleSheet = createStyleSheet('@namespace svg "http://www.w3.org/2000/svg";')
         expect(() => styleSheet.insertRule('@import "./global.css";', 1)).toThrow(INVALID_RULE_POSITION_ERROR)
     })
-    it('throws an error when trying to insert @layer between @import and @import', () => {
+    it('throws an error when trying to insert @layer between @import and @import', async () => {
         const styleSheet = createStyleSheet(`
             @import "./global.css";
             @import "./page.css";
         `)
         expect(() => styleSheet.insertRule('@layer base;', 1)).toThrow(INVALID_RULE_POSITION_ERROR)
+        await CSSImportRule.convert(globalThis, styleSheet.cssRules[0])._promise
+        await CSSImportRule.convert(globalThis, styleSheet.cssRules[1])._promise
     })
-    it('throws an error when trying to insert @layer between @import and @namespace', () => {
+    it('throws an error when trying to insert @layer between @import and @namespace', async () => {
         const styleSheet = createStyleSheet(`
             @import "./global.css";
             @namespace svg "http://www.w3.org/2000/svg";
         `)
         expect(() => styleSheet.insertRule('@layer base;', 1)).toThrow(INVALID_RULE_POSITION_ERROR)
+        await CSSImportRule.convert(globalThis, styleSheet.cssRules[0])._promise
     })
     it('throws an error when trying to insert @layer between @namespace and @namespace', () => {
         const styleSheet = createStyleSheet(`
@@ -308,7 +312,7 @@ describe('CSSStyleSheet.insertRule(), CSSStyleSheet.deleteRule()', () => {
         expect(() => styleSheet.insertRule('@namespace svg "http://www.w3.org/2000/svg";'))
             .toThrow(INVALID_NAMESPACE_STATE_ERROR)
     })
-    it('inserts and deletes a rule', () => {
+    it('inserts and deletes a rule', async () => {
 
         const styleSheet = createStyleSheet()
         const { cssRules } = styleSheet
@@ -337,6 +341,8 @@ describe('CSSStyleSheet.insertRule(), CSSStyleSheet.deleteRule()', () => {
         styleSheet.insertRule('svg|rect {}', 5)
 
         expect(cssRules).toHaveLength(6)
+
+        await CSSImportRule.convert(globalThis, styleSheet.cssRules[1])._promise
     })
 })
 describe('CSSStyleSheet.replace(), CSSStyleSheet.replaceSync()', () => {
@@ -371,7 +377,7 @@ describe('CSSStyleSheet.replace(), CSSStyleSheet.replaceSync()', () => {
 
         expect(styleSheet.cssRules).toHaveLength(1)
     })
-    it('ignores import rules and invalid statements', () => {
+    it('ignores import rules and invalid contents', () => {
 
         const styleSheet = new globalThis.CSSStyleSheet
 
@@ -1425,7 +1431,7 @@ describe('CSS grammar - semantic', () => {
         expect(cssRules).toHaveLength(1)
         expect(CSSNamespaceRule.is(cssRules[0])).toBeTruthy()
     })
-    test('top-level - ignored @import following @layer interleaved after another @import', () => {
+    test('top-level - ignored @import following @layer interleaved after another @import', async () => {
 
         const { cssRules } = createStyleSheet(`
             @import "./global.css";
@@ -1435,8 +1441,10 @@ describe('CSS grammar - semantic', () => {
 
         expect(cssRules).toHaveLength(2)
         expect(CSSLayerStatementRule.is(cssRules[1])).toBeTruthy()
+
+        await CSSImportRule.convert(globalThis, cssRules[0])._promise
     })
-    test('top-level - @import following @layer or ignored rules', () => {
+    test('top-level - @import following @layer or ignored rules', async () => {
 
         const { cssRules } = createStyleSheet(`
             @layer name;
@@ -1447,8 +1455,10 @@ describe('CSS grammar - semantic', () => {
 
         expect(cssRules).toHaveLength(2)
         expect(CSSImportRule.is(cssRules[1])).toBeTruthy()
+
+        await CSSImportRule.convert(globalThis, cssRules[1])._promise
     })
-    test('top-level - @import following ignored rules interleaved after another @import', () => {
+    test('top-level - @import following ignored rules interleaved after another @import', async () => {
 
         const { cssRules } = createStyleSheet(`
             @import "./global.css";
@@ -1460,6 +1470,9 @@ describe('CSS grammar - semantic', () => {
 
         expect(cssRules).toHaveLength(2)
         expect(CSSImportRule.is(cssRules[1])).toBeTruthy()
+
+        await CSSImportRule.convert(globalThis, cssRules[0])._promise
+        await CSSImportRule.convert(globalThis, cssRules[1])._promise
     })
     test('top-level - ignored @namespace following any non-ignored rule other than @import or @layer', () => {
 
@@ -1482,7 +1495,7 @@ describe('CSS grammar - semantic', () => {
         expect(cssRules).toHaveLength(2)
         expect(CSSLayerStatementRule.is(cssRules[1])).toBeTruthy()
     })
-    test('top-level - ignored @namespace following @layer interleaved after @import', () => {
+    test('top-level - ignored @namespace following @layer interleaved after @import', async () => {
 
         const { cssRules } = createStyleSheet(`
             @import "./global.css";
@@ -1492,8 +1505,10 @@ describe('CSS grammar - semantic', () => {
 
         expect(cssRules).toHaveLength(2)
         expect(CSSLayerStatementRule.is(cssRules[1])).toBeTruthy()
+
+        await CSSImportRule.convert(globalThis, cssRules[0])._promise
     })
-    test('top-level - @namespace following @import, @layer, ignored rules', () => {
+    test('top-level - @namespace following @import, @layer, ignored rules', async () => {
 
         const { cssRules } = createStyleSheet(`
             @layer name;
@@ -1504,6 +1519,8 @@ describe('CSS grammar - semantic', () => {
 
         expect(cssRules).toHaveLength(3)
         expect(CSSNamespaceRule.is(cssRules[2])).toBeTruthy()
+
+        await CSSImportRule.convert(globalThis, cssRules[1])._promise
     })
     test('top-level - @namespace following ignored rules interleaved after another @namespace', () => {
 
