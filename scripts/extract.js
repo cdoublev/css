@@ -45,6 +45,8 @@ const initial = {
         '--*': { initial: null, value: '<declaration-value>?' },
     },
     types: {
+        // https://github.com/w3c/csswg-drafts/issues/13092
+        '<anchored-feature>': '<media-feature>',
         // https://github.com/w3c/csswg-drafts/issues/10558
         '<custom-function-definition>': '<function-token> <function-parameter>#? ) [returns <css-type>]?',
         '<dashed-function>': {

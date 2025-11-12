@@ -2573,6 +2573,16 @@ describe('<an+b>', () => {
         valid.forEach(([input, expected = input]) => expect(parse('<an+b>', input)).toBe(expected))
     })
 })
+describe('<anchored-feature>', () => {
+    test('invalid', () => {
+        expect(parse('<anchored-feature>', 'color', false, containerRule)).toBeNull()
+        expect(parse('<anchored-feature>', 'scrollable', false, containerRule)).toBeNull()
+    })
+    test('representation', () => {
+        const feature = ident('fallback', ['<mf-name>', '<mf-boolean>', '<media-feature>', '<anchored-feature>'])
+        expect(parse('<anchored-feature>', 'fallback', false, containerRule)).toMatchObject(feature)
+    })
+})
 describe('<animateable-feature>', () => {
     test('invalid', () => {
         const invalid = [
