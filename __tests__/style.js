@@ -1091,18 +1091,18 @@ describe('text-autospace', () => {
         expect(style.textAutospace).toBe('normal')
     })
 })
+describe('text-decoration-inset', () => {
+    test('valid', () => {
+        const style = createStyleBlock()
+        style.textDecorationInset = '1px 1px'
+        expect(style.textDecorationInset).toBe('1px')
+    })
+})
 describe('text-decoration-skip-self', () => {
     test('valid', () => {
         const style = createStyleBlock()
         style.textDecorationSkipSelf = 'skip-underline skip-overline skip-line-through'
         expect(style.textDecorationSkipSelf).toBe('skip-all')
-    })
-})
-describe('text-decoration-trim', () => {
-    test('valid', () => {
-        const style = createStyleBlock()
-        style.textDecorationTrim = '1px 1px'
-        expect(style.textDecorationTrim).toBe('1px')
     })
 })
 describe('text-emphasis-position', () => {
@@ -1588,7 +1588,7 @@ describe('border-block-color, border-inline-color', () => {
         style.borderBlockColor = 'green'
         longhands.forEach(longhand => expect(style[longhand]).toBe('green'))
         expect(style.borderBlockColor).toBe('green')
-        style.borderBlockColor = 'currentcolor green'
+        style.borderBlockColor = 'currentColor green'
         expect(style.borderBlockStartColor).toBe(initial('border-block-start-color'))
         expect(style.borderBlockEndColor).toBe('green')
         expect(style.borderBlockColor).toBe('currentcolor green')
@@ -1723,10 +1723,10 @@ describe('border-color', () => {
         style.borderColor = 'red'
         longhands.forEach(longhand => expect(style[longhand]).toBe('red'))
         expect(style.borderColor).toBe('red')
-        style.borderColor = 'currentcolor red'
+        style.borderColor = 'currentColor red'
         longhands.forEach((longhand, i) => expect(style[longhand]).toBe(values[i % 2]))
         expect(style.borderColor).toBe('currentcolor red')
-        style.borderColor = 'currentcolor red green'
+        style.borderColor = 'currentColor red green'
         longhands.forEach((longhand, i) => expect(style[longhand]).toBe(values[i === 3 ? 1 : i]))
         expect(style.borderColor).toBe('currentcolor red green')
 
@@ -1902,7 +1902,7 @@ describe('caret', () => {
         expect(style.caret).toBe('manual')
     })
 })
-describe('column-rule', () => {
+describe('column-rule, row-rule', () => {
     test('expansion and reification', () => {
 
         const style = createStyleBlock()
@@ -1911,7 +1911,6 @@ describe('column-rule', () => {
         // Initial longhand values
         style.columnRule = 'medium none currentColor'
         expect(style).toHaveLength(longhands.length)
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
         expect(style.columnRule).toBe('medium')
 
         // Omitted values
@@ -1920,8 +1919,25 @@ describe('column-rule', () => {
         expect(style.columnRule).toBe('medium')
         style.columnRule = 'solid'
         longhands.forEach(longhand =>
-            expect(style[longhand]).toBe(longhand === 'column-rule-style' ? 'solid' : initial(longhand)))
+            expect(style[longhand]).toBe(longhand.endsWith('style') ? 'solid' : initial(longhand)))
         expect(style.columnRule).toBe('solid')
+
+        // repeat()
+        style.columnRule = 'solid, repeat(2, solid, none), none'
+        expect(style.columnRuleWidth).toBe('medium repeat(2, medium medium) medium')
+        expect(style.columnRuleStyle).toBe('solid repeat(2, solid none) none')
+        expect(style.columnRuleColor).toBe('currentcolor repeat(2, currentcolor currentcolor) currentcolor')
+        expect(style.columnRule).toBe('solid, repeat(2, solid, medium), medium')
+
+        // All longhands cannot be represented
+        style.columnRule = 'repeat(1, medium), medium'
+        style.columnRuleWidth = 'medium repeat(1, medium)'
+        expect(style.columnRule).toBe('')
+        expect(style.cssText).toBe('column-rule-width: medium repeat(1, medium); column-rule-style: repeat(1, none) none; column-rule-color: repeat(1, currentcolor) currentcolor;')
+        style.columnRule = 'repeat(1, medium)'
+        style.columnRuleWidth = 'repeat(2, medium)'
+        expect(style.columnRule).toBe('')
+        expect(style.cssText).toBe('column-rule-width: repeat(2, medium); column-rule-style: repeat(1, none); column-rule-color: repeat(1, currentcolor);')
     })
 })
 describe('columns', () => {
@@ -3204,6 +3220,114 @@ describe('position-try', () => {
         expect(style.positionTry).toBe('most-width none')
     })
 })
+describe('rule', () => {
+    test('expansion and reification', () => {
+
+        const style = createStyleBlock()
+        const longhands = shorthands.get('rule')[0]
+
+        // All equal longhand values
+        style.rule = 'medium none currentColor'
+        expect(style).toHaveLength(longhands.length)
+        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
+        expect(style.rule).toBe('medium')
+
+        // All longhands cannot be represented
+        style.rowRuleWidth = '1px'
+        expect(style.rule).toBe('')
+        expect(style.cssText).toBe('row-rule: 1px; column-rule: medium;')
+    })
+})
+describe('rule-break', () => {
+    test('expansion and reification', () => {
+
+        const style = createStyleBlock()
+        const longhands = shorthands.get('rule-break')[0]
+
+        // All equal longhand values
+        style.ruleBreak = 'spanning-item'
+        expect(style).toHaveLength(longhands.length)
+        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
+        expect(style.ruleBreak).toBe('spanning-item')
+
+        // All longhands cannot be represented
+        style.rowRuleBreak = 'none'
+        expect(style.ruleBreak).toBe('')
+        expect(style.cssText).toBe('row-rule-break: none; column-rule-break: spanning-item;')
+    })
+})
+describe('rule-color', () => {
+    test('expansion and reification', () => {
+
+        const style = createStyleBlock()
+        const longhands = shorthands.get('rule-color')[0]
+
+        // All equal longhand values
+        style.ruleColor = 'currentColor'
+        expect(style).toHaveLength(longhands.length)
+        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
+        expect(style.ruleColor).toBe('currentcolor')
+
+        // All longhands cannot be represented
+        style.rowRuleColor = 'green'
+        expect(style.ruleColor).toBe('')
+        expect(style.cssText).toBe('row-rule-color: green; column-rule-color: currentcolor;')
+    })
+})
+describe('rule-outset', () => {
+    test('expansion and reification', () => {
+
+        const style = createStyleBlock()
+        const longhands = shorthands.get('rule-outset')[0]
+
+        // All equal longhand values
+        style.ruleOutset = '50%'
+        expect(style).toHaveLength(longhands.length)
+        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
+        expect(style.ruleOutset).toBe('50%')
+
+        // All longhands cannot be represented
+        style.rowRuleOutset = '0%'
+        expect(style.ruleOutset).toBe('')
+        expect(style.cssText).toBe('row-rule-outset: 0%; column-rule-outset: 50%;')
+    })
+})
+describe('rule-style', () => {
+    test('expansion and reification', () => {
+
+        const style = createStyleBlock()
+        const longhands = shorthands.get('rule-style')[0]
+
+        // All equal longhand values
+        style.ruleStyle = 'none'
+        expect(style).toHaveLength(longhands.length)
+        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
+        expect(style.ruleStyle).toBe('none')
+
+        // All longhands cannot be represented
+        style.rowRuleStyle = 'solid'
+        expect(style.ruleStyle).toBe('')
+        expect(style.cssText).toBe('row-rule-style: solid; column-rule-style: none;')
+    })
+})
+describe('rule-width', () => {
+    test('expansion and reification', () => {
+
+        const style = createStyleBlock()
+        const longhands = shorthands.get('rule-width')[0]
+
+        // All equal longhand values
+        style.ruleWidth = 'medium'
+        expect(style).toHaveLength(longhands.length)
+        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
+        expect(style.ruleWidth).toBe('medium')
+
+        // All longhands cannot be represented
+        style.rowRuleWidth = '1px'
+        expect(style.ruleWidth).toBe('')
+        expect(style.cssText).toBe('row-rule-width: 1px; column-rule-width: medium;')
+    })
+})
 describe('scroll-margin', () => {
     test('expansion and reification', () => {
 
@@ -3405,7 +3529,7 @@ describe('text-decoration', () => {
         const longhands = shorthands.get('text-decoration')[0]
 
         // Initial longhand values
-        style.textDecoration = 'none auto solid currentcolor'
+        style.textDecoration = 'none auto solid currentColor'
         expect(style).toHaveLength(longhands.length)
         longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
         expect(style.textDecoration).toBe('none')
@@ -3451,7 +3575,7 @@ describe('text-emphasis', () => {
         const longhands = shorthands.get('text-emphasis')[0]
 
         // Initial longhand values
-        style.textEmphasis = 'none currentcolor'
+        style.textEmphasis = 'none currentColor'
         expect(style).toHaveLength(longhands.length)
         longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
         expect(style.textEmphasis).toBe('none')

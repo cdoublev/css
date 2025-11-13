@@ -499,7 +499,6 @@ const excluded = {
         'css-color-6',
         'css-conditional-values',
         'css-extensions',
-        'css-gaps',
         'css-grid-3',
         'webvtt',
         // Prefer SVG 2
