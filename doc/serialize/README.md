@@ -1,23 +1,13 @@
 
 # Serializing CSS
 
-The procedure to [*serialize a CSS rule*](https://drafts.csswg.org/cssom-1/#serialize-a-css-rule) is rather explicit so this document focuses on serializing property values, which depends on the interface:
+This document focuses primarily on the serializaton of property values, given that descriptor values do not cascade and do not include relative values, and that the procedure to [serialize a rule](https://drafts.csswg.org/cssom-1/#serialize-a-css-rule) is quite explicit.
 
-  - `Element.style`, `CSSRule.style`, `CSSRule.cssText`: the declared value
-  - `getComputedStyle()`: the resolved value
+Property values are either exposed as [resolved values](https://drafts.csswg.org/cssom-1/#resolved-values) from `getComputedStyle()`, or as [declared values](https://drafts.csswg.org/css-cascade-5/#declared) from `CSSStyleDeclaration`.
 
-`Element.style` and each `CSSRule.style` and `HTMLStyleElement.style` in the document can hold a declaration value for the same property and `Element`. CSS cascade defines how to resolve a *cascaded value* and other values at later processing stages:
+The document may hold declared values for the same `Element` and property in `document.styleSheets`, `document.adoptedStyleSheets`, and `Element.style`. CSS cascade defines how to resolve a single [cascaded value](https://drafts.csswg.org/css-cascade-5/#cascaded). At later processing stages, it becomes a resolved value, which is either the [computed value](https://drafts.csswg.org/css-cascade-5/#computed) or the [used value](https://drafts.csswg.org/css-cascade-5/#used).
 
-  - *authored value*: the input value used to set the property
-  - [declared value](https://drafts.csswg.org/css-cascade-5/#declared): *each property declaration applied to an element contributes a declared value for that property*
-  - [cascaded value](https://drafts.csswg.org/css-cascade-5/#cascaded): *the declared value that wins the cascade*
-  - [specified value](https://drafts.csswg.org/css-cascade-5/#specified): *the result of putting the cascaded value through the defaulting processes*, ie. the *inherited value* (as a computed value) when there is no cascaded value, or the *initial value* defined for the property when it does not inherit or when there is no inherited value
-  - [resolved value](https://drafts.csswg.org/cssom-1/#resolved-values): either the computed or used value
-  - [computed value](https://drafts.csswg.org/css-cascade-5/#computed): *the result of resolving the specified value as defined in the “Computed Value” line of the property definition table*
-  - [used value](https://drafts.csswg.org/css-cascade-5/#used): *the result of taking the computed value and completing any remaining calculations to make it the absolute theoretical value*
-  - [actual value](https://drafts.csswg.org/css-cascade-5/#actual): *the used value after any such [user agent dependent] adjustments have been made*
-
-The declared value may serialize to a slightly different value than the authored value, according to the general serialization principles, and because the lexical parser does not keep minor details like trailing decimal 0, unit character case, etc.
+Declared property values (and descriptor values, rule preludes) may serialize to a slightly different value than the authored value, according to the general serialization principles, and because the lexical parser does not keep minor details like trailing decimal 0, unit character case, etc.
 
 The computed and later value may serialize to the same value than the declared value, or a value closer to its absolute equivalent, computed using data that may not be available while parsing the declared value, like property values declared for an ancestor `Element` or the size of the block container.
 
@@ -33,17 +23,17 @@ The first principle means that the representation resulting from parsing an inpu
 
 The second principle means sorting component values in the canonical order defined by the grammar and removing component values that can be omitted.
 
+Omitting component values is primarily intended for backward compatibility.
+
 
 ## Implementation
 
-CSS values are currently represented either as a `List` or a plain object, with a `types` property.
+`serializeValue()` is an implementation of the procedure to [serialize a CSS value](https://drafts.csswg.org/cssom-1/#serialize-a-css-value). It takes either a single longhand declaration or for a shorthand, a list of declarations that must be reduced to a single declaration (step 1). Then it represents the declaration value as a list of CSS component values simplified according to the shortest serialization principle (step 2).
 
-*Serialize a CSS value* accepts a single longhand declaration, or a list of declarations for a shorthand that must be reduced into a single declaration. Then the declaration value is represented as a list (plain array) of CSS component values (step 2), simplified according to the shortest serialization principle.
+`serializeComponentValueList()` is an implementation of steps 3 to 5, which [serialize [each] component value](https://drafts.csswg.org/cssom-1/#serialize-a-css-component-value) according to its type, which is implemented with `serializeComponentValue()`, and separates them with a whitespace when appropriate.
 
-`serializeComponentValueList()` is a custom abstraction of steps 4 to 5 that can be used by other specific serialization functions, and serializes the provided list ignoring its `types` and using its `separator` (default: whitespace), whereas `serializeComponentValue()` is the implementation of *serialize a CSS component value*, and run any specific serialization function according to its `types`:
+`serializeComponentValueList()` ignores any existing type on the provided list, like `<position>` for `background-position`, which requires serializing two component values even when it was declared with one. Therefore `serializeValue()` is implemented with `serializeComponentValue()` instead, which accepts a component value as a single object but also as a list of component values or a plain `String` produced at step 2 of `serializeValue()`, which is implemented with `representDeclarationValue()`.
 
-  > 3. Remove any `<whitespace-token>`s from components.
-  > 4. Replace each component value in components with the result of invoking *serialize a CSS component value*.
-  > 5. Join the items of components into a single string, inserting `" "` (U+0020 SPACE) between each pair of items unless the second item is a `","` (U+002C COMMA). Return the result.
+`represent<PropertyOrDescriptor>()` takes a single declaration for a longhand or a list of declarations for a shorthand, and returns a simplified/reified value that is often partially or fully serialized (and is then passed to `serializeComponentValue()`), which avoids writing imperative code to serialize each part.
 
-Step 3 is skipped since leading and trailing `<whitespace-token>`s are already removed while consuming a list of component values and in the parse result, except for arbitrary substitution containing values, which are represented with a `List` whose `separator` is an empty string.
+`serialize<Type>()` takes a component value or a list of component values, and returns a simplified and fully serialized value according to specific rules defined for `Type`.
