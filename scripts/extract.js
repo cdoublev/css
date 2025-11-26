@@ -121,7 +121,7 @@ const replaced = {
         '<absolute-size>': 'xx-small | x-small | small | medium | large | x-large | xx-large',
         '<age>': 'child | young | old',
         '<angle>': '<dimension>',
-        '<animation-action>': 'none | play | play-forwards | play-backwards | pause | reset | replay',
+        '<animation-action>': 'none | play | play-once | play-forwards | play-backwards | pause | reset | replay',
         '<attr-unit>': `"%" | ${[...dimensions.values()].flatMap(dimension => dimension.units).join(' | ')}`,
         '<basic-shape>': '<basic-shape-rect> | <circle()> | <ellipse()> | <polygon()> | <path()> | <shape()>',
         '<counter-name>': '<custom-ident>',

@@ -638,6 +638,13 @@ describe('border-spacing', () => {
         expect(style.borderSpacing).toBe('1px')
     })
 })
+describe('box-shadow-offset', () => {
+    test('valid', () => {
+        const style = createStyleBlock()
+        style.boxShadowOffset = '0px'
+        expect(style.boxShadowOffset).toBe('0px 0px')
+    })
+})
 describe('break-after, break-before, page-break-after, page-break-before', () => {
     test('invalid', () => {
         const style = createStyleBlock()
@@ -1688,22 +1695,22 @@ describe('border-block-end, border-block-start, border-bottom, border-inline-end
         expect(style.borderTop).toBe('solid')
     })
 })
-describe('border-clip', () => {
+describe('border-clip, border-block-clip, border-inline-clip', () => {
     test('expansion and reification', () => {
 
         const style = createStyleBlock()
         const longhands = shorthands.get('border-clip')[0]
 
         // All equal longhand values
-        style.borderClip = 'normal'
+        style.borderClip = 'none'
         expect(style).toHaveLength(longhands.length)
         longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.borderClip).toBe('normal')
+        expect(style.borderClip).toBe('none')
 
         // All longhands cannot be represented
         style.borderTopClip = '1px'
         expect(style.borderClip).toBe('')
-        expect(style.cssText).toBe('border-top-clip: 1px; border-right-clip: normal; border-bottom-clip: normal; border-left-clip: normal;')
+        expect(style.cssText).toBe('border-top-clip: 1px; border-right-clip: none; border-bottom-clip: none; border-left-clip: none;')
     })
 })
 describe('border-color', () => {

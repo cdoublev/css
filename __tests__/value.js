@@ -2757,6 +2757,17 @@ describe('<blur()>', () => {
         expect(parse('<blur()>', 'blur(0px)')).toBe('blur()')
     })
 })
+describe('<border-radius>', () => {
+    test('representation', () => {
+        const radius = length(0, 'px', ['<length-percentage>'])
+        const radii = list([radius], ' ', ['<legacy-border-radius-syntax>', '<border-radius>'])
+        expect(parse('<border-radius>', '0px', false)).toMatchObject(radii)
+    })
+    test('valid', () => {
+        expect(parse('<border-radius>', '0px / 0px')).toBe('0px')
+        expect(parse('<border-radius>', '0px / 1px')).toBe('0px 1px')
+    })
+})
 describe('<brightness()>, <contrast()>, <grayscale()>, <invert()>, <opacity()>, <saturate()>, <sepia()>', () => {
     test('representation', () => {
         expect(parse('<brightness()>', 'brightness()', false)).toMatchObject({
