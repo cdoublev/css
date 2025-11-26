@@ -13,7 +13,7 @@ The input of the CSS parser can have different sources:
   - the value assigned to `Element.style`, `Element.media`, `Element.sizes`
   - etc
 
-The output can be a `CSSStyleSheet`, a `CSSRule`, a declaration, a `CSSStyleDeclaration`, or a list of component values.
+The output can be a `CSSStyleSheet`, a `CSSRule`, a `CSSStyleDeclaration`, a declaration, or a list of component values.
 
 Let's introduce the CSS grammar and look at parsing a declaration value specified with `Element.style.setProperty()`, before sketching a complete picture by looking at parsing a style sheet.
 
@@ -56,7 +56,7 @@ Declarations are stored in instances of `CSSStyleDeclaration` associated with an
 <summary><strong>Aside:</strong> <code>CSSStyleDeclaration</code> was a confusing name from the start.</summary>
 <br>
 
-It suggests that `CSSStyleDeclaration` represents a single declaration accepted in the block value of a style rule. Initially, it actually represented a list of these declarations, and later a list of declaration accepted in the block value of some at-rules.
+It suggests that `CSSStyleDeclaration` represents a single declaration accepted in the block value of a style rule. Initially, it actually represented a list of declarations accepted in the block value of a style rule. Later, it also represented a list of declarations accepted in the block value of some at-rules like `@font-face` and `@page`.
 
 Before the introduction of these at-rules and nested style and group rules, it could have been used to represent the block value of a style rule. Assigning a value containing a rule to `Element.style` or `CSSStyleDeclaration.cssText` must not cause a parse error. The rule must simply be ignored:
 
@@ -65,21 +65,21 @@ Before the introduction of these at-rules and nested style and group rules, it c
 <p style="color: green; @media all { color: red };">text</p>
 ```
 
-Instead of modifying this behavior to allow interpreting rules, the CSSWG decided to wrap a `CSSStyleDeclaration` representing a list of declarations appearing after a nested rule, in `CSSNestedDeclarations`, which is a "transparent" rule representing a single list of declarations.
+Instead of modifying this behavior to interpret rules, the CSSWG decided to represent lists of declarations appearing after a nested rule, with a `CSSStyleDeclaration` contained in `CSSNestedDeclarations`, which is a "transparent" rule that can only contain this list of declarations.
 
-`CSSStyleDeclaration` is now extended by subclasses defined with a restricted set of descriptor attributes: `CSSFontFaceDescriptors`, `CSSPageDescriptors`, etc. Their names also helped to conceal confusion about the context accepting these declarations.
+`CSSStyleDeclaration` is now extended by subclasses defined with a restricted set of property and descriptor attributes: `CSSStyleProperties`, `CSSFontFaceDescriptors`, `CSSPageDescriptors`, etc. Their names also helped to remove confusion about the context in which these declarations are accepted.
 
 </details>
 
 [`Element.style.setProperty(property, value)`](https://drafts.csswg.org/cssom-1/#dom-cssstyledeclaration-setproperty) must [parse](https://drafts.csswg.org/cssom-1/#parse-a-css-value) the input string `value` into a list of component values matched against the grammar of `property`.
 
-If `property` is a longhand, it must store a declaration for `property` in `Element.style` with this list as the declaration value. If `property` is a shorthand, it must expand the list and store a declaration for each longhand.
+If `property` is a longhand, it must store a declaration for `property` with this list as its value. If `property` is a shorthand, it must expand the list and store a declaration for each longhand.
 
 Matching a value against a grammar of a property is not further specified but implies:
 
   - matching against CSS-wide keywords
   - searching for an arbitrary substitution
-  - matching against the value definition and validating any semantic rule for `property` or productions
+  - matching against the value definition of the property and validating any semantic rule for the property or productions
   - matching against other declaration value substitutions
 
 Based on underlying procedures, the parsed list is nearly identical to the list of tokens resulting from [tokenizing](https://drafts.csswg.org/css-syntax-3/#css-tokenize) `value`. Most tokens are preserved as "primitive" component values. Others are consumed into a function or simple block.
@@ -94,7 +94,7 @@ For example, the declaration value of a property defined with `rgb(...)` include
 
 The list is not specified as being transformed or returned from matching it against the grammar. However, some values like math functions and `<an+b>` must be parsed into a specific representation.
 
-Furthermore, while [*serialize a CSS value*](https://drafts.csswg.org/cssom-1/#serialize-a-css-value) only enforces idempotence, ie. `assert.equal(serialize(parse(input)), serialize(parse(serialize(parse(input)))))`, a component value must be associated the matched productions in order to apply its serialization rules.
+Furthermore, while [*serialize a CSS value*](https://drafts.csswg.org/cssom-1/#serialize-a-css-value) only enforces idempotence, ie. `assert.equal(serialize(parse(input)), serialize(parse(serialize(parse(input)))))`, a component value must be associated the matched productions in order to apply their serialization rules.
 
 To overcome these challenges, this library defines the following requirements for the CSS parser:
 
@@ -107,7 +107,7 @@ To overcome these challenges, this library defines the following requirements fo
 
 ## Parsing a style sheet
 
-CSS Syntax defines entry points and algorithms to parse a style sheet and represent it with a `CSSStyleSheet`:
+CSS Syntax defines [entry points](https://drafts.csswg.org/css-syntax-3/#parser-entry-points) (*parse* procedures) and [algorithms](https://drafts.csswg.org/css-syntax-3/#parser-algorithms) (*consume* procedures) to parse a style sheet and represent it with a `CSSStyleSheet`:
 
   > **3. Tokenizing and Parsing CSS**
   >
@@ -117,20 +117,18 @@ CSS Syntax defines entry points and algorithms to parse a style sheet and repres
   >
   > The input to the CSS parsing process consists of a stream of Unicode code points, which is passed through a tokenization stage followed by a tree construction stage. The output is a `CSSStyleSheet` object.
 
-Each *parse* procedure in CSS Syntax is named a [*parser entry point*](https://drafts.csswg.org/css-syntax-3/#parser-entry-points) and runs a corresponding *consume* procedure named a [*parser algorithm*](https://drafts.csswg.org/css-syntax-3/#parser-algorithms).
-
-Entry points can receive a string, tokens, or component values, and output the expected structure: a component value, a declaration, a rule, or a list of them. For a [rule](https://drafts.csswg.org/css-syntax-3/#consume-at-rule) and a [declaration](https://drafts.csswg.org/css-syntax-3/#consume-declaration), it must be validated against their grammar in the context. If its grammar cannot be resolved in the context, it is invalid. `@charset`, `@import`, `@namespace`, `@layer`, also define the order in which they must appear.
-
-However, CSS Syntax does not prescribe when and how to construct CSSOM representations. It allows doing it in parallel, noting that a `CSSStyleSheet` will never be discarded, and that constructing a `CSSRule` requires a reference to its `CSSStyleSheet`.
+The parser entry points can receive a string, tokens, or component values, and output the expected structure: a component value, a declaration, a rule, or a list of them. For a [rule](https://drafts.csswg.org/css-syntax-3/#consume-at-rule) and a [declaration](https://drafts.csswg.org/css-syntax-3/#consume-declaration), it must be validated against its grammar in the context. If its grammar cannot be resolved in this context, it is invalid. `@charset`, `@import`, `@namespace`, `@layer`, also define the order in which they can appear.
 
 <details>
-<summary>CSSOM and HTML use <a href="https://drafts.csswg.org/cssom-1/#create-a-css-style-sheet"><i>create a CSS style sheet</i></a> when processing an HTTP <code>Link</code> header, <code>HTMLLinkElement</code>, <code>HTMLStyleElement</code>, but when and how to initiate parsing its contents is left unspecified.</summary>
+<summary>CSS Syntax does not prescribe when and how to construct CSSOM representations, which creates some confusion.</summary>
 <br>
 
-While CSS Syntax defines [*parse a stylesheet*](https://drafts.csswg.org/css-syntax-3/#parse-a-stylesheet) as *the normal parser entry point for parsing stylesheets*, creating and returning *a new style sheet, with its location set to `location`*, with *location* linking to its [definition](https://drafts.csswg.org/cssom-1/#concept-css-style-sheet-location) in CSSOM as a *state item* of `CSSStyleSheet`, and while its result *must be interpreted as a CSS style sheet* and assigned to `CSSImportRule.styleSheet` in [CSS Cascade 4](https://drafts.csswg.org/css-cascade-4/#fetch-an-import), it also defines [*parse a CSS stylesheet*](https://drafts.csswg.org/css-syntax-3/#parse-a-css-stylesheet), which is not used by any specification and runs *parse a stylesheet*. The type of its return value is not defined but it may be assumed to be an instance of `CSSStyleSheet`, as its name suggests and as opposed to an internal representation that would be returned by *parse a stylesheet*.
+CSSOM and HTML use [*create a CSS style sheet*](https://drafts.csswg.org/cssom-1/#create-a-css-style-sheet) when processing an HTTP `Link` header, `HTMLLinkElement`, `HTMLStyleElement`, but when and how to initiate parsing its contents is left unspecified.
+
+While CSS Syntax defines [*parse a stylesheet*](https://drafts.csswg.org/css-syntax-3/#parse-a-stylesheet) as *the normal parser entry point for parsing stylesheets*,  which creates and returns *a new style sheet, with its location set to `location`* (and *location* linking to its [definition](https://drafts.csswg.org/cssom-1/#concept-css-style-sheet-location) in CSSOM as a *state item* of `CSSStyleSheet`), and while its result *must be interpreted as a CSS style sheet* and assigned to `CSSImportRule.styleSheet` in [CSS Cascade 4](https://drafts.csswg.org/css-cascade-4/#fetch-an-import), it also defines [*parse a CSS stylesheet*](https://drafts.csswg.org/css-syntax-3/#parse-a-css-stylesheet), which is not used by any specification and runs *parse a stylesheet*, and whose return value type is not defined but could be considered an instance of `CSSStyleSheet`, as its name suggests, and as opposed to an internal representation that would be returned by *parse a stylesheet*.
 
 Similarly, CSSOM defines [*parse a CSS rule*](https://drafts.csswg.org/cssom-1/#parse-a-css-rule), which runs *parse a rule*. The type of its return value may be assumed to be an instance of `CSSRule` because `CSSStyleSheet.insertRule()` or `CSSGroupingRule.insertRule()` adds it into `CSSStyleSheet.cssRules` and `CSSGroupingRule.cssRules`, which represent `CSSRule`s.
 
-This library constructs the CSSOM tree in parallel and initiates parsing a style sheet by creating a `CSSStyleSheet`, providing the list of rules as a string to its constructor.
+This library constructs the CSSOM tree in parallel and initiates parsing a style sheet by creating a `CSSStyleSheet`, providing the list of rules as a string to its constructor. This allows creating `CSSRule` by passing to its constructor a reference to its `CSSStyleSheet` and to any parent `CSSRule`.
 
 </details>
