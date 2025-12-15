@@ -48,12 +48,12 @@ Non-terminals and terminals can be combined to produce an alternation, an arrang
 
 **Combinators**
 
-| Syntax   | Description                 | Precedence                       |
-| -------- | --------------------------- | -------------------------------- |
-| `a b`    | `a` and `b` in this order   | `a b` == `[a b]`                 |
-| `a && b` | `a` and `b` in any order    | `a && b c` == `a && [b c]`       |
-| `a || b` | `a` and/or `b` in any order | `a || b && c` == `a || [b && c]` |
-| `a | b`  | `a` (x)or `b`               | `a | b || c` == `a | [b || c]`   |
+| Syntax     | Description                 | Precedence                           |
+| ---------- | --------------------------- | ------------------------------------ |
+| `a b`      | `a` and `b` in this order   | `a b` == `[a b]`                     |
+| `a && b`   | `a` and `b` in any order    | `a && b c` == `a && [b c]`           |
+| `a \|\| b` | `a` and/or `b` in any order | `a \|\| b && c` == `a \|\| [b && c]` |
+| `a \| b`   | `a` (x)or `b`               | `a \| b \|\| c` == `a \| [b \|\| c]` |
 
 Non-terminals and terminals can also be multiplied.
 
@@ -87,7 +87,7 @@ A whitespace, or the absence of a whitespace, are meaningless in value definitio
 
 Rules are manually defined in `lib/rules/definitions.js`.
 
-[CSS Fill and Stroke 3](https://drafts.fxtf.org/fill-stroke-3/) is supposed to supersede [SVG Strokes](https://svgwg.org/specs/strokes/), which is supposed to supersede [SVG 2](https://svgwg.org/svg2-draft/), but browsers only implement the properties from SVG 2, therefore all definitions from CSS Fill and Stroke 3 and SVG Strokes are ignored.
+[CSS Fill and Stroke 3](https://drafts.csswg-drafts.org/fill-stroke-3/) is supposed to supersede [SVG Strokes](https://svgwg.org/specs/strokes/), which is supposed to supersede [SVG 2](https://svgwg.org/svg2-draft/), but browsers only implement the properties from SVG 2, therefore all definitions from CSS Fill and Stroke 3 and SVG Strokes are ignored.
 
 Some definitions cannot be extracted by `w3c/reffy`, are written in prose, or exist in multiple specifications, sometimes with different values, for different reasons:
 
@@ -117,17 +117,17 @@ Additionally, the following steps are applied:
 
 The output from parsing a value definition is a plain object with the following properties:
 
-| Name        | Type                   | Description                                                                                |
-| ----------- | ---------------------- | ------------------------------------------------------------------------------------------ |
-| `max`       | `Number`               | Maximum value for a numeric production                                                     |
-| `min`       | `Number`               | Minimum value for a numeric production                                                     |
-| `name`      | `String`               | The production name                                                                        |
-| `range`     | `String`               | The value of a keyword, an at-keyword, or `<function-token>` to match                      |
-| `separator` | `String`               | The delimiter token value separating repetitions                                           |
-| `type`      | `String`               | The type of grammar                                                                        |
-| `value`     | `[Definition]\|String` | The definitions of child symbols, the value definition of a non-terminal, or a token value |
+| Name        | Type                   | Description                                              |
+| ----------- | ----------| --------------------------------------------------------------------- |
+| `max`       | `Number`  | Maximum value for a numeric production                                |
+| `min`       | `Number`  | Minimum value for a numeric production                                |
+| `name`      | `String`  | The production name                                                   |
+| `range`     | `String`  | The value of a keyword, an at-keyword, or `<function-token>` to match |
+| `separator` | `String`  | The delimiter token value separating repetitions                      |
+| `type`      | `String`  | The type of grammar                                                   |
+| `value`     | See below | The definition of child symbols, or the code point of a token         |
 
-While the `value` of a non-terminal is parsed just in time (which allows recursion and is less complex), the `value` of a simple block and a function is immediately parsed into a definition object.
+While the `value` of a non-terminal is a `String` parsed just in time (which allows recursion and is less complex), the `value` of a combination is a list of parsed definitions, and the `value` of symbols multiplied or nested in a simple block or function is a parsed definition. As a rule of thumb, the symbols that are visible in a production rule are immediately parsed, while the symbols produced by a non-terminal are parsed just in time.
 
 **Categories of `definition.type`**
 
@@ -187,14 +187,14 @@ A *sequence* defines a branch node that can have one or more children.
 | `a{0,n}`    | `{ type: 'repetition', min: 0, max: n, value: { ... } }`                  |
 | `a#{0,n}`   | `{ type: 'repetition', min: 0, max: n, separator: ',', value: { ... } }`  |
 
-The result of parsing against `<foo>?` is a single component value whereas the result of parsing against `<foo>{0,1}` is a list of zero or one component value. However, any value matching `<foo>?`, `<foo>{0,1}`, `<foo>*`, `<foo>#`, is considered as omitted.
+The result of parsing against `<foo>?` is a single component value whereas the result of parsing against `<foo>{0,1}` is a list of zero or one component value. However, any empty value matching `<foo>?`, `<foo>{0,1}`, `<foo>*`, `<foo>#`, is considered an omitted value.
 
 **Combination**
 
-| Type        | Definition                     |
-| ----------- | ------------------------------ |
-| `a a`       | `{ type: ' ', value: [...] }`  |
-| `a && a`    | `{ type: '&&', value: [...] }` |
-| `a || a`    | `{ type: '||', value: [...] }` |
-| `a | a`     | `{ type: '|', value: [...] }`  |
-| `a [a | a]` | `{ type: ' ', value: [...] }`  |
+| Type         | Definition                       |
+| ------------ | -------------------------------- |
+| `a a`        | `{ type: ' ', value: [...] }`    |
+| `a && a`     | `{ type: '&&', value: [...] }`   |
+| `a \|\| a`   | `{ type: '\|\|', value: [...] }` |
+| `a \| a`     | `{ type: '\|', value: [...] }`   |
+| `a [a \| a]` | `{ type: ' ', value: [...] }`    |

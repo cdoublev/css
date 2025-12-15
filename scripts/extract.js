@@ -47,8 +47,9 @@ const initial = {
     types: {
         // https://github.com/w3c/csswg-drafts/issues/13092
         '<anchored-feature>': '<media-feature>',
-        // https://github.com/w3c/csswg-drafts/issues/10558
+        // https://github.com/w3c/csswg-drafts/issues/13167
         '<custom-function-definition>': '<function-token> <function-parameter>#? ) [returns <css-type>]?',
+        // https://github.com/w3c/csswg-drafts/issues/10558
         '<dashed-function>': {
             name: '<dashed-function>',
             type: 'non-terminal',

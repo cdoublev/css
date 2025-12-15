@@ -12,11 +12,11 @@ This section defines the requirements for a CSS parser before presenting the rel
 
 Parsing is the process of deriving an unstructured input, by applying production rules, into a representation that exposes its grammatical structure.
 
-A **parse tree** (aka. derivation tree) is a hierarchical representation of this derivation. A branch node represents zero or more tokens matching a non-terminal, a combination, a repetition. A leaf node represents a single token matching a terminal.
+A ***parse tree*** (aka. derivation tree) is a hierarchical representation of this derivation. A branch node represents zero or more tokens matching a non-terminal, a combination, a repetition. A leaf node represents a single token matching a terminal.
 
 **Note:** in graph theory, a parse tree is a graph that is acyclic, finite, undirected, connected, rooted, ie. there is exactly one bidirectional path between two nodes and there is a node designated as the root of the tree.
 
-How production rules are applied depends on the derivation order. It can start from the root node, follow a *pre-order*, which means that a parent node is visited before its children, and end to the rightmost leaf node, resulting to a *leftmost derivation*. Or it can start from the leftmost leaf node, follow a *post-order*, which means that a parent node is visited after its children, and end to the root node, resulting to a *rightmost derivation in reverse*.
+How production rules are applied depends on the derivation order. It can start from the root node, follow a *pre-order*, which means that a parent node is visited before its children, and end at the rightmost leaf node, resulting in a *leftmost derivation*. Or it can start from the leftmost leaf node, follow a *post-order*, which means that a parent node is visited after its children, and end at the root node, resulting in a *rightmost derivation in reverse*.
 
 **Note:** *pre-order* and *post-order* are also named *top-down* and *bottom-up* orders because parse trees are often represented with their root node at the top and their leaves at the bottom, which makes these names coupled to the visual representation of the tree.
 
@@ -44,7 +44,7 @@ The *syntactic context* is any visible object surrounding a value (in CSS: a rul
 
 ### CSS Grammar
 
-The CSS grammar is layered on three levels: lexic, syntax, and semantics. Lexic and syntax define the structure. Semantics defines the contextual meaning.
+The CSS grammar is layered on three levels: tokens, syntax, and semantics. Tokens and syntax define the structure. Semantics defines the contextual meaning.
 
 The following list defines the different levels of CSS structures:
 
@@ -57,7 +57,7 @@ The following list defines the different levels of CSS structures:
     - value: list of component values
   - function and simple block: list of component values
 
-A component value is a preserved token (lexical unit), a function, or a simple block.
+A component value is a preserved token, a function, or a simple block.
 
 The CSS grammar could be defined only with production rules, but encoding semantics is not always trivial. Therefore, semantic rules are often defined in prose. More importantly, an invalid part of a value must not always cause the entire process to fail. Therefore, some productions are defined with an algorithm to skip invalid parts, which excludes generated parsers.
 
@@ -189,7 +189,7 @@ In contexts where declarations cascade or apply to elements, the grammar is impl
 
 Validating a value in the context, before or after matching its definition, often requires traversing the parse tree to access a sibling or parent node. For example, there must be a whitespace preceding `+` and `-` in `<calc-sum>`. So if it is omitted, the validation action associated to the node representing `+` or `-` must return an error if its parent node represents `<calc-sum>`.
 
-Other grammar rules requires modifying the value definition. For example, math functions must support at least 32 arguments, which means the default value (20) of the `#` multiplier of `<calc-sum>` must be overriden. Similarly, `#` must be ignored at the top-level of a production rule for a property value range.
+Other grammar rules require modifying the value definition. For example, math functions must support at least 32 arguments, which means the default value (20) of the `#` multiplier of `<calc-sum>` must be overridden. Similarly, `#` must be ignored at the top-level of a production rule for a property value range.
 
 Finally, the context representation must allow to determine the input token marking the end of the parsed node value. So it must be hierarchical, to allow to determine which of a function or block is the closest context, like in `fn([a])` and `[fn(a)]`.
 
@@ -362,13 +362,13 @@ Finally, it validates a priority, if any.
 
 The state machine allows defining transition actions for a specific production.
 
-| Action        | Description                                                               |
-| ------------- | ------------------------------------------------------------------------- |
-| `configure`   | Override the node                                                         |
-| `preprocess`  | Validate a semantic rule                                                  |
-| `postprocess` | Validate a semantic rule, simplify a valid match result                   |
-| `replace`     | Replace a match failure with the result from parsing a substitution value |
-| `intercept`   | Handle a parse error                                                      |
+| Action        | Description                                                             |
+| ------------- | ----------------------------------------------------------------------- |
+| `configure`   | Override the node                                                       |
+| `preprocess`  | Validate a semantic rule                                                |
+| `postprocess` | Validate a semantic rule, simplify a valid match result                 |
+| `replace`     | Replace a match failure with the result of parsing a substitution value |
+| `intercept`   | Handle a parse error                                                    |
 
 The next state is based on the output of the previous action, which can be `undefined`, `null`, `Error`, or a valid parse result, except the initial transition action, which must return a node.
 
