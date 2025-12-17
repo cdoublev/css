@@ -9,14 +9,6 @@ beforeEach(() => {
     stream.index = -1
 })
 
-describe('moveTo(index)', () => {
-    it('moves the stream to the item at the given index', () => {
-        stream.moveTo(1)
-        expect(stream.current).toBe('e')
-        expect(stream.index).toBe(1)
-    })
-})
-
 describe('consume(item, fallback)', () => {
     it('throws an error when the given item is not at the front of the stream', () => {
         expect(() => stream.consume('_', Error)).toThrow('"_" was expected')
@@ -49,6 +41,18 @@ describe('consume(item, fallback)', () => {
         expect(stream.consume(char => char === stream.current)).toBe('l')
         expect(stream.consume((char, arg1, arg2) => char === 'l' ? `${arg1}${arg2}` : null, 'l', 'o')).toBe('lo')
         expect(stream.index).toBe(3)
+    })
+})
+
+describe('backtrack(index)', () => {
+    it('throws an error when trying to move at an index greater than the current stream index', () => {
+        expect(() => stream.backtrack(0)).toThrow('Unexpected backtrack index greater than current stream index')
+    })
+    it('moves the stream back to the item at the given index', () => {
+        stream.consume()
+        stream.backtrack(-1)
+        expect(stream.current).toBeUndefined()
+        expect(stream.index).toBe(-1)
     })
 })
 
@@ -115,7 +119,7 @@ describe('next(size, offset = 0)', () => {
 
 describe('prev(size, offset = 0)', () => {
     it('returns the given size of previous items located at the given offset from index', () => {
-        stream.moveTo(string.length)
+        stream.index = string.length
         expect(stream.prev()).toBe('o')
         expect(stream.prev(1, 0)).toBe('o')
         expect(stream.prev(1, 1)).toBe('l')
@@ -253,5 +257,36 @@ it('works with an array', () => {
     let index = 0
     for (const char of stream) {
         expect(char).toBe(['hello', ' ', 'beautiful', ' ', 'world', '!'][index++])
+    }
+})
+it('works with an iterator', () => {
+
+    const iterator = string[Symbol.iterator]()
+    const stream = new Stream(iterator)
+
+    expect(stream.current).toBeUndefined()
+    expect(stream.next()).toBe('h')
+    expect(stream.next(2)).toEqual(['h', 'e'])
+    expect(stream.next(1, 1)).toBe('e')
+    expect(stream.next(2, 1)).toEqual(['e', 'l'])
+    expect(stream.consume()).toBe('h')
+    expect(stream.current).toBe('h')
+    expect(stream.consume(2)).toEqual(['e', 'l'])
+    expect(stream.current).toBe('l')
+    expect(stream.prev()).toBe('e')
+    expect(stream.prev(1, 1)).toBe('h')
+
+    stream.index = -1
+
+    expect(stream.current).toBeUndefined()
+    expect(stream.consumeUntil('o')).toEqual(['h', 'e', 'l', 'l'])
+    expect(stream.consume()).toBe('o')
+    expect(stream.consume('o')).toBeNull()
+
+    stream.index = -1
+
+    let index = 0
+    for (const char of stream) {
+        expect(char).toBe(string[index++])
     }
 })
