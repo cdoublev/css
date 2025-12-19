@@ -13,7 +13,9 @@ import {
     CSSStyleProperties,
     CSSStyleSheet,
 } from '../lib/cssom/index.js'
+import { describe, it, test } from 'node:test'
 import { UPDATE_COMPUTED_STYLE_DECLARATION_ERROR } from '../lib/error.js'
+import assert from 'node:assert'
 import { install } from '@cdoublev/css'
 import properties from '../lib/properties/definitions.js'
 import shorthands from '../lib/properties/shorthands.js'
@@ -64,11 +66,11 @@ describe('CSSStyleDeclaration / CSSStyleProperties', () => {
             }
             const prefixed = dashed.startsWith('-webkit-')
             const camel = toIDLAttribute(dashed, prefixed)
-            expect(Object.hasOwn(prototype, dashed)).toBeTruthy()
-            expect(Object.hasOwn(prototype, camel)).toBeTruthy()
+            assert.equal(Object.hasOwn(prototype, dashed), true)
+            assert.equal(Object.hasOwn(prototype, camel), true)
             if (prefixed) {
                 const webkit = toIDLAttribute(dashed)
-                expect(Object.hasOwn(prototype, webkit)).toBeTruthy()
+                assert.equal(Object.hasOwn(prototype, webkit), true)
             }
         })
     })
@@ -79,8 +81,8 @@ describe('CSSStyleDeclaration / CSSStyleProperties', () => {
         const parentRule = {}
         const style = createStyleBlock({ declarations, parentRule })
 
-        expect(style.color).toBe(value.serialized)
-        expect(style.parentRule).toBe(parentRule)
+        assert.equal(style.color, value.serialized)
+        assert.equal(style.parentRule, parentRule)
     })
     it('initializes with declarations resulting from parsing `Element.style`', () => {
         const element = {
@@ -89,7 +91,7 @@ describe('CSSStyleDeclaration / CSSStyleProperties', () => {
             },
         }
         const style = createStyleBlock({ ownerNode: element })
-        expect(style.color).toBe('green')
+        assert.equal(style.color, 'green')
     })
     it('has array-like properties and methods', () => {
 
@@ -97,9 +99,9 @@ describe('CSSStyleDeclaration / CSSStyleProperties', () => {
 
         style.color = 'green'
 
-        expect(style).toHaveLength(1)
-        expect(style[0]).toBe('color')
-        expect(style.item(0)).toBe('color')
+        assert.equal(style.length, 1)
+        assert.equal(style[0], 'color')
+        assert.equal(style.item(0), 'color')
     })
     it('reflects a dashed property with its camel-cased and webkit cased variants', () => {
 
@@ -107,21 +109,21 @@ describe('CSSStyleDeclaration / CSSStyleProperties', () => {
 
         style['-webkit-line-clamp'] = '1'
 
-        expect(style['-webkit-line-clamp']).toBe('1')
-        expect(style.webkitLineClamp).toBe('1')
-        expect(style.WebkitLineClamp).toBe('1')
+        assert.equal(style['-webkit-line-clamp'], '1')
+        assert.equal(style.webkitLineClamp, '1')
+        assert.equal(style.WebkitLineClamp, '1')
 
         style.webkitLineClamp = '2'
 
-        expect(style['-webkit-line-clamp']).toBe('2')
-        expect(style.webkitLineClamp).toBe('2')
-        expect(style.WebkitLineClamp).toBe('2')
+        assert.equal(style['-webkit-line-clamp'], '2')
+        assert.equal(style.webkitLineClamp, '2')
+        assert.equal(style.WebkitLineClamp, '2')
 
         style.WebkitLineClamp = '3'
 
-        expect(style['-webkit-line-clamp']).toBe('3')
-        expect(style.webkitLineClamp).toBe('3')
-        expect(style.WebkitLineClamp).toBe('3')
+        assert.equal(style['-webkit-line-clamp'], '3')
+        assert.equal(style.webkitLineClamp, '3')
+        assert.equal(style.WebkitLineClamp, '3')
     })
     it('reflects a longhand property with its alias', () => {
 
@@ -129,13 +131,13 @@ describe('CSSStyleDeclaration / CSSStyleProperties', () => {
 
         style.order = '1'
 
-        expect(style.order).toBe('1')
-        expect(style['-webkit-order']).toBe('1')
+        assert.equal(style.order, '1')
+        assert.equal(style['-webkit-order'], '1')
 
         style['-webkit-order'] = '2'
 
-        expect(style.order).toBe('2')
-        expect(style['-webkit-order']).toBe('2')
+        assert.equal(style.order, '2')
+        assert.equal(style['-webkit-order'], '2')
     })
     it('reflects a shorthand property with its alias', () => {
 
@@ -143,64 +145,64 @@ describe('CSSStyleDeclaration / CSSStyleProperties', () => {
 
         style.gap = '1px'
 
-        expect(style.gap).toBe('1px')
-        expect(style['grid-gap']).toBe('1px')
+        assert.equal(style.gap, '1px')
+        assert.equal(style['grid-gap'], '1px')
 
         style['grid-gap'] = '2px'
 
-        expect(style.gap).toBe('2px')
-        expect(style['grid-gap']).toBe('2px')
+        assert.equal(style.gap, '2px')
+        assert.equal(style['grid-gap'], '2px')
     })
     it('sets a declaration for a longhand property mapping to another property', () => {
         const style = createStyleBlock()
         style['-webkit-box-align'] = 'start'
-        expect(style['-webkit-box-align']).toBe('start')
-        expect(style['align-items']).toBe('')
+        assert.equal(style['-webkit-box-align'], 'start')
+        assert.equal(style['align-items'], '')
     })
 })
 describe('CSSStyleDeclaration.cssText', () => {
     it('does not store a declaration with an invalid name', () => {
         const style = createStyleBlock()
         style.cssText = 'webkitLineClamp: 1; WebkitLineClamp: 1'
-        expect(style.cssText).toBe('')
+        assert.equal(style.cssText, '')
     })
     it('stores a declaration for the target of a property alias', () => {
         const style = createStyleBlock()
         style.cssText = '-webkit-order: 1; grid-gap: 1px'
-        expect(style.cssText).toBe('order: 1; gap: 1px;')
+        assert.equal(style.cssText, 'order: 1; gap: 1px;')
     })
     it('stores a declaration for a property mapping to another property', () => {
         const style = createStyleBlock()
         style.cssText = '-webkit-box-align: start'
-        expect(style.cssText).toBe('-webkit-box-align: start;')
+        assert.equal(style.cssText, '-webkit-box-align: start;')
     })
     it('stores a custom property declaration with an escaped code point', () => {
         const style = createStyleBlock()
         style.cssText = '--custom\\ property: 1'
-        expect(style.cssText).toBe('--custom\\ property: 1;')
+        assert.equal(style.cssText, '--custom\\ property: 1;')
     })
     it('stores a custom property declaration with an empty string value', () => {
         const style = createStyleBlock()
         style.cssText = '--custom:;'
-        expect(style.cssText).toBe('--custom: ;')
-        expect(style.getPropertyValue('--custom')).toBe(' ')
+        assert.equal(style.cssText, '--custom: ;')
+        assert.equal(style.getPropertyValue('--custom'), ' ')
     })
     it('stores declarations in specified order', () => {
         const style = createStyleBlock()
         style.cssText = 'color: orange; width: 1px; color: green'
-        expect(style.cssText).toBe('width: 1px; color: green;')
+        assert.equal(style.cssText, 'width: 1px; color: green;')
         style.cssText = 'color: green !important; width: 1px; color: orange'
-        expect(style.cssText).toBe('color: green !important; width: 1px;')
+        assert.equal(style.cssText, 'color: green !important; width: 1px;')
     })
     it('ignores rules', () => {
         const style = createStyleBlock()
         style.cssText = 'color: green; @page { color: red }; .selector { color: red }; font-size: 12px'
-        expect(style.cssText).toBe('color: green; font-size: 12px;')
+        assert.equal(style.cssText, 'color: green; font-size: 12px;')
     })
     it('ignores an orphan }', () => {
         const style = createStyleBlock()
         style.cssText = 'color: green; } font-size: 12px'
-        expect(style.cssText).toBe('color: green; font-size: 12px;')
+        assert.equal(style.cssText, 'color: green; font-size: 12px;')
     })
 })
 describe('CSSStyleDeclaration.setProperty(), CSSStyleDeclaration.getPropertyValue(), CSSStyleDeclaration.removeProperty()', () => {
@@ -213,18 +215,18 @@ describe('CSSStyleDeclaration.setProperty(), CSSStyleDeclaration.getPropertyValu
         style.setProperty('webkitLineClamp', '1')
         style.setProperty('WebkitLineClamp', '1')
 
-        expect(style.getPropertyValue('-webkit-line-clamp')).toBe('')
+        assert.equal(style.getPropertyValue('-webkit-line-clamp'), '')
     })
     it('does not store a declaration with a value including a priority', () => {
         const style = createStyleBlock()
         style.setProperty('font-size', '1px !important')
-        expect(style.getPropertyValue('font-size')).toBe('')
+        assert.equal(style.getPropertyValue('font-size'), '')
     })
     it('does not store a declaration with an invalid priority', () => {
         const style = createStyleBlock()
         style.setProperty('font-size', '1px', ' ')
         style.setProperty('font-size', '1px', '!important')
-        expect(style.getPropertyValue('font-size')).toBe('')
+        assert.equal(style.getPropertyValue('font-size'), '')
     })
     it('sets and removes a declaration for a standard property normalized to lowercase', () => {
 
@@ -232,13 +234,13 @@ describe('CSSStyleDeclaration.setProperty(), CSSStyleDeclaration.getPropertyValu
 
         style.setProperty('-WEBKIT-LINE-CLAMP', '1')
 
-        expect(style.getPropertyValue('-WEBKIT-LINE-CLAMP')).toBe('1')
-        expect(style.getPropertyValue('webkitLineClamp')).toBe('')
-        expect(style.getPropertyValue('WebkitLineClamp')).toBe('')
+        assert.equal(style.getPropertyValue('-WEBKIT-LINE-CLAMP'), '1')
+        assert.equal(style.getPropertyValue('webkitLineClamp'), '')
+        assert.equal(style.getPropertyValue('WebkitLineClamp'), '')
 
         style.removeProperty('-WEBKIT-LINE-CLAMP')
 
-        expect(style.getPropertyValue('-webkit-line-clamp')).toBe('')
+        assert.equal(style.getPropertyValue('-webkit-line-clamp'), '')
     })
     it('sets and removes a declaration for the target of a longhand property alias', () => {
 
@@ -246,13 +248,13 @@ describe('CSSStyleDeclaration.setProperty(), CSSStyleDeclaration.getPropertyValu
 
         style.setProperty('-webkit-order', '1')
 
-        expect(style.getPropertyValue('order')).toBe('1')
-        expect(style.getPropertyValue('-webkit-order')).toBe('1')
+        assert.equal(style.getPropertyValue('order'), '1')
+        assert.equal(style.getPropertyValue('-webkit-order'), '1')
 
         style.removeProperty('-webkit-order')
 
-        expect(style.getPropertyValue('order')).toBe('')
-        expect(style.getPropertyValue('-webkit-order')).toBe('')
+        assert.equal(style.getPropertyValue('order'), '')
+        assert.equal(style.getPropertyValue('-webkit-order'), '')
     })
     it('sets and removes a declaration for the target of a shorthand property alias', () => {
 
@@ -260,13 +262,13 @@ describe('CSSStyleDeclaration.setProperty(), CSSStyleDeclaration.getPropertyValu
 
         style.setProperty('grid-gap', '1px')
 
-        expect(style.getPropertyValue('gap')).toBe('1px')
-        expect(style.getPropertyValue('grid-gap')).toBe('1px')
+        assert.equal(style.getPropertyValue('gap'), '1px')
+        assert.equal(style.getPropertyValue('grid-gap'), '1px')
 
         style.removeProperty('grid-gap')
 
-        expect(style.getPropertyValue('gap')).toBe('')
-        expect(style.getPropertyValue('grid-gap')).toBe('')
+        assert.equal(style.getPropertyValue('gap'), '')
+        assert.equal(style.getPropertyValue('grid-gap'), '')
     })
     it('sets a declaration for a longhand property mapping to another property', () => {
 
@@ -274,8 +276,8 @@ describe('CSSStyleDeclaration.setProperty(), CSSStyleDeclaration.getPropertyValu
 
         style.setProperty('-webkit-box-align', 'start')
 
-        expect(style.getPropertyValue('-webkit-box-align')).toBe('start')
-        expect(style.getPropertyValue('align-items')).toBe('')
+        assert.equal(style.getPropertyValue('-webkit-box-align'), 'start')
+        assert.equal(style.getPropertyValue('align-items'), '')
     })
     it('sets and removes a declaration for a custom property with an escaped name', () => {
 
@@ -283,12 +285,12 @@ describe('CSSStyleDeclaration.setProperty(), CSSStyleDeclaration.getPropertyValu
 
         style.setProperty('--custom PROP', '1')
 
-        expect(style.getPropertyValue('--custom PROP')).toBe('1')
-        expect(style.getPropertyValue('--custom\ PROP')).toBe('1')
+        assert.equal(style.getPropertyValue('--custom PROP'), '1')
+        assert.equal(style.getPropertyValue('--custom\ PROP'), '1')
 
         style.removeProperty('--custom PROP')
 
-        expect(style.getPropertyValue('--custom PROP')).toBe('')
+        assert.equal(style.getPropertyValue('--custom PROP'), '')
     })
     it('sets and removes a declaration for a custom property containing an escaped code point', () => {
 
@@ -296,12 +298,12 @@ describe('CSSStyleDeclaration.setProperty(), CSSStyleDeclaration.getPropertyValu
 
         style.setProperty('--custom\ PROP', '1')
 
-        expect(style.getPropertyValue('--custom PROP')).toBe('1')
-        expect(style.getPropertyValue('--custom\ PROP')).toBe('1')
+        assert.equal(style.getPropertyValue('--custom PROP'), '1')
+        assert.equal(style.getPropertyValue('--custom\ PROP'), '1')
 
         style.removeProperty('--custom\ PROP')
 
-        expect(style.getPropertyValue('--custom\ PROP')).toBe('')
+        assert.equal(style.getPropertyValue('--custom\ PROP'), '')
     })
     it('sets a declaration with a priority', () => {
 
@@ -309,21 +311,21 @@ describe('CSSStyleDeclaration.setProperty(), CSSStyleDeclaration.getPropertyValu
 
         // Standard property
         style.setProperty('font-size', '10px', 'important')
-        expect(style.getPropertyPriority('font-size')).toBe('important')
+        assert.equal(style.getPropertyPriority('font-size'), 'important')
         style.setProperty('font-size', '10px')
-        expect(style.getPropertyPriority('font-size')).toBe('')
+        assert.equal(style.getPropertyPriority('font-size'), '')
 
         // Longhand property alias
         style.setProperty('order', '1', 'important')
-        expect(style.getPropertyPriority('-webkit-order')).toBe('important')
+        assert.equal(style.getPropertyPriority('-webkit-order'), 'important')
 
         // Shorthand property alias
         style.setProperty('gap', '1px', 'important')
-        expect(style.getPropertyPriority('grid-gap')).toBe('important')
+        assert.equal(style.getPropertyPriority('grid-gap'), 'important')
 
         // Custom property
         style.setProperty('--custom', '1', 'important')
-        expect(style.getPropertyPriority('--custom')).toBe('important')
+        assert.equal(style.getPropertyPriority('--custom'), 'important')
     })
     it('removes a declaration for the specified name when the specified value is an empty string', () => {
 
@@ -333,9 +335,9 @@ describe('CSSStyleDeclaration.setProperty(), CSSStyleDeclaration.getPropertyValu
         style.setProperty('color', '')
         style.setProperty('--custom', '')
 
-        expect(style.getPropertyValue('color')).toBe('')
-        expect(style.getPropertyValue('--custom')).toBe('')
-        expect(style).toHaveLength(0)
+        assert.equal(style.getPropertyValue('color'), '')
+        assert.equal(style.getPropertyValue('--custom'), '')
+        assert.equal(style.length, 0)
     })
     it('updates a declaration not preceded by a declaration for a property of the same logical property group', () => {
 
@@ -345,13 +347,13 @@ describe('CSSStyleDeclaration.setProperty(), CSSStyleDeclaration.getPropertyValu
         style.width = '1px'
 
         style.borderTopColor = 'orange'
-        expect(style.cssText).toBe('border-top-color: orange; width: 1px;')
+        assert.equal(style.cssText, 'border-top-color: orange; width: 1px;')
 
         style.borderTopColor = 'green'
-        expect(style.cssText).toBe('border-top-color: green; width: 1px;')
+        assert.equal(style.cssText, 'border-top-color: green; width: 1px;')
 
         style.setProperty('border-top-color', 'green', 'important')
-        expect(style.cssText).toBe('border-top-color: green !important; width: 1px;')
+        assert.equal(style.cssText, 'border-top-color: green !important; width: 1px;')
     })
     it('removes then append a declaration followed by a declaration for a property of the same logical property group and with a different mapping', () => {
 
@@ -361,10 +363,10 @@ describe('CSSStyleDeclaration.setProperty(), CSSStyleDeclaration.getPropertyValu
         style.borderBlockStartColor = 'orange'
 
         style.borderTopColor = 'green'
-        expect(style.cssText).toBe('border-block-start-color: orange; border-top-color: green;')
+        assert.equal(style.cssText, 'border-block-start-color: orange; border-top-color: green;')
 
         style.borderBlockStartColor = 'green'
-        expect(style.cssText).toBe('border-top-color: green; border-block-start-color: green;')
+        assert.equal(style.cssText, 'border-top-color: green; border-block-start-color: green;')
     })
 })
 
@@ -373,7 +375,7 @@ describe('CSS-wide keywords', () => {
         const style = createStyleBlock()
         substitutions.keywords.forEach(keyword => {
             style.opacity = keyword.toUpperCase()
-            expect(style.opacity).toBe(keyword)
+            assert.equal(style.opacity, keyword)
         })
     })
 })
@@ -399,7 +401,7 @@ describe('arbitrary substitution', () => {
             '{env()}',
         ]
         invalid.forEach(input => style.color = input)
-        expect(style).toHaveLength(0)
+        assert.equal(style.length, 0)
     })
     test('valid', () => {
         const style = createStyleBlock()
@@ -427,7 +429,7 @@ describe('arbitrary substitution', () => {
         ]
         valid.forEach(([input, expected = input]) => {
             style.cssText = `opacity: ${input}`
-            expect(style.opacity).toBe(expected)
+            assert.equal(style.opacity, expected)
         })
     })
 })
@@ -451,7 +453,7 @@ describe('<whole-value>', () => {
             ['toggle(toggle(1))', 'opacity'],
         ]
         invalid.forEach(([substitution, property]) => style[property] = substitution)
-        expect(style).toHaveLength(0)
+        assert.equal(style.length, 0)
     })
     test('valid', () => {
         const style = createStyleBlock()
@@ -475,7 +477,7 @@ describe('<whole-value>', () => {
         ]
         valid.forEach(([input, expected, property]) => {
             style.cssText = `${property}: ${input}`
-            expect(style.getPropertyValue(property)).toBe(expected)
+            assert.equal(style.getPropertyValue(property), expected)
         })
     })
 })
@@ -495,7 +497,7 @@ describe('--*', () => {
             '!important',
         ]
         invalid.forEach(input => style.setProperty('--custom', input))
-        expect(style).toHaveLength(0)
+        assert.equal(style.length, 0)
     })
     test('valid', () => {
         const style = createStyleBlock()
@@ -520,8 +522,8 @@ describe('--*', () => {
         ]
         valid.forEach(([input, expected = input]) => {
             style.cssText = `--custom: ${input}`
-            expect(style.getPropertyValue('--custom')).toBe(expected.replace(' !important', ''))
-            expect(style.cssText).toBe(`--custom: ${expected.trim()};`)
+            assert.equal(style.getPropertyValue('--custom'), expected.replace(' !important', ''))
+            assert.equal(style.cssText, `--custom: ${expected.trim()};`)
         })
     })
 })
@@ -529,23 +531,23 @@ describe('alignment-baseline', () => {
     test('valid', () => {
         const style = createStyleBlock()
         style.alignmentBaseline = 'text-before-edge'
-        expect(style.alignmentBaseline).toBe('text-top')
+        assert.equal(style.alignmentBaseline, 'text-top')
         style.alignmentBaseline = 'text-after-edge'
-        expect(style.alignmentBaseline).toBe('text-bottom')
+        assert.equal(style.alignmentBaseline, 'text-bottom')
     })
 })
 describe('animation-range-center', () => {
     test('valid', () => {
         const style = createStyleBlock()
         style.animationRangeCenter = 'source 50%'
-        expect(style.animationRangeCenter).toBe('source')
+        assert.equal(style.animationRangeCenter, 'source')
     })
 })
 describe('animation-range-start, animation-range-end, timeline-trigger-exit-range-end, timeline-trigger-exit-range-start, timeline-trigger-range-end, timeline-trigger-range-start', () => {
     test('valid', () => {
         const style = createStyleBlock()
         style.animationRangeStart = 'entry 0%'
-        expect(style.animationRangeStart).toBe('entry')
+        assert.equal(style.animationRangeStart, 'entry')
     })
 })
 describe('background-position', () => {
@@ -559,7 +561,7 @@ describe('background-position', () => {
         ]
         valid.forEach(([input, expected = input]) => {
             style.cssText = `background-position: ${input}`
-            expect(style.backgroundPosition).toBe(expected)
+            assert.equal(style.backgroundPosition, expected)
         })
     })
 })
@@ -567,16 +569,16 @@ describe('background-size, mask-size', () => {
     test('valid', () => {
         const style = createStyleBlock()
         style.backgroundSize = '100%'
-        expect(style.backgroundSize).toBe('100% auto')
+        assert.equal(style.backgroundSize, '100% auto')
     })
 })
 describe('border-end-end-radius, border-end-start-radius, border-bottom-left-radius, border-bottom-right-radius, border-start-end-radius, border-start-start-radius, border-top-left-radius, border-top-right-radius', () => {
     test('valid', () => {
         const style = createStyleBlock()
         style.borderBottomLeftRadius = '1px 1px'
-        expect(style.borderBottomLeftRadius).toBe('1px')
+        assert.equal(style.borderBottomLeftRadius, '1px')
         style.borderBottomLeftRadius = '1px 2px'
-        expect(style.borderBottomLeftRadius).toBe('1px 2px')
+        assert.equal(style.borderBottomLeftRadius, '1px 2px')
     })
 })
 describe('border-image-outset, mask-border-outset', () => {
@@ -590,7 +592,7 @@ describe('border-image-outset, mask-border-outset', () => {
         ]
         valid.forEach(([input, expected = input]) => {
             style.cssText = `border-image-outset: ${input}`
-            expect(style.borderImageOutset).toBe(expected)
+            assert.equal(style.borderImageOutset, expected)
         })
     })
 })
@@ -598,7 +600,7 @@ describe('border-image-repeat, mask-border-repeat', () => {
     test('valid', () => {
         const style = createStyleBlock()
         style.borderImageRepeat = 'stretch stretch'
-        expect(style.borderImageRepeat).toBe('stretch')
+        assert.equal(style.borderImageRepeat, 'stretch')
     })
 })
 describe('border-image-slice, mask-border-slice', () => {
@@ -612,7 +614,7 @@ describe('border-image-slice, mask-border-slice', () => {
         ]
         valid.forEach(([input, expected = input]) => {
             style.cssText = `border-image-slice: ${input}`
-            expect(style.borderImageSlice).toBe(expected)
+            assert.equal(style.borderImageSlice, expected)
         })
     })
 })
@@ -627,7 +629,7 @@ describe('border-image-width, mask-border-width', () => {
         ]
         valid.forEach(([input, expected = input]) => {
             style.cssText = `border-image-width: ${input}`
-            expect(style.borderImageWidth).toBe(expected)
+            assert.equal(style.borderImageWidth, expected)
         })
     })
 })
@@ -635,21 +637,21 @@ describe('border-spacing', () => {
     test('valid', () => {
         const style = createStyleBlock()
         style.borderSpacing = '1px 1px'
-        expect(style.borderSpacing).toBe('1px')
+        assert.equal(style.borderSpacing, '1px')
     })
 })
 describe('box-shadow-offset', () => {
     test('valid', () => {
         const style = createStyleBlock()
         style.boxShadowOffset = '0px'
-        expect(style.boxShadowOffset).toBe('0px 0px')
+        assert.equal(style.boxShadowOffset, '0px 0px')
     })
 })
 describe('break-after, break-before, page-break-after, page-break-before', () => {
     test('invalid', () => {
         const style = createStyleBlock()
         style.pageBreakAfter = 'recto'
-        expect(style).toHaveLength(0)
+        assert.equal(style.length, 0)
     })
     test('valid', () => {
 
@@ -657,38 +659,38 @@ describe('break-after, break-before, page-break-after, page-break-before', () =>
 
         // Unmapped value
         style.breakAfter = 'recto'
-        expect(style.breakAfter).toBe('recto')
-        expect(style.pageBreakAfter).toBe('')
-        expect(style.cssText).toBe('break-after: recto;')
+        assert.equal(style.breakAfter, 'recto')
+        assert.equal(style.pageBreakAfter, '')
+        assert.equal(style.cssText, 'break-after: recto;')
 
         // Legacy mapped value
         style.breakAfter = 'page'
-        expect(style.breakAfter).toBe('page')
-        expect(style.pageBreakAfter).toBe('always')
-        expect(style.cssText).toBe('break-after: page;')
+        assert.equal(style.breakAfter, 'page')
+        assert.equal(style.pageBreakAfter, 'always')
+        assert.equal(style.cssText, 'break-after: page;')
         style.cssText = ''
         style.pageBreakAfter = 'always'
-        expect(style.breakAfter).toBe('page')
-        expect(style.pageBreakAfter).toBe('always')
-        expect(style.cssText).toBe('break-after: page;')
+        assert.equal(style.breakAfter, 'page')
+        assert.equal(style.pageBreakAfter, 'always')
+        assert.equal(style.cssText, 'break-after: page;')
 
         // Substitution-value
         style.breakAfter = 'var(--custom)'
-        expect(style.breakAfter).toBe('var(--custom)')
-        expect(style.pageBreakAfter).toBe('var(--custom)')
-        expect(style.cssText).toBe('break-after: var(--custom);')
+        assert.equal(style.breakAfter, 'var(--custom)')
+        assert.equal(style.pageBreakAfter, 'var(--custom)')
+        assert.equal(style.cssText, 'break-after: var(--custom);')
         style.cssText = ''
         style.pageBreakAfter = 'var(--custom)'
-        expect(style.breakAfter).toBe('var(--custom)')
-        expect(style.pageBreakAfter).toBe('var(--custom)')
-        expect(style.cssText).toBe('break-after: var(--custom);')
+        assert.equal(style.breakAfter, 'var(--custom)')
+        assert.equal(style.pageBreakAfter, 'var(--custom)')
+        assert.equal(style.cssText, 'break-after: var(--custom);')
     })
 })
 describe('break-inside, page-break-inside', () => {
     test('invalid', () => {
         const style = createStyleBlock()
         style.pageBreakInside = 'avoid-page'
-        expect(style).toHaveLength(0)
+        assert.equal(style.length, 0)
     })
     test('valid', () => {
 
@@ -696,27 +698,27 @@ describe('break-inside, page-break-inside', () => {
 
         // Unmapped value
         style.breakInside = 'avoid-page'
-        expect(style.breakInside).toBe('avoid-page')
-        expect(style.pageBreakInside).toBe('')
-        expect(style.cssText).toBe('break-inside: avoid-page;')
+        assert.equal(style.breakInside, 'avoid-page')
+        assert.equal(style.pageBreakInside, '')
+        assert.equal(style.cssText, 'break-inside: avoid-page;')
 
         // Substitution-value
         style.breakInside = 'var(--custom)'
-        expect(style.breakInside).toBe('var(--custom)')
-        expect(style.pageBreakInside).toBe('var(--custom)')
-        expect(style.cssText).toBe('break-inside: var(--custom);')
+        assert.equal(style.breakInside, 'var(--custom)')
+        assert.equal(style.pageBreakInside, 'var(--custom)')
+        assert.equal(style.cssText, 'break-inside: var(--custom);')
         style.cssText = ''
         style.pageBreakInside = 'var(--custom)'
-        expect(style.breakInside).toBe('var(--custom)')
-        expect(style.pageBreakInside).toBe('var(--custom)')
-        expect(style.cssText).toBe('break-inside: var(--custom);')
+        assert.equal(style.breakInside, 'var(--custom)')
+        assert.equal(style.pageBreakInside, 'var(--custom)')
+        assert.equal(style.cssText, 'break-inside: var(--custom);')
     })
 })
 describe('clip-path', () => {
     test('valid', () => {
         const style = createStyleBlock()
         style.clipPath = 'inset(1px) border-box'
-        expect(style.clipPath).toBe('inset(1px)')
+        assert.equal(style.clipPath, 'inset(1px)')
     })
 })
 describe('color-scheme', () => {
@@ -724,26 +726,26 @@ describe('color-scheme', () => {
         const style = createStyleBlock()
         style.colorScheme = 'NORMAL only'
         style.colorScheme = 'only only'
-        expect(style).toHaveLength(0)
+        assert.equal(style.length, 0)
     })
 })
 describe('counter-increment, counter-set, counter-reset', () => {
     test('valid', () => {
         const style = createStyleBlock()
         style.counterIncrement = 'counter 0'
-        expect(style.counterIncrement).toBe('counter 0')
+        assert.equal(style.counterIncrement, 'counter 0')
         style.counterIncrement = 'counter 1'
-        expect(style.counterIncrement).toBe('counter')
+        assert.equal(style.counterIncrement, 'counter')
         style.counterSet = 'counter 0'
-        expect(style.counterSet).toBe('counter')
+        assert.equal(style.counterSet, 'counter')
         style.counterSet = 'counter 1'
-        expect(style.counterSet).toBe('counter 1')
+        assert.equal(style.counterSet, 'counter 1')
         style.counterReset = 'counter 0'
-        expect(style.counterReset).toBe('counter')
+        assert.equal(style.counterReset, 'counter')
         style.counterReset = 'counter 1'
-        expect(style.counterReset).toBe('counter 1')
+        assert.equal(style.counterReset, 'counter 1')
         style.counterReset = 'reversed(counter) 0'
-        expect(style.counterReset).toBe('reversed(counter) 0')
+        assert.equal(style.counterReset, 'reversed(counter) 0')
     })
 })
 describe('container-name', () => {
@@ -756,22 +758,19 @@ describe('container-name', () => {
             'name none',
         ]
         invalid.forEach(input => style.containerName = input)
-        expect(style).toHaveLength(0)
+        assert.equal(style.length, 0)
     })
     test('valid', () => {
         const style = createStyleBlock()
         style.containerName = 'none'
-        expect(style.containerName).toBe('none')
+        assert.equal(style.containerName, 'none')
     })
 })
 describe('cue-after, cue-before', () => {
     test('valid', () => {
         const style = createStyleBlock()
         style.cueAfter = 'url("icon.wav") 0db'
-        expect(style.cueAfter).toBe('url("icon.wav")')
-        // tmp
-        style.cueAfter = 'url("icon.wav") 1db'
-        expect(style.cueAfter).toBe('url("icon.wav") 1db')
+        assert.equal(style.cueAfter, 'url("icon.wav")')
     })
 })
 describe('display', () => {
@@ -780,12 +779,12 @@ describe('display', () => {
         // Alias value
         display.aliases.forEach((to, from) => {
             style.display = from
-            expect(style.display).toBe(to)
+            assert.equal(style.display, to)
         })
         // Legacy mapped value
         for (const mapped of compatibility.values.keywords['display'].mappings.keys()) {
             style.display = mapped
-            expect(style.display).toBe(mapped)
+            assert.equal(style.display, mapped)
         }
     })
 })
@@ -793,10 +792,10 @@ describe('float', () => {
     test('mirroring with cssFloat', () => {
         const style = createStyleBlock()
         style.cssFloat = 'left'
-        expect(style.float).toBe('left')
-        expect(style.cssText).toBe('float: left;')
+        assert.equal(style.float, 'left')
+        assert.equal(style.cssText, 'float: left;')
         style.setProperty('float', 'right')
-        expect(style.cssFloat).toBe('right')
+        assert.equal(style.cssFloat, 'right')
     })
 })
 describe('flow-into', () => {
@@ -804,21 +803,21 @@ describe('flow-into', () => {
         const style = createStyleBlock()
         style.flowInto = 'AUTO'
         style.flowInto = 'none element'
-        expect(style).toHaveLength(0)
+        assert.equal(style.length, 0)
     })
 })
 describe('font-size-adjust', () => {
     test('valid', () => {
         const style = createStyleBlock()
         style.fontSizeAdjust = 'ex-height 1'
-        expect(style.fontSizeAdjust).toBe('1')
+        assert.equal(style.fontSizeAdjust, '1')
     })
 })
 describe('font-style', () => {
     test('valid', () => {
         const style = createStyleBlock()
         style.fontStyle = 'oblique 0deg'
-        expect(style.fontStyle).toBe('normal')
+        assert.equal(style.fontStyle, 'normal')
     })
 })
 describe('glyph-orientation-vertical, text-orientation', () => {
@@ -831,7 +830,7 @@ describe('glyph-orientation-vertical, text-orientation', () => {
             'calc(0deg)',
         ]
         invalid.forEach(input => style.glyphOrientationVertical = input)
-        expect(style).toHaveLength(0)
+        assert.equal(style.length, 0)
     })
     test('valid', () => {
 
@@ -847,32 +846,32 @@ describe('glyph-orientation-vertical, text-orientation', () => {
         ]
         mapping.forEach(([value, legacy, mapped = legacy]) => {
             style.textOrientation = value
-            expect(style.textOrientation).toBe(value)
-            expect(style.glyphOrientationVertical).toBe(mapped)
-            expect(style.cssText).toBe(`text-orientation: ${value};`)
+            assert.equal(style.textOrientation, value)
+            assert.equal(style.glyphOrientationVertical, mapped)
+            assert.equal(style.cssText, `text-orientation: ${value};`)
             style.cssText = ''
             style.glyphOrientationVertical = legacy
-            expect(style.textOrientation).toBe(value)
-            expect(style.glyphOrientationVertical).toBe(mapped)
-            expect(style.cssText).toBe(`text-orientation: ${value};`)
+            assert.equal(style.textOrientation, value)
+            assert.equal(style.glyphOrientationVertical, mapped)
+            assert.equal(style.cssText, `text-orientation: ${value};`)
         })
 
         // Substitution-value
         style.textOrientation = 'var(--custom)'
-        expect(style.textOrientation).toBe('var(--custom)')
-        expect(style.glyphOrientationVertical).toBe('var(--custom)')
-        expect(style.cssText).toBe('text-orientation: var(--custom);')
+        assert.equal(style.textOrientation, 'var(--custom)')
+        assert.equal(style.glyphOrientationVertical, 'var(--custom)')
+        assert.equal(style.cssText, 'text-orientation: var(--custom);')
         style.glyphOrientationVertical = 'var(--custom)'
-        expect(style.textOrientation).toBe('var(--custom)')
-        expect(style.glyphOrientationVertical).toBe('var(--custom)')
-        expect(style.cssText).toBe('text-orientation: var(--custom);')
+        assert.equal(style.textOrientation, 'var(--custom)')
+        assert.equal(style.glyphOrientationVertical, 'var(--custom)')
+        assert.equal(style.cssText, 'text-orientation: var(--custom);')
     })
 })
 describe('grid-auto-flow', () => {
     test('valid', () => {
         const style = createStyleBlock()
         style.gridAutoFlow = 'row dense'
-        expect(style.gridAutoFlow).toBe('dense')
+        assert.equal(style.gridAutoFlow, 'dense')
     })
 })
 describe('grid-template-areas', () => {
@@ -898,12 +897,12 @@ describe('grid-template-areas', () => {
             '". a" "a ."',
         ]
         invalid.forEach(input => style.gridTemplateAreas = input)
-        expect(style).toHaveLength(0)
+        assert.equal(style.length, 0)
     })
     test('valid', () => {
         const style = createStyleBlock()
         style.gridTemplateAreas = '"  a  .b.  c  " "a . . . c'
-        expect(style.gridTemplateAreas).toBe('"a . b . c" "a . . . c"')
+        assert.equal(style.gridTemplateAreas, '"a . b . c" "a . . . c"')
     })
 })
 describe('grid-template-columns, grid-template-rows', () => {
@@ -917,7 +916,7 @@ describe('grid-template-columns, grid-template-rows', () => {
         ]
         valid.forEach(([input, expected = input]) => {
             style.cssText = `grid-template-rows: ${input}`
-            expect(style.gridTemplateRows).toBe(expected)
+            assert.equal(style.gridTemplateRows, expected)
         })
     })
 })
@@ -925,16 +924,16 @@ describe('hyphenate-limit-chars', () => {
     test('valid', () => {
         const style = createStyleBlock()
         style.hyphenateLimitChars = '0 1 1'
-        expect(style.hyphenateLimitChars).toBe('0 1')
+        assert.equal(style.hyphenateLimitChars, '0 1')
         style.hyphenateLimitChars = '0 auto auto'
-        expect(style.hyphenateLimitChars).toBe('0')
+        assert.equal(style.hyphenateLimitChars, '0')
     })
 })
 describe('image-orientation', () => {
     test('valid', () => {
         const style = createStyleBlock()
         style.imageOrientation = '0deg flip'
-        expect(style.imageOrientation).toBe('flip')
+        assert.equal(style.imageOrientation, 'flip')
     })
 })
 describe('image-rendering', () => {
@@ -942,30 +941,30 @@ describe('image-rendering', () => {
         const style = createStyleBlock()
         // Legacy mapped value
         style.imageRendering = 'optimizeSpeed'
-        expect(style.imageRendering).toBe('optimizespeed')
+        assert.equal(style.imageRendering, 'optimizespeed')
         style.imageRendering = 'optimizeQuality'
-        expect(style.imageRendering).toBe('optimizequality')
+        assert.equal(style.imageRendering, 'optimizequality')
     })
 })
 describe('image-resolution', () => {
     test('valid', () => {
         const style = createStyleBlock()
         style.imageResolution = 'from-image 1dppx'
-        expect(style.imageResolution).toBe('from-image')
+        assert.equal(style.imageResolution, 'from-image')
     })
 })
 describe('initial-letter', () => {
     test('valid', () => {
         const style = createStyleBlock()
         style.initialLetter = '1 drop'
-        expect(style.initialLetter).toBe('1')
+        assert.equal(style.initialLetter, '1')
     })
 })
 describe('object-fit', () => {
     test('valid', () => {
         const style = createStyleBlock()
         style.objectFit = 'contain scale-down'
-        expect(style.objectFit).toBe('scale-down')
+        assert.equal(style.objectFit, 'scale-down')
     })
 })
 describe('offset-path', () => {
@@ -983,7 +982,7 @@ describe('offset-path', () => {
         ]
         valid.forEach(([input, expected = input]) => {
             style.cssText = `offset-path: ${input}`
-            expect(style.offsetPath).toBe(expected)
+            assert.equal(style.offsetPath, expected)
         })
     })
 })
@@ -1000,7 +999,7 @@ describe('offset-rotate', () => {
         ]
         valid.forEach(([input, expected]) => {
             style.cssText = `offset-rotate: ${input}`
-            expect(style.offsetRotate).toBe(expected)
+            assert.equal(style.offsetRotate, expected)
         })
     })
 })
@@ -1008,7 +1007,7 @@ describe('overflow-clip-margin-block-end, overflow-clip-margin-block-start, over
     test('valid', () => {
         const style = createStyleBlock()
         style.overflowClipMarginBlockEnd = 'content-box 0px'
-        expect(style.overflowClipMarginBlockEnd).toBe('content-box')
+        assert.equal(style.overflowClipMarginBlockEnd, 'content-box')
     })
 })
 describe('paint-order', () => {
@@ -1027,7 +1026,7 @@ describe('paint-order', () => {
         ]
         valid.forEach(([input, expected = input]) => {
             style.cssText = `paint-order: ${input}`
-            expect(style.paintOrder).toBe(expected)
+            assert.equal(style.paintOrder, expected)
         })
     })
 })
@@ -1035,28 +1034,28 @@ describe('scale', () => {
     test('valid', () => {
         const style = createStyleBlock()
         style.scale = '100% 100% 1'
-        expect(style.scale).toBe('100%')
+        assert.equal(style.scale, '100%')
     })
 })
 describe('scroll-snap-align', () => {
     test('valid', () => {
         const style = createStyleBlock()
         style.scrollSnapAlign = 'none none'
-        expect(style.scrollSnapAlign).toBe('none')
+        assert.equal(style.scrollSnapAlign, 'none')
     })
 })
 describe('scroll-snap-type', () => {
     test('valid', () => {
         const style = createStyleBlock()
         style.scrollSnapType = 'x proximity'
-        expect(style.scrollSnapType).toBe('x')
+        assert.equal(style.scrollSnapType, 'x')
     })
 })
 describe('shape-outside', () => {
     test('valid', () => {
         const style = createStyleBlock()
         style.shapeOutside = 'inset(1px) margin-box'
-        expect(style.shapeOutside).toBe('inset(1px)')
+        assert.equal(style.shapeOutside, 'inset(1px)')
     })
 })
 describe('@font-face/src', () => {
@@ -1064,7 +1063,7 @@ describe('@font-face/src', () => {
         const style = CSSFontFaceDescriptors.create(globalThis, undefined, { parentRule: fontFaceRule })
         style.src = '{]}, local("serif")'
         style.src = 'local("serif"), {]}'
-        expect(style).toHaveLength(0)
+        assert.equal(style.length, 0)
     })
     test('valid', () => {
         const style = CSSFontFaceDescriptors.create(globalThis, undefined, { parentRule: fontFaceRule })
@@ -1080,7 +1079,7 @@ describe('@font-face/src', () => {
         valid.forEach(input => {
             style.removeProperty('src')
             style.setProperty('src', input)
-            expect(style.src).toBe('local("serif")')
+            assert.equal(style.src, 'local("serif")')
         })
     })
 })
@@ -1088,35 +1087,35 @@ describe('text-align-all', () => {
     test('invalid', () => {
         const style = createStyleBlock()
         style.textAlignAll = '"12"'
-        expect(style).toHaveLength(0)
+        assert.equal(style.length, 0)
     })
 })
 describe('text-autospace', () => {
     test('valid', () => {
         const style = createStyleBlock()
         style.textAutospace = 'ideograph-alpha ideograph-numeric'
-        expect(style.textAutospace).toBe('normal')
+        assert.equal(style.textAutospace, 'normal')
     })
 })
 describe('text-decoration-inset', () => {
     test('valid', () => {
         const style = createStyleBlock()
         style.textDecorationInset = '1px 1px'
-        expect(style.textDecorationInset).toBe('1px')
+        assert.equal(style.textDecorationInset, '1px')
     })
 })
 describe('text-decoration-skip-self', () => {
     test('valid', () => {
         const style = createStyleBlock()
         style.textDecorationSkipSelf = 'skip-underline skip-overline skip-line-through'
-        expect(style.textDecorationSkipSelf).toBe('skip-all')
+        assert.equal(style.textDecorationSkipSelf, 'skip-all')
     })
 })
 describe('text-emphasis-position', () => {
     test('valid', () => {
         const style = createStyleBlock()
         style.textEmphasisPosition = 'over right'
-        expect(style.textEmphasisPosition).toBe('over')
+        assert.equal(style.textEmphasisPosition, 'over')
     })
 })
 describe('text-justify', () => {
@@ -1124,28 +1123,28 @@ describe('text-justify', () => {
         const style = createStyleBlock()
         // Legacy value alias
         style.textJustify = 'distribute'
-        expect(style.textJustify).toBe('inter-character')
+        assert.equal(style.textJustify, 'inter-character')
     })
 })
 describe('translate', () => {
     test('valid', () => {
         const style = createStyleBlock()
         style.translate = '0px 0px 0px'
-        expect(style.translate).toBe('0px')
+        assert.equal(style.translate, '0px')
     })
 })
 describe('view-timeline-inset', () => {
     test('valid', () => {
         const style = createStyleBlock()
         style.viewTimelineInset = 'auto auto'
-        expect(style.viewTimelineInset).toBe('auto')
+        assert.equal(style.viewTimelineInset, 'auto')
     })
 })
 describe('view-transition-class', () => {
     test('invalid', () => {
         const style = createStyleBlock()
         style.viewTransitionClass = 'class NONE'
-        expect(style).toHaveLength(0)
+        assert.equal(style.length, 0)
     })
 })
 describe('view-transition-name', () => {
@@ -1153,7 +1152,7 @@ describe('view-transition-name', () => {
         const style = createStyleBlock()
         style.viewTransitionName = 'AUTO'
         style.viewTransitionName = 'match-element'
-        expect(style).toHaveLength(0)
+        assert.equal(style.length, 0)
     })
 })
 describe('voice-pitch, voice-range', () => {
@@ -1166,7 +1165,7 @@ describe('voice-pitch, voice-range', () => {
         ]
         valid.forEach(input => {
             style.cssText = `voice-pitch: ${input}`
-            expect(style.voicePitch).toBe('x-low')
+            assert.equal(style.voicePitch, 'x-low')
         })
     })
 })
@@ -1174,9 +1173,9 @@ describe('voice-rate', () => {
     test('valid', () => {
         const style = createStyleBlock()
         style.voiceRate = 'normal 100%'
-        expect(style.voiceRate).toBe('normal')
+        assert.equal(style.voiceRate, 'normal')
         style.voiceRate = '100%'
-        expect(style.voiceRate).toBe('100%')
+        assert.equal(style.voiceRate, '100%')
     })
 })
 
@@ -1188,37 +1187,37 @@ describe('-webkit-line-clamp', () => {
 
         // none
         style.webkitLineClamp = 'none'
-        expect(style).toHaveLength(longhands.length)
-        expect(style.maxLines).toBe('none')
-        expect(style.blockEllipsis).toBe('auto')
-        expect(style.continue).toBe('auto')
-        expect(style.webkitLineClamp).toBe('none')
-        expect(style.cssText).toBe('-webkit-line-clamp: none;')
+        assert.equal(style.length, longhands.length)
+        assert.equal(style.maxLines, 'none')
+        assert.equal(style.blockEllipsis, 'auto')
+        assert.equal(style.continue, 'auto')
+        assert.equal(style.webkitLineClamp, 'none')
+        assert.equal(style.cssText, '-webkit-line-clamp: none;')
 
         // <integer>
         style.webkitLineClamp = '1'
-        expect(style.maxLines).toBe('1')
-        expect(style.blockEllipsis).toBe('auto')
-        expect(style.continue).toBe('-webkit-legacy')
-        expect(style.webkitLineClamp).toBe('1')
-        expect(style.cssText).toBe('line-clamp: 1 -webkit-legacy;')
+        assert.equal(style.maxLines, '1')
+        assert.equal(style.blockEllipsis, 'auto')
+        assert.equal(style.continue, '-webkit-legacy')
+        assert.equal(style.webkitLineClamp, '1')
+        assert.equal(style.cssText, 'line-clamp: 1 -webkit-legacy;')
 
         // All longhands cannot be represented
         style.continue = initial('continue')
-        expect(style.webkitLineClamp).toBe('')
-        expect(style.cssText).toBe('max-lines: 1; block-ellipsis: auto; continue: auto;')
+        assert.equal(style.webkitLineClamp, '')
+        assert.equal(style.cssText, 'max-lines: 1; block-ellipsis: auto; continue: auto;')
         style.blockEllipsis = initial('block-ellipsis')
         style.continue = '-webkit-legacy'
-        expect(style.webkitLineClamp).toBe('')
-        expect(style.cssText).toBe('line-clamp: 1 no-ellipsis -webkit-legacy;')
+        assert.equal(style.webkitLineClamp, '')
+        assert.equal(style.cssText, 'line-clamp: 1 no-ellipsis -webkit-legacy;')
         style.maxLines = initial('max-lines')
         style.blockEllipsis = 'auto'
-        expect(style.webkitLineClamp).toBe('')
-        expect(style.cssText).toBe('line-clamp: auto -webkit-legacy;')
+        assert.equal(style.webkitLineClamp, '')
+        assert.equal(style.cssText, 'line-clamp: auto -webkit-legacy;')
         style.blockEllipsis = initial('block-ellipsis')
         style.continue = initial('continue')
-        expect(style.webkitLineClamp).toBe('')
-        expect(style.cssText).toBe('line-clamp: none;')
+        assert.equal(style.webkitLineClamp, '')
+        assert.equal(style.cssText, 'line-clamp: none;')
     })
 })
 describe('-webkit-text-stroke', () => {
@@ -1229,18 +1228,18 @@ describe('-webkit-text-stroke', () => {
 
         // Initial longhand values
         style.webkitTextStroke = '0 currentColor'
-        expect(style).toHaveLength(longhands.length)
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.webkitTextStroke).toBe('0px')
+        assert.equal(style.length, longhands.length)
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.webkitTextStroke, '0px')
 
         // Omitted values
         style.webkitTextStroke = '0px'
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.webkitTextStroke).toBe('0px')
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.webkitTextStroke, '0px')
         style.webkitTextStroke = 'green'
-        expect(style.webkitTextStrokeWidth).toBe(initial('-webkit-text-stroke-width'))
-        expect(style.webkitTextStrokeColor).toBe('green')
-        expect(style.webkitTextStroke).toBe('green')
+        assert.equal(style.webkitTextStrokeWidth, initial('-webkit-text-stroke-width'))
+        assert.equal(style.webkitTextStrokeColor, 'green')
+        assert.equal(style.webkitTextStroke, 'green')
     })
 })
 describe('all', () => {
@@ -1252,12 +1251,12 @@ describe('all', () => {
         style.all = 'initial'
 
         // All equal longhand values
-        expect(style).toHaveLength(longhands.length)
-        expect(style[longhands[0]]).toBe('initial')
-        expect(style.all).toBe('initial')
-        expect(style.cssText).toBe('all: initial;')
-        expect(style.direction).toBe('')
-        expect(style.unicodeBidi).toBe('')
+        assert.equal(style.length, longhands.length)
+        assert.equal(style[longhands[0]], 'initial')
+        assert.equal(style.all, 'initial')
+        assert.equal(style.cssText, 'all: initial;')
+        assert.equal(style.direction, '')
+        assert.equal(style.unicodeBidi, '')
 
         // All longhands cannot be represented
         const [head, ...tail] = longhands
@@ -1283,8 +1282,8 @@ describe('all', () => {
             },
             new Set)
         style[head] = 'inherit'
-        expect(style.all).toBe('')
-        expect(style.cssText).toBe(`${[...initial].map(name => `${name}: initial`).join('; ')}; ${head}: inherit;`)
+        assert.equal(style.all, '')
+        assert.equal(style.cssText, `${[...initial].map(name => `${name}: initial`).join('; ')}; ${head}: inherit;`)
     })
 })
 describe('animation', () => {
@@ -1298,31 +1297,33 @@ describe('animation', () => {
 
         // Initial longhand values
         style.animation = animation
-        expect(style).toHaveLength(longhands.length)
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.animation).toBe(animation)
+        assert.equal(style.length, longhands.length)
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.animation, animation)
 
         // Omitted values
         style.animation = 'auto'
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.animation).toBe(animation)
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.animation, animation)
         style.animation = 'linear'
         longhands.forEach(longhand =>
-            expect(style[longhand]).toBe(longhand === 'animation-timing-function' ? 'linear' : initial(longhand)))
-        expect(style.animation).toBe(animation.replace('ease', 'linear'))
+            assert.equal(style[longhand], longhand === 'animation-timing-function' ? 'linear' : initial(longhand)))
+        assert.equal(style.animation, animation.replace('ease', 'linear'))
 
         // All longhands cannot be represented
         style.animationName = 'none, none'
-        expect(style.animation).toBe('')
-        expect(style.cssText).toBe('animation-duration: auto; animation-timing-function: linear; animation-delay: 0s; animation-iteration-count: 1; animation-direction: normal; animation-fill-mode: none; animation-play-state: running; animation-name: none, none; animation-timeline: auto; animation-composition: replace; animation-range: normal; animation-trigger: none;')
+        assert.equal(style.animation, '')
+        assert.equal(style.cssText, 'animation-duration: auto; animation-timing-function: linear; animation-delay: 0s; animation-iteration-count: 1; animation-direction: normal; animation-fill-mode: none; animation-play-state: running; animation-name: none, none; animation-timeline: auto; animation-composition: replace; animation-range: normal; animation-trigger: none;')
 
         // Coordinated value list
         style.animation = `${animation}, ${animation}`
         longhands.forEach(longhand =>
-            expect(style[longhand]).toBe(resetOnly.includes(longhand)
-                ? initial(longhand)
-                : `${initial(longhand)}, ${initial(longhand)}`))
-        expect(style.animation).toBe(`${animation}, ${animation}`)
+            assert.equal(
+                style[longhand],
+                resetOnly.includes(longhand)
+                    ? initial(longhand)
+                    : `${initial(longhand)}, ${initial(longhand)}`))
+        assert.equal(style.animation, `${animation}, ${animation}`)
     })
 })
 describe('animation-range', () => {
@@ -1333,9 +1334,9 @@ describe('animation-range', () => {
 
         // Initial longhand values
         style.animationRange = 'normal normal'
-        expect(style).toHaveLength(longhands.length)
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.animationRange).toBe('normal')
+        assert.equal(style.length, longhands.length)
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.animationRange, 'normal')
 
         // Omitted values
         const values = [
@@ -1351,20 +1352,20 @@ describe('animation-range', () => {
         ]
         values.forEach(([input, start = input, end = start, expected = input]) => {
             style.animationRange = input
-            expect(style.animationRangeStart).toBe(start)
-            expect(style.animationRangeEnd).toBe(end)
-            expect(style.animationRange).toBe(expected)
+            assert.equal(style.animationRangeStart, start)
+            assert.equal(style.animationRangeEnd, end)
+            assert.equal(style.animationRange, expected)
         })
 
         // All longhands cannot be represented
         style.animationRangeStart = 'normal, normal'
-        expect(style.animationRange).toBe('')
-        expect(style.cssText).toBe('animation-range-start: normal, normal; animation-range-end: normal;')
+        assert.equal(style.animationRange, '')
+        assert.equal(style.cssText, 'animation-range-start: normal, normal; animation-range-end: normal;')
 
         // Coordinated value list
         style.animationRange = 'normal, normal'
-        longhands.forEach(longhand => expect(style[longhand]).toBe(`${initial(longhand)}, ${initial(longhand)}`))
-        expect(style.animationRange).toBe('normal, normal')
+        longhands.forEach(longhand => assert.equal(style[longhand], `${initial(longhand)}, ${initial(longhand)}`))
+        assert.equal(style.animationRange, 'normal, normal')
     })
 })
 describe('background', () => {
@@ -1378,32 +1379,32 @@ describe('background', () => {
 
         // Initial longhand values + important
         style.cssText = `background: ${background} !important`
-        expect(style).toHaveLength(longhands.length)
+        assert.equal(style.length, longhands.length)
         longhands.forEach(longhand => {
-            expect(style[longhand]).toBe(initial(longhand))
-            expect(style.getPropertyPriority(longhand)).toBe('important')
+            assert.equal(style[longhand], initial(longhand))
+            assert.equal(style.getPropertyPriority(longhand), 'important')
         })
-        expect(style.background).toBe('none')
-        expect(style.getPropertyPriority('background')).toBe('important')
-        expect(style.cssText).toBe('background: none !important;')
+        assert.equal(style.background, 'none')
+        assert.equal(style.getPropertyPriority('background'), 'important')
+        assert.equal(style.cssText, 'background: none !important;')
 
         // Empty string
         style.background = ''
-        longhands.forEach(longhand => expect(style[longhand]).toBe(''))
-        expect(style.background).toBe('')
+        longhands.forEach(longhand => assert.equal(style[longhand], ''))
+        assert.equal(style.background, '')
 
         // CSS-wide keyword
         style.background = 'initial'
-        longhands.forEach(longhand => expect(style[longhand]).toBe('initial'))
-        expect(style.background).toBe('initial')
+        longhands.forEach(longhand => assert.equal(style[longhand], 'initial'))
+        assert.equal(style.background, 'initial')
 
         // Pending substitution
         style.background = 'var(--custom)'
-        longhands.forEach(longhand => expect(style[longhand]).toBe(''))
-        expect(style.background).toBe('var(--custom)')
+        longhands.forEach(longhand => assert.equal(style[longhand], ''))
+        assert.equal(style.background, 'var(--custom)')
         style.background = 'toggle(none)'
-        longhands.forEach(longhand => expect(style[longhand]).toBe(''))
-        expect(style.background).toBe('toggle(none)')
+        longhands.forEach(longhand => assert.equal(style[longhand], ''))
+        assert.equal(style.background, 'toggle(none)')
 
         // Omitted values
         const values = [
@@ -1419,37 +1420,38 @@ describe('background', () => {
         ]
         values.forEach(([input, declared = {}]) => {
             style.background = input
-            longhands.forEach(longhand => expect(style[longhand]).toBe(declared[longhand] ?? initial(longhand)))
-            expect(style.background).toBe(input)
+            longhands.forEach(longhand => assert.equal(style[longhand], declared[longhand] ?? initial(longhand)))
+            assert.equal(style.background, input)
         })
 
         // All longhands cannot be represented
         style.backgroundImage = 'none, none'
-        expect(style.background).toBe('')
-        expect(style.cssText).toBe('background-image: none, none; background-position: 0% 0%; background-size: auto auto; background-repeat: repeat; background-attachment: scroll; background-origin: padding-box; background-clip: border-area; background-color: transparent; background-blend-mode: normal;')
+        assert.equal(style.background, '')
+        assert.equal(style.cssText, 'background-image: none, none; background-position: 0% 0%; background-size: auto auto; background-repeat: repeat; background-attachment: scroll; background-origin: padding-box; background-clip: border-area; background-color: transparent; background-blend-mode: normal;')
         style.backgroundImage = 'initial'
-        expect(style.background).toBe('')
-        expect(style.cssText).toBe('background-image: initial; background-position: 0% 0%; background-size: auto auto; background-repeat: repeat; background-attachment: scroll; background-origin: padding-box; background-clip: border-area; background-color: transparent; background-blend-mode: normal;')
+        assert.equal(style.background, '')
+        assert.equal(style.cssText, 'background-image: initial; background-position: 0% 0%; background-size: auto auto; background-repeat: repeat; background-attachment: scroll; background-origin: padding-box; background-clip: border-area; background-color: transparent; background-blend-mode: normal;')
         style.setProperty('background-image', 'none', 'important')
-        expect(style.background).toBe('')
-        expect(style.cssText).toBe('background-image: none !important; background-position: 0% 0%; background-size: auto auto; background-repeat: repeat; background-attachment: scroll; background-origin: padding-box; background-clip: border-area; background-color: transparent; background-blend-mode: normal;')
+        assert.equal(style.background, '')
+        assert.equal(style.cssText, 'background-image: none !important; background-position: 0% 0%; background-size: auto auto; background-repeat: repeat; background-attachment: scroll; background-origin: padding-box; background-clip: border-area; background-color: transparent; background-blend-mode: normal;')
         style.background = 'var(--custom)'
         style.backgroundImage = 'var(--custom)'
-        expect(style.background).toBe('')
-        expect(style.cssText).toBe('background-image: var(--custom); background-position: ; background-size: ; background-repeat-x: ; background-repeat-y: ; background-attachment: ; background-origin: ; background-clip: ; background-color: ; background-blend-mode: ;')
+        assert.equal(style.background, '')
+        assert.equal(style.cssText, 'background-image: var(--custom); background-position: ; background-size: ; background-repeat-x: ; background-repeat-y: ; background-attachment: ; background-origin: ; background-clip: ; background-color: ; background-blend-mode: ;')
         style.background = 'toggle(initial)'
         style.backgroundImage = 'toggle(initial)'
-        expect(style.background).toBe('')
-        expect(style.cssText).toBe('background-image: toggle(initial); background-position: ; background-size: ; background-repeat-x: ; background-repeat-y: ; background-attachment: ; background-origin: ; background-clip: ; background-color: ; background-blend-mode: ;')
+        assert.equal(style.background, '')
+        assert.equal(style.cssText, 'background-image: toggle(initial); background-position: ; background-size: ; background-repeat-x: ; background-repeat-y: ; background-attachment: ; background-origin: ; background-clip: ; background-color: ; background-blend-mode: ;')
 
         // Coordinated value list
         style.background = `${background.replace(' transparent', '')}, ${background}`
         longhands.forEach(longhand =>
-            expect(style[longhand]).toBe(
+            assert.equal(
+                style[longhand],
                 (longhand === 'background-color' || resetOnly.includes(longhand))
                     ? initial(longhand)
                     : `${initial(longhand)}, ${initial(longhand)}`))
-        expect(style.background).toBe('none, none')
+        assert.equal(style.background, 'none, none')
     })
 })
 describe('background-repeat', () => {
@@ -1460,9 +1462,9 @@ describe('background-repeat', () => {
 
         // Initial longhand values
         style.backgroundRepeat = 'repeat repeat'
-        expect(style).toHaveLength(longhands.length)
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.backgroundRepeat).toBe('repeat')
+        assert.equal(style.length, longhands.length)
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.backgroundRepeat, 'repeat')
 
         // Omitted values
         const values = [
@@ -1473,9 +1475,9 @@ describe('background-repeat', () => {
         ]
         values.forEach(([input, x = input, y = x]) => {
             style.backgroundRepeat = input
-            expect(style.backgroundRepeatX).toBe(x)
-            expect(style.backgroundRepeatY).toBe(y)
-            expect(style.backgroundRepeat).toBe(input)
+            assert.equal(style.backgroundRepeatX, x)
+            assert.equal(style.backgroundRepeatY, y)
+            assert.equal(style.backgroundRepeat, input)
         })
     })
 })
@@ -1487,18 +1489,18 @@ describe('block-step', () => {
 
         // Initial longhand values
         style.blockStep = 'none margin-box auto up'
-        expect(style).toHaveLength(longhands.length)
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.blockStep).toBe('none')
+        assert.equal(style.length, longhands.length)
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.blockStep, 'none')
 
         // Omitted values
         style.blockStep = 'none'
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.blockStep).toBe('none')
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.blockStep, 'none')
         style.blockStep = 'padding-box'
         longhands.forEach(longhand =>
-            expect(style[longhand]).toBe(longhand === 'block-step-insert' ? 'padding-box' : initial(longhand)))
-        expect(style.blockStep).toBe('padding-box')
+            assert.equal(style[longhand], longhand === 'block-step-insert' ? 'padding-box' : initial(longhand)))
+        assert.equal(style.blockStep, 'padding-box')
     })
 })
 describe('border', () => {
@@ -1509,39 +1511,39 @@ describe('border', () => {
 
         // Initial longhand values
         style.border = 'medium none currentColor'
-        expect(style).toHaveLength(longhands.length)
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.border).toBe('medium')
+        assert.equal(style.length, longhands.length)
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.border, 'medium')
 
         // Omitted values
         style.border = 'medium'
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.border).toBe('medium')
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.border, 'medium')
         style.border = 'solid'
         longhands.forEach(longhand =>
-            expect(style[longhand]).toBe(longhand.endsWith('style') ? 'solid' : initial(longhand)))
-        expect(style.border).toBe('solid')
+            assert.equal(style[longhand], longhand.endsWith('style') ? 'solid' : initial(longhand)))
+        assert.equal(style.border, 'solid')
 
         // All longhands cannot be represented
         style.borderImageWidth = '1px'
-        expect(style.border).toBe('')
-        expect(style.cssText).toBe('border-width: medium; border-style: solid; border-color: currentcolor; border-image: 100% / 1px;')
+        assert.equal(style.border, '')
+        assert.equal(style.cssText, 'border-width: medium; border-style: solid; border-color: currentcolor; border-image: 100% / 1px;')
 
         // Interleaved logical property declaration
         style.cssText = 'border: 1px solid red; border-block-start-width: 2px; border-block-end-width: 2px; border-color: green'
-        expect(style.border).toBe('1px solid green')
-        expect(style.cssText).toBe('border: 1px solid green; border-block-width: 2px;')
+        assert.equal(style.border, '1px solid green')
+        assert.equal(style.cssText, 'border: 1px solid green; border-block-width: 2px;')
         style.cssText = 'border: 1px solid red; border-block-start-color: orange; border-block-end-color: orange; border-color: green'
-        expect(style.border).toBe('1px solid green')
-        /* (Ideally) expect(style.cssText).toBe('border-block-color: orange; border: 1px solid green;') */
-        expect(style.cssText).toBe('border-width: 1px; border-style: solid; border-image: none; border-block-color: orange; border-color: green;')
+        assert.equal(style.border, '1px solid green')
+        /* (Ideally) assert.equal(style.cssText, 'border-block-color: orange; border: 1px solid green;') */
+        assert.equal(style.cssText, 'border-width: 1px; border-style: solid; border-image: none; border-block-color: orange; border-color: green;')
         style.cssText = 'border: 1px solid red; border-block-start-color: orange; border-block-start-width: 1px; border-color: green'
-        expect(style.border).toBe('1px solid green')
-        /* (Ideally) expect(style.cssText).toBe('border-block-start-color: orange; border: 1px solid green; border-block-start-width: 1px;') */
-        expect(style.cssText).toBe('border-width: 1px; border-style: solid; border-image: none; border-block-start-color: orange; border-block-start-width: 1px; border-color: green;')
+        assert.equal(style.border, '1px solid green')
+        /* (Ideally) assert.equal(style.cssText, 'border-block-start-color: orange; border: 1px solid green; border-block-start-width: 1px;') */
+        assert.equal(style.cssText, 'border-width: 1px; border-style: solid; border-image: none; border-block-start-color: orange; border-block-start-width: 1px; border-color: green;')
         style.cssText = 'border-image: none; border-block-start-width: 2px; border-width: 1px; border-style: solid; border-color: green;'
-        expect(style.border).toBe('1px solid green')
-        expect(style.cssText).toBe('border-image: none; border-block-start-width: 2px; border-width: 1px; border-style: solid; border-color: green;')
+        assert.equal(style.border, '1px solid green')
+        assert.equal(style.cssText, 'border-image: none; border-block-start-width: 2px; border-width: 1px; border-style: solid; border-color: green;')
     })
 })
 describe('border-block, border-inline', () => {
@@ -1552,31 +1554,31 @@ describe('border-block, border-inline', () => {
 
         // Initial longhand values
         style.borderBlock = 'medium none currentColor'
-        expect(style).toHaveLength(longhands.length)
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.borderBlock).toBe('medium')
+        assert.equal(style.length, longhands.length)
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.borderBlock, 'medium')
 
         // Omitted values
         style.borderBlock = 'medium'
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.borderBlock).toBe('medium')
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.borderBlock, 'medium')
         style.borderBlock = 'solid'
         longhands.forEach(longhand =>
-            expect(style[longhand]).toBe(longhand.endsWith('style') ? 'solid' : initial(longhand)))
-        expect(style.borderBlock).toBe('solid')
+            assert.equal(style[longhand], longhand.endsWith('style') ? 'solid' : initial(longhand)))
+        assert.equal(style.borderBlock, 'solid')
 
         // Interleaved logical property declaration
         style.cssText = 'border-block-width: 1px; border-top-width: 2px; border-block-style: solid; border-block-color: green'
-        expect(style.borderBlock).toBe('1px solid green')
-        expect(style.cssText).toBe('border-block: 1px solid green; border-top-width: 2px;')
+        assert.equal(style.borderBlock, '1px solid green')
+        assert.equal(style.cssText, 'border-block: 1px solid green; border-top-width: 2px;')
         style.cssText = 'border-block-width: 1px; border-top-style: none; border-block-style: solid; border-block-color: green'
-        expect(style.borderBlock).toBe('1px solid green')
-        /* (Ideally) expect(style.cssText).toBe('border-top-style: none; border-block: 1px solid green;') */
-        expect(style.cssText).toBe('border-block-width: 1px; border-top-style: none; border-block-style: solid; border-block-color: green;')
+        assert.equal(style.borderBlock, '1px solid green')
+        /* (Ideally) assert.equal(style.cssText, 'border-top-style: none; border-block: 1px solid green;') */
+        assert.equal(style.cssText, 'border-block-width: 1px; border-top-style: none; border-block-style: solid; border-block-color: green;')
         style.cssText = 'border-block-width: 1px; border-top-width: 2px; border-top-style: none; border-block-style: solid; border-block-color: green'
-        expect(style.borderBlock).toBe('1px solid green')
-        /* (Ideally) expect(style.cssText).toBe('border-top-style: none; border-block: 1px solid green; border-top-width: 2px;') */
-        expect(style.cssText).toBe('border-block-width: 1px; border-top-width: 2px; border-top-style: none; border-block-style: solid; border-block-color: green;')
+        assert.equal(style.borderBlock, '1px solid green')
+        /* (Ideally) assert.equal(style.cssText, 'border-top-style: none; border-block: 1px solid green; border-top-width: 2px;') */
+        assert.equal(style.cssText, 'border-block-width: 1px; border-top-width: 2px; border-top-style: none; border-block-style: solid; border-block-color: green;')
     })
 })
 describe('border-block-color, border-inline-color', () => {
@@ -1587,18 +1589,18 @@ describe('border-block-color, border-inline-color', () => {
 
         // Initial longhand values
         style.borderBlockColor = 'currentColor currentColor'
-        expect(style).toHaveLength(longhands.length)
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.borderBlockColor).toBe('currentcolor')
+        assert.equal(style.length, longhands.length)
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.borderBlockColor, 'currentcolor')
 
         // Omitted values
         style.borderBlockColor = 'green'
-        longhands.forEach(longhand => expect(style[longhand]).toBe('green'))
-        expect(style.borderBlockColor).toBe('green')
+        longhands.forEach(longhand => assert.equal(style[longhand], 'green'))
+        assert.equal(style.borderBlockColor, 'green')
         style.borderBlockColor = 'currentColor green'
-        expect(style.borderBlockStartColor).toBe(initial('border-block-start-color'))
-        expect(style.borderBlockEndColor).toBe('green')
-        expect(style.borderBlockColor).toBe('currentcolor green')
+        assert.equal(style.borderBlockStartColor, initial('border-block-start-color'))
+        assert.equal(style.borderBlockEndColor, 'green')
+        assert.equal(style.borderBlockColor, 'currentcolor green')
     })
 })
 describe('border-block-end-radius, border-block-start-radius, border-bottom-radius, border-inline-end-radius, border-inline-start-radius, border-left-radius, border-right-radius, border-top-radius', () => {
@@ -1609,24 +1611,24 @@ describe('border-block-end-radius, border-block-start-radius, border-bottom-radi
 
         // Initial longhand values
         style.borderBlockEndRadius = '0 0 / 0 0'
-        expect(style).toHaveLength(longhands.length)
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.borderBlockEndRadius).toBe('0px')
+        assert.equal(style.length, longhands.length)
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.borderBlockEndRadius, '0px')
 
         // Omitted values
         style.borderBlockEndRadius = '1px'
-        longhands.forEach(longhand => expect(style[longhand]).toBe('1px'))
-        expect(style.borderBlockEndRadius).toBe('1px')
+        longhands.forEach(longhand => assert.equal(style[longhand], '1px'))
+        assert.equal(style.borderBlockEndRadius, '1px')
         style.borderBlockEndRadius = '0px 1px / 0px'
-        expect(style.borderEndStartRadius).toBe(initial('border-end-start-radius'))
-        expect(style.borderEndEndRadius).toBe('1px 0px')
-        expect(style.borderBlockEndRadius).toBe('0px 1px / 0px')
+        assert.equal(style.borderEndStartRadius, initial('border-end-start-radius'))
+        assert.equal(style.borderEndEndRadius, '1px 0px')
+        assert.equal(style.borderBlockEndRadius, '0px 1px / 0px')
         style.borderBlockEndRadius = '0px / calc(0px)'
-        longhands.forEach(longhand => expect(style[longhand]).toBe('0px calc(0px)'))
-        expect(style.borderBlockEndRadius).toBe('0px / calc(0px)')
+        longhands.forEach(longhand => assert.equal(style[longhand], '0px calc(0px)'))
+        assert.equal(style.borderBlockEndRadius, '0px / calc(0px)')
         style.borderBlockEndRadius = '0px / 1px'
-        longhands.forEach(longhand => expect(style[longhand]).toBe('0px 1px'))
-        expect(style.borderBlockEndRadius).toBe('0px / 1px')
+        longhands.forEach(longhand => assert.equal(style[longhand], '0px 1px'))
+        assert.equal(style.borderBlockEndRadius, '0px / 1px')
     })
 })
 describe('border-block-style, border-inline-style', () => {
@@ -1637,18 +1639,18 @@ describe('border-block-style, border-inline-style', () => {
 
         // Initial longhand values
         style.borderBlockStyle = 'none none'
-        expect(style).toHaveLength(longhands.length)
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.borderBlockStyle).toBe('none')
+        assert.equal(style.length, longhands.length)
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.borderBlockStyle, 'none')
 
         // Omitted values
         style.borderBlockStyle = 'solid'
-        longhands.forEach(longhand => expect(style[longhand]).toBe('solid'))
-        expect(style.borderBlockStyle).toBe('solid')
+        longhands.forEach(longhand => assert.equal(style[longhand], 'solid'))
+        assert.equal(style.borderBlockStyle, 'solid')
         style.borderBlockStyle = 'none solid'
-        expect(style.borderBlockStartStyle).toBe(initial('border-block-start-style'))
-        expect(style.borderBlockEndStyle).toBe('solid')
-        expect(style.borderBlockStyle).toBe('none solid')
+        assert.equal(style.borderBlockStartStyle, initial('border-block-start-style'))
+        assert.equal(style.borderBlockEndStyle, 'solid')
+        assert.equal(style.borderBlockStyle, 'none solid')
     })
 })
 describe('border-block-width, border-inline-width', () => {
@@ -1659,18 +1661,18 @@ describe('border-block-width, border-inline-width', () => {
 
         // Initial longhand values
         style.borderBlockWidth = 'medium medium'
-        expect(style).toHaveLength(longhands.length)
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.borderBlockWidth).toBe('medium')
+        assert.equal(style.length, longhands.length)
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.borderBlockWidth, 'medium')
 
         // Omitted values
         style.borderBlockWidth = '1px'
-        longhands.forEach(longhand => expect(style[longhand]).toBe('1px'))
-        expect(style.borderBlockWidth).toBe('1px')
+        longhands.forEach(longhand => assert.equal(style[longhand], '1px'))
+        assert.equal(style.borderBlockWidth, '1px')
         style.borderBlockWidth = 'medium 1px'
-        expect(style.borderBlockStartWidth).toBe(initial('border-block-start-width'))
-        expect(style.borderBlockEndWidth).toBe('1px')
-        expect(style.borderBlockWidth).toBe('medium 1px')
+        assert.equal(style.borderBlockStartWidth, initial('border-block-start-width'))
+        assert.equal(style.borderBlockEndWidth, '1px')
+        assert.equal(style.borderBlockWidth, 'medium 1px')
     })
 })
 describe('border-block-end, border-block-start, border-bottom, border-inline-end, border-inline-start, border-left, border-right, border-top', () => {
@@ -1681,18 +1683,18 @@ describe('border-block-end, border-block-start, border-bottom, border-inline-end
 
         // Initial longhand values
         style.borderTop = 'medium none currentColor'
-        expect(style).toHaveLength(longhands.length)
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.borderTop).toBe('medium')
+        assert.equal(style.length, longhands.length)
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.borderTop, 'medium')
 
         // Omitted values
         style.borderTop = 'medium'
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.borderTop).toBe('medium')
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.borderTop, 'medium')
         style.borderTop = 'solid'
         longhands.forEach(longhand =>
-            expect(style[longhand]).toBe(longhand.endsWith('style') ? 'solid' : initial(longhand)))
-        expect(style.borderTop).toBe('solid')
+            assert.equal(style[longhand], longhand.endsWith('style') ? 'solid' : initial(longhand)))
+        assert.equal(style.borderTop, 'solid')
     })
 })
 describe('border-clip, border-block-clip, border-inline-clip', () => {
@@ -1703,14 +1705,14 @@ describe('border-clip, border-block-clip, border-inline-clip', () => {
 
         // All equal longhand values
         style.borderClip = 'none'
-        expect(style).toHaveLength(longhands.length)
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.borderClip).toBe('none')
+        assert.equal(style.length, longhands.length)
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.borderClip, 'none')
 
         // All longhands cannot be represented
         style.borderTopClip = '1px'
-        expect(style.borderClip).toBe('')
-        expect(style.cssText).toBe('border-top-clip: 1px; border-right-clip: none; border-bottom-clip: none; border-left-clip: none;')
+        assert.equal(style.borderClip, '')
+        assert.equal(style.cssText, 'border-top-clip: 1px; border-right-clip: none; border-bottom-clip: none; border-left-clip: none;')
     })
 })
 describe('border-color', () => {
@@ -1721,29 +1723,29 @@ describe('border-color', () => {
 
         // Initial longhand values
         style.borderColor = 'currentColor currentColor currentColor currentColor'
-        expect(style).toHaveLength(longhands.length)
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.borderColor).toBe('currentcolor')
+        assert.equal(style.length, longhands.length)
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.borderColor, 'currentcolor')
 
         // Omitted values
         const values = ['currentcolor', 'red', 'green']
         style.borderColor = 'red'
-        longhands.forEach(longhand => expect(style[longhand]).toBe('red'))
-        expect(style.borderColor).toBe('red')
+        longhands.forEach(longhand => assert.equal(style[longhand], 'red'))
+        assert.equal(style.borderColor, 'red')
         style.borderColor = 'currentColor red'
-        longhands.forEach((longhand, i) => expect(style[longhand]).toBe(values[i % 2]))
-        expect(style.borderColor).toBe('currentcolor red')
+        longhands.forEach((longhand, i) => assert.equal(style[longhand], values[i % 2]))
+        assert.equal(style.borderColor, 'currentcolor red')
         style.borderColor = 'currentColor red green'
-        longhands.forEach((longhand, i) => expect(style[longhand]).toBe(values[i === 3 ? 1 : i]))
-        expect(style.borderColor).toBe('currentcolor red green')
+        longhands.forEach((longhand, i) => assert.equal(style[longhand], values[i === 3 ? 1 : i]))
+        assert.equal(style.borderColor, 'currentcolor red green')
 
         // Interleaved logical property declaration
         style.cssText = 'border-top-color: green; border-block-start-color: orange; border-right-color: green; border-bottom-color: green; border-left-color: green'
-        expect(style.borderColor).toBe('green')
-        expect(style.cssText).toBe('border-top-color: green; border-block-start-color: orange; border-right-color: green; border-bottom-color: green; border-left-color: green;')
+        assert.equal(style.borderColor, 'green')
+        assert.equal(style.cssText, 'border-top-color: green; border-block-start-color: orange; border-right-color: green; border-bottom-color: green; border-left-color: green;')
         style.cssText = 'border-top-color: green; border-block-start-width: 1px; border-right-color: green; border-bottom-color: green; border-left-color: green'
-        expect(style.borderColor).toBe('green')
-        expect(style.cssText).toBe('border-color: green; border-block-start-width: 1px;')
+        assert.equal(style.borderColor, 'green')
+        assert.equal(style.cssText, 'border-color: green; border-block-start-width: 1px;')
     })
 })
 describe('border-image', () => {
@@ -1754,9 +1756,9 @@ describe('border-image', () => {
 
         // Initial longhand values
         style.borderImage = 'none 100% / 1 / 0 stretch'
-        expect(style).toHaveLength(longhands.length)
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.borderImage).toBe('none')
+        assert.equal(style.length, longhands.length)
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.borderImage, 'none')
 
         // Omitted values
         const values = [
@@ -1766,8 +1768,8 @@ describe('border-image', () => {
         ]
         values.forEach(([input, declared = {}, expected = input]) => {
             style.borderImage = input
-            longhands.forEach(longhand => expect(style[longhand]).toBe(declared[longhand] ?? initial(longhand)))
-            expect(style.borderImage).toBe(expected)
+            longhands.forEach(longhand => assert.equal(style[longhand], declared[longhand] ?? initial(longhand)))
+            assert.equal(style.borderImage, expected)
         })
     })
 })
@@ -1779,26 +1781,26 @@ describe('border-radius', () => {
 
         // Initial longhand values
         style.borderRadius = '0 0 0 0 / 0 0 0 0'
-        expect(style).toHaveLength(longhands.length)
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.borderRadius).toBe('0px')
+        assert.equal(style.length, longhands.length)
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.borderRadius, '0px')
 
         // Omitted values
         style.borderRadius = '1px'
-        longhands.forEach(longhand => expect(style[longhand]).toBe('1px'))
-        expect(style.borderRadius).toBe('1px')
+        longhands.forEach(longhand => assert.equal(style[longhand], '1px'))
+        assert.equal(style.borderRadius, '1px')
         style.borderRadius = '0px 1px 2px 3px / 0px 1px'
-        expect(style.borderTopLeftRadius).toBe(initial('border-top-left-radius'))
-        expect(style.borderTopRightRadius).toBe('1px')
-        expect(style.borderBottomRightRadius).toBe('2px 0px')
-        expect(style.borderBottomLeftRadius).toBe('3px 1px')
-        expect(style.borderRadius).toBe('0px 1px 2px 3px / 0px 1px')
+        assert.equal(style.borderTopLeftRadius, initial('border-top-left-radius'))
+        assert.equal(style.borderTopRightRadius, '1px')
+        assert.equal(style.borderBottomRightRadius, '2px 0px')
+        assert.equal(style.borderBottomLeftRadius, '3px 1px')
+        assert.equal(style.borderRadius, '0px 1px 2px 3px / 0px 1px')
         style.borderRadius = '0px / 1px'
-        longhands.forEach(longhand => expect(style[longhand]).toBe('0px 1px'))
-        expect(style.borderRadius).toBe('0px / 1px')
+        longhands.forEach(longhand => assert.equal(style[longhand], '0px 1px'))
+        assert.equal(style.borderRadius, '0px / 1px')
         style.borderRadius = '0px / calc(0px)'
-        longhands.forEach(longhand => expect(style[longhand]).toBe('0px calc(0px)'))
-        expect(style.borderRadius).toBe('0px / calc(0px)')
+        longhands.forEach(longhand => assert.equal(style[longhand], '0px calc(0px)'))
+        assert.equal(style.borderRadius, '0px / calc(0px)')
     })
 })
 describe('border-style', () => {
@@ -1809,21 +1811,21 @@ describe('border-style', () => {
 
         // Initial longhand values
         style.borderStyle = 'none none none none'
-        expect(style).toHaveLength(longhands.length)
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.borderStyle).toBe('none')
+        assert.equal(style.length, longhands.length)
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.borderStyle, 'none')
 
         // Omitted values
         const values = ['none', 'dashed', 'solid']
         style.borderStyle = 'solid'
-        longhands.forEach(longhand => expect(style[longhand]).toBe('solid'))
-        expect(style.borderStyle).toBe('solid')
+        longhands.forEach(longhand => assert.equal(style[longhand], 'solid'))
+        assert.equal(style.borderStyle, 'solid')
         style.borderStyle = 'none dashed'
-        longhands.forEach((longhand, i) => expect(style[longhand]).toBe(values[i % 2]))
-        expect(style.borderStyle).toBe('none dashed')
+        longhands.forEach((longhand, i) => assert.equal(style[longhand], values[i % 2]))
+        assert.equal(style.borderStyle, 'none dashed')
         style.borderStyle = 'none dashed solid'
-        longhands.forEach((longhand, i) => expect(style[longhand]).toBe(values[i === 3 ? 1 : i]))
-        expect(style.borderStyle).toBe('none dashed solid')
+        longhands.forEach((longhand, i) => assert.equal(style[longhand], values[i === 3 ? 1 : i]))
+        assert.equal(style.borderStyle, 'none dashed solid')
     })
 })
 describe('border-width', () => {
@@ -1834,21 +1836,21 @@ describe('border-width', () => {
 
         // Initial longhand values
         style.borderWidth = 'medium medium medium medium'
-        expect(style).toHaveLength(longhands.length)
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.borderWidth).toBe('medium')
+        assert.equal(style.length, longhands.length)
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.borderWidth, 'medium')
 
         // Omitted values
         const values = ['medium', '1px', '2px']
         style.borderWidth = '1px'
-        longhands.forEach(longhand => expect(style[longhand]).toBe('1px'))
-        expect(style.borderWidth).toBe('1px')
+        longhands.forEach(longhand => assert.equal(style[longhand], '1px'))
+        assert.equal(style.borderWidth, '1px')
         style.borderWidth = 'medium 1px'
-        longhands.forEach((longhand, i) => expect(style[longhand]).toBe(values[i % 2]))
-        expect(style.borderWidth).toBe('medium 1px')
+        longhands.forEach((longhand, i) => assert.equal(style[longhand], values[i % 2]))
+        assert.equal(style.borderWidth, 'medium 1px')
         style.borderWidth = 'medium 1px 2px'
-        longhands.forEach((longhand, i) => expect(style[longhand]).toBe(values[i === 3 ? 1 : i]))
-        expect(style.borderWidth).toBe('medium 1px 2px')
+        longhands.forEach((longhand, i) => assert.equal(style[longhand], values[i === 3 ? 1 : i]))
+        assert.equal(style.borderWidth, 'medium 1px 2px')
     })
 })
 describe('box-shadow', () => {
@@ -1860,9 +1862,9 @@ describe('box-shadow', () => {
 
         // Initial longhand values
         style.boxShadow = 'currentColor none 0 0 outset'
-        expect(style).toHaveLength(longhands.length)
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.boxShadow).toBe('currentcolor none')
+        assert.equal(style.length, longhands.length)
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.boxShadow, 'currentcolor none')
 
         // Omitted values
         const values = [
@@ -1872,19 +1874,19 @@ describe('box-shadow', () => {
         ]
         values.forEach(([input, declared = {}]) => {
             style.boxShadow = input
-            longhands.forEach(longhand => expect(style[longhand]).toBe(declared[longhand] ?? initial(longhand)))
-            expect(style.boxShadow).toBe(input)
+            longhands.forEach(longhand => assert.equal(style[longhand], declared[longhand] ?? initial(longhand)))
+            assert.equal(style.boxShadow, input)
         })
 
         // All longhands cannot be represented
         style.boxShadowOffset = '0px 0px, 0px 0px'
-        expect(style.boxShadow).toBe('')
-        expect(style.cssText).toBe('box-shadow-color: currentcolor; box-shadow-offset: 0px 0px, 0px 0px; box-shadow-blur: 0px; box-shadow-spread: 0px; box-shadow-position: outset;')
+        assert.equal(style.boxShadow, '')
+        assert.equal(style.cssText, 'box-shadow-color: currentcolor; box-shadow-offset: 0px 0px, 0px 0px; box-shadow-blur: 0px; box-shadow-spread: 0px; box-shadow-position: outset;')
 
         // Coordinated value list
         style.boxShadow = `${shadow}, ${shadow}`
-        longhands.forEach(longhand => expect(style[longhand]).toBe(`${initial(longhand)}, ${initial(longhand)}`))
-        expect(style.boxShadow).toBe('currentcolor none, currentcolor none')
+        longhands.forEach(longhand => assert.equal(style[longhand], `${initial(longhand)}, ${initial(longhand)}`))
+        assert.equal(style.boxShadow, 'currentcolor none, currentcolor none')
     })
 })
 describe('caret', () => {
@@ -1895,18 +1897,18 @@ describe('caret', () => {
 
         // Initial longhand values
         style.caret = 'auto auto auto'
-        expect(style).toHaveLength(longhands.length)
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.caret).toBe('auto')
+        assert.equal(style.length, longhands.length)
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.caret, 'auto')
 
         // Omitted values
         style.caret = 'auto'
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.caret).toBe('auto')
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.caret, 'auto')
         style.caret = 'manual'
         longhands.forEach(longhand =>
-            expect(style[longhand]).toBe(longhand === 'caret-animation' ? 'manual' : initial(longhand)))
-        expect(style.caret).toBe('manual')
+            assert.equal(style[longhand], longhand === 'caret-animation' ? 'manual' : initial(longhand)))
+        assert.equal(style.caret, 'manual')
     })
 })
 describe('column-rule, row-rule', () => {
@@ -1917,34 +1919,34 @@ describe('column-rule, row-rule', () => {
 
         // Initial longhand values
         style.columnRule = 'medium none currentColor'
-        expect(style).toHaveLength(longhands.length)
-        expect(style.columnRule).toBe('medium')
+        assert.equal(style.length, longhands.length)
+        assert.equal(style.columnRule, 'medium')
 
         // Omitted values
         style.columnRule = 'medium'
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.columnRule).toBe('medium')
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.columnRule, 'medium')
         style.columnRule = 'solid'
         longhands.forEach(longhand =>
-            expect(style[longhand]).toBe(longhand.endsWith('style') ? 'solid' : initial(longhand)))
-        expect(style.columnRule).toBe('solid')
+            assert.equal(style[longhand], longhand.endsWith('style') ? 'solid' : initial(longhand)))
+        assert.equal(style.columnRule, 'solid')
 
         // repeat()
         style.columnRule = 'solid, repeat(2, solid, none), none'
-        expect(style.columnRuleWidth).toBe('medium repeat(2, medium medium) medium')
-        expect(style.columnRuleStyle).toBe('solid repeat(2, solid none) none')
-        expect(style.columnRuleColor).toBe('currentcolor repeat(2, currentcolor currentcolor) currentcolor')
-        expect(style.columnRule).toBe('solid, repeat(2, solid, medium), medium')
+        assert.equal(style.columnRuleWidth, 'medium repeat(2, medium medium) medium')
+        assert.equal(style.columnRuleStyle, 'solid repeat(2, solid none) none')
+        assert.equal(style.columnRuleColor, 'currentcolor repeat(2, currentcolor currentcolor) currentcolor')
+        assert.equal(style.columnRule, 'solid, repeat(2, solid, medium), medium')
 
         // All longhands cannot be represented
         style.columnRule = 'repeat(1, medium), medium'
         style.columnRuleWidth = 'medium repeat(1, medium)'
-        expect(style.columnRule).toBe('')
-        expect(style.cssText).toBe('column-rule-width: medium repeat(1, medium); column-rule-style: repeat(1, none) none; column-rule-color: repeat(1, currentcolor) currentcolor;')
+        assert.equal(style.columnRule, '')
+        assert.equal(style.cssText, 'column-rule-width: medium repeat(1, medium); column-rule-style: repeat(1, none) none; column-rule-color: repeat(1, currentcolor) currentcolor;')
         style.columnRule = 'repeat(1, medium)'
         style.columnRuleWidth = 'repeat(2, medium)'
-        expect(style.columnRule).toBe('')
-        expect(style.cssText).toBe('column-rule-width: repeat(2, medium); column-rule-style: repeat(1, none); column-rule-color: repeat(1, currentcolor);')
+        assert.equal(style.columnRule, '')
+        assert.equal(style.cssText, 'column-rule-width: repeat(2, medium); column-rule-style: repeat(1, none); column-rule-color: repeat(1, currentcolor);')
     })
 })
 describe('columns', () => {
@@ -1955,9 +1957,9 @@ describe('columns', () => {
 
         // Initial longhand values
         style.columns = 'auto auto / auto'
-        expect(style).toHaveLength(longhands.length)
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.columns).toBe('auto')
+        assert.equal(style.length, longhands.length)
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.columns, 'auto')
 
         // Omitted values
         const values = [
@@ -1967,8 +1969,8 @@ describe('columns', () => {
         ]
         values.forEach(([input, declared = {}]) => {
             style.columns = input
-            longhands.forEach(longhand => expect(style[longhand]).toBe(declared[longhand] ?? initial(longhand)))
-            expect(style.columns).toBe(input)
+            longhands.forEach(longhand => assert.equal(style[longhand], declared[longhand] ?? initial(longhand)))
+            assert.equal(style.columns, input)
         })
     })
 })
@@ -1980,18 +1982,18 @@ describe('contain-intrinsic-size', () => {
 
         // Initial longhand values
         style.containIntrinsicSize = 'none none'
-        expect(style).toHaveLength(longhands.length)
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.containIntrinsicSize).toBe('none')
+        assert.equal(style.length, longhands.length)
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.containIntrinsicSize, 'none')
 
         // Omitted values
         style.containIntrinsicSize = '1px'
-        longhands.forEach(longhand => expect(style[longhand]).toBe('1px'))
-        expect(style.containIntrinsicSize).toBe('1px')
+        longhands.forEach(longhand => assert.equal(style[longhand], '1px'))
+        assert.equal(style.containIntrinsicSize, '1px')
         style.containIntrinsicSize = 'none 1px'
-        expect(style.containIntrinsicWidth).toBe(initial('contain-intrinsic-width'))
-        expect(style.containIntrinsicHeight).toBe('1px')
-        expect(style.containIntrinsicSize).toBe('none 1px')
+        assert.equal(style.containIntrinsicWidth, initial('contain-intrinsic-width'))
+        assert.equal(style.containIntrinsicHeight, '1px')
+        assert.equal(style.containIntrinsicSize, 'none 1px')
     })
 })
 describe('container', () => {
@@ -2002,18 +2004,18 @@ describe('container', () => {
 
         // Initial longhand values
         style.container = 'none / normal'
-        expect(style).toHaveLength(longhands.length)
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.container).toBe('none')
+        assert.equal(style.length, longhands.length)
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.container, 'none')
 
         // Omitted values
         style.container = 'none'
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.container).toBe('none')
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.container, 'none')
         style.container = 'none / size'
-        expect(style.containerName).toBe(initial('container-name'))
-        expect(style.containerType).toBe('size')
-        expect(style.container).toBe('none / size')
+        assert.equal(style.containerName, initial('container-name'))
+        assert.equal(style.containerType, 'size')
+        assert.equal(style.container, 'none / size')
     })
 })
 describe('corner', () => {
@@ -2024,9 +2026,9 @@ describe('corner', () => {
 
         // Initial longhand values
         style.corner = '0 0 0 0 / 0 0 0 0 round round round round'
-        expect(style).toHaveLength(longhands.length)
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.corner).toBe('0px')
+        assert.equal(style.length, longhands.length)
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.corner, '0px')
 
         // Omitted values
         const values = [
@@ -2065,8 +2067,8 @@ describe('corner', () => {
         ]
         values.forEach(([input, declared]) => {
             style.corner = input
-            longhands.forEach(longhand => expect(style[longhand]).toBe(declared[longhand] ?? initial(longhand)))
-            expect(style.corner).toBe(input)
+            longhands.forEach(longhand => assert.equal(style[longhand], declared[longhand] ?? initial(longhand)))
+            assert.equal(style.corner, input)
         })
     })
 })
@@ -2078,35 +2080,35 @@ describe('corner-block-end, corner-block-start, corner-bottom, corner-inline-end
 
         // Initial longhand values
         style.cornerBlockEnd = '0 0 / 0 0 round round'
-        expect(style).toHaveLength(longhands.length)
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.cornerBlockEnd).toBe('0px')
+        assert.equal(style.length, longhands.length)
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.cornerBlockEnd, '0px')
 
         // Omitted values
         style.cornerBlockEnd = '1px'
         longhands.forEach(longhand =>
-            expect(style[longhand]).toBe(longhand.endsWith('radius') ? '1px' : initial(longhand)))
-        expect(style.cornerBlockEnd).toBe('1px')
+            assert.equal(style[longhand], longhand.endsWith('radius') ? '1px' : initial(longhand)))
+        assert.equal(style.cornerBlockEnd, '1px')
         style.cornerBlockEnd = '0px 1px / 0px'
         longhands.forEach(longhand =>
-            expect(style[longhand]).toBe(longhand === 'border-end-end-radius' ? '1px 0px' : initial(longhand)))
-        expect(style.cornerBlockEnd).toBe('0px 1px / 0px')
+            assert.equal(style[longhand], longhand === 'border-end-end-radius' ? '1px 0px' : initial(longhand)))
+        assert.equal(style.cornerBlockEnd, '0px 1px / 0px')
         style.cornerBlockEnd = '0px / calc(0px)'
         longhands.forEach(longhand =>
-            expect(style[longhand]).toBe(longhand.includes('radius') ? '0px calc(0px)' : initial(longhand)))
-        expect(style.cornerBlockEnd).toBe('0px / calc(0px)')
+            assert.equal(style[longhand], longhand.includes('radius') ? '0px calc(0px)' : initial(longhand)))
+        assert.equal(style.cornerBlockEnd, '0px / calc(0px)')
         style.cornerBlockEnd = '0px / 1px'
         longhands.forEach(longhand =>
-            expect(style[longhand]).toBe(longhand.includes('radius') ? '0px 1px' : initial(longhand)))
-        expect(style.cornerBlockEnd).toBe('0px / 1px')
+            assert.equal(style[longhand], longhand.includes('radius') ? '0px 1px' : initial(longhand)))
+        assert.equal(style.cornerBlockEnd, '0px / 1px')
         style.cornerBlockEnd = 'scoop'
         longhands.forEach(longhand =>
-            expect(style[longhand]).toBe(longhand.includes('shape') ? 'scoop' : initial(longhand)))
-        expect(style.cornerBlockEnd).toBe('scoop')
+            assert.equal(style[longhand], longhand.includes('shape') ? 'scoop' : initial(longhand)))
+        assert.equal(style.cornerBlockEnd, 'scoop')
         style.cornerBlockEnd = 'round scoop'
         longhands.forEach(longhand =>
-            expect(style[longhand]).toBe(longhand === 'corner-end-end-shape' ? 'scoop' : initial(longhand)))
-        expect(style.cornerBlockEnd).toBe('round scoop')
+            assert.equal(style[longhand], longhand === 'corner-end-end-shape' ? 'scoop' : initial(longhand)))
+        assert.equal(style.cornerBlockEnd, 'round scoop')
     })
 })
 describe('corner-end-end, corner-end-start, corner-bottom-left, corner-bottom-right, corner-start-end, corner-start-start, corner-top-left, corner-top-right', () => {
@@ -2117,18 +2119,18 @@ describe('corner-end-end, corner-end-start, corner-bottom-left, corner-bottom-ri
 
         // Initial longhand values
         style.cornerEndEnd = '0 0 round'
-        expect(style).toHaveLength(longhands.length)
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.cornerEndEnd).toBe('0px')
+        assert.equal(style.length, longhands.length)
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.cornerEndEnd, '0px')
 
         // Omitted values
         style.cornerEndEnd = '0px'
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.cornerEndEnd).toBe('0px')
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.cornerEndEnd, '0px')
         style.cornerEndEnd = 'scoop'
-        expect(style.borderEndEndRadius).toBe(initial('border-end-end-radius'))
-        expect(style.cornerEndEndShape).toBe('scoop')
-        expect(style.cornerEndEnd).toBe('scoop')
+        assert.equal(style.borderEndEndRadius, initial('border-end-end-radius'))
+        assert.equal(style.cornerEndEndShape, 'scoop')
+        assert.equal(style.cornerEndEnd, 'scoop')
     })
 })
 describe('corner-shape', () => {
@@ -2139,21 +2141,21 @@ describe('corner-shape', () => {
 
         // Initial longhand values
         style.cornerShape = 'round round round round'
-        expect(style).toHaveLength(longhands.length)
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.cornerShape).toBe('round')
+        assert.equal(style.length, longhands.length)
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.cornerShape, 'round')
 
         // Omitted values
         const values = ['round', 'scoop', 'bevel']
         style.cornerShape = 'scoop'
-        longhands.forEach(longhand => expect(style[longhand]).toBe('scoop'))
-        expect(style.cornerShape).toBe('scoop')
+        longhands.forEach(longhand => assert.equal(style[longhand], 'scoop'))
+        assert.equal(style.cornerShape, 'scoop')
         style.cornerShape = 'round scoop'
-        longhands.forEach((longhand, i) => expect(style[longhand]).toBe(values[i % 2]))
-        expect(style.cornerShape).toBe('round scoop')
+        longhands.forEach((longhand, i) => assert.equal(style[longhand], values[i % 2]))
+        assert.equal(style.cornerShape, 'round scoop')
         style.cornerShape = 'round scoop bevel'
-        longhands.forEach((longhand, i) => expect(style[longhand]).toBe(values[i === 3 ? 1 : i]))
-        expect(style.cornerShape).toBe('round scoop bevel')
+        longhands.forEach((longhand, i) => assert.equal(style[longhand], values[i === 3 ? 1 : i]))
+        assert.equal(style.cornerShape, 'round scoop bevel')
     })
 })
 describe('corner-block-end-shape, corner-block-start-shape, corner-bottom-shape, corner-inline-end-shape, corner-inline-start-shape, corner-left-shape, corner-right-shape, corner-top-shape', () => {
@@ -2164,18 +2166,18 @@ describe('corner-block-end-shape, corner-block-start-shape, corner-bottom-shape,
 
         // Initial longhand values
         style.cornerBlockEndShape = 'round round'
-        expect(style).toHaveLength(longhands.length)
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.cornerBlockEndShape).toBe('round')
+        assert.equal(style.length, longhands.length)
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.cornerBlockEndShape, 'round')
 
         // Omitted values
         style.cornerBlockEndShape = 'scoop'
-        longhands.forEach(longhand => expect(style[longhand]).toBe('scoop'))
-        expect(style.cornerBlockEndShape).toBe('scoop')
+        longhands.forEach(longhand => assert.equal(style[longhand], 'scoop'))
+        assert.equal(style.cornerBlockEndShape, 'scoop')
         style.cornerBlockEndShape = 'round scoop'
-        expect(style.cornerEndStartShape).toBe(initial('corner-end-start-shape'))
-        expect(style.cornerEndEndShape).toBe('scoop')
-        expect(style.cornerBlockEndShape).toBe('round scoop')
+        assert.equal(style.cornerEndStartShape, initial('corner-end-start-shape'))
+        assert.equal(style.cornerEndEndShape, 'scoop')
+        assert.equal(style.cornerBlockEndShape, 'round scoop')
     })
 })
 describe('cue, pause, rest', () => {
@@ -2186,18 +2188,18 @@ describe('cue, pause, rest', () => {
 
         // Initial longhand values
         style.cue = 'none none'
-        expect(style).toHaveLength(longhands.length)
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.cue).toBe('none')
+        assert.equal(style.length, longhands.length)
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.cue, 'none')
 
         // Omitted values
         style.cue = 'none'
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.cue).toBe('none')
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.cue, 'none')
         style.cue = 'none url("icon.wav")'
-        expect(style.cueBefore).toBe(initial('cue-before'))
-        expect(style.cueAfter).toBe('url("icon.wav")')
-        expect(style.cue).toBe('none url("icon.wav")')
+        assert.equal(style.cueBefore, initial('cue-before'))
+        assert.equal(style.cueAfter, 'url("icon.wav")')
+        assert.equal(style.cue, 'none url("icon.wav")')
     })
 })
 describe('event-trigger', () => {
@@ -2208,21 +2210,22 @@ describe('event-trigger', () => {
 
         // Initial longhand values
         style.eventTrigger = 'none none'
-        expect(style).toHaveLength(longhands.length)
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.eventTrigger).toBe('none')
+        assert.equal(style.length, longhands.length)
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.eventTrigger, 'none')
 
         // All longhands cannot be represented
         style.eventTriggerName = '--trigger, --trigger'
-        expect(style.eventTrigger).toBe('')
-        expect(style.cssText).toBe('event-trigger-name: --trigger, --trigger; event-trigger-source: none;')
+        assert.equal(style.eventTrigger, '')
+        assert.equal(style.cssText, 'event-trigger-name: --trigger, --trigger; event-trigger-source: none;')
 
         // Coordinated value list
         style.eventTrigger = '--trigger none, --trigger none'
         longhands.forEach(longhand =>
-            expect(style[longhand])
-                .toBe(longhand === 'event-trigger-name' ? '--trigger, --trigger' : 'none, none'))
-        expect(style.eventTrigger).toBe('--trigger none, --trigger none')
+            assert.equal(
+                style[longhand],
+                longhand === 'event-trigger-name' ? '--trigger, --trigger' : 'none, none'))
+        assert.equal(style.eventTrigger, '--trigger none, --trigger none')
     })
 })
 describe('flex', () => {
@@ -2233,35 +2236,35 @@ describe('flex', () => {
 
         // Initial longhand values
         style.flex = '0 1 auto'
-        expect(style).toHaveLength(longhands.length)
-        expect(style.flexGrow).toBe('0')
-        expect(style.flexShrink).toBe('1')
-        expect(style.flexBasis).toBe('auto')
-        expect(style.flex).toBe('0 auto')
+        assert.equal(style.length, longhands.length)
+        assert.equal(style.flexGrow, '0')
+        assert.equal(style.flexShrink, '1')
+        assert.equal(style.flexBasis, 'auto')
+        assert.equal(style.flex, '0 auto')
 
         // Omitted values
         style.flex = '1'
-        expect(style.flexGrow).toBe('1')
-        expect(style.flexShrink).toBe('1')
-        expect(style.flexBasis).toBe('0px')
-        expect(style.flex).toBe('1')
+        assert.equal(style.flexGrow, '1')
+        assert.equal(style.flexShrink, '1')
+        assert.equal(style.flexBasis, '0px')
+        assert.equal(style.flex, '1')
         style.flex = '1 1'
-        expect(style.flexGrow).toBe('1')
-        expect(style.flexShrink).toBe('1')
-        expect(style.flexBasis).toBe('0px')
-        expect(style.flex).toBe('1')
+        assert.equal(style.flexGrow, '1')
+        assert.equal(style.flexShrink, '1')
+        assert.equal(style.flexBasis, '0px')
+        assert.equal(style.flex, '1')
         style.flex = '0px'
-        expect(style.flexGrow).toBe('1')
-        expect(style.flexShrink).toBe('1')
-        expect(style.flexBasis).toBe('0px')
-        expect(style.flex).toBe('1')
+        assert.equal(style.flexGrow, '1')
+        assert.equal(style.flexShrink, '1')
+        assert.equal(style.flexBasis, '0px')
+        assert.equal(style.flex, '1')
 
         // none
         style.flex = 'none'
-        expect(style.flexGrow).toBe('0')
-        expect(style.flexShrink).toBe('0')
-        expect(style.flexBasis).toBe('auto')
-        expect(style.flex).toBe('none')
+        assert.equal(style.flexGrow, '0')
+        assert.equal(style.flexShrink, '0')
+        assert.equal(style.flexBasis, 'auto')
+        assert.equal(style.flex, 'none')
     })
 })
 describe('flex-flow', () => {
@@ -2272,18 +2275,18 @@ describe('flex-flow', () => {
 
         // Initial longhand values
         style.flexFlow = 'row nowrap'
-        expect(style).toHaveLength(longhands.length)
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.flexFlow).toBe('row')
+        assert.equal(style.length, longhands.length)
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.flexFlow, 'row')
 
         // Omitted values
         style.flexFlow = 'row'
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.flexFlow).toBe('row')
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.flexFlow, 'row')
         style.flexFlow = 'wrap'
-        expect(style.flexDirection).toBe(initial('flex-direction'))
-        expect(style.flexWrap).toBe('wrap')
-        expect(style.flexFlow).toBe('wrap')
+        assert.equal(style.flexDirection, initial('flex-direction'))
+        assert.equal(style.flexWrap, 'wrap')
+        assert.equal(style.flexFlow, 'wrap')
     })
 })
 describe('font', () => {
@@ -2296,36 +2299,36 @@ describe('font', () => {
 
         // Initial longhand values
         style.font = 'normal normal normal normal medium / normal monospace'
-        expect(style).toHaveLength(longhands.length)
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.font).toBe('medium monospace')
+        assert.equal(style.length, longhands.length)
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.font, 'medium monospace')
 
         // Omitted values
         style.font = 'medium monospace'
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.font).toBe('medium monospace')
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.font, 'medium monospace')
         style.font = 'medium / 1 monospace'
         longhands.forEach(longhand =>
-            expect(style[longhand]).toBe(longhand === 'line-height' ? '1' : initial(longhand)))
-        expect(style.font).toBe('medium / 1 monospace')
+            assert.equal(style[longhand], longhand === 'line-height' ? '1' : initial(longhand)))
+        assert.equal(style.font, 'medium / 1 monospace')
 
         // All longhands cannot be represented
         style.fontVariantCaps = 'all-petite-caps'
-        expect(style.font).toBe('')
-        expect(style.cssText).toBe('font-style: normal; font-variant: all-petite-caps; font-weight: normal; font-width: normal; font-size: medium; line-height: 1; font-family: monospace; font-feature-settings: normal; font-kerning: auto; font-language-override: normal; font-optical-sizing: auto; font-size-adjust: none; font-variation-settings: normal;')
+        assert.equal(style.font, '')
+        assert.equal(style.cssText, 'font-style: normal; font-variant: all-petite-caps; font-weight: normal; font-width: normal; font-size: medium; line-height: 1; font-family: monospace; font-feature-settings: normal; font-kerning: auto; font-language-override: normal; font-optical-sizing: auto; font-size-adjust: none; font-variation-settings: normal;')
         style.fontVariantCaps = initial('font-variant-caps')
         style.fontWidth = '110%'
-        expect(style.font).toBe('')
-        expect(style.cssText).toBe('font-style: normal; font-variant: normal; font-weight: normal; font-width: 110%; font-size: medium; line-height: 1; font-family: monospace; font-feature-settings: normal; font-kerning: auto; font-language-override: normal; font-optical-sizing: auto; font-size-adjust: none; font-variation-settings: normal;')
+        assert.equal(style.font, '')
+        assert.equal(style.cssText, 'font-style: normal; font-variant: normal; font-weight: normal; font-width: 110%; font-size: medium; line-height: 1; font-family: monospace; font-feature-settings: normal; font-kerning: auto; font-language-override: normal; font-optical-sizing: auto; font-size-adjust: none; font-variation-settings: normal;')
 
         // System font
         style.font = 'caption'
         longhands.forEach(longhand =>
-            expect(style[longhand]).toBe(resetOnly.includes(longhand) ? initial(longhand) : ''))
-        expect(style.font).toBe('caption')
+            assert.equal(style[longhand], resetOnly.includes(longhand) ? initial(longhand) : ''))
+        assert.equal(style.font, 'caption')
         style.fontStyle = 'italic'
-        expect(style.font).toBe('')
-        expect(style.cssText).toBe('font-style: italic; font-variant-ligatures: ; font-variant-caps: ; font-variant-alternates: ; font-variant-numeric: ; font-variant-east-asian: ; font-variant-position: ; font-variant-emoji: ; font-weight: ; font-width: ; font-size: ; line-height: ; font-family: ; font-feature-settings: normal; font-kerning: auto; font-language-override: normal; font-optical-sizing: auto; font-size-adjust: none; font-variation-settings: normal;')
+        assert.equal(style.font, '')
+        assert.equal(style.cssText, 'font-style: italic; font-variant-ligatures: ; font-variant-caps: ; font-variant-alternates: ; font-variant-numeric: ; font-variant-east-asian: ; font-variant-position: ; font-variant-emoji: ; font-weight: ; font-width: ; font-size: ; line-height: ; font-family: ; font-feature-settings: normal; font-kerning: auto; font-language-override: normal; font-optical-sizing: auto; font-size-adjust: none; font-variation-settings: normal;')
     })
 })
 describe('font-synthesis', () => {
@@ -2336,9 +2339,9 @@ describe('font-synthesis', () => {
 
         // Initial longhand values
         style.fontSynthesis = 'weight style small-caps position'
-        expect(style).toHaveLength(longhands.length)
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.fontSynthesis).toBe('weight style small-caps position')
+        assert.equal(style.length, longhands.length)
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.fontSynthesis, 'weight style small-caps position')
 
         // Omitted values
         const values = [
@@ -2359,14 +2362,14 @@ describe('font-synthesis', () => {
         ]
         values.forEach(([input, expected]) => {
             style.fontSynthesis = input
-            longhands.forEach((longhand, i) => expect(style[longhand]).toBe(expected[i]))
-            expect(style.fontSynthesis).toBe(input)
+            longhands.forEach((longhand, i) => assert.equal(style[longhand], expected[i]))
+            assert.equal(style.fontSynthesis, input)
         })
 
         // All longhands cannot be represented
         style.fontSynthesisStyle = 'oblique-only'
-        expect(style.fontSynthesis).toBe('')
-        expect(style.cssText).toBe('font-synthesis-weight: none; font-synthesis-style: oblique-only; font-synthesis-small-caps: auto; font-synthesis-position: auto;')
+        assert.equal(style.fontSynthesis, '')
+        assert.equal(style.cssText, 'font-synthesis-weight: none; font-synthesis-style: oblique-only; font-synthesis-small-caps: auto; font-synthesis-position: auto;')
     })
 })
 describe('font-variant', () => {
@@ -2377,24 +2380,24 @@ describe('font-variant', () => {
 
         // Initial longhand values (not all longhands can be explicitly declared)
         style.fontVariant = 'normal'
-        expect(style).toHaveLength(longhands.length)
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.fontVariant).toBe('normal')
+        assert.equal(style.length, longhands.length)
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.fontVariant, 'normal')
 
         // Omitted values
         style.fontVariant = 'none'
         longhands.forEach(longhand =>
-            expect(style[longhand]).toBe(longhand === 'font-variant-ligatures' ? 'none' : initial(longhand)))
-        expect(style.fontVariant).toBe('none')
+            assert.equal(style[longhand], longhand === 'font-variant-ligatures' ? 'none' : initial(longhand)))
+        assert.equal(style.fontVariant, 'none')
         style.fontVariant = 'small-caps'
         longhands.forEach(longhand =>
-            expect(style[longhand]).toBe(longhand === 'font-variant-caps' ? 'small-caps' : initial(longhand)))
-        expect(style.fontVariant).toBe('small-caps')
+            assert.equal(style[longhand], longhand === 'font-variant-caps' ? 'small-caps' : initial(longhand)))
+        assert.equal(style.fontVariant, 'small-caps')
 
         // All longhands cannot be represented
         style.fontVariantLigatures = 'none'
-        expect(style.fontVariant).toBe('')
-        expect(style.cssText).toBe('font-variant-ligatures: none; font-variant-caps: small-caps; font-variant-alternates: normal; font-variant-numeric: normal; font-variant-east-asian: normal; font-variant-position: normal; font-variant-emoji: normal;')
+        assert.equal(style.fontVariant, '')
+        assert.equal(style.cssText, 'font-variant-ligatures: none; font-variant-caps: small-caps; font-variant-alternates: normal; font-variant-numeric: normal; font-variant-east-asian: normal; font-variant-position: normal; font-variant-emoji: normal;')
     })
 })
 describe('gap', () => {
@@ -2405,18 +2408,18 @@ describe('gap', () => {
 
         // Initial longhand values
         style.gap = 'normal normal'
-        expect(style).toHaveLength(longhands.length)
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.gap).toBe('normal')
+        assert.equal(style.length, longhands.length)
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.gap, 'normal')
 
         // Omitted values
         style.gap = 'normal'
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.gap).toBe('normal')
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.gap, 'normal')
         style.gap = 'normal 1px'
-        expect(style.rowGap).toBe(initial('row-gap'))
-        expect(style.columnGap).toBe('1px')
-        expect(style.gap).toBe('normal 1px')
+        assert.equal(style.rowGap, initial('row-gap'))
+        assert.equal(style.columnGap, '1px')
+        assert.equal(style.gap, 'normal 1px')
     })
 })
 describe('grid', () => {
@@ -2427,55 +2430,55 @@ describe('grid', () => {
 
         // Explicit row and column templates
         style.grid = 'none / none'
-        expect(style).toHaveLength(longhands.length)
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.grid).toBe('none')
+        assert.equal(style.length, longhands.length)
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.grid, 'none')
 
         // Implicit row track list and explicit column template
         style.grid = 'auto-flow none / none'
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.grid).toBe('none')
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.grid, 'none')
 
         // Explicit row template and implicit column track list
         style.grid = 'none / auto-flow auto'
         longhands.forEach(longhand =>
-            expect(style[longhand]).toBe(longhand === 'grid-auto-flow' ? 'column' : initial(longhand)))
-        expect(style.grid).toBe('none / auto-flow')
+            assert.equal(style[longhand], longhand === 'grid-auto-flow' ? 'column' : initial(longhand)))
+        assert.equal(style.grid, 'none / auto-flow')
 
         // Implicit row and column track list
         style.gridAutoRows = '1px'
-        expect(style.grid).toBe('')
-        expect(style.cssText).toBe('grid-template: none; grid-auto-flow: column; grid-auto-rows: 1px; grid-auto-columns: auto;')
+        assert.equal(style.grid, '')
+        assert.equal(style.cssText, 'grid-template: none; grid-auto-flow: column; grid-auto-rows: 1px; grid-auto-columns: auto;')
         style.gridAutoFlow = initial('grid-auto-flow')
         style.gridAutoColumns = '1px'
-        expect(style.grid).toBe('')
-        expect(style.cssText).toBe('grid-template: none; grid-auto-flow: row; grid-auto-rows: 1px; grid-auto-columns: 1px;')
+        assert.equal(style.grid, '')
+        assert.equal(style.cssText, 'grid-template: none; grid-auto-flow: row; grid-auto-rows: 1px; grid-auto-columns: 1px;')
         style.gridAutoRows = initial('grid-auto-rows')
-        expect(style.grid).toBe('')
-        expect(style.cssText).toBe('grid-template: none; grid-auto-flow: row; grid-auto-rows: auto; grid-auto-columns: 1px;')
+        assert.equal(style.grid, '')
+        assert.equal(style.cssText, 'grid-template: none; grid-auto-flow: row; grid-auto-rows: auto; grid-auto-columns: 1px;')
         style.gridAutoColumns = initial('grid-auto-columns')
 
         // Explicit and implicit row track list
         style.gridTemplateRows = '1px'
         style.gridAutoRows = '1px'
-        expect(style.grid).toBe('')
-        expect(style.cssText).toBe('grid-template: 1px / none; grid-auto-flow: row; grid-auto-rows: 1px; grid-auto-columns: auto;')
+        assert.equal(style.grid, '')
+        assert.equal(style.cssText, 'grid-template: 1px / none; grid-auto-flow: row; grid-auto-rows: 1px; grid-auto-columns: auto;')
         style.gridAutoRows = initial('grid-auto-rows')
         style.gridAutoFlow = 'row dense'
-        expect(style.grid).toBe('')
-        expect(style.cssText).toBe('grid-template: 1px / none; grid-auto-flow: dense; grid-auto-rows: auto; grid-auto-columns: auto;')
+        assert.equal(style.grid, '')
+        assert.equal(style.cssText, 'grid-template: 1px / none; grid-auto-flow: dense; grid-auto-rows: auto; grid-auto-columns: auto;')
         style.gridAutoFlow = initial('grid-auto-flow')
         style.gridTemplateRows = initial('grid-template-rows')
 
         // Explicit and implicit column track list
         style.gridTemplateColumns = '1px'
         style.gridAutoColumns = '1px'
-        expect(style.grid).toBe('')
-        expect(style.cssText).toBe('grid-template: none / 1px; grid-auto-flow: row; grid-auto-rows: auto; grid-auto-columns: 1px;')
+        assert.equal(style.grid, '')
+        assert.equal(style.cssText, 'grid-template: none / 1px; grid-auto-flow: row; grid-auto-rows: auto; grid-auto-columns: 1px;')
         style.gridAutoColumns = initial('grid-auto-columns')
         style.gridAutoFlow = 'column'
-        expect(style.grid).toBe('')
-        expect(style.cssText).toBe('grid-template: none / 1px; grid-auto-flow: column; grid-auto-rows: auto; grid-auto-columns: auto;')
+        assert.equal(style.grid, '')
+        assert.equal(style.cssText, 'grid-template: none / 1px; grid-auto-flow: column; grid-auto-rows: auto; grid-auto-columns: auto;')
         style.gridAutoFlow = initial('grid-auto-flow')
         style.gridTemplateColumns = initial('grid-template-columns')
     })
@@ -2488,36 +2491,36 @@ describe('grid-area', () => {
 
         // Initial longhand values
         style.gridArea = 'auto / auto / auto / auto'
-        expect(style).toHaveLength(longhands.length)
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.gridArea).toBe('auto')
+        assert.equal(style.length, longhands.length)
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.gridArea, 'auto')
 
         // Omitted values
         const values = ['a', 'b', 'c']
         style.gridArea = 'a'
-        longhands.forEach(longhand => expect(style[longhand]).toBe('a'))
-        expect(style.gridArea).toBe('a')
+        longhands.forEach(longhand => assert.equal(style[longhand], 'a'))
+        assert.equal(style.gridArea, 'a')
         style.gridArea = 'a / b'
-        longhands.forEach((longhand, i) => expect(style[longhand]).toBe(values[i % 2]))
-        expect(style.gridArea).toBe('a / b')
+        longhands.forEach((longhand, i) => assert.equal(style[longhand], values[i % 2]))
+        assert.equal(style.gridArea, 'a / b')
         style.gridArea = 'a / b / c'
-        longhands.forEach((longhand, i) => expect(style[longhand]).toBe(values[i === 3 ? 1 : i]))
-        expect(style.gridArea).toBe('a / b / c')
+        longhands.forEach((longhand, i) => assert.equal(style[longhand], values[i === 3 ? 1 : i]))
+        assert.equal(style.gridArea, 'a / b / c')
         style.gridArea = '1'
         longhands.forEach(longhand =>
-            expect(style[longhand]).toBe(longhand === 'grid-row-start' ? '1' : initial(longhand)))
-        expect(style.gridArea).toBe('1')
+            assert.equal(style[longhand], longhand === 'grid-row-start' ? '1' : initial(longhand)))
+        assert.equal(style.gridArea, '1')
         style.gridArea = '1 / auto / 1 / 1'
         longhands.forEach(longhand =>
-            expect(style[longhand]).toBe(longhand === 'grid-column-start' ? initial(longhand) : '1'))
-        expect(style.gridArea).toBe('1 / auto / 1 / 1')
+            assert.equal(style[longhand], longhand === 'grid-column-start' ? initial(longhand) : '1'))
+        assert.equal(style.gridArea, '1 / auto / 1 / 1')
         style.gridArea = '1 / 1 / auto / 1'
         longhands.forEach(longhand =>
-            expect(style[longhand]).toBe(longhand === 'grid-row-end' ? initial(longhand) : '1'))
-        expect(style.gridArea).toBe('1 / 1 / auto / 1')
+            assert.equal(style[longhand], longhand === 'grid-row-end' ? initial(longhand) : '1'))
+        assert.equal(style.gridArea, '1 / 1 / auto / 1')
         style.gridArea = '1 / 1 / 1 / 1'
-        longhands.forEach(longhand => expect(style[longhand]).toBe('1'))
-        expect(style.gridArea).toBe('1 / 1 / 1 / 1')
+        longhands.forEach(longhand => assert.equal(style[longhand], '1'))
+        assert.equal(style.gridArea, '1 / 1 / 1 / 1')
     })
 })
 describe('grid-column, grid-row', () => {
@@ -2528,25 +2531,25 @@ describe('grid-column, grid-row', () => {
 
         // Initial longhand values
         style.gridColumn = 'auto / auto'
-        expect(style).toHaveLength(longhands.length)
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.gridColumn).toBe('auto')
+        assert.equal(style.length, longhands.length)
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.gridColumn, 'auto')
 
         // Omitted values
         style.gridColumn = 'a'
-        longhands.forEach(longhand => expect(style[longhand]).toBe('a'))
-        expect(style.gridColumn).toBe('a')
+        longhands.forEach(longhand => assert.equal(style[longhand], 'a'))
+        assert.equal(style.gridColumn, 'a')
         style.gridColumn = 'a / b'
-        expect(style.gridColumnStart).toBe('a')
-        expect(style.gridColumnEnd).toBe('b')
-        expect(style.gridColumn).toBe('a / b')
+        assert.equal(style.gridColumnStart, 'a')
+        assert.equal(style.gridColumnEnd, 'b')
+        assert.equal(style.gridColumn, 'a / b')
         style.gridColumn = '1'
-        expect(style.gridColumnStart).toBe('1')
-        expect(style.gridColumnEnd).toBe(initial('grid-column-end'))
-        expect(style.gridColumn).toBe('1')
+        assert.equal(style.gridColumnStart, '1')
+        assert.equal(style.gridColumnEnd, initial('grid-column-end'))
+        assert.equal(style.gridColumn, '1')
         style.gridColumn = '1 / 1'
-        longhands.forEach(longhand => expect(style[longhand]).toBe('1'))
-        expect(style.gridColumn).toBe('1 / 1')
+        longhands.forEach(longhand => assert.equal(style[longhand], '1'))
+        assert.equal(style.gridColumn, '1 / 1')
     })
 })
 describe('grid-template', () => {
@@ -2557,73 +2560,73 @@ describe('grid-template', () => {
 
         // Row and column templates
         style.gridTemplate = 'none / none'
-        expect(style).toHaveLength(longhands.length)
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.gridTemplate).toBe('none')
+        assert.equal(style.length, longhands.length)
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.gridTemplate, 'none')
 
         // Areas
         style.gridTemplate = `
             [top a-top] "a a" 1px  [a-bottom]
                 [b-top] "b b" auto [b-bottom bottom]
             / auto`
-        expect(style.gridTemplateAreas).toBe('"a a" "b b"')
-        expect(style.gridTemplateRows).toBe('[top a-top] 1px [a-bottom b-top] auto [b-bottom bottom]')
-        expect(style.gridTemplateColumns).toBe('auto')
-        expect(style.gridTemplate).toBe('[top a-top] "a a" 1px [a-bottom b-top] "b b" [b-bottom bottom] / auto')
+        assert.equal(style.gridTemplateAreas, '"a a" "b b"')
+        assert.equal(style.gridTemplateRows, '[top a-top] 1px [a-bottom b-top] auto [b-bottom bottom]')
+        assert.equal(style.gridTemplateColumns, 'auto')
+        assert.equal(style.gridTemplate, '[top a-top] "a a" 1px [a-bottom b-top] "b b" [b-bottom bottom] / auto')
 
         // Empty <line-names>
         style.gridTemplate = '[] "." [] [a] "." [] / [] 1px []'
-        expect(style.gridTemplateAreas).toBe('"." "."')
-        expect(style.gridTemplateRows).toBe('auto [a] auto')
-        expect(style.gridTemplateColumns).toBe('1px')
-        expect(style.gridTemplate).toBe('"." [a] "." / 1px')
+        assert.equal(style.gridTemplateAreas, '"." "."')
+        assert.equal(style.gridTemplateRows, 'auto [a] auto')
+        assert.equal(style.gridTemplateColumns, '1px')
+        assert.equal(style.gridTemplate, '"." [a] "." / 1px')
 
         // Areas and a shorter row track list
         style.gridTemplateRows = 'auto'
-        expect(style.gridTemplate).toBe('')
-        expect(style.cssText).toBe('grid-template-rows: auto; grid-template-columns: 1px; grid-template-areas: "." ".";')
+        assert.equal(style.gridTemplate, '')
+        assert.equal(style.cssText, 'grid-template-rows: auto; grid-template-columns: 1px; grid-template-areas: "." ".";')
 
         // Areas and a longer row track list
         style.gridTemplateRows = 'auto auto auto'
-        expect(style.gridTemplate).toBe('')
-        expect(style.cssText).toBe('grid-template-rows: auto auto auto; grid-template-columns: 1px; grid-template-areas: "." ".";')
+        assert.equal(style.gridTemplate, '')
+        assert.equal(style.cssText, 'grid-template-rows: auto auto auto; grid-template-columns: 1px; grid-template-areas: "." ".";')
         style.gridTemplateRows = initial('grid-template-rows')
 
         // Areas and no row track list
         style.gridTemplateAreas = '"a"'
-        expect(style.gridTemplate).toBe('')
-        expect(style.cssText).toBe('grid-template-rows: none; grid-template-columns: 1px; grid-template-areas: "a";')
+        assert.equal(style.gridTemplate, '')
+        assert.equal(style.cssText, 'grid-template-rows: none; grid-template-columns: 1px; grid-template-areas: "a";')
 
         // Areas and a repeated row track list
         style.gridTemplateRows = 'repeat(1, 1px)'
-        expect(style.gridTemplate).toBe('')
-        expect(style.cssText).toBe('grid-template-rows: repeat(1, 1px); grid-template-columns: 1px; grid-template-areas: "a";')
+        assert.equal(style.gridTemplate, '')
+        assert.equal(style.cssText, 'grid-template-rows: repeat(1, 1px); grid-template-columns: 1px; grid-template-areas: "a";')
         style.gridTemplateRows = 'repeat(auto-fill, 1px)'
-        expect(style.gridTemplate).toBe('')
-        expect(style.cssText).toBe('grid-template-rows: repeat(auto-fill, 1px); grid-template-columns: 1px; grid-template-areas: "a";')
+        assert.equal(style.gridTemplate, '')
+        assert.equal(style.cssText, 'grid-template-rows: repeat(auto-fill, 1px); grid-template-columns: 1px; grid-template-areas: "a";')
 
         // Areas and a repeated column track list
         style.gridTemplateRows = 'auto'
         style.gridTemplateColumns = 'repeat(1, 1px)'
-        expect(style.gridTemplate).toBe('')
-        expect(style.cssText).toBe('grid-template-rows: auto; grid-template-columns: repeat(1, 1px); grid-template-areas: "a";')
+        assert.equal(style.gridTemplate, '')
+        assert.equal(style.cssText, 'grid-template-rows: auto; grid-template-columns: repeat(1, 1px); grid-template-areas: "a";')
         style.gridTemplateColumns = 'repeat(auto-fill, 1px)'
-        expect(style.gridTemplate).toBe('')
-        expect(style.cssText).toBe('grid-template-rows: auto; grid-template-columns: repeat(auto-fill, 1px); grid-template-areas: "a";')
+        assert.equal(style.gridTemplate, '')
+        assert.equal(style.cssText, 'grid-template-rows: auto; grid-template-columns: repeat(auto-fill, 1px); grid-template-areas: "a";')
         style.gridTemplateColumns = initial('grid-template-columns')
 
         // Areas and a subgrided track list
         style.gridTemplateRows = 'subgrid []'
-        expect(style.gridTemplate).toBe('')
-        expect(style.cssText).toBe('grid-template-rows: subgrid []; grid-template-columns: none; grid-template-areas: "a";')
+        assert.equal(style.gridTemplate, '')
+        assert.equal(style.cssText, 'grid-template-rows: subgrid []; grid-template-columns: none; grid-template-areas: "a";')
         style.gridTemplateRows = 'auto'
         style.gridTemplateColumns = 'subgrid []'
-        expect(style.gridTemplate).toBe('')
-        expect(style.cssText).toBe('grid-template-rows: auto; grid-template-columns: subgrid []; grid-template-areas: "a";')
+        assert.equal(style.gridTemplate, '')
+        assert.equal(style.cssText, 'grid-template-rows: auto; grid-template-columns: subgrid []; grid-template-areas: "a";')
 
         // Areas and a longer column track list
         style.gridTemplateColumns = '1px 1px'
-        expect(style.gridTemplate).toBe('"a" / 1px 1px')
+        assert.equal(style.gridTemplate, '"a" / 1px 1px')
     })
 })
 describe('inset', () => {
@@ -2634,21 +2637,21 @@ describe('inset', () => {
 
         // Initial longhand values
         style.inset = 'auto auto auto auto'
-        expect(style).toHaveLength(longhands.length)
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.inset).toBe('auto')
+        assert.equal(style.length, longhands.length)
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.inset, 'auto')
 
         // Omitted values
         const values = ['auto', '1px', '2px']
         style.inset = '1px'
-        longhands.forEach(longhand => expect(style[longhand]).toBe('1px'))
-        expect(style.inset).toBe('1px')
+        longhands.forEach(longhand => assert.equal(style[longhand], '1px'))
+        assert.equal(style.inset, '1px')
         style.inset = 'auto 1px'
-        longhands.forEach((longhand, i) => expect(style[longhand]).toBe(values[i % 2]))
-        expect(style.inset).toBe('auto 1px')
+        longhands.forEach((longhand, i) => assert.equal(style[longhand], values[i % 2]))
+        assert.equal(style.inset, 'auto 1px')
         style.inset = 'auto 1px 2px'
-        longhands.forEach((longhand, i) => expect(style[longhand]).toBe(values[i === 3 ? 1 : i]))
-        expect(style.inset).toBe('auto 1px 2px')
+        longhands.forEach((longhand, i) => assert.equal(style[longhand], values[i === 3 ? 1 : i]))
+        assert.equal(style.inset, 'auto 1px 2px')
     })
 })
 describe('inset-block, inset-inline', () => {
@@ -2659,18 +2662,18 @@ describe('inset-block, inset-inline', () => {
 
         // Initial longhand values
         style.insetBlock = 'auto auto'
-        expect(style).toHaveLength(longhands.length)
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.insetBlock).toBe('auto')
+        assert.equal(style.length, longhands.length)
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.insetBlock, 'auto')
 
         // Omitted values
         style.insetBlock = '1px'
-        longhands.forEach(longhand => expect(style[longhand]).toBe('1px'))
-        expect(style.insetBlock).toBe('1px')
+        longhands.forEach(longhand => assert.equal(style[longhand], '1px'))
+        assert.equal(style.insetBlock, '1px')
         style.insetBlock = 'auto 1px'
-        expect(style.insetBlockStart).toBe(initial('inset-block-start'))
-        expect(style.insetBlockEnd).toBe('1px')
-        expect(style.insetBlock).toBe('auto 1px')
+        assert.equal(style.insetBlockStart, initial('inset-block-start'))
+        assert.equal(style.insetBlockEnd, '1px')
+        assert.equal(style.insetBlock, 'auto 1px')
     })
 })
 describe('interest-delay', () => {
@@ -2681,18 +2684,18 @@ describe('interest-delay', () => {
 
         // Initial longhand values
         style.interestDelay = 'normal normal'
-        expect(style).toHaveLength(longhands.length)
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.interestDelay).toBe('normal')
+        assert.equal(style.length, longhands.length)
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.interestDelay, 'normal')
 
         // Omitted values
         style.interestDelay = '1s'
-        longhands.forEach(longhand => expect(style[longhand]).toBe('1s'))
-        expect(style.interestDelay).toBe('1s')
+        longhands.forEach(longhand => assert.equal(style[longhand], '1s'))
+        assert.equal(style.interestDelay, '1s')
         style.interestDelay = 'normal 1s'
-        expect(style.interestDelayStart).toBe(initial('interest-delay-start'))
-        expect(style.interestDelayEnd).toBe('1s')
-        expect(style.interestDelay).toBe('normal 1s')
+        assert.equal(style.interestDelayStart, initial('interest-delay-start'))
+        assert.equal(style.interestDelayEnd, '1s')
+        assert.equal(style.interestDelay, 'normal 1s')
     })
 })
 describe('line-clamp', () => {
@@ -2703,53 +2706,53 @@ describe('line-clamp', () => {
 
         // Initial longhand values (not all longhands can be explicitly declared)
         style.lineClamp = 'none'
-        expect(style).toHaveLength(longhands.length)
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.lineClamp).toBe('none')
-        expect(style.cssText).toBe('line-clamp: none;')
+        assert.equal(style.length, longhands.length)
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.lineClamp, 'none')
+        assert.equal(style.cssText, 'line-clamp: none;')
 
         // Omitted values
         style.lineClamp = '1'
-        expect(style.maxLines).toBe('1')
-        expect(style.blockEllipsis).toBe('auto')
-        expect(style.continue).toBe('collapse')
-        expect(style.lineClamp).toBe('1')
-        expect(style.cssText).toBe('line-clamp: 1;')
+        assert.equal(style.maxLines, '1')
+        assert.equal(style.blockEllipsis, 'auto')
+        assert.equal(style.continue, 'collapse')
+        assert.equal(style.lineClamp, '1')
+        assert.equal(style.cssText, 'line-clamp: 1;')
         style.lineClamp = 'auto'
-        expect(style.maxLines).toBe('none')
-        expect(style.blockEllipsis).toBe('auto')
-        expect(style.continue).toBe('collapse')
-        expect(style.lineClamp).toBe('auto')
-        expect(style.cssText).toBe('line-clamp: auto;')
+        assert.equal(style.maxLines, 'none')
+        assert.equal(style.blockEllipsis, 'auto')
+        assert.equal(style.continue, 'collapse')
+        assert.equal(style.lineClamp, 'auto')
+        assert.equal(style.cssText, 'line-clamp: auto;')
         style.lineClamp = '1 -webkit-legacy'
-        expect(style.maxLines).toBe('1')
-        expect(style.blockEllipsis).toBe('auto')
-        expect(style.continue).toBe('-webkit-legacy')
-        expect(style.lineClamp).toBe('1 -webkit-legacy')
-        expect(style.cssText).toBe('line-clamp: 1 -webkit-legacy;')
+        assert.equal(style.maxLines, '1')
+        assert.equal(style.blockEllipsis, 'auto')
+        assert.equal(style.continue, '-webkit-legacy')
+        assert.equal(style.lineClamp, '1 -webkit-legacy')
+        assert.equal(style.cssText, 'line-clamp: 1 -webkit-legacy;')
         style.lineClamp = 'no-ellipsis -webkit-legacy'
-        expect(style.maxLines).toBe('none')
-        expect(style.blockEllipsis).toBe('no-ellipsis')
-        expect(style.continue).toBe('-webkit-legacy')
-        expect(style.lineClamp).toBe('no-ellipsis -webkit-legacy')
-        expect(style.cssText).toBe('line-clamp: no-ellipsis -webkit-legacy;')
+        assert.equal(style.maxLines, 'none')
+        assert.equal(style.blockEllipsis, 'no-ellipsis')
+        assert.equal(style.continue, '-webkit-legacy')
+        assert.equal(style.lineClamp, 'no-ellipsis -webkit-legacy')
+        assert.equal(style.cssText, 'line-clamp: no-ellipsis -webkit-legacy;')
 
         // All longhands cannot be represented
         style.maxLines = '1'
         style.continue = initial('continue')
-        expect(style.lineClamp).toBe('')
-        expect(style.cssText).toBe('max-lines: 1; block-ellipsis: no-ellipsis; continue: auto;')
+        assert.equal(style.lineClamp, '')
+        assert.equal(style.cssText, 'max-lines: 1; block-ellipsis: no-ellipsis; continue: auto;')
         style.maxLines = initial('max-lines')
         style.blockEllipsis = 'auto'
-        expect(style.lineClamp).toBe('')
-        expect(style.cssText).toBe('-webkit-line-clamp: none;')
+        assert.equal(style.lineClamp, '')
+        assert.equal(style.cssText, '-webkit-line-clamp: none;')
         style.blockEllipsis = initial('block-ellipsis')
         style.continue = 'collapse'
-        expect(style.lineClamp).toBe('')
-        expect(style.cssText).toBe('max-lines: none; block-ellipsis: no-ellipsis; continue: collapse;')
+        assert.equal(style.lineClamp, '')
+        assert.equal(style.cssText, 'max-lines: none; block-ellipsis: no-ellipsis; continue: collapse;')
         style.continue = 'discard'
-        expect(style.lineClamp).toBe('')
-        expect(style.cssText).toBe('max-lines: none; block-ellipsis: no-ellipsis; continue: discard;')
+        assert.equal(style.lineClamp, '')
+        assert.equal(style.cssText, 'max-lines: none; block-ellipsis: no-ellipsis; continue: discard;')
     })
 })
 describe('list-style', () => {
@@ -2760,9 +2763,9 @@ describe('list-style', () => {
 
         // Initial longhand values
         style.listStyle = 'outside none disc'
-        expect(style).toHaveLength(longhands.length)
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.listStyle).toBe('outside')
+        assert.equal(style.length, longhands.length)
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.listStyle, 'outside')
 
         // Omitted values
         const values = [
@@ -2773,8 +2776,8 @@ describe('list-style', () => {
         ]
         values.forEach(([input, declared = {}]) => {
             style.listStyle = input
-            longhands.forEach(longhand => expect(style[longhand]).toBe(declared[longhand] ?? initial(longhand)))
-            expect(style.listStyle).toBe(input)
+            longhands.forEach(longhand => assert.equal(style[longhand], declared[longhand] ?? initial(longhand)))
+            assert.equal(style.listStyle, input)
         })
     })
 })
@@ -2786,21 +2789,21 @@ describe('margin', () => {
 
         // Initial longhand values
         style.margin = '0 0 0 0'
-        expect(style).toHaveLength(longhands.length)
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.margin).toBe('0px')
+        assert.equal(style.length, longhands.length)
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.margin, '0px')
 
         // Omitted values
         const values = ['0px', '1px', '2px']
         style.margin = '1px'
-        longhands.forEach(longhand => expect(style[longhand]).toBe('1px'))
-        expect(style.margin).toBe('1px')
+        longhands.forEach(longhand => assert.equal(style[longhand], '1px'))
+        assert.equal(style.margin, '1px')
         style.margin = '0px 1px'
-        longhands.forEach((longhand, i) => expect(style[longhand]).toBe(values[i % 2]))
-        expect(style.margin).toBe('0px 1px')
+        longhands.forEach((longhand, i) => assert.equal(style[longhand], values[i % 2]))
+        assert.equal(style.margin, '0px 1px')
         style.margin = '0px 1px 2px'
-        longhands.forEach((longhand, i) => expect(style[longhand]).toBe(values[i === 3 ? 1 : i]))
-        expect(style.margin).toBe('0px 1px 2px')
+        longhands.forEach((longhand, i) => assert.equal(style[longhand], values[i === 3 ? 1 : i]))
+        assert.equal(style.margin, '0px 1px 2px')
     })
 })
 describe('margin-block, margin-inline', () => {
@@ -2811,18 +2814,18 @@ describe('margin-block, margin-inline', () => {
 
         // Initial longhand values
         style.marginBlock = '0 0'
-        expect(style).toHaveLength(longhands.length)
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.marginBlock).toBe('0px')
+        assert.equal(style.length, longhands.length)
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.marginBlock, '0px')
 
         // Omitted values
         style.marginBlock = '1px'
-        longhands.forEach(longhand => expect(style[longhand]).toBe('1px'))
-        expect(style.marginBlock).toBe('1px')
+        longhands.forEach(longhand => assert.equal(style[longhand], '1px'))
+        assert.equal(style.marginBlock, '1px')
         style.marginBlock = '0px 1px'
-        expect(style.marginBlockStart).toBe(initial('margin-block-start'))
-        expect(style.marginBlockEnd).toBe('1px')
-        expect(style.marginBlock).toBe('0px 1px')
+        assert.equal(style.marginBlockStart, initial('margin-block-start'))
+        assert.equal(style.marginBlockEnd, '1px')
+        assert.equal(style.marginBlock, '0px 1px')
     })
 })
 describe('marker', () => {
@@ -2833,14 +2836,14 @@ describe('marker', () => {
 
         // All equal longhand values
         style.marker = 'none'
-        expect(style).toHaveLength(longhands.length)
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.marker).toBe('none')
+        assert.equal(style.length, longhands.length)
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.marker, 'none')
 
         // All longhands cannot be represented
         style.markerStart = 'url("#start")'
-        expect(style.marker).toBe('')
-        expect(style.cssText).toBe('marker-start: url("#start"); marker-mid: none; marker-end: none;')
+        assert.equal(style.marker, '')
+        assert.equal(style.cssText, 'marker-start: url("#start"); marker-mid: none; marker-end: none;')
     })
 })
 describe('mask', () => {
@@ -2854,9 +2857,9 @@ describe('mask', () => {
 
         // Initial longhand values
         style.mask = mask
-        expect(style).toHaveLength(longhands.length)
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.mask).toBe('none')
+        assert.equal(style.length, longhands.length)
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.mask, 'none')
 
         // Omitted values
         const values = [
@@ -2868,22 +2871,22 @@ describe('mask', () => {
         ]
         values.forEach(([input, declared = {}]) => {
             style.mask = input
-            longhands.forEach(longhand => expect(style[longhand]).toBe(declared[longhand] ?? initial(longhand)))
-            expect(style.mask).toBe(input)
+            longhands.forEach(longhand => assert.equal(style[longhand], declared[longhand] ?? initial(longhand)))
+            assert.equal(style.mask, input)
         })
 
         // All longhands cannot be represented
         style.maskImage = 'none, none'
-        expect(style.mask).toBe('')
-        expect(style.cssText).toBe('mask-image: none, none; mask-position: 0% 0%; mask-size: auto auto; mask-repeat: repeat; mask-origin: border-box; mask-clip: no-clip; mask-composite: add; mask-mode: match-source; mask-border: none;')
+        assert.equal(style.mask, '')
+        assert.equal(style.cssText, 'mask-image: none, none; mask-position: 0% 0%; mask-size: auto auto; mask-repeat: repeat; mask-origin: border-box; mask-clip: no-clip; mask-composite: add; mask-mode: match-source; mask-border: none;')
 
         // Coordinated value list
         style.mask = `${mask}, ${mask}`
         longhands.forEach(longhand =>
-            expect(style[longhand]).toBe(resetOnly.includes(longhand)
+            assert.equal(style[longhand], resetOnly.includes(longhand)
                 ? initial(longhand)
                 : `${initial(longhand)}, ${initial(longhand)}`))
-        expect(style.mask).toBe('none, none')
+        assert.equal(style.mask, 'none, none')
     })
 })
 describe('mask-border', () => {
@@ -2894,9 +2897,9 @@ describe('mask-border', () => {
 
         // Initial longhand values
         style.maskBorder = 'none 0 / auto / 0 stretch alpha'
-        expect(style).toHaveLength(longhands.length)
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.maskBorder).toBe('none')
+        assert.equal(style.length, longhands.length)
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.maskBorder, 'none')
 
         // Omitted values
         const values = [
@@ -2906,8 +2909,8 @@ describe('mask-border', () => {
         ]
         values.forEach(([input, declared = {}, expected = input]) => {
             style.maskBorder = input
-            longhands.forEach(longhand => expect(style[longhand]).toBe(declared[longhand] ?? initial(longhand)))
-            expect(style.maskBorder).toBe(expected)
+            longhands.forEach(longhand => assert.equal(style[longhand], declared[longhand] ?? initial(longhand)))
+            assert.equal(style.maskBorder, expected)
         })
     })
 })
@@ -2919,9 +2922,9 @@ describe('offset', () => {
 
         // Initial longhand values
         style.offset = 'normal none 0 auto / auto'
-        expect(style).toHaveLength(longhands.length)
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.offset).toBe('normal')
+        assert.equal(style.length, longhands.length)
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.offset, 'normal')
 
         // Omitted values
         const values = [
@@ -2933,8 +2936,8 @@ describe('offset', () => {
         ]
         values.forEach(([input, declared = {}, expected = input]) => {
             style.offset = input
-            longhands.forEach(longhand => expect(style[longhand]).toBe(declared[longhand] ?? initial(longhand)))
-            expect(style.offset).toBe(expected)
+            longhands.forEach(longhand => assert.equal(style[longhand], declared[longhand] ?? initial(longhand)))
+            assert.equal(style.offset, expected)
         })
     })
 })
@@ -2946,18 +2949,18 @@ describe('outline', () => {
 
         // Initial longhand values
         style.outline = 'medium none auto'
-        expect(style).toHaveLength(longhands.length)
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.outline).toBe('medium')
+        assert.equal(style.length, longhands.length)
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.outline, 'medium')
 
         // Omitted values
         style.outline = 'medium'
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.outline).toBe('medium')
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.outline, 'medium')
         style.outline = 'solid'
         longhands.forEach(longhand =>
-            expect(style[longhand]).toBe(longhand === 'outline-style' ? 'solid' : initial(longhand)))
-        expect(style.outline).toBe('solid')
+            assert.equal(style[longhand], longhand === 'outline-style' ? 'solid' : initial(longhand)))
+        assert.equal(style.outline, 'solid')
     })
 })
 describe('overflow', () => {
@@ -2968,23 +2971,23 @@ describe('overflow', () => {
 
         // Initial longhand values
         style.overflow = 'visible visible'
-        expect(style).toHaveLength(longhands.length)
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.overflow).toBe('visible')
+        assert.equal(style.length, longhands.length)
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.overflow, 'visible')
 
         // Omitted values
         style.overflow = 'visible'
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.overflow).toBe('visible')
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.overflow, 'visible')
         style.overflow = 'visible hidden'
-        expect(style.overflowX).toBe(initial('overflow-x'))
-        expect(style.overflowY).toBe('hidden')
-        expect(style.overflow).toBe('visible hidden')
+        assert.equal(style.overflowX, initial('overflow-x'))
+        assert.equal(style.overflowY, 'hidden')
+        assert.equal(style.overflow, 'visible hidden')
 
         // Legacy value alias
         style.overflow = 'overlay'
-        longhands.forEach(longhand => expect(style[longhand]).toBe('auto'))
-        expect(style.overflow).toBe('auto')
+        longhands.forEach(longhand => assert.equal(style[longhand], 'auto'))
+        assert.equal(style.overflow, 'auto')
     })
 })
 describe('overflow-clip-margin', () => {
@@ -2995,19 +2998,19 @@ describe('overflow-clip-margin', () => {
 
         // All equal longhand values
         style.overflowClipMargin = '0px'
-        expect(style).toHaveLength(longhands.length)
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.overflowClipMargin).toBe('0px')
+        assert.equal(style.length, longhands.length)
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.overflowClipMargin, '0px')
 
         // Omitted values
         style.overflowClipMargin = 'content-box 0px'
-        longhands.forEach(longhand => expect(style[longhand]).toBe('content-box'))
-        expect(style.overflowClipMargin).toBe('content-box')
+        longhands.forEach(longhand => assert.equal(style[longhand], 'content-box'))
+        assert.equal(style.overflowClipMargin, 'content-box')
 
         // All longhands cannot be represented
         style.overflowClipMarginTop = '1px'
-        expect(style.marker).toBe('')
-        expect(style.cssText).toBe('overflow-clip-margin-top: 1px; overflow-clip-margin-right: content-box; overflow-clip-margin-bottom: content-box; overflow-clip-margin-left: content-box;')
+        assert.equal(style.marker, '')
+        assert.equal(style.cssText, 'overflow-clip-margin-top: 1px; overflow-clip-margin-right: content-box; overflow-clip-margin-bottom: content-box; overflow-clip-margin-left: content-box;')
     })
 })
 describe('overflow-clip-margin-block, overflow-clip-margin-inline', () => {
@@ -3018,19 +3021,19 @@ describe('overflow-clip-margin-block, overflow-clip-margin-inline', () => {
 
         // All equal longhand values
         style.overflowClipMarginBlock = '0px'
-        expect(style).toHaveLength(longhands.length)
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.overflowClipMarginBlock).toBe('0px')
+        assert.equal(style.length, longhands.length)
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.overflowClipMarginBlock, '0px')
 
         // Omitted values
         style.overflowClipMarginBlock = 'content-box 0px'
-        longhands.forEach(longhand => expect(style[longhand]).toBe('content-box'))
-        expect(style.overflowClipMarginBlock).toBe('content-box')
+        longhands.forEach(longhand => assert.equal(style[longhand], 'content-box'))
+        assert.equal(style.overflowClipMarginBlock, 'content-box')
 
         // All longhands cannot be represented
         style.overflowClipMarginBlockStart = '1px'
-        expect(style.marker).toBe('')
-        expect(style.cssText).toBe('overflow-clip-margin-block-start: 1px; overflow-clip-margin-block-end: content-box;')
+        assert.equal(style.marker, '')
+        assert.equal(style.cssText, 'overflow-clip-margin-block-start: 1px; overflow-clip-margin-block-end: content-box;')
     })
 })
 describe('overscroll-behavior', () => {
@@ -3041,18 +3044,18 @@ describe('overscroll-behavior', () => {
 
         // Initial longhand values
         style.overscrollBehavior = 'auto auto'
-        expect(style).toHaveLength(longhands.length)
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.overscrollBehavior).toBe('auto')
+        assert.equal(style.length, longhands.length)
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.overscrollBehavior, 'auto')
 
         // Omitted values
         style.overscrollBehavior = 'auto'
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.overscrollBehavior).toBe('auto')
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.overscrollBehavior, 'auto')
         style.overscrollBehavior = 'auto contain'
-        expect(style.overscrollBehaviorX).toBe(initial('overscroll-behavior-x'))
-        expect(style.overscrollBehaviorY).toBe('contain')
-        expect(style.overscrollBehavior).toBe('auto contain')
+        assert.equal(style.overscrollBehaviorX, initial('overscroll-behavior-x'))
+        assert.equal(style.overscrollBehaviorY, 'contain')
+        assert.equal(style.overscrollBehavior, 'auto contain')
     })
 })
 describe('padding', () => {
@@ -3063,21 +3066,21 @@ describe('padding', () => {
 
         // Initial longhand values
         style.padding = '0 0 0 0'
-        expect(style).toHaveLength(longhands.length)
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.padding).toBe('0px')
+        assert.equal(style.length, longhands.length)
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.padding, '0px')
 
         // Omitted values
         const values = ['0px', '1px', '2px']
         style.padding = '1px'
-        longhands.forEach(longhand => expect(style[longhand]).toBe('1px'))
-        expect(style.padding).toBe('1px')
+        longhands.forEach(longhand => assert.equal(style[longhand], '1px'))
+        assert.equal(style.padding, '1px')
         style.padding = '0px 1px'
-        longhands.forEach((longhand, i) => expect(style[longhand]).toBe(values[i % 2]))
-        expect(style.padding).toBe('0px 1px')
+        longhands.forEach((longhand, i) => assert.equal(style[longhand], values[i % 2]))
+        assert.equal(style.padding, '0px 1px')
         style.padding = '0px 1px 2px'
-        longhands.forEach((longhand, i) => expect(style[longhand]).toBe(values[i === 3 ? 1 : i]))
-        expect(style.padding).toBe('0px 1px 2px')
+        longhands.forEach((longhand, i) => assert.equal(style[longhand], values[i === 3 ? 1 : i]))
+        assert.equal(style.padding, '0px 1px 2px')
     })
 })
 describe('padding-block, padding-inline', () => {
@@ -3088,18 +3091,18 @@ describe('padding-block, padding-inline', () => {
 
         // Initial longhand values
         style.paddingBlock = '0 0'
-        expect(style).toHaveLength(longhands.length)
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.paddingBlock).toBe('0px')
+        assert.equal(style.length, longhands.length)
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.paddingBlock, '0px')
 
         // Omitted values
         style.paddingBlock = '1px'
-        longhands.forEach(longhand => expect(style[longhand]).toBe('1px'))
-        expect(style.paddingBlock).toBe('1px')
+        longhands.forEach(longhand => assert.equal(style[longhand], '1px'))
+        assert.equal(style.paddingBlock, '1px')
         style.paddingBlock = '0px 1px'
-        expect(style.paddingBlockStart).toBe(initial('padding-block-start'))
-        expect(style.paddingBlockEnd).toBe('1px')
-        expect(style.paddingBlock).toBe('0px 1px')
+        assert.equal(style.paddingBlockStart, initial('padding-block-start'))
+        assert.equal(style.paddingBlockEnd, '1px')
+        assert.equal(style.paddingBlock, '0px 1px')
     })
 })
 describe('place-content', () => {
@@ -3110,22 +3113,22 @@ describe('place-content', () => {
 
         // Initial longhand values
         style.placeContent = 'normal normal'
-        expect(style).toHaveLength(longhands.length)
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.placeContent).toBe('normal')
+        assert.equal(style.length, longhands.length)
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.placeContent, 'normal')
 
         // Omitted values
         style.placeContent = 'normal'
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.placeContent).toBe('normal')
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.placeContent, 'normal')
         style.placeContent = 'normal space-between'
-        expect(style.alignContent).toBe(initial('align-content'))
-        expect(style.justifyContent).toBe('space-between')
-        expect(style.placeContent).toBe('normal space-between')
+        assert.equal(style.alignContent, initial('align-content'))
+        assert.equal(style.justifyContent, 'space-between')
+        assert.equal(style.placeContent, 'normal space-between')
         style.placeContent = 'baseline'
-        expect(style.alignContent).toBe('baseline')
-        expect(style.justifyContent).toBe('start')
-        expect(style.placeContent).toBe('baseline')
+        assert.equal(style.alignContent, 'baseline')
+        assert.equal(style.justifyContent, 'start')
+        assert.equal(style.placeContent, 'baseline')
     })
 })
 describe('place-items', () => {
@@ -3136,18 +3139,18 @@ describe('place-items', () => {
 
         // Initial longhand values
         style.placeItems = 'normal legacy'
-        expect(style).toHaveLength(longhands.length)
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.placeItems).toBe('normal legacy')
+        assert.equal(style.length, longhands.length)
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.placeItems, 'normal legacy')
 
         // Omitted values
         style.placeItems = 'normal'
-        longhands.forEach(longhand => expect(style[longhand]).toBe('normal'))
-        expect(style.placeItems).toBe('normal')
+        longhands.forEach(longhand => assert.equal(style[longhand], 'normal'))
+        assert.equal(style.placeItems, 'normal')
         style.placeItems = 'normal stretch'
-        expect(style.alignItems).toBe(initial('align-items'))
-        expect(style.justifyItems).toBe('stretch')
-        expect(style.placeItems).toBe('normal stretch')
+        assert.equal(style.alignItems, initial('align-items'))
+        assert.equal(style.justifyItems, 'stretch')
+        assert.equal(style.placeItems, 'normal stretch')
     })
 })
 describe('place-self', () => {
@@ -3158,18 +3161,18 @@ describe('place-self', () => {
 
         // Initial longhand values
         style.placeSelf = 'auto auto'
-        expect(style).toHaveLength(longhands.length)
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.placeSelf).toBe('auto')
+        assert.equal(style.length, longhands.length)
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.placeSelf, 'auto')
 
         // Omitted values
         style.placeSelf = 'auto'
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.placeSelf).toBe('auto')
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.placeSelf, 'auto')
         style.placeSelf = 'auto normal'
-        expect(style.alignSelf).toBe(initial('align-self'))
-        expect(style.justifySelf).toBe('normal')
-        expect(style.placeSelf).toBe('auto normal')
+        assert.equal(style.alignSelf, initial('align-self'))
+        assert.equal(style.justifySelf, 'normal')
+        assert.equal(style.placeSelf, 'auto normal')
     })
 })
 describe('pointer-timeline', () => {
@@ -3181,28 +3184,28 @@ describe('pointer-timeline', () => {
 
         // Initial longhand values
         style.pointerTimeline = timeline
-        expect(style).toHaveLength(longhands.length)
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.pointerTimeline).toBe('none')
+        assert.equal(style.length, longhands.length)
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.pointerTimeline, 'none')
 
         // Omitted values
         style.pointerTimeline = 'none'
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.pointerTimeline).toBe('none')
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.pointerTimeline, 'none')
         style.pointerTimeline = 'none inline'
-        expect(style.pointerTimelineName).toBe(initial('pointer-timeline-name'))
-        expect(style.pointerTimelineAxis).toBe('inline')
-        expect(style.pointerTimeline).toBe('none inline')
+        assert.equal(style.pointerTimelineName, initial('pointer-timeline-name'))
+        assert.equal(style.pointerTimelineAxis, 'inline')
+        assert.equal(style.pointerTimeline, 'none inline')
 
         // All longhands cannot be represented
         style.pointerTimelineName = 'none, none'
-        expect(style.pointerTimeline).toBe('')
-        expect(style.cssText).toBe('pointer-timeline-name: none, none; pointer-timeline-axis: inline;')
+        assert.equal(style.pointerTimeline, '')
+        assert.equal(style.cssText, 'pointer-timeline-name: none, none; pointer-timeline-axis: inline;')
 
         // Coordinated value list
         style.pointerTimeline = `${timeline}, ${timeline}`
-        longhands.forEach(longhand => expect(style[longhand]).toBe(`${initial(longhand)}, ${initial(longhand)}`))
-        expect(style.pointerTimeline).toBe('none, none')
+        longhands.forEach(longhand => assert.equal(style[longhand], `${initial(longhand)}, ${initial(longhand)}`))
+        assert.equal(style.pointerTimeline, 'none, none')
     })
 })
 describe('position-try', () => {
@@ -3213,18 +3216,18 @@ describe('position-try', () => {
 
         // Initial longhand values
         style.positionTry = 'normal none'
-        expect(style).toHaveLength(longhands.length)
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.positionTry).toBe('none')
+        assert.equal(style.length, longhands.length)
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.positionTry, 'none')
 
         // Omitted values
         style.positionTry = 'none'
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.positionTry).toBe('none')
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.positionTry, 'none')
         style.positionTry = 'most-width none'
-        expect(style.positionTryOrder).toBe('most-width')
-        expect(style.positionTryFallbacks).toBe(initial('position-try-fallbacks'))
-        expect(style.positionTry).toBe('most-width none')
+        assert.equal(style.positionTryOrder, 'most-width')
+        assert.equal(style.positionTryFallbacks, initial('position-try-fallbacks'))
+        assert.equal(style.positionTry, 'most-width none')
     })
 })
 describe('rule', () => {
@@ -3235,14 +3238,14 @@ describe('rule', () => {
 
         // All equal longhand values
         style.rule = 'medium none currentColor'
-        expect(style).toHaveLength(longhands.length)
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.rule).toBe('medium')
+        assert.equal(style.length, longhands.length)
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.rule, 'medium')
 
         // All longhands cannot be represented
         style.rowRuleWidth = '1px'
-        expect(style.rule).toBe('')
-        expect(style.cssText).toBe('row-rule: 1px; column-rule: medium;')
+        assert.equal(style.rule, '')
+        assert.equal(style.cssText, 'row-rule: 1px; column-rule: medium;')
     })
 })
 describe('rule-break', () => {
@@ -3253,14 +3256,14 @@ describe('rule-break', () => {
 
         // All equal longhand values
         style.ruleBreak = 'spanning-item'
-        expect(style).toHaveLength(longhands.length)
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.ruleBreak).toBe('spanning-item')
+        assert.equal(style.length, longhands.length)
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.ruleBreak, 'spanning-item')
 
         // All longhands cannot be represented
         style.rowRuleBreak = 'none'
-        expect(style.ruleBreak).toBe('')
-        expect(style.cssText).toBe('row-rule-break: none; column-rule-break: spanning-item;')
+        assert.equal(style.ruleBreak, '')
+        assert.equal(style.cssText, 'row-rule-break: none; column-rule-break: spanning-item;')
     })
 })
 describe('rule-color', () => {
@@ -3271,14 +3274,14 @@ describe('rule-color', () => {
 
         // All equal longhand values
         style.ruleColor = 'currentColor'
-        expect(style).toHaveLength(longhands.length)
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.ruleColor).toBe('currentcolor')
+        assert.equal(style.length, longhands.length)
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.ruleColor, 'currentcolor')
 
         // All longhands cannot be represented
         style.rowRuleColor = 'green'
-        expect(style.ruleColor).toBe('')
-        expect(style.cssText).toBe('row-rule-color: green; column-rule-color: currentcolor;')
+        assert.equal(style.ruleColor, '')
+        assert.equal(style.cssText, 'row-rule-color: green; column-rule-color: currentcolor;')
     })
 })
 describe('rule-outset', () => {
@@ -3289,14 +3292,14 @@ describe('rule-outset', () => {
 
         // All equal longhand values
         style.ruleOutset = '50%'
-        expect(style).toHaveLength(longhands.length)
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.ruleOutset).toBe('50%')
+        assert.equal(style.length, longhands.length)
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.ruleOutset, '50%')
 
         // All longhands cannot be represented
         style.rowRuleOutset = '0%'
-        expect(style.ruleOutset).toBe('')
-        expect(style.cssText).toBe('row-rule-outset: 0%; column-rule-outset: 50%;')
+        assert.equal(style.ruleOutset, '')
+        assert.equal(style.cssText, 'row-rule-outset: 0%; column-rule-outset: 50%;')
     })
 })
 describe('rule-style', () => {
@@ -3307,14 +3310,14 @@ describe('rule-style', () => {
 
         // All equal longhand values
         style.ruleStyle = 'none'
-        expect(style).toHaveLength(longhands.length)
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.ruleStyle).toBe('none')
+        assert.equal(style.length, longhands.length)
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.ruleStyle, 'none')
 
         // All longhands cannot be represented
         style.rowRuleStyle = 'solid'
-        expect(style.ruleStyle).toBe('')
-        expect(style.cssText).toBe('row-rule-style: solid; column-rule-style: none;')
+        assert.equal(style.ruleStyle, '')
+        assert.equal(style.cssText, 'row-rule-style: solid; column-rule-style: none;')
     })
 })
 describe('rule-width', () => {
@@ -3325,14 +3328,14 @@ describe('rule-width', () => {
 
         // All equal longhand values
         style.ruleWidth = 'medium'
-        expect(style).toHaveLength(longhands.length)
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.ruleWidth).toBe('medium')
+        assert.equal(style.length, longhands.length)
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.ruleWidth, 'medium')
 
         // All longhands cannot be represented
         style.rowRuleWidth = '1px'
-        expect(style.ruleWidth).toBe('')
-        expect(style.cssText).toBe('row-rule-width: 1px; column-rule-width: medium;')
+        assert.equal(style.ruleWidth, '')
+        assert.equal(style.cssText, 'row-rule-width: 1px; column-rule-width: medium;')
     })
 })
 describe('scroll-margin', () => {
@@ -3343,21 +3346,21 @@ describe('scroll-margin', () => {
 
         // Initial longhand values
         style.scrollMargin = '0 0 0 0'
-        expect(style).toHaveLength(longhands.length)
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.scrollMargin).toBe('0px')
+        assert.equal(style.length, longhands.length)
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.scrollMargin, '0px')
 
         // Omitted values
         const values = ['0px', '1px', '2px']
         style.scrollMargin = '1px'
-        longhands.forEach(longhand => expect(style[longhand]).toBe('1px'))
-        expect(style.scrollMargin).toBe('1px')
+        longhands.forEach(longhand => assert.equal(style[longhand], '1px'))
+        assert.equal(style.scrollMargin, '1px')
         style.scrollMargin = '0px 1px'
-        longhands.forEach((longhand, i) => expect(style[longhand]).toBe(values[i % 2]))
-        expect(style.scrollMargin).toBe('0px 1px')
+        longhands.forEach((longhand, i) => assert.equal(style[longhand], values[i % 2]))
+        assert.equal(style.scrollMargin, '0px 1px')
         style.scrollMargin = '0px 1px 2px'
-        longhands.forEach((longhand, i) => expect(style[longhand]).toBe(values[i === 3 ? 1 : i]))
-        expect(style.scrollMargin).toBe('0px 1px 2px')
+        longhands.forEach((longhand, i) => assert.equal(style[longhand], values[i === 3 ? 1 : i]))
+        assert.equal(style.scrollMargin, '0px 1px 2px')
     })
 })
 describe('scroll-margin-block, scroll-margin-inline', () => {
@@ -3368,18 +3371,18 @@ describe('scroll-margin-block, scroll-margin-inline', () => {
 
         // Initial longhand values
         style.scrollMarginBlock = '0 0'
-        expect(style).toHaveLength(longhands.length)
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.scrollMarginBlock).toBe('0px')
+        assert.equal(style.length, longhands.length)
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.scrollMarginBlock, '0px')
 
         // Omitted values
         style.scrollMarginBlock = '1px'
-        longhands.forEach(longhand => expect(style[longhand]).toBe('1px'))
-        expect(style.scrollMarginBlock).toBe('1px')
+        longhands.forEach(longhand => assert.equal(style[longhand], '1px'))
+        assert.equal(style.scrollMarginBlock, '1px')
         style.scrollMarginBlock = '0px 1px'
-        expect(style.scrollMarginBlockStart).toBe(initial('scroll-margin-block-start'))
-        expect(style.scrollMarginBlockEnd).toBe('1px')
-        expect(style.scrollMarginBlock).toBe('0px 1px')
+        assert.equal(style.scrollMarginBlockStart, initial('scroll-margin-block-start'))
+        assert.equal(style.scrollMarginBlockEnd, '1px')
+        assert.equal(style.scrollMarginBlock, '0px 1px')
     })
 })
 describe('scroll-padding', () => {
@@ -3390,21 +3393,21 @@ describe('scroll-padding', () => {
 
         // Initial longhand values
         style.scrollPadding = 'auto auto auto auto'
-        expect(style).toHaveLength(longhands.length)
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.scrollPadding).toBe('auto')
+        assert.equal(style.length, longhands.length)
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.scrollPadding, 'auto')
 
         // Omitted values
         const values = ['0px', '1px', '2px']
         style.scrollPadding = '1px'
-        longhands.forEach(longhand => expect(style[longhand]).toBe('1px'))
-        expect(style.scrollPadding).toBe('1px')
+        longhands.forEach(longhand => assert.equal(style[longhand], '1px'))
+        assert.equal(style.scrollPadding, '1px')
         style.scrollPadding = '0px 1px'
-        longhands.forEach((longhand, i) => expect(style[longhand]).toBe(values[i % 2]))
-        expect(style.scrollPadding).toBe('0px 1px')
+        longhands.forEach((longhand, i) => assert.equal(style[longhand], values[i % 2]))
+        assert.equal(style.scrollPadding, '0px 1px')
         style.scrollPadding = '0px 1px 2px'
-        longhands.forEach((longhand, i) => expect(style[longhand]).toBe(values[i === 3 ? 1 : i]))
-        expect(style.scrollPadding).toBe('0px 1px 2px')
+        longhands.forEach((longhand, i) => assert.equal(style[longhand], values[i === 3 ? 1 : i]))
+        assert.equal(style.scrollPadding, '0px 1px 2px')
     })
 })
 describe('scroll-padding-block, scroll-padding-inline', () => {
@@ -3415,18 +3418,18 @@ describe('scroll-padding-block, scroll-padding-inline', () => {
 
         // Initial longhand values
         style.scrollPaddingBlock = 'auto auto'
-        expect(style).toHaveLength(longhands.length)
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.scrollPaddingBlock).toBe('auto')
+        assert.equal(style.length, longhands.length)
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.scrollPaddingBlock, 'auto')
 
         // Omitted values
         style.scrollPaddingBlock = 'auto'
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.scrollPaddingBlock).toBe('auto')
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.scrollPaddingBlock, 'auto')
         style.scrollPaddingBlock = 'auto 1px'
-        expect(style.scrollPaddingBlockStart).toBe(initial('scroll-padding-block-start'))
-        expect(style.scrollPaddingBlockEnd).toBe('1px')
-        expect(style.scrollPaddingBlock).toBe('auto 1px')
+        assert.equal(style.scrollPaddingBlockStart, initial('scroll-padding-block-start'))
+        assert.equal(style.scrollPaddingBlockEnd, '1px')
+        assert.equal(style.scrollPaddingBlock, 'auto 1px')
     })
 })
 describe('scroll-timeline', () => {
@@ -3438,35 +3441,35 @@ describe('scroll-timeline', () => {
 
         // Initial longhand values
         style.scrollTimeline = timeline
-        expect(style).toHaveLength(longhands.length)
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.scrollTimeline).toBe('none')
+        assert.equal(style.length, longhands.length)
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.scrollTimeline, 'none')
 
         // Omitted values
         style.scrollTimeline = 'none'
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.scrollTimeline).toBe('none')
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.scrollTimeline, 'none')
         style.scrollTimeline = 'none inline'
-        expect(style.scrollTimelineName).toBe(initial('scroll-timeline-name'))
-        expect(style.scrollTimelineAxis).toBe('inline')
-        expect(style.scrollTimeline).toBe('none inline')
+        assert.equal(style.scrollTimelineName, initial('scroll-timeline-name'))
+        assert.equal(style.scrollTimelineAxis, 'inline')
+        assert.equal(style.scrollTimeline, 'none inline')
 
         // All longhands cannot be represented
         style.scrollTimelineName = 'none, none'
-        expect(style.scrollTimeline).toBe('')
-        expect(style.cssText).toBe('scroll-timeline-name: none, none; scroll-timeline-axis: inline;')
+        assert.equal(style.scrollTimeline, '')
+        assert.equal(style.cssText, 'scroll-timeline-name: none, none; scroll-timeline-axis: inline;')
 
         // Coordinated value list
         style.scrollTimeline = `${timeline}, ${timeline}`
-        longhands.forEach(longhand => expect(style[longhand]).toBe(`${initial(longhand)}, ${initial(longhand)}`))
-        expect(style.scrollTimeline).toBe('none, none')
+        longhands.forEach(longhand => assert.equal(style[longhand], `${initial(longhand)}, ${initial(longhand)}`))
+        assert.equal(style.scrollTimeline, 'none, none')
     })
 })
 describe('text-align', () => {
     test('invalid', () => {
         const style = createStyleBlock()
         style.textAlign = '"12"'
-        expect(style).toHaveLength(0)
+        assert.equal(style.length, 0)
     })
     test('expansion and reification', () => {
 
@@ -3475,31 +3478,31 @@ describe('text-align', () => {
 
         // Initial longhand values (not all longhands can be explicitly declared)
         style.textAlign = 'start'
-        expect(style).toHaveLength(longhands.length)
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.textAlign).toBe('start')
+        assert.equal(style.length, longhands.length)
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.textAlign, 'start')
 
         // justify-all
         style.textAlign = 'justify-all'
-        longhands.forEach(longhand => expect(style[longhand]).toBe('justify'))
-        expect(style.textAlign).toBe('justify-all')
+        longhands.forEach(longhand => assert.equal(style[longhand], 'justify'))
+        assert.equal(style.textAlign, 'justify-all')
 
         // match-parent
         style.textAlign = 'match-parent'
-        longhands.forEach(longhand => expect(style[longhand]).toBe('match-parent'))
-        expect(style.textAlign).toBe('match-parent')
+        longhands.forEach(longhand => assert.equal(style[longhand], 'match-parent'))
+        assert.equal(style.textAlign, 'match-parent')
 
         // All longhands cannot be represented
         style.textAlignLast = initial('text-align-last')
-        expect(style.textAlign).toBe('')
-        expect(style.cssText).toBe('text-align-all: match-parent; text-align-last: auto;')
+        assert.equal(style.textAlign, '')
+        assert.equal(style.cssText, 'text-align-all: match-parent; text-align-last: auto;')
         style.textAlignAll = 'justify'
         style.textAlignLast = 'start'
-        expect(style.textAlign).toBe('')
-        expect(style.cssText).toBe('text-align-all: justify; text-align-last: start;')
+        assert.equal(style.textAlign, '')
+        assert.equal(style.cssText, 'text-align-all: justify; text-align-last: start;')
         style.textAlignAll = initial('text-align-all')
-        expect(style.textAlign).toBe('')
-        expect(style.cssText).toBe('text-align-all: start; text-align-last: start;')
+        assert.equal(style.textAlign, '')
+        assert.equal(style.cssText, 'text-align-all: start; text-align-last: start;')
     })
 })
 describe('text-box', () => {
@@ -3510,9 +3513,9 @@ describe('text-box', () => {
 
         // Initial longhand values
         style.textBox = 'none auto'
-        expect(style).toHaveLength(longhands.length)
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.textBox).toBe('normal')
+        assert.equal(style.length, longhands.length)
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.textBox, 'normal')
 
         // Omitted values
         const values = [
@@ -3524,8 +3527,8 @@ describe('text-box', () => {
         ]
         values.forEach(([input, declared = {}, expected = input]) => {
             style.textBox = input
-            longhands.forEach(longhand => expect(style[longhand]).toBe(declared[longhand] ?? initial(longhand)))
-            expect(style.textBox).toBe(expected)
+            longhands.forEach(longhand => assert.equal(style[longhand], declared[longhand] ?? initial(longhand)))
+            assert.equal(style.textBox, expected)
         })
     })
 })
@@ -3537,18 +3540,18 @@ describe('text-decoration', () => {
 
         // Initial longhand values
         style.textDecoration = 'none auto solid currentColor'
-        expect(style).toHaveLength(longhands.length)
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.textDecoration).toBe('none')
+        assert.equal(style.length, longhands.length)
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.textDecoration, 'none')
 
         // Omitted values
         style.textDecoration = 'none'
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.textDecoration).toBe('none')
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.textDecoration, 'none')
         style.textDecoration = 'from-font'
         longhands.forEach(longhand =>
-            expect(style[longhand]).toBe(longhand === 'text-decoration-thickness' ? 'from-font' : initial(longhand)))
-        expect(style.textDecoration).toBe('from-font')
+            assert.equal(style[longhand], longhand === 'text-decoration-thickness' ? 'from-font' : initial(longhand)))
+        assert.equal(style.textDecoration, 'from-font')
     })
 })
 describe('text-decoration-skip', () => {
@@ -3559,20 +3562,20 @@ describe('text-decoration-skip', () => {
 
         // All equal longhand values
         style.textDecorationSkip = 'auto'
-        expect(style).toHaveLength(longhands.length)
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.textDecorationSkip).toBe('auto')
+        assert.equal(style.length, longhands.length)
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.textDecorationSkip, 'auto')
 
         // none
         style.textDecorationSkip = 'none'
         longhands.forEach(longhand =>
-            expect(style[longhand]).toBe(longhand === 'text-decoration-skip-self' ? 'no-skip' : 'none'))
-        expect(style.textDecorationSkip).toBe('none')
+            assert.equal(style[longhand], longhand === 'text-decoration-skip-self' ? 'no-skip' : 'none'))
+        assert.equal(style.textDecorationSkip, 'none')
 
         // All longhands cannot be represented
         style.textDecorationSkipSelf = 'skip-all'
-        expect(style.textDecorationSkip).toBe('')
-        expect(style.cssText).toBe('text-decoration-skip-self: skip-all; text-decoration-skip-box: none; text-decoration-skip-spaces: none; text-decoration-skip-ink: none;')
+        assert.equal(style.textDecorationSkip, '')
+        assert.equal(style.cssText, 'text-decoration-skip-self: skip-all; text-decoration-skip-box: none; text-decoration-skip-spaces: none; text-decoration-skip-ink: none;')
     })
 })
 describe('text-emphasis', () => {
@@ -3583,18 +3586,18 @@ describe('text-emphasis', () => {
 
         // Initial longhand values
         style.textEmphasis = 'none currentColor'
-        expect(style).toHaveLength(longhands.length)
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.textEmphasis).toBe('none')
+        assert.equal(style.length, longhands.length)
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.textEmphasis, 'none')
 
         // Omitted values
         style.textEmphasis = 'none'
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.textEmphasis).toBe('none')
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.textEmphasis, 'none')
         style.textEmphasis = 'green'
-        expect(style.textEmphasisStyle).toBe(initial('text-emphasis-style'))
-        expect(style.textEmphasisColor).toBe('green')
-        expect(style.textEmphasis).toBe('green')
+        assert.equal(style.textEmphasisStyle, initial('text-emphasis-style'))
+        assert.equal(style.textEmphasisColor, 'green')
+        assert.equal(style.textEmphasis, 'green')
     })
 })
 describe('text-spacing', () => {
@@ -3605,45 +3608,45 @@ describe('text-spacing', () => {
 
         // Initial longhand values (not all longhands can be explicitly declared)
         style.textSpacing = 'normal'
-        expect(style).toHaveLength(longhands.length)
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.textSpacing).toBe('normal')
+        assert.equal(style.length, longhands.length)
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.textSpacing, 'normal')
 
         // Omitted values
         style.textSpacing = 'space-all'
-        expect(style.textSpacingTrim).toBe('space-all')
-        expect(style.textAutospace).toBe(initial('text-autospace'))
-        expect(style.textSpacing).toBe('space-all')
+        assert.equal(style.textSpacingTrim, 'space-all')
+        assert.equal(style.textAutospace, initial('text-autospace'))
+        assert.equal(style.textSpacing, 'space-all')
         style.textSpacing = 'no-autospace'
-        expect(style.textSpacingTrim).toBe(initial('text-spacing-trim'))
-        expect(style.textAutospace).toBe('no-autospace')
-        expect(style.textSpacing).toBe('no-autospace')
+        assert.equal(style.textSpacingTrim, initial('text-spacing-trim'))
+        assert.equal(style.textAutospace, 'no-autospace')
+        assert.equal(style.textSpacing, 'no-autospace')
         style.textSpacing = 'ideograph-alpha ideograph-numeric'
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.textSpacing).toBe('normal')
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.textSpacing, 'normal')
 
         // none
         style.textSpacing = 'none'
-        expect(style.textSpacingTrim).toBe('space-all')
-        expect(style.textAutospace).toBe('no-autospace')
-        expect(style.textSpacing).toBe('none')
+        assert.equal(style.textSpacingTrim, 'space-all')
+        assert.equal(style.textAutospace, 'no-autospace')
+        assert.equal(style.textSpacing, 'none')
 
         // auto
         style.textSpacing = 'auto'
-        longhands.forEach(longhand => expect(style[longhand]).toBe('auto'))
-        expect(style.textSpacing).toBe('auto')
+        longhands.forEach(longhand => assert.equal(style[longhand], 'auto'))
+        assert.equal(style.textSpacing, 'auto')
 
         // All longhands cannot be represented
         style.textAutospace = initial('text-autospace')
-        expect(style.textSpacing).toBe('')
-        expect(style.cssText).toBe('text-spacing-trim: auto; text-autospace: normal;')
+        assert.equal(style.textSpacing, '')
+        assert.equal(style.cssText, 'text-spacing-trim: auto; text-autospace: normal;')
         style.textAutospace = 'no-autospace'
-        expect(style.textSpacing).toBe('')
-        expect(style.cssText).toBe('text-spacing-trim: auto; text-autospace: no-autospace;')
+        assert.equal(style.textSpacing, '')
+        assert.equal(style.cssText, 'text-spacing-trim: auto; text-autospace: no-autospace;')
         style.textSpacingTrim = 'space-all'
         style.textAutospace = 'auto'
-        expect(style.textSpacing).toBe('')
-        expect(style.cssText).toBe('text-spacing-trim: space-all; text-autospace: auto;')
+        assert.equal(style.textSpacing, '')
+        assert.equal(style.cssText, 'text-spacing-trim: space-all; text-autospace: auto;')
     })
 })
 describe('text-wrap', () => {
@@ -3654,18 +3657,18 @@ describe('text-wrap', () => {
 
         // Initial longhand values
         style.textWrap = 'wrap auto'
-        expect(style).toHaveLength(longhands.length)
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.textWrap).toBe('wrap')
+        assert.equal(style.length, longhands.length)
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.textWrap, 'wrap')
 
         // Omitted values
         style.textWrap = 'wrap'
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.textWrap).toBe('wrap')
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.textWrap, 'wrap')
         style.textWrap = 'balance'
-        expect(style.textWrapMode).toBe(initial('text-wrap-mode'))
-        expect(style.textWrapStyle).toBe('balance')
-        expect(style.textWrap).toBe('balance')
+        assert.equal(style.textWrapMode, initial('text-wrap-mode'))
+        assert.equal(style.textWrapStyle, 'balance')
+        assert.equal(style.textWrap, 'balance')
     })
 })
 describe('timeline-trigger', () => {
@@ -3676,9 +3679,9 @@ describe('timeline-trigger', () => {
 
         // Initial longhand values
         style.timelineTrigger = 'none auto normal normal / auto auto'
-        expect(style).toHaveLength(longhands.length)
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.timelineTrigger).toBe('none')
+        assert.equal(style.length, longhands.length)
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.timelineTrigger, 'none')
 
         // Omitted values
         const values = [
@@ -3701,19 +3704,19 @@ describe('timeline-trigger', () => {
         ]
         values.forEach(([input, declared = {}, expected = input]) => {
             style.timelineTrigger = input
-            longhands.forEach(longhand => expect(style[longhand]).toBe(declared[longhand] ?? initial(longhand)))
-            expect(style.timelineTrigger).toBe(expected)
+            longhands.forEach(longhand => assert.equal(style[longhand], declared[longhand] ?? initial(longhand)))
+            assert.equal(style.timelineTrigger, expected)
         })
 
         // All longhands cannot be represented
         style.timelineTriggerName = '--trigger, --trigger'
-        expect(style.timelineTrigger).toBe('')
-        expect(style.cssText).toBe('timeline-trigger-name: --trigger, --trigger; timeline-trigger-source: auto; timeline-trigger-range: normal; timeline-trigger-exit-range: entry;')
+        assert.equal(style.timelineTrigger, '')
+        assert.equal(style.cssText, 'timeline-trigger-name: --trigger, --trigger; timeline-trigger-source: auto; timeline-trigger-range: normal; timeline-trigger-exit-range: entry;')
 
         // Coordinated value list
         style.timelineTrigger = 'none auto normal, none auto normal'
-        longhands.forEach(longhand => expect(style[longhand]).toBe(`${initial(longhand)}, ${initial(longhand)}`))
-        expect(style.timelineTrigger).toBe('none auto normal, none auto normal')
+        longhands.forEach(longhand => assert.equal(style[longhand], `${initial(longhand)}, ${initial(longhand)}`))
+        assert.equal(style.timelineTrigger, 'none auto normal, none auto normal')
     })
 })
 describe('timeline-trigger-exit-range', () => {
@@ -3724,9 +3727,9 @@ describe('timeline-trigger-exit-range', () => {
 
         // Initial longhand values
         style.timelineTriggerExitRange = 'auto auto'
-        expect(style).toHaveLength(longhands.length)
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.timelineTriggerExitRange).toBe('auto')
+        assert.equal(style.length, longhands.length)
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.timelineTriggerExitRange, 'auto')
 
         // Omitted values
         const values = [
@@ -3742,20 +3745,20 @@ describe('timeline-trigger-exit-range', () => {
         ]
         values.forEach(([input, start = input, end = input, expected = input]) => {
             style.timelineTriggerExitRange = input
-            expect(style.timelineTriggerExitRangeStart).toBe(start)
-            expect(style.timelineTriggerExitRangeEnd).toBe(end)
-            expect(style.timelineTriggerExitRange).toBe(expected)
+            assert.equal(style.timelineTriggerExitRangeStart, start)
+            assert.equal(style.timelineTriggerExitRangeEnd, end)
+            assert.equal(style.timelineTriggerExitRange, expected)
         })
 
         // All longhands cannot be represented
         style.timelineTriggerExitRangeStart = 'auto, auto'
-        expect(style.animationRange).toBe('')
-        expect(style.cssText).toBe('timeline-trigger-exit-range-start: auto, auto; timeline-trigger-exit-range-end: auto;')
+        assert.equal(style.animationRange, '')
+        assert.equal(style.cssText, 'timeline-trigger-exit-range-start: auto, auto; timeline-trigger-exit-range-end: auto;')
 
         // Coordinated value list
         style.timelineTriggerExitRange = 'auto, auto'
-        longhands.forEach(longhand => expect(style[longhand]).toBe(`${initial(longhand)}, ${initial(longhand)}`))
-        expect(style.timelineTriggerExitRange).toBe('auto, auto')
+        longhands.forEach(longhand => assert.equal(style[longhand], `${initial(longhand)}, ${initial(longhand)}`))
+        assert.equal(style.timelineTriggerExitRange, 'auto, auto')
     })
 })
 describe('timeline-trigger-range', () => {
@@ -3766,9 +3769,9 @@ describe('timeline-trigger-range', () => {
 
         // Initial longhand values
         style.timelineTriggerRange = 'normal normal'
-        expect(style).toHaveLength(longhands.length)
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.timelineTriggerRange).toBe('normal')
+        assert.equal(style.length, longhands.length)
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.timelineTriggerRange, 'normal')
 
         // Omitted values
         const values = [
@@ -3784,20 +3787,20 @@ describe('timeline-trigger-range', () => {
         ]
         values.forEach(([input, start = input, end = input, expected = input]) => {
             style.timelineTriggerRange = input
-            expect(style.timelineTriggerRangeStart).toBe(start)
-            expect(style.timelineTriggerRangeEnd).toBe(end)
-            expect(style.timelineTriggerRange).toBe(expected)
+            assert.equal(style.timelineTriggerRangeStart, start)
+            assert.equal(style.timelineTriggerRangeEnd, end)
+            assert.equal(style.timelineTriggerRange, expected)
         })
 
         // All longhands cannot be represented
         style.timelineTriggerRangeStart = 'normal, normal'
-        expect(style.animationRange).toBe('')
-        expect(style.cssText).toBe('timeline-trigger-range-start: normal, normal; timeline-trigger-range-end: normal;')
+        assert.equal(style.animationRange, '')
+        assert.equal(style.cssText, 'timeline-trigger-range-start: normal, normal; timeline-trigger-range-end: normal;')
 
         // Coordinated value list
         style.timelineTriggerRange = 'normal, normal'
-        longhands.forEach(longhand => expect(style[longhand]).toBe(`${initial(longhand)}, ${initial(longhand)}`))
-        expect(style.timelineTriggerRange).toBe('normal, normal')
+        longhands.forEach(longhand => assert.equal(style[longhand], `${initial(longhand)}, ${initial(longhand)}`))
+        assert.equal(style.timelineTriggerRange, 'normal, normal')
     })
 })
 describe('transition', () => {
@@ -3809,28 +3812,28 @@ describe('transition', () => {
 
         // Initial longhand values
         style.transition = transition
-        expect(style).toHaveLength(longhands.length)
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.transition).toBe('0s')
+        assert.equal(style.length, longhands.length)
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.transition, '0s')
 
         // Omitted values
         style.transition = '0s'
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.transition).toBe('0s')
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.transition, '0s')
         style.transition = 'linear'
         longhands.forEach(longhand =>
-            expect(style[longhand]).toBe(longhand === 'transition-timing-function' ? 'linear' : initial(longhand)))
-        expect(style.transition).toBe('linear')
+            assert.equal(style[longhand], longhand === 'transition-timing-function' ? 'linear' : initial(longhand)))
+        assert.equal(style.transition, 'linear')
 
         // All longhands cannot be represented
         style.transitionProperty = 'none, none'
-        expect(style.transition).toBe('')
-        expect(style.cssText).toBe('transition-duration: 0s; transition-timing-function: linear; transition-delay: 0s; transition-behavior: normal; transition-property: none, none;')
+        assert.equal(style.transition, '')
+        assert.equal(style.cssText, 'transition-duration: 0s; transition-timing-function: linear; transition-delay: 0s; transition-behavior: normal; transition-property: none, none;')
 
         // Coordinated value list
         style.transition = `${transition}, ${transition}`
-        longhands.forEach(longhand => expect(style[longhand]).toBe(`${initial(longhand)}, ${initial(longhand)}`))
-        expect(style.transition).toBe('0s, 0s')
+        longhands.forEach(longhand => assert.equal(style[longhand], `${initial(longhand)}, ${initial(longhand)}`))
+        assert.equal(style.transition, '0s, 0s')
     })
 })
 describe('vertical-align', () => {
@@ -3838,7 +3841,7 @@ describe('vertical-align', () => {
         const style = createStyleBlock()
         style.verticalAlign = 'text-before-edge'
         style.verticalAlign = 'text-after-edge'
-        expect(style).toHaveLength(0)
+        assert.equal(style.length, 0)
     })
     test('expansion and reification', () => {
 
@@ -3847,22 +3850,22 @@ describe('vertical-align', () => {
 
         // Initial longhand values (not all longhands can be explicitly declared)
         style.verticalAlign = 'baseline 0'
-        expect(style).toHaveLength(longhands.length)
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.verticalAlign).toBe('baseline')
+        assert.equal(style.length, longhands.length)
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.verticalAlign, 'baseline')
 
         // Omitted values
         style.verticalAlign = 'baseline'
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.verticalAlign).toBe('baseline')
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.verticalAlign, 'baseline')
         style.verticalAlign = 'first'
         longhands.forEach(longhand =>
-            expect(style[longhand]).toBe(longhand === 'baseline-source' ? 'first' : initial(longhand)))
-        expect(style.verticalAlign).toBe('first')
+            assert.equal(style[longhand], longhand === 'baseline-source' ? 'first' : initial(longhand)))
+        assert.equal(style.verticalAlign, 'first')
         style.verticalAlign = '1px'
         longhands.forEach(longhand =>
-            expect(style[longhand]).toBe(longhand === 'baseline-shift' ? '1px' : initial(longhand)))
-        expect(style.verticalAlign).toBe('1px')
+            assert.equal(style[longhand], longhand === 'baseline-shift' ? '1px' : initial(longhand)))
+        assert.equal(style.verticalAlign, '1px')
     })
 })
 describe('view-timeline', () => {
@@ -3874,9 +3877,9 @@ describe('view-timeline', () => {
 
         // Initial longhand values
         style.viewTimeline = timeline
-        expect(style).toHaveLength(longhands.length)
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.viewTimeline).toBe('none')
+        assert.equal(style.length, longhands.length)
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.viewTimeline, 'none')
 
         // Omitted values
         const values = [
@@ -3886,19 +3889,19 @@ describe('view-timeline', () => {
         ]
         values.forEach(([input, declared = {}]) => {
             style.viewTimeline = input
-            longhands.forEach(longhand => expect(style[longhand]).toBe(declared[longhand] ?? initial(longhand)))
-            expect(style.viewTimeline).toBe(input)
+            longhands.forEach(longhand => assert.equal(style[longhand], declared[longhand] ?? initial(longhand)))
+            assert.equal(style.viewTimeline, input)
         })
 
         // All longhands cannot be represented
         style.viewTimelineName = 'none, none'
-        expect(style.viewTimeline).toBe('')
-        expect(style.cssText).toBe('view-timeline-name: none, none; view-timeline-axis: block; view-timeline-inset: 1px;')
+        assert.equal(style.viewTimeline, '')
+        assert.equal(style.cssText, 'view-timeline-name: none, none; view-timeline-axis: block; view-timeline-inset: 1px;')
 
         // Coordinated value list
         style.viewTimeline = `${timeline}, ${timeline}`
-        longhands.forEach(longhand => expect(style[longhand]).toBe(`${initial(longhand)}, ${initial(longhand)}`))
-        expect(style.viewTimeline).toBe('none, none')
+        longhands.forEach(longhand => assert.equal(style[longhand], `${initial(longhand)}, ${initial(longhand)}`))
+        assert.equal(style.viewTimeline, 'none, none')
     })
 })
 describe('white-space', () => {
@@ -3909,24 +3912,24 @@ describe('white-space', () => {
 
         // Initial longhand values
         style.whiteSpace = 'collapse wrap none'
-        expect(style).toHaveLength(longhands.length)
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.whiteSpace).toBe('normal')
+        assert.equal(style.length, longhands.length)
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.whiteSpace, 'normal')
 
         // Omitted values
         style.whiteSpace = 'collapse'
-        longhands.forEach(longhand => expect(style[longhand]).toBe(initial(longhand)))
-        expect(style.whiteSpace).toBe('normal')
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.whiteSpace, 'normal')
         style.whiteSpace = 'nowrap'
         longhands.forEach(longhand =>
-            expect(style[longhand]).toBe(longhand === 'text-wrap-mode' ? 'nowrap' : initial(longhand)))
-        expect(style.whiteSpace).toBe('nowrap')
+            assert.equal(style[longhand], longhand === 'text-wrap-mode' ? 'nowrap' : initial(longhand)))
+        assert.equal(style.whiteSpace, 'nowrap')
 
         // normal, pre, pre-line, pre-wrap
         whiteSpace.mapping.forEach((mapping, keyword) => {
             style.whiteSpace = keyword
-            longhands.forEach((longhand, index) => expect(style[longhand]).toBe(mapping[index].value))
-            expect(style.whiteSpace).toBe(keyword)
+            longhands.forEach((longhand, i) => assert.equal(style[longhand], mapping[i].value))
+            assert.equal(style.whiteSpace, keyword)
         })
     })
 })
@@ -3963,61 +3966,61 @@ describe('CSSFontFaceDescriptors', () => {
             style.fontWeight = fontWeight
             style.sizeAdjust = sizeAdjust
         })
-        expect(style).toHaveLength(0)
+        assert.equal(style.length, 0)
     })
     test('valid', () => {
 
         const style = CSSFontFaceDescriptors.create(globalThis, undefined, { parentRule: fontFaceRule })
 
         // Alias
-        expect(style.fontStretch).toBe(style.fontWidth)
+        assert.equal(style.fontStretch, style.fontWidth)
         style.fontStretch = 'condensed'
-        expect(style.fontStretch).toBe('condensed')
-        expect(style.fontWidth).toBe('condensed')
+        assert.equal(style.fontStretch, 'condensed')
+        assert.equal(style.fontWidth, 'condensed')
 
         // Dependency-free substitution
         style.fontWeight = 'env(name, attr(name))'
         style.sizeAdjust = 'env(name, attr(name))'
-        expect(style.fontWeight).toBe('env(name, attr(name))')
-        expect(style.sizeAdjust).toBe('env(name, attr(name))')
+        assert.equal(style.fontWeight, 'env(name, attr(name))')
+        assert.equal(style.sizeAdjust, 'env(name, attr(name))')
         style.fontWeight = 'if(media(width): 1)'
         style.sizeAdjust = 'if(media(width): 1%)'
-        expect(style.fontWeight).toBe('if(media(width): 1)')
-        expect(style.sizeAdjust).toBe('if(media(width): 1%)')
+        assert.equal(style.fontWeight, 'if(media(width): 1)')
+        assert.equal(style.sizeAdjust, 'if(media(width): 1%)')
         style.fontWeight = 'first-valid(1)'
         style.sizeAdjust = 'first-valid(1%)'
-        expect(style.fontWeight).toBe('1')
-        expect(style.sizeAdjust).toBe('1%')
+        assert.equal(style.fontWeight, '1')
+        assert.equal(style.sizeAdjust, '1%')
         style.fontWeight = 'calc(progress(1, 0, 1))'
         style.sizeAdjust = 'calc(1% * progress(1, 0, 1))'
-        expect(style.fontWeight).toBe('calc(1)')
-        expect(style.sizeAdjust).toBe('calc(1%)')
+        assert.equal(style.fontWeight, 'calc(1)')
+        assert.equal(style.sizeAdjust, 'calc(1%)')
 
         // Specific serialization rule
         style.ascentOverride = '1% 1%'
-        expect(style.ascentOverride).toBe('1%')
+        assert.equal(style.ascentOverride, '1%')
         style.descentOverride = '1% 1%'
-        expect(style.descentOverride).toBe('1%')
+        assert.equal(style.descentOverride, '1%')
         style.fontSize = '1 1'
-        expect(style.fontSize).toBe('1')
+        assert.equal(style.fontSize, '1')
         style.fontWidth = 'normal normal'
-        expect(style.fontWidth).toBe('normal')
+        assert.equal(style.fontWidth, 'normal')
         style.fontStyle = 'oblique 0deg'
-        expect(style.fontStyle).toBe('normal')
+        assert.equal(style.fontStyle, 'normal')
         style.fontStyle = 'oblique 1deg 1deg'
-        expect(style.fontStyle).toBe('oblique 1deg')
+        assert.equal(style.fontStyle, 'oblique 1deg')
         style.fontWeight = 'normal normal'
-        expect(style.fontWeight).toBe('normal')
+        assert.equal(style.fontWeight, 'normal')
         style.lineGapOverride = '1% 1%'
-        expect(style.lineGapOverride).toBe('1%')
+        assert.equal(style.lineGapOverride, '1%')
         style.subscriptPositionOverride = '1% 1%'
-        expect(style.subscriptPositionOverride).toBe('1%')
+        assert.equal(style.subscriptPositionOverride, '1%')
         style.subscriptSizeOverride = '1% 1%'
-        expect(style.subscriptSizeOverride).toBe('1%')
+        assert.equal(style.subscriptSizeOverride, '1%')
         style.superscriptPositionOverride = '1% 1%'
-        expect(style.superscriptPositionOverride).toBe('1%')
+        assert.equal(style.superscriptPositionOverride, '1%')
         style.superscriptSizeOverride = '1% 1%'
-        expect(style.superscriptSizeOverride).toBe('1%')
+        assert.equal(style.superscriptSizeOverride, '1%')
     })
 })
 describe('CSSFunctionDescriptors', () => {
@@ -4030,7 +4033,7 @@ describe('CSSFunctionDescriptors', () => {
         // Priority
         style.setProperty('result', '1', 'important')
 
-        expect(style).toHaveLength(0)
+        assert.equal(style.length, 0)
     })
 })
 describe('CSSKeyframeProperties', () => {
@@ -4043,7 +4046,7 @@ describe('CSSKeyframeProperties', () => {
         // Priority
         style.setProperty('font-weight', '1', 'important')
 
-        expect(style).toHaveLength(0)
+        assert.equal(style.length, 0)
     })
     test('valid', () => {
 
@@ -4051,45 +4054,45 @@ describe('CSSKeyframeProperties', () => {
 
         // Custom property
         style.setProperty('--custom', 'green')
-        expect(style.getPropertyValue('--custom')).toBe('green')
+        assert.equal(style.getPropertyValue('--custom'), 'green')
 
         // Dependency-free substitution
         style.fontWeight = 'env(name)'
-        expect(style.fontWeight).toBe('env(name)')
+        assert.equal(style.fontWeight, 'env(name)')
         style.fontWeight = 'if(media(width): 1)'
-        expect(style.fontWeight).toBe('if(media(width): 1)')
+        assert.equal(style.fontWeight, 'if(media(width): 1)')
         style.fontWeight = 'first-valid(1)'
-        expect(style.fontWeight).toBe('1')
+        assert.equal(style.fontWeight, '1')
         style.fontWeight = 'calc(progress(1, 0, 1))'
-        expect(style.fontWeight).toBe('calc(1)')
+        assert.equal(style.fontWeight, 'calc(1)')
 
         // Cascade or element-dependent value
         style.fontWeight = 'initial'
-        expect(style.fontWeight).toBe('initial')
+        assert.equal(style.fontWeight, 'initial')
         style.fontWeight = 'inherit(--custom)'
-        expect(style.fontWeight).toBe('inherit(--custom)')
+        assert.equal(style.fontWeight, 'inherit(--custom)')
         style.fontWeight = 'var(--custom)'
-        expect(style.fontWeight).toBe('var(--custom)')
+        assert.equal(style.fontWeight, 'var(--custom)')
 
         // Element-dependent value
         style.fontWeight = '--custom()'
-        expect(style.fontWeight).toBe('--custom()')
+        assert.equal(style.fontWeight, '--custom()')
         style.fontWeight = 'attr(name)'
-        expect(style.fontWeight).toBe('attr(name)')
+        assert.equal(style.fontWeight, 'attr(name)')
         style.fontWeight = 'random-item(--key, 1)'
-        expect(style.fontWeight).toBe('random-item(--key, 1)')
+        assert.equal(style.fontWeight, 'random-item(--key, 1)')
         style.fontWeight = 'interpolate(0, 0: 1)'
-        expect(style.fontWeight).toBe('interpolate(0, 0: 1)')
+        assert.equal(style.fontWeight, 'interpolate(0, 0: 1)')
         style.fontWeight = 'toggle(1)'
-        expect(style.fontWeight).toBe('toggle(1)')
+        assert.equal(style.fontWeight, 'toggle(1)')
         style.fontWeight = 'calc-interpolate(0, 0: 1)'
-        expect(style.fontWeight).toBe('calc-interpolate(0, 0: 1)')
+        assert.equal(style.fontWeight, 'calc-interpolate(0, 0: 1)')
         style.fontWeight = 'random(1, 1)'
-        expect(style.fontWeight).toBe('random(1, 1)')
+        assert.equal(style.fontWeight, 'random(1, 1)')
         style.fontWeight = 'sibling-count()'
-        expect(style.fontWeight).toBe('sibling-count()')
+        assert.equal(style.fontWeight, 'sibling-count()')
         style.color = 'color-interpolate(0, 0: green)'
-        expect(style.color).toBe('color-interpolate(0, 0: green)')
+        assert.equal(style.color, 'color-interpolate(0, 0: green)')
     })
 })
 describe('CSSMarginDescriptors', () => {
@@ -4097,7 +4100,7 @@ describe('CSSMarginDescriptors', () => {
         const style = CSSMarginDescriptors.create(globalThis, undefined, { parentRule: marginRule })
         // Invalid name
         style.setProperty('top', '1px')
-        expect(style).toHaveLength(0)
+        assert.equal(style.length, 0)
     })
     test('valid', () => {
 
@@ -4105,50 +4108,50 @@ describe('CSSMarginDescriptors', () => {
 
         // Custom property
         style.setProperty('--custom', 'green')
-        expect(style.getPropertyValue('--custom')).toBe('green')
+        assert.equal(style.getPropertyValue('--custom'), 'green')
 
         // Priority
         style.setProperty('font-weight', '1', 'important')
-        expect(style.fontWeight).toBe('1')
-        expect(style.getPropertyPriority('font-weight')).toBe('important')
+        assert.equal(style.fontWeight, '1')
+        assert.equal(style.getPropertyPriority('font-weight'), 'important')
 
         // Dependency-free substitution
         style.fontWeight = 'env(name)'
-        expect(style.fontWeight).toBe('env(name)')
+        assert.equal(style.fontWeight, 'env(name)')
         style.fontWeight = 'if(media(width): 1)'
-        expect(style.fontWeight).toBe('if(media(width): 1)')
+        assert.equal(style.fontWeight, 'if(media(width): 1)')
         style.fontWeight = 'first-valid(1)'
-        expect(style.fontWeight).toBe('1')
+        assert.equal(style.fontWeight, '1')
         style.fontWeight = 'calc(progress(1, 0, 1))'
-        expect(style.fontWeight).toBe('calc(1)')
+        assert.equal(style.fontWeight, 'calc(1)')
 
         // Cascade or element-dependent value
         style.fontWeight = 'initial'
-        expect(style.fontWeight).toBe('initial')
+        assert.equal(style.fontWeight, 'initial')
         style.fontWeight = 'inherit(--custom)'
-        expect(style.fontWeight).toBe('inherit(--custom)')
+        assert.equal(style.fontWeight, 'inherit(--custom)')
         style.fontWeight = 'var(--custom)'
-        expect(style.fontWeight).toBe('var(--custom)')
+        assert.equal(style.fontWeight, 'var(--custom)')
 
         // Element-dependent value
         style.fontWeight = '--custom()'
-        expect(style.fontWeight).toBe('--custom()')
+        assert.equal(style.fontWeight, '--custom()')
         style.fontWeight = 'attr(name)'
-        expect(style.fontWeight).toBe('attr(name)')
+        assert.equal(style.fontWeight, 'attr(name)')
         style.fontWeight = 'random-item(--key, 1)'
-        expect(style.fontWeight).toBe('random-item(--key, 1)')
+        assert.equal(style.fontWeight, 'random-item(--key, 1)')
         style.fontWeight = 'interpolate(0, 0: 1)'
-        expect(style.fontWeight).toBe('interpolate(0, 0: 1)')
+        assert.equal(style.fontWeight, 'interpolate(0, 0: 1)')
         style.fontWeight = 'toggle(1)'
-        expect(style.fontWeight).toBe('toggle(1)')
+        assert.equal(style.fontWeight, 'toggle(1)')
         style.fontWeight = 'calc-interpolate(0, 0: 1)'
-        expect(style.fontWeight).toBe('calc-interpolate(0, 0: 1)')
+        assert.equal(style.fontWeight, 'calc-interpolate(0, 0: 1)')
         style.fontWeight = 'random(1, 1)'
-        expect(style.fontWeight).toBe('random(1, 1)')
+        assert.equal(style.fontWeight, 'random(1, 1)')
         style.fontWeight = 'sibling-count()'
-        expect(style.fontWeight).toBe('sibling-count()')
+        assert.equal(style.fontWeight, 'sibling-count()')
         style.color = 'color-interpolate(0, 0: red)'
-        expect(style.color).toBe('color-interpolate(0, 0: red)')
+        assert.equal(style.color, 'color-interpolate(0, 0: red)')
     })
 })
 describe('CSSPageDescriptors', () => {
@@ -4156,7 +4159,7 @@ describe('CSSPageDescriptors', () => {
         const style = CSSPageDescriptors.create(globalThis, undefined, { parentRule: pageRule })
         // Invalid name
         style.setProperty('top', '1px')
-        expect(style).toHaveLength(0)
+        assert.equal(style.length, 0)
     })
     test('valid', () => {
 
@@ -4164,84 +4167,84 @@ describe('CSSPageDescriptors', () => {
 
         // Custom property
         style.setProperty('--custom', 'green')
-        expect(style.getPropertyValue('--custom')).toBe('green')
+        assert.equal(style.getPropertyValue('--custom'), 'green')
 
         // Priority
         style.setProperty('size', '1px', 'important')
-        expect(style.size).toBe('1px')
-        expect(style.getPropertyPriority('size')).toBe('important')
+        assert.equal(style.size, '1px')
+        assert.equal(style.getPropertyPriority('size'), 'important')
 
         // Dependency-free substitution
         style.fontWeight = 'env(name, attr(name))'
         style.size = 'env(name, attr(name))'
-        expect(style.fontWeight).toBe('env(name, attr(name))')
-        expect(style.size).toBe('env(name, attr(name))')
+        assert.equal(style.fontWeight, 'env(name, attr(name))')
+        assert.equal(style.size, 'env(name, attr(name))')
         style.fontWeight = 'if(media(width): 1)'
         style.size = 'if(media(width): 1px)'
-        expect(style.fontWeight).toBe('if(media(width): 1)')
-        expect(style.size).toBe('if(media(width): 1px)')
+        assert.equal(style.fontWeight, 'if(media(width): 1)')
+        assert.equal(style.size, 'if(media(width): 1px)')
         style.fontWeight = 'first-valid(1)'
         style.size = 'first-valid(1px)'
-        expect(style.fontWeight).toBe('1')
-        expect(style.size).toBe('1px')
+        assert.equal(style.fontWeight, '1')
+        assert.equal(style.size, '1px')
         style.fontWeight = 'calc(progress(1, 0, 1))'
         style.size = 'calc(1px * progress(1, 0, 1))'
-        expect(style.fontWeight).toBe('calc(1)')
-        expect(style.size).toBe('calc(1px)')
+        assert.equal(style.fontWeight, 'calc(1)')
+        assert.equal(style.size, 'calc(1px)')
 
         // Cascade or element-dependent value
         style.fontWeight = 'initial'
         style.size = 'initial'
-        expect(style.fontWeight).toBe('initial')
-        expect(style.size).toBe('initial')
+        assert.equal(style.fontWeight, 'initial')
+        assert.equal(style.size, 'initial')
         style.fontWeight = 'inherit(--custom)'
         style.size = 'inherit(--custom)'
-        expect(style.fontWeight).toBe('inherit(--custom)')
-        expect(style.size).toBe('inherit(--custom)')
+        assert.equal(style.fontWeight, 'inherit(--custom)')
+        assert.equal(style.size, 'inherit(--custom)')
         style.fontWeight = 'var(--custom)'
         style.size = 'var(--custom)'
-        expect(style.fontWeight).toBe('var(--custom)')
-        expect(style.size).toBe('var(--custom)')
+        assert.equal(style.fontWeight, 'var(--custom)')
+        assert.equal(style.size, 'var(--custom)')
 
         // Element-dependent value
         style.fontWeight = '--custom()'
         style.size = '--custom()'
-        expect(style.fontWeight).toBe('--custom()')
-        expect(style.size).toBe('--custom()')
+        assert.equal(style.fontWeight, '--custom()')
+        assert.equal(style.size, '--custom()')
         style.fontWeight = 'attr(name)'
         style.size = 'attr(name)'
-        expect(style.fontWeight).toBe('attr(name)')
-        expect(style.size).toBe('attr(name)')
+        assert.equal(style.fontWeight, 'attr(name)')
+        assert.equal(style.size, 'attr(name)')
         style.fontWeight = 'random-item(--key, 1)'
         style.size = 'random-item(--key, 1px)'
-        expect(style.fontWeight).toBe('random-item(--key, 1)')
-        expect(style.size).toBe('random-item(--key, 1px)')
+        assert.equal(style.fontWeight, 'random-item(--key, 1)')
+        assert.equal(style.size, 'random-item(--key, 1px)')
         style.fontWeight = 'interpolate(0, 0: 1)'
         style.size = 'interpolate(0, 0: 1px)'
-        expect(style.fontWeight).toBe('interpolate(0, 0: 1)')
-        expect(style.size).toBe('interpolate(0, 0: 1px)')
+        assert.equal(style.fontWeight, 'interpolate(0, 0: 1)')
+        assert.equal(style.size, 'interpolate(0, 0: 1px)')
         style.fontWeight = 'toggle(1)'
         style.size = 'toggle(1px)'
-        expect(style.fontWeight).toBe('toggle(1)')
-        expect(style.size).toBe('toggle(1px)')
+        assert.equal(style.fontWeight, 'toggle(1)')
+        assert.equal(style.size, 'toggle(1px)')
         style.fontWeight = 'calc-interpolate(0, 0: 1)'
         style.size = 'calc-interpolate(0, 0: 1px)'
-        expect(style.fontWeight).toBe('calc-interpolate(0, 0: 1)')
-        expect(style.size).toBe('calc-interpolate(0, 0: 1px)')
+        assert.equal(style.fontWeight, 'calc-interpolate(0, 0: 1)')
+        assert.equal(style.size, 'calc-interpolate(0, 0: 1px)')
         style.fontWeight = 'random(1, 1)'
         style.size = 'random(1px, 1px)'
-        expect(style.fontWeight).toBe('random(1, 1)')
-        expect(style.size).toBe('random(1px, 1px)')
+        assert.equal(style.fontWeight, 'random(1, 1)')
+        assert.equal(style.size, 'random(1px, 1px)')
         style.fontWeight = 'sibling-count()'
         style.size = 'calc(1px * sibling-count())'
-        expect(style.fontWeight).toBe('sibling-count()')
-        expect(style.size).toBe('calc(1px * sibling-count())')
+        assert.equal(style.fontWeight, 'sibling-count()')
+        assert.equal(style.size, 'calc(1px * sibling-count())')
         style.color = 'color-interpolate(0, 0: red)'
-        expect(style.color).toBe('color-interpolate(0, 0: red)')
+        assert.equal(style.color, 'color-interpolate(0, 0: red)')
 
         // Specific serialization rule
         style.size = '1px 1px'
-        expect(style.size).toBe('1px')
+        assert.equal(style.size, '1px')
     })
 })
 describe('CSSPositionTryDescriptors', () => {
@@ -4256,7 +4259,7 @@ describe('CSSPositionTryDescriptors', () => {
         // Priority
         style.setProperty('top', '1px', 'important')
 
-        expect(style).toHaveLength(0)
+        assert.equal(style.length, 0)
     })
     test('valid', () => {
 
@@ -4264,38 +4267,38 @@ describe('CSSPositionTryDescriptors', () => {
 
         // Dependency-free substitution
         style.top = 'env(name)'
-        expect(style.top).toBe('env(name)')
+        assert.equal(style.top, 'env(name)')
         style.top = 'if(media(width): 1px)'
-        expect(style.top).toBe('if(media(width): 1px)')
+        assert.equal(style.top, 'if(media(width): 1px)')
         style.top = 'first-valid(1px)'
-        expect(style.top).toBe('1px')
+        assert.equal(style.top, '1px')
         style.top = 'calc(1px * progress(1, 0, 1))'
-        expect(style.top).toBe('calc(1px)')
+        assert.equal(style.top, 'calc(1px)')
 
         // Cascade or element-dependent value
         style.top = 'initial'
-        expect(style.top).toBe('initial')
+        assert.equal(style.top, 'initial')
         style.top = 'inherit(--custom)'
-        expect(style.top).toBe('inherit(--custom)')
+        assert.equal(style.top, 'inherit(--custom)')
         style.top = 'var(--custom)'
-        expect(style.top).toBe('var(--custom)')
+        assert.equal(style.top, 'var(--custom)')
 
         // Element-dependent value
         style.top = '--custom()'
-        expect(style.top).toBe('--custom()')
+        assert.equal(style.top, '--custom()')
         style.top = 'attr(name)'
-        expect(style.top).toBe('attr(name)')
+        assert.equal(style.top, 'attr(name)')
         style.top = 'random-item(--key, 1px)'
-        expect(style.top).toBe('random-item(--key, 1px)')
+        assert.equal(style.top, 'random-item(--key, 1px)')
         style.top = 'interpolate(0, 0: 1px)'
-        expect(style.top).toBe('interpolate(0, 0: 1px)')
+        assert.equal(style.top, 'interpolate(0, 0: 1px)')
         style.top = 'toggle(1px)'
-        expect(style.top).toBe('toggle(1px)')
+        assert.equal(style.top, 'toggle(1px)')
         style.top = 'calc-interpolate(0, 0: 1px)'
-        expect(style.top).toBe('calc-interpolate(0, 0: 1px)')
+        assert.equal(style.top, 'calc-interpolate(0, 0: 1px)')
         style.top = 'random(1px, 1px)'
-        expect(style.top).toBe('random(1px, 1px)')
+        assert.equal(style.top, 'random(1px, 1px)')
         style.top = 'calc(1px * sibling-count())'
-        expect(style.top).toBe('calc(1px * sibling-count())')
+        assert.equal(style.top, 'calc(1px * sibling-count())')
     })
 })

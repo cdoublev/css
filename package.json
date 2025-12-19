@@ -16,7 +16,7 @@
   "directories": {
     "doc": "doc",
     "lib": "./lib",
-    "test": "__tests__"
+    "test": "test"
   },
   "files": [
     "lib",
@@ -34,18 +34,15 @@
     "build:interface": "node ./scripts/interface.js",
     "lint": "eslint",
     "safe-publish": "npm run build && npm run lint && npm run test && npm publish",
-    "test": "node --experimental-vm-modules ./node_modules/.bin/jest",
-    "test:inspect": "node --experimental-vm-modules --inspect-brk=0.0.0.0:9222 ./node_modules/.bin/jest --runInBand --watchAll -b",
-    "test:watch": "npm run test -- --watchAll -b"
+    "test": "node --test",
+    "test:inspect": "node --watch --inspect-wait=0.0.0.0:9222",
+    "test:watch": "npm run test -- --watch"
   },
   "dependencies": {
     "undici": "^7.16.0"
   },
   "devDependencies": {
     "@cdoublev/eslint-config": "^0.12.0",
-    "eslint": "^9.0.0",
-    "jest": "^30.0.0",
-    "jest-junit": "^16.0.0",
     "webidl2js": "cdoublev/webidl2js",
     "webref": "w3c/webref#24d8d826e00395985483ddaedb3c571c3b73f34e"
   },

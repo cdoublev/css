@@ -1,4 +1,6 @@
 
+import { describe, test } from 'node:test'
+import assert from 'node:assert'
 import { install } from '@cdoublev/css'
 import matchMediaQueryList from '../lib/match/media.js'
 import matchSupport from '../lib/match/support.js'
@@ -25,7 +27,7 @@ describe('media', () => {
     }
 
     test('empty', () => {
-        expect(match('')).toBeTruthy()
+        assert.equal(match(''), true)
     })
     test('types', () => {
         const queries = [
@@ -41,7 +43,7 @@ describe('media', () => {
             ['not unknown'],
         ]
         queries.forEach(([query, expected = true, context = window]) =>
-            expect(match(query, context)).toBe(expected))
+            assert.equal(match(query, context), expected))
     })
     test('boolean', () => {
         const queries = [
@@ -102,7 +104,7 @@ describe('media', () => {
             ['(width)', false, { innerWidth: 0 }],
         ]
         queries.forEach(([query, expected = true, context = window]) =>
-            expect(match(query, context)).toBe(expected))
+            assert.equal(match(query, context), expected))
     })
     test('plain', () => {
         const queries = [
@@ -209,7 +211,7 @@ describe('media', () => {
             ['(width: 100px)'],
         ]
         queries.forEach(([query, expected = true, context = window]) =>
-            expect(match(query, context)).toBe(expected))
+            assert.equal(match(query, context), expected))
     })
     test('range', () => {
         const queries = [
@@ -272,7 +274,7 @@ describe('media', () => {
             ['(aspect-ratio >= 0 / 0)', false, { innerHeight: 1, innerWidth: 0 }],
         ]
         queries.forEach(([query, expected = true, context = window]) =>
-            expect(match(query, context)).toBe(expected))
+            assert.equal(match(query, context), expected))
     })
     test('combinations', () => {
         const queries = [
@@ -298,7 +300,7 @@ describe('media', () => {
             ['(not (unknown)) or (color)'],
         ]
         queries.forEach(([query, expected = true, context = window]) =>
-            expect(match(query, context)).toBe(expected))
+            assert.equal(match(query, context), expected))
     })
 })
 
@@ -309,8 +311,8 @@ describe('support', () => {
     }
 
     test('at-rule', () => {
-        expect(match('at-rule(@style)')).toBeFalsy()
-        expect(match('at-rule(@ANNOTATION)')).toBeTruthy()
+        assert.equal(match('at-rule(@style)'), false)
+        assert.equal(match('at-rule(@ANNOTATION)'), true)
     })
     test('declaration', () => {
         const declarations = [
@@ -330,14 +332,14 @@ describe('support', () => {
             ['grid-gap: 1px'],
             ['-webkit-box-align: center'],
         ]
-        declarations.forEach(([declaration, expected = true]) => expect(match(declaration)).toBe(expected))
+        declarations.forEach(([declaration, expected = true]) => assert.equal(match(declaration), expected))
     })
     test('font technology', () => {
-        expect(match('font-tech(color-svg)')).toBeTruthy()
+        assert.equal(match('font-tech(color-svg)'), true)
     })
     test('font format', () => {
-        expect(match('font-format("woff")')).toBeFalsy()
-        expect(match('font-format(woff)')).toBeTruthy()
+        assert.equal(match('font-format("woff")'), false)
+        assert.equal(match('font-format(woff)'), true)
     })
     test('selector', () => {
         const selectors = [
@@ -355,7 +357,7 @@ describe('support', () => {
             ['type + .class'],
         ]
         selectors.forEach(([selector, expected = true]) =>
-            expect(match(`selector(${selector})`)).toBe(expected))
+            assert.equal(match(`selector(${selector})`), expected))
     })
     test('combinations', () => {
         const queries = [
@@ -375,6 +377,6 @@ describe('support', () => {
             ['((unknown) and (unknown)) or (color: green)'],
             ['((unknown) or (color: green)) and (color: green)'],
         ]
-        queries.forEach(([query, expected = true]) => expect(match(query)).toBe(expected))
+        queries.forEach(([query, expected = true]) => assert.equal(match(query), expected))
     })
 })

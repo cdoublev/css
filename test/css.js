@@ -7,6 +7,8 @@ import {
     INVALID_INITIAL_CUSTOM_PROPERTY_VALUE_UNIVERSAL,
     MISSING_INITIAL_CUSTOM_PROPERTY_VALUE,
 } from '../lib/error.js'
+import { describe, it } from 'node:test'
+import assert from 'node:assert'
 import { install } from '@cdoublev/css'
 
 install()
@@ -26,7 +28,7 @@ describe('CSS.escape()', () => {
             ['·-_09AZaz'],
             ['[`', '\\[\\`'],
         ]
-        values.forEach(([input, expected = input]) => expect(CSS.escape(input)).toBe(expected))
+        values.forEach(([input, expected = input]) => assert.equal(CSS.escape(input), expected))
     })
 })
 describe('CSS.registerProperty()', () => {
@@ -46,7 +48,7 @@ describe('CSS.registerProperty()', () => {
             [{ inherits: true, initialValue: 'initial', name: '--custom', syntax: '*' }, INVALID_INITIAL_CUSTOM_PROPERTY_VALUE],
         ]
         registeredProperties.set('--registered', { inherits: true, initialValue: 'green', syntax: '<color>' })
-        invalid.forEach(([definition, error]) => expect(() => CSS.registerProperty(definition)).toThrow(error))
+        invalid.forEach(([definition, error]) => assert.throws(() => CSS.registerProperty(definition), error))
     })
     it('registers a valid definition', () => {
         const valid = [
@@ -59,7 +61,7 @@ describe('CSS.registerProperty()', () => {
         ]
         valid.forEach(property => {
             CSS.registerProperty(property)
-            expect(registeredProperties.has(property.name)).toBeTruthy()
+            assert.equal(registeredProperties.has(property.name), true)
         })
     })
 })
@@ -79,11 +81,11 @@ describe('CSS.supports()', () => {
             ['-webkit-box-align', 'center'],
         ]
         declarations.forEach(([property, value, expected = true]) =>
-            expect(CSS.supports(property, value)).toBe(expected))
+            assert.equal(CSS.supports(property, value), expected))
     })
     it('returns whether it supports the given feature condition', () => {
-        // Complete test is in __tests__/match.js
-        expect(CSS.supports('general(enclosed)')).toBeFalsy()
-        expect(CSS.supports('color: green')).toBeTruthy()
+        // Complete test is in test/match.js
+        assert.equal(CSS.supports('general(enclosed)'), false)
+        assert.equal(CSS.supports('color: green'), true)
     })
 })

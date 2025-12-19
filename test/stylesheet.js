@@ -31,6 +31,8 @@ import {
     MediaList,
     StyleSheetList,
 } from '../lib/cssom/index.js'
+import { after, afterEach, describe, it, test } from 'node:test'
+import assert from 'node:assert'
 import fs from 'node:fs/promises'
 import http from 'node:http'
 import { install } from '@cdoublev/css'
@@ -168,7 +170,7 @@ globalThis.origin = baseURL
 afterEach(() => {
     styleSheets._list.splice(0)
 })
-afterAll(() => {
+after(() => {
     servers.forEach(server => server.close())
 })
 
@@ -180,31 +182,31 @@ describe('CSSStyleSheet', () => {
         const styleSheet = new globalThis.CSSStyleSheet(options)
 
         // StyleSheet properties
-        expect(styleSheet.disabled).toBeTruthy()
-        expect(styleSheet.href).toBe(document.baseURI)
-        expect(MediaList.is(styleSheet.media)).toBeTruthy()
-        expect(styleSheet.media.mediaText).toBe(media)
-        expect(styleSheet.ownerNode).toBeNull()
-        expect(styleSheet.parentStyleSheet).toBeNull()
-        expect(styleSheet.title).toBe('')
-        expect(styleSheet.type).toBe('text/css')
+        assert.equal(styleSheet.disabled, true)
+        assert.equal(styleSheet.href, document.baseURI)
+        assert.equal(MediaList.is(styleSheet.media), true)
+        assert.equal(styleSheet.media.mediaText, media)
+        assert.equal(styleSheet.ownerNode, null)
+        assert.equal(styleSheet.parentStyleSheet, null)
+        assert.equal(styleSheet.title, '')
+        assert.equal(styleSheet.type, 'text/css')
 
         // CSSStyleSheet properties
-        expect(styleSheet.ownerRule).toBeNull()
-        expect(CSSRuleList.is(styleSheet.cssRules)).toBeTruthy()
-        expect(CSSRuleList.is(styleSheet.rules)).toBeTruthy()
+        assert.equal(styleSheet.ownerRule, null)
+        assert.equal(CSSRuleList.is(styleSheet.cssRules), true)
+        assert.equal(CSSRuleList.is(styleSheet.rules), true)
     })
     it('creates a constructed CSSStyleSheet with a MediaList', () => {
 
         const { media } = new globalThis.CSSStyleSheet({ media: 'all' })
         const styleSheet = new globalThis.CSSStyleSheet({ media })
 
-        expect(styleSheet.media).not.toBe(media)
-        expect(styleSheet.media.mediaText).toBe(media.mediaText)
+        assert.notEqual(styleSheet.media, media)
+        assert.equal(styleSheet.media.mediaText, media.mediaText)
 
         media.mediaText = '(width)'
-        expect(media.mediaText).toBe('(width)')
-        expect(styleSheet.media.mediaText).toBe('all')
+        assert.equal(media.mediaText, '(width)')
+        assert.equal(styleSheet.media.mediaText, 'all')
     })
     it('creates a non-constructed CSSStyleSheet', () => {
 
@@ -222,73 +224,71 @@ describe('CSSStyleSheet', () => {
         const styleSheet = createStyleSheet('', properties)
 
         // StyleSheet properties
-        expect(styleSheet.disabled).toBeFalsy()
-        expect(styleSheet.href).toBe(location)
-        expect(MediaList.is(styleSheet.media)).toBeTruthy()
-        expect(styleSheet.media.mediaText).toBe(media)
-        expect(styleSheet.ownerNode).toBe(ownerNode)
-        expect(styleSheet.parentStyleSheet).toBeNull()
-        expect(styleSheet.title).toBe(title)
-        expect(styleSheet.type).toBe('text/css')
+        assert.equal(styleSheet.disabled, false)
+        assert.equal(styleSheet.href, location)
+        assert.equal(MediaList.is(styleSheet.media), true)
+        assert.equal(styleSheet.media.mediaText, media)
+        assert.equal(styleSheet.ownerNode, ownerNode)
+        assert.equal(styleSheet.parentStyleSheet, null)
+        assert.equal(styleSheet.title, title)
+        assert.equal(styleSheet.type, 'text/css')
 
         // CSSStyleSheet properties
-        expect(CSSRuleList.is(styleSheet.cssRules)).toBeTruthy()
-        expect(CSSRuleList.is(styleSheet.rules)).toBeTruthy()
-        expect(styleSheet.ownerRule).toBeNull()
+        assert.equal(CSSRuleList.is(styleSheet.cssRules), true)
+        assert.equal(CSSRuleList.is(styleSheet.rules), true)
+        assert.equal(styleSheet.ownerRule, null)
     })
 })
 describe('CSSStyleSheet.insertRule(), CSSStyleSheet.deleteRule()', () => {
     it('throws an error when trying to insert/delete a rule in a style sheet whose origin is not clean', () => {
         const styleSheet = createStyleSheet('', { originClean: false })
-        expect(() => styleSheet.insertRule('style {}')).toThrow(ACCESS_THIRD_PARTY_STYLESHEET_ERROR)
-        expect(() => styleSheet.deleteRule(0)).toThrow(ACCESS_THIRD_PARTY_STYLESHEET_ERROR)
+        assert.throws(() => styleSheet.insertRule('style {}'), ACCESS_THIRD_PARTY_STYLESHEET_ERROR)
+        assert.throws(() => styleSheet.deleteRule(0), ACCESS_THIRD_PARTY_STYLESHEET_ERROR)
     })
     it('throws an error when trying to insert/delete a rule while modifications on the style sheet are not allowed', () => {
         const styleSheet = new globalThis.CSSStyleSheet
         styleSheet.replace('')
-        expect(() => styleSheet.insertRule('style {}')).toThrow(UPDATE_LOCKED_STYLESHEET_ERROR)
-        expect(() => styleSheet.deleteRule(0)).toThrow(UPDATE_LOCKED_STYLESHEET_ERROR)
+        assert.throws(() => styleSheet.insertRule('style {}'), UPDATE_LOCKED_STYLESHEET_ERROR)
+        assert.throws(() => styleSheet.deleteRule(0), UPDATE_LOCKED_STYLESHEET_ERROR)
     })
     it('throws an error when trying to insert an invalid rule according to the CSS grammar', () => {
         const styleSheet = createStyleSheet()
-        expect(() => styleSheet.insertRule(' ')).toThrow(MISSING_RULE_ERROR)
-        expect(() => styleSheet.insertRule('@charset "utf-8";')).toThrow(INVALID_RULE_ERROR)
-        expect(() => styleSheet.insertRule('@top-left {}')).toThrow(INVALID_RULE_ERROR)
-        expect(() => styleSheet.insertRule('@media;')).toThrow(INVALID_RULE_ERROR)
-        expect(() => styleSheet.insertRule('style;')).toThrow(INVALID_RULE_ERROR)
-        expect(() => styleSheet.insertRule('style {};')).toThrow(EXTRA_RULE_ERROR)
+        assert.throws(() => styleSheet.insertRule(' '), MISSING_RULE_ERROR)
+        assert.throws(() => styleSheet.insertRule('@charset "utf-8";'), INVALID_RULE_ERROR)
+        assert.throws(() => styleSheet.insertRule('@top-left {}'), INVALID_RULE_ERROR)
+        assert.throws(() => styleSheet.insertRule('@media;'), INVALID_RULE_ERROR)
+        assert.throws(() => styleSheet.insertRule('style;'), INVALID_RULE_ERROR)
+        assert.throws(() => styleSheet.insertRule('style {};'), EXTRA_RULE_ERROR)
     })
     it('throws an error when trying to insert @import in a constructed style sheet', () => {
         const styleSheet = new globalThis.CSSStyleSheet
-        expect(() => styleSheet.insertRule('@import "./global.css";')).toThrow(INSERT_INVALID_IMPORT_ERROR)
+        assert.throws(() => styleSheet.insertRule('@import "./global.css";'), INSERT_INVALID_IMPORT_ERROR)
     })
     it('throws an error when trying to insert/delete a rule at an index greater than the length of rules', () => {
         const styleSheet = createStyleSheet()
-        expect(() => styleSheet.insertRule('style {}', 1)).toThrow(INVALID_RULE_INDEX_ERROR)
-        expect(() => styleSheet.deleteRule(0)).toThrow(INVALID_RULE_INDEX_ERROR)
+        assert.throws(() => styleSheet.insertRule('style {}', 1), INVALID_RULE_INDEX_ERROR)
+        assert.throws(() => styleSheet.deleteRule(0), INVALID_RULE_INDEX_ERROR)
     })
     it('throws an error when trying to insert any other rule than @import or @layer before @import', async () => {
         const styleSheet = createStyleSheet('@import "./global.css";')
-        expect(() => styleSheet.insertRule('@namespace svg "http://www.w3.org/2000/svg";'))
-            .toThrow(INVALID_RULE_POSITION_ERROR)
-        expect(() => styleSheet.insertRule('style {}'))
-            .toThrow(INVALID_RULE_POSITION_ERROR)
+        assert.throws(() => styleSheet.insertRule('@namespace svg "http://www.w3.org/2000/svg";'), INVALID_RULE_POSITION_ERROR)
+        assert.throws(() => styleSheet.insertRule('style {}'), INVALID_RULE_POSITION_ERROR)
         await CSSImportRule.convert(globalThis, styleSheet.cssRules[0])._promise
     })
     it('throws an error when trying to insert any other rule than @import, @layer, @namespace, before @namespace', () => {
         const styleSheet = createStyleSheet('@namespace svg "http://www.w3.org/2000/svg";')
-        expect(() => styleSheet.insertRule('style {}')).toThrow(INVALID_RULE_POSITION_ERROR)
+        assert.throws(() => styleSheet.insertRule('style {}'), INVALID_RULE_POSITION_ERROR)
     })
     it('throws an error when trying to insert @import after any other rule than @import or @layer', () => {
         const styleSheet = createStyleSheet('@namespace svg "http://www.w3.org/2000/svg";')
-        expect(() => styleSheet.insertRule('@import "./global.css";', 1)).toThrow(INVALID_RULE_POSITION_ERROR)
+        assert.throws(() => styleSheet.insertRule('@import "./global.css";', 1), INVALID_RULE_POSITION_ERROR)
     })
     it('throws an error when trying to insert @layer between @import and @import', async () => {
         const styleSheet = createStyleSheet(`
             @import "./global.css";
             @import "./page.css";
         `)
-        expect(() => styleSheet.insertRule('@layer base;', 1)).toThrow(INVALID_RULE_POSITION_ERROR)
+        assert.throws(() => styleSheet.insertRule('@layer base;', 1), INVALID_RULE_POSITION_ERROR)
         await CSSImportRule.convert(globalThis, styleSheet.cssRules[0])._promise
         await CSSImportRule.convert(globalThis, styleSheet.cssRules[1])._promise
     })
@@ -297,7 +297,7 @@ describe('CSSStyleSheet.insertRule(), CSSStyleSheet.deleteRule()', () => {
             @import "./global.css";
             @namespace svg "http://www.w3.org/2000/svg";
         `)
-        expect(() => styleSheet.insertRule('@layer base;', 1)).toThrow(INVALID_RULE_POSITION_ERROR)
+        assert.throws(() => styleSheet.insertRule('@layer base;', 1), INVALID_RULE_POSITION_ERROR)
         await CSSImportRule.convert(globalThis, styleSheet.cssRules[0])._promise
     })
     it('throws an error when trying to insert @layer between @namespace and @namespace', () => {
@@ -305,12 +305,11 @@ describe('CSSStyleSheet.insertRule(), CSSStyleSheet.deleteRule()', () => {
             @namespace html "https://www.w3.org/1999/xhtml/";
             @namespace svg "http://www.w3.org/2000/svg";
         `)
-        expect(() => styleSheet.insertRule('@layer base;', 1)).toThrow(INVALID_RULE_POSITION_ERROR)
+        assert.throws(() => styleSheet.insertRule('@layer base;', 1), INVALID_RULE_POSITION_ERROR)
     })
     it('throws an error when trying to insert @namespace if any other rule than @import, @layer, @namespace, exists', () => {
         const styleSheet = createStyleSheet('style {}')
-        expect(() => styleSheet.insertRule('@namespace svg "http://www.w3.org/2000/svg";'))
-            .toThrow(INVALID_NAMESPACE_STATE_ERROR)
+        assert.throws(() => styleSheet.insertRule('@namespace svg "http://www.w3.org/2000/svg";'), INVALID_NAMESPACE_STATE_ERROR)
     })
     it('inserts and deletes a rule', async () => {
 
@@ -319,20 +318,20 @@ describe('CSSStyleSheet.insertRule(), CSSStyleSheet.deleteRule()', () => {
 
         styleSheet.insertRule('@namespace svg "http://www.w3.org/2000/svg";', 0)
 
-        expect(cssRules).toHaveLength(1)
+        assert.equal(cssRules.length, 1)
 
         const namespaceRule = cssRules[0]
 
-        expect(CSSNamespaceRule.is(namespaceRule)).toBeTruthy()
+        assert.equal(CSSNamespaceRule.is(namespaceRule), true)
 
         styleSheet.insertRule('@namespace html "https://www.w3.org/1999/xhtml/";')
 
-        expect(cssRules[1]).toBe(namespaceRule)
+        assert.equal(cssRules[1], namespaceRule)
 
         styleSheet.deleteRule(1)
 
-        expect(cssRules).toHaveLength(1)
-        expect(namespaceRule.parentStyleSheet).toBeNull()
+        assert.equal(cssRules.length, 1)
+        assert.equal(namespaceRule.parentStyleSheet, null)
 
         styleSheet.insertRule('@import "./page.css";')
         styleSheet.insertRule('@layer reset;')
@@ -340,7 +339,7 @@ describe('CSSStyleSheet.insertRule(), CSSStyleSheet.deleteRule()', () => {
         styleSheet.insertRule('@layer base;', 4)
         styleSheet.insertRule('svg|rect {}', 5)
 
-        expect(cssRules).toHaveLength(6)
+        assert.equal(cssRules.length, 6)
 
         await CSSImportRule.convert(globalThis, styleSheet.cssRules[1])._promise
     })
@@ -348,26 +347,26 @@ describe('CSSStyleSheet.insertRule(), CSSStyleSheet.deleteRule()', () => {
 describe('CSSStyleSheet.replace(), CSSStyleSheet.replaceSync()', () => {
     it('throws an error when trying to replace rules of a non-constructed style sheet', () => {
         const styleSheet = createStyleSheet()
-        expect(() => styleSheet.replaceSync('')).toThrow(UPDATE_LOCKED_STYLESHEET_ERROR)
+        assert.throws(() => styleSheet.replaceSync(''), UPDATE_LOCKED_STYLESHEET_ERROR)
     })
     it('throws an error when trying to replace rules concurrently', async () => {
         const styleSheet = new globalThis.CSSStyleSheet
         styleSheet.replace('')
-        return expect(styleSheet.replace('')).rejects.toMatchObject(UPDATE_LOCKED_STYLESHEET_ERROR)
+        await assert.rejects(styleSheet.replace(''), UPDATE_LOCKED_STYLESHEET_ERROR)
     })
     it('replaces a rule asynchronously/synchronously', async () => {
 
         const styleSheet = new globalThis.CSSStyleSheet
         const { cssRules } = styleSheet
 
-        expect(await styleSheet.replace('style { color: orange }')).toBe(styleSheet)
-        expect(cssRules).toHaveLength(1)
-        expect(cssRules[0].style.color).toBe('orange')
+        assert.equal(await styleSheet.replace('style { color: orange }'), styleSheet)
+        assert.equal(cssRules.length, 1)
+        assert.equal(cssRules[0].style.color, 'orange')
 
         styleSheet.replaceSync('style { color: green }')
 
-        expect(cssRules).toHaveLength(1)
-        expect(cssRules[0].style.color).toBe('green')
+        assert.equal(cssRules.length, 1)
+        assert.equal(cssRules[0].style.color, 'green')
     })
     it('ignores opening and ending HTML comment tokens', () => {
 
@@ -375,7 +374,7 @@ describe('CSSStyleSheet.replace(), CSSStyleSheet.replaceSync()', () => {
 
         styleSheet.replaceSync('<!-- style {} -->')
 
-        expect(styleSheet.cssRules).toHaveLength(1)
+        assert.equal(styleSheet.cssRules.length, 1)
     })
     it('ignores import rules and invalid contents', () => {
 
@@ -388,7 +387,7 @@ describe('CSSStyleSheet.replace(), CSSStyleSheet.replaceSync()', () => {
             color: red;
         `)
 
-        expect(CSSStyleRule.is(styleSheet.cssRules[0])).toBeTruthy()
+        assert.equal(CSSStyleRule.is(styleSheet.cssRules[0]), true)
     })
 })
 
@@ -398,8 +397,8 @@ describe('CSSRuleList.item()', () => {
             #rule-1 {}
             #rule-2 {}
         `)
-        expect(cssRules.item(1)).toBe(cssRules[1])
-        expect(cssRules.item(2)).toBeNull()
+        assert.equal(cssRules.item(1), cssRules[1])
+        assert.equal(cssRules.item(2), null)
     })
 })
 describe('CSSRuleList.length', () => {
@@ -408,7 +407,7 @@ describe('CSSRuleList.length', () => {
             #rule-1 {}
             #rule-2 {}
         `)
-        expect(cssRules).toHaveLength(2)
+        assert.equal(cssRules.length, 2)
     })
 })
 
@@ -419,13 +418,13 @@ describe('CSSColorProfileRule', () => {
         const rule = styleSheet.cssRules[0]
 
         // CSSRule
-        expect(rule.cssText).toBe('@color-profile --name { src: url("profile.icc"); }')
-        expect(rule.parentRule).toBeNull()
-        expect(rule.parentStyleSheet).toBe(styleSheet)
+        assert.equal(rule.cssText, '@color-profile --name { src: url("profile.icc"); }')
+        assert.equal(rule.parentRule, null)
+        assert.equal(rule.parentStyleSheet, styleSheet)
 
         // CSSColorProfileRule
-        expect(rule.name).toBe('--name')
-        expect(rule.src).toBe('url("profile.icc")')
+        assert.equal(rule.name, '--name')
+        assert.equal(rule.src, 'url("profile.icc")')
     })
 })
 describe('CSSContainerRule', () => {
@@ -435,15 +434,15 @@ describe('CSSContainerRule', () => {
         const rule = styleSheet.cssRules[0]
 
         // CSSRule
-        expect(rule.cssText).toBe('@container name { style {} }')
-        expect(rule.parentRule).toBeNull()
-        expect(rule.parentStyleSheet).toBe(styleSheet)
+        assert.equal(rule.cssText, '@container name { style {} }')
+        assert.equal(rule.parentRule, null)
+        assert.equal(rule.parentStyleSheet, styleSheet)
 
         // CSSGroupingRule
-        expect(CSSRuleList.is(rule.cssRules)).toBeTruthy()
+        assert.equal(CSSRuleList.is(rule.cssRules), true)
 
         // CSSConditionRule
-        expect(rule.conditionText).toBe('name')
+        assert.equal(rule.conditionText, 'name')
     })
 })
 describe('CSSCounterStyleRule', () => {
@@ -453,16 +452,16 @@ describe('CSSCounterStyleRule', () => {
         let rule = styleSheet.cssRules[0]
 
         // CSSRule
-        expect(rule.cssText).toBe('@counter-style name { speak-as: auto; system: fixed; }')
-        expect(rule.parentRule).toBeNull()
-        expect(rule.parentStyleSheet).toBe(styleSheet)
+        assert.equal(rule.cssText, '@counter-style name { speak-as: auto; system: fixed; }')
+        assert.equal(rule.parentRule, null)
+        assert.equal(rule.parentStyleSheet, styleSheet)
 
         // CSSCounterStyleRule
         //   https://github.com/w3c/csswg-drafts/issues/9363
         rule.name = ''
-        expect(rule.name).toBe('name')
+        assert.equal(rule.name, 'name')
         rule.name = '\n'
-        expect(rule.name).toBe('\\a')
+        assert.equal(rule.name, '\\a')
         //   Priority
         rule.system = 'fixed !important'
         //   Cascade or element-dependent substitution
@@ -471,64 +470,64 @@ describe('CSSCounterStyleRule', () => {
         rule.system = 'attr(name)'
         //   Dependency-free pending substitution
         rule.system = 'env(name)'
-        expect(rule.system).toBe('fixed')
+        assert.equal(rule.system, 'fixed')
         //   system: symbolic (default)
         rule = createStyleSheet('@counter-style name {}').cssRules[0]
         rule.additiveSymbols = '1 a'
-        expect(rule.additiveSymbols).toBe('')
+        assert.equal(rule.additiveSymbols, '')
         rule.symbols = 'a'
-        expect(rule.symbols).toBe('a')
+        assert.equal(rule.symbols, 'a')
         rule.system = 'fixed'
         rule.system = 'extends decimal'
-        expect(rule.system).toBe('')
+        assert.equal(rule.system, '')
         rule.system = 'symbolic'
-        expect(rule.system).toBe('symbolic')
+        assert.equal(rule.system, 'symbolic')
         //   system: fixed
         rule = createStyleSheet('@counter-style name { system: fixed }').cssRules[0]
         rule.additiveSymbols = '1 a'
-        expect(rule.additiveSymbols).toBe('')
+        assert.equal(rule.additiveSymbols, '')
         rule.symbols = 'a'
-        expect(rule.symbols).toBe('a')
+        assert.equal(rule.symbols, 'a')
         rule.system = 'symbolic'
         rule.system = 'extends decimal'
-        expect(rule.system).toBe('fixed')
+        assert.equal(rule.system, 'fixed')
         rule.system = 'first-valid(fixed 2)'
-        expect(rule.system).toBe('fixed 2')
+        assert.equal(rule.system, 'fixed 2')
         rule.system = 'fixed calc(2)'
-        expect(rule.system).toBe('fixed calc(2)')
+        assert.equal(rule.system, 'fixed calc(2)')
         //   system: numeric (and alphabetic)
         rule = createStyleSheet('@counter-style name { system: numeric }').cssRules[0]
         rule.additiveSymbols = '1 a, 2 b'
-        expect(rule.additiveSymbols).toBe('')
+        assert.equal(rule.additiveSymbols, '')
         rule.symbols = 'a'
-        expect(rule.symbols).toBe('')
+        assert.equal(rule.symbols, '')
         rule.symbols = 'a b'
-        expect(rule.symbols).toBe('a b')
+        assert.equal(rule.symbols, 'a b')
         rule.system = 'symbolic'
         rule.system = 'extends decimal'
-        expect(rule.system).toBe('numeric')
+        assert.equal(rule.system, 'numeric')
         // system: additive
         rule = createStyleSheet('@counter-style name { system: additive }').cssRules[0]
         rule.symbols = 'a'
-        expect(rule.symbols).toBe('')
+        assert.equal(rule.symbols, '')
         rule.additiveSymbols = '1 a, 1 b'
-        expect(rule.additiveSymbols).toBe('')
+        assert.equal(rule.additiveSymbols, '')
         rule.additiveSymbols = '1 a, 2 b'
-        expect(rule.additiveSymbols).toBe('')
+        assert.equal(rule.additiveSymbols, '')
         rule.additiveSymbols = '1 a'
-        expect(rule.additiveSymbols).toBe('1 a')
+        assert.equal(rule.additiveSymbols, '1 a')
         rule.system = 'symbolic'
-        expect(rule.system).toBe('additive')
+        assert.equal(rule.system, 'additive')
         // system: extends <counter-style-name>
         rule = createStyleSheet('@counter-style name { system: extends decimal }').cssRules[0]
         rule.additiveSymbols = '1 a'
-        expect(rule.additiveSymbols).toBe('')
+        assert.equal(rule.additiveSymbols, '')
         rule.symbols = 'a'
-        expect(rule.symbols).toBe('')
+        assert.equal(rule.symbols, '')
         rule.system = 'symbolic'
-        expect(rule.system).toBe('extends decimal')
+        assert.equal(rule.system, 'extends decimal')
         rule.system = 'extends disc'
-        expect(rule.system).toBe('extends disc')
+        assert.equal(rule.system, 'extends disc')
     })
 })
 describe('CSSFontFaceRule', () => {
@@ -538,12 +537,12 @@ describe('CSSFontFaceRule', () => {
         const rule = styleSheet.cssRules[0]
 
         // CSSRule
-        expect(rule.cssText).toBe('@font-face { src: url("serif.woff2"); }')
-        expect(rule.parentRule).toBeNull()
-        expect(rule.parentStyleSheet).toBe(styleSheet)
+        assert.equal(rule.cssText, '@font-face { src: url("serif.woff2"); }')
+        assert.equal(rule.parentRule, null)
+        assert.equal(rule.parentStyleSheet, styleSheet)
 
         // CSSFontFaceRule
-        expect(CSSFontFaceDescriptors.is(rule.style)).toBeTruthy()
+        assert.equal(CSSFontFaceDescriptors.is(rule.style), true)
     })
 })
 describe('CSSFontFeatureValuesRule', () => {
@@ -558,35 +557,35 @@ describe('CSSFontFeatureValuesRule', () => {
         const rule = styleSheet.cssRules[0]
 
         // CSSRule
-        expect(rule.cssText).toBe('@font-feature-values name { font-display: block; @annotation { name: 2; } }')
-        expect(rule.parentRule).toBeNull()
-        expect(rule.parentStyleSheet).toBe(styleSheet)
+        assert.equal(rule.cssText, '@font-feature-values name { font-display: block; @annotation { name: 2; } }')
+        assert.equal(rule.parentRule, null)
+        assert.equal(rule.parentStyleSheet, styleSheet)
 
         // CSSFontFeatureValuesRule
-        expect(rule.fontFamily).toBe('name')
+        assert.equal(rule.fontFamily, 'name')
 
         // CSSFontFeatureValuesMap
         rule.styleset.set('double-W', 0)
-        expect(rule.styleset.get('double-W')).toEqual([0])
-        expect(rule.cssText).toBe('@font-feature-values name { font-display: block; @annotation { name: 2; } @styleset { double-W: 0; } }')
+        assert.deepEqual(rule.styleset.get('double-W'), [0])
+        assert.equal(rule.cssText, '@font-feature-values name { font-display: block; @annotation { name: 2; } @styleset { double-W: 0; } }')
         rule.styleset.set('double-W', [0, 1])
-        expect(rule.styleset.get('double-W')).toEqual([0, 1])
-        expect(rule.cssText).toBe('@font-feature-values name { font-display: block; @annotation { name: 2; } @styleset { double-W: 0 1; } }')
+        assert.deepEqual(rule.styleset.get('double-W'), [0, 1])
+        assert.equal(rule.cssText, '@font-feature-values name { font-display: block; @annotation { name: 2; } @styleset { double-W: 0 1; } }')
         rule.styleset.delete('double-W')
-        expect(rule.cssText).toBe('@font-feature-values name { font-display: block; @annotation { name: 2; } }')
-        expect(() => rule.annotation.set('boxed', [0, 1])).toThrow(INVALID_FONT_FEATURE_VALUE_ERROR)
-        expect(() => rule.annotation.set('boxed', [-1])).toThrow(INVALID_FONT_FEATURE_VALUE_ERROR)
-        expect(() => rule.characterVariant.set('alpha-2', [0, 1, 2])).toThrow(INVALID_FONT_FEATURE_VALUE_ERROR)
-        expect(() => rule.characterVariant.set('alpha-2', [-1, 0])).toThrow(INVALID_FONT_FEATURE_VALUE_ERROR)
-        expect(() => rule.characterVariant.set('alpha-2', [100, 0])).toThrow(INVALID_FONT_FEATURE_VALUE_ERROR)
-        expect(() => rule.ornaments.set('bullet', [0, 1])).toThrow(INVALID_FONT_FEATURE_VALUE_ERROR)
-        expect(() => rule.ornaments.set('bullet', [-1])).toThrow(INVALID_FONT_FEATURE_VALUE_ERROR)
-        expect(() => rule.styleset.set('double-W', [-1, 0])).toThrow(INVALID_FONT_FEATURE_VALUE_ERROR)
-        expect(() => rule.styleset.set('double-W', [21, 0])).toThrow(INVALID_FONT_FEATURE_VALUE_ERROR)
-        expect(() => rule.stylistic.set('alt-g', [0, 1])).toThrow(INVALID_FONT_FEATURE_VALUE_ERROR)
-        expect(() => rule.stylistic.set('alt-g', [-1])).toThrow(INVALID_FONT_FEATURE_VALUE_ERROR)
-        expect(() => rule.swash.set('cool', [0, 1])).toThrow(INVALID_FONT_FEATURE_VALUE_ERROR)
-        expect(() => rule.swash.set('cool', [-1])).toThrow(INVALID_FONT_FEATURE_VALUE_ERROR)
+        assert.equal(rule.cssText, '@font-feature-values name { font-display: block; @annotation { name: 2; } }')
+        assert.throws(() => rule.annotation.set('boxed', [0, 1]), INVALID_FONT_FEATURE_VALUE_ERROR)
+        assert.throws(() => rule.annotation.set('boxed', [-1]), INVALID_FONT_FEATURE_VALUE_ERROR)
+        assert.throws(() => rule.characterVariant.set('alpha-2', [0, 1, 2]), INVALID_FONT_FEATURE_VALUE_ERROR)
+        assert.throws(() => rule.characterVariant.set('alpha-2', [-1, 0]), INVALID_FONT_FEATURE_VALUE_ERROR)
+        assert.throws(() => rule.characterVariant.set('alpha-2', [100, 0]), INVALID_FONT_FEATURE_VALUE_ERROR)
+        assert.throws(() => rule.ornaments.set('bullet', [0, 1]), INVALID_FONT_FEATURE_VALUE_ERROR)
+        assert.throws(() => rule.ornaments.set('bullet', [-1]), INVALID_FONT_FEATURE_VALUE_ERROR)
+        assert.throws(() => rule.styleset.set('double-W', [-1, 0]), INVALID_FONT_FEATURE_VALUE_ERROR)
+        assert.throws(() => rule.styleset.set('double-W', [21, 0]), INVALID_FONT_FEATURE_VALUE_ERROR)
+        assert.throws(() => rule.stylistic.set('alt-g', [0, 1]), INVALID_FONT_FEATURE_VALUE_ERROR)
+        assert.throws(() => rule.stylistic.set('alt-g', [-1]), INVALID_FONT_FEATURE_VALUE_ERROR)
+        assert.throws(() => rule.swash.set('cool', [0, 1]), INVALID_FONT_FEATURE_VALUE_ERROR)
+        assert.throws(() => rule.swash.set('cool', [-1]), INVALID_FONT_FEATURE_VALUE_ERROR)
     })
 })
 describe('CSSFontPaletteValuesRule', () => {
@@ -602,15 +601,15 @@ describe('CSSFontPaletteValuesRule', () => {
         const rule = styleSheet.cssRules[0]
 
         // CSSRule
-        expect(rule.cssText).toBe('@font-palette-values --name { base-palette: light; font-family: name; override-colors: 0 green; }')
-        expect(rule.parentRule).toBeNull()
-        expect(rule.parentStyleSheet).toBe(styleSheet)
+        assert.equal(rule.cssText, '@font-palette-values --name { base-palette: light; font-family: name; override-colors: 0 green; }')
+        assert.equal(rule.parentRule, null)
+        assert.equal(rule.parentStyleSheet, styleSheet)
 
         // CSSFontPaletteValuesRule
-        expect(rule.name).toBe('--name')
-        expect(rule.fontFamily).toBe('name')
-        expect(rule.basePalette).toBe('light')
-        expect(rule.overrideColors).toBe('0 green')
+        assert.equal(rule.name, '--name')
+        assert.equal(rule.fontFamily, 'name')
+        assert.equal(rule.basePalette, 'light')
+        assert.equal(rule.overrideColors, '0 green')
     })
 })
 describe('CSSFunctionRule, CSSFunctionDeclarations', () => {
@@ -635,22 +634,22 @@ describe('CSSFunctionRule, CSSFunctionDeclarations', () => {
         const declarations = rule.cssRules[1]
 
         // CSSRule
-        expect(rule.cssText).toBe(`@function --name(${parameters.map(([input, expected = input]) => expected).join(', ')}) { @media {} result: 1; }`)
-        expect(rule.parentRule).toBeNull()
-        expect(rule.parentStyleSheet).toBe(styleSheet)
-        expect(declarations.cssText).toBe('result: 1;')
-        expect(declarations.parentRule).toBe(rule)
-        expect(declarations.parentStyleSheet).toBe(styleSheet)
+        assert.equal(rule.cssText, `@function --name(${parameters.map(([input, expected = input]) => expected).join(', ')}) { @media {} result: 1; }`)
+        assert.equal(rule.parentRule, null)
+        assert.equal(rule.parentStyleSheet, styleSheet)
+        assert.equal(declarations.cssText, 'result: 1;')
+        assert.equal(declarations.parentRule, rule)
+        assert.equal(declarations.parentStyleSheet, styleSheet)
 
         // CSSGroupingRule
-        expect(CSSRuleList.is(rule.cssRules)).toBeTruthy()
+        assert.equal(CSSRuleList.is(rule.cssRules), true)
 
         // CSSFunctionRule
-        expect(rule.name).toBe('--name')
-        expect(rule.returnType).toBe('*')
+        assert.equal(rule.name, '--name')
+        assert.equal(rule.returnType, '*')
 
         // CSSFunctionDeclarations
-        expect(CSSFunctionDescriptors.is(declarations.style)).toBeTruthy()
+        assert.equal(CSSFunctionDescriptors.is(declarations.style), true)
     })
     test('methods', () => {
 
@@ -664,7 +663,7 @@ describe('CSSFunctionRule, CSSFunctionDeclarations', () => {
         ]
         const rule = createStyleSheet(`@function --name(${parameters.join(', ')}) {}`).cssRules[0]
 
-        expect(rule.getParameters()).toEqual([
+        assert.deepEqual(rule.getParameters(), [
             { defaultValue: null, name: '--param\\ eter-1', type: '*' },
             { defaultValue: null, name: '--parameter-2', type: '*' },
             { defaultValue: null, name: '--parameter-3', type: '<number>' },
@@ -683,40 +682,40 @@ describe('CSSImportRule', () => {
         await CSSImportRule.convert(globalThis, rule)._promise
 
         // CSSRule
-        expect(rule.cssText).toBe('@import url("./sheet.css");')
-        expect(rule.parentRule).toBeNull()
-        expect(rule.parentStyleSheet).toBe(styleSheet)
+        assert.equal(rule.cssText, '@import url("./sheet.css");')
+        assert.equal(rule.parentRule, null)
+        assert.equal(rule.parentStyleSheet, styleSheet)
 
         // CSSImportRule
-        expect(rule.href).toBe('./sheet.css')
-        expect(rule.layerName).toBeNull()
-        expect(MediaList.is(rule.media)).toBeTruthy()
-        expect(rule.media.mediaText).toBe('')
-        expect(rule.supportsText).toBeNull()
-        expect(CSSStyleSheet.is(rule.styleSheet)).toBeTruthy()
+        assert.equal(rule.href, './sheet.css')
+        assert.equal(rule.layerName, null)
+        assert.equal(MediaList.is(rule.media), true)
+        assert.equal(rule.media.mediaText, '')
+        assert.equal(rule.supportsText, null)
+        assert.equal(CSSStyleSheet.is(rule.styleSheet), true)
 
         // Imported CSSStyleSheet and StyleSheet properties
-        expect(rule.styleSheet.disabled).toBeFalsy()
-        expect(rule.styleSheet.href).toBe(`${baseURL}/sheet.css`)
-        expect(rule.styleSheet.ownerNode).toBeNull()
-        expect(rule.styleSheet.ownerRule).toBe(rule)
-        expect(MediaList.is(rule.styleSheet.media)).toBeTruthy()
-        expect(rule.styleSheet.media).not.toBe(rule.media)
-        expect(rule.styleSheet.media.mediaText).toBe(rule.media.mediaText)
-        expect(rule.styleSheet.parentStyleSheet).toBe(styleSheet)
-        expect(rule.styleSheet.title).toBe('')
-        expect(rule.styleSheet.type).toBe('text/css')
+        assert.equal(rule.styleSheet.disabled, false)
+        assert.equal(rule.styleSheet.href, `${baseURL}/sheet.css`)
+        assert.equal(rule.styleSheet.ownerNode, null)
+        assert.equal(rule.styleSheet.ownerRule, rule)
+        assert.equal(MediaList.is(rule.styleSheet.media), true)
+        assert.notEqual(rule.styleSheet.media, rule.media)
+        assert.equal(rule.styleSheet.media.mediaText, rule.media.mediaText)
+        assert.equal(rule.styleSheet.parentStyleSheet, styleSheet)
+        assert.equal(rule.styleSheet.title, '')
+        assert.equal(rule.styleSheet.type, 'text/css')
 
         // Alternative CSSImportRule attribute syntax
         rule = createStyleSheet('@import url(./global.css) layer supports(color: green) all;').cssRules[0]
-        expect(rule.href).toBe('./global.css')
-        expect(rule.layerName).toBe('')
-        expect(rule.supportsText).toBe('color: green')
-        expect(rule.cssText).toBe('@import url("./global.css") layer supports(color: green);')
+        assert.equal(rule.href, './global.css')
+        assert.equal(rule.layerName, '')
+        assert.equal(rule.supportsText, 'color: green')
+        assert.equal(rule.cssText, '@import url("./global.css") layer supports(color: green);')
         rule = createStyleSheet('@import url("./global.css") layer(global) all;').cssRules[0]
-        expect(rule.href).toBe('./global.css')
-        expect(rule.layerName).toBe('global')
-        expect(rule.cssText).toBe('@import url("./global.css") layer(global);')
+        assert.equal(rule.href, './global.css')
+        assert.equal(rule.layerName, 'global')
+        assert.equal(rule.cssText, '@import url("./global.css") layer(global);')
 
         await CSSImportRule.convert(globalThis, rule)._promise
     })
@@ -738,7 +737,7 @@ describe('CSSImportRule', () => {
         await Promise.all(failures.map(async input => {
             const rule = createStyleSheet(input).cssRules[0]
             await CSSImportRule.convert(globalThis, rule)._promise
-            expect(rule.styleSheet).toBeNull()
+            assert.equal(rule.styleSheet, null)
         }))
 
         const successes = [
@@ -772,14 +771,14 @@ describe('CSSImportRule', () => {
         await Promise.all(successes.map(async ([input, expected = 'style { content: "€"; }', encoding]) => {
             const rule = createStyleSheet(input, { encoding }).cssRules[0]
             await CSSImportRule.convert(globalThis, rule)._promise
-            expect(CSSStyleSheet.is(rule.styleSheet)).toBeTruthy()
+            assert.equal(CSSStyleSheet.is(rule.styleSheet), true)
             if (expected === '') {
-                expect(rule.styleSheet.cssRules[0]?.cssText).toBeUndefined()
+                assert.equal(rule.styleSheet.cssRules[0]?.cssText, undefined)
             } else if (expected) {
-                expect(rule.styleSheet.cssRules[0]?.cssText).toBe(expected)
+                assert.equal(rule.styleSheet.cssRules[0]?.cssText, expected)
             } else {
-                expect(() => rule.styleSheet.cssRules).toThrow(ACCESS_THIRD_PARTY_STYLESHEET_ERROR)
-                expect(() => rule.styleSheet.rules).toThrow(ACCESS_THIRD_PARTY_STYLESHEET_ERROR)
+                assert.throws(() => rule.styleSheet.cssRules, ACCESS_THIRD_PARTY_STYLESHEET_ERROR)
+                assert.throws(() => rule.styleSheet.rules, ACCESS_THIRD_PARTY_STYLESHEET_ERROR)
             }
         }))
     })
@@ -789,13 +788,13 @@ describe('CSSImportRule', () => {
 
         const a = styleSheet.cssRules[0]
         await CSSImportRule.convert(globalThis, a)._promise
-        expect(a.styleSheet).not.toBeNull()
+        assert.notEqual(a.styleSheet, null)
         const b = a.styleSheet.cssRules[0]
         await CSSImportRule.convert(globalThis, b)._promise
-        expect(b.styleSheet).not.toBeNull()
+        assert.notEqual(b.styleSheet, null)
         const circular = b.styleSheet.cssRules[0]
         await CSSImportRule.convert(globalThis, circular)._promise
-        expect(circular.styleSheet).toBeNull()
+        assert.equal(circular.styleSheet, null)
     })
 })
 describe('CSSKeyframeRule', () => {
@@ -806,17 +805,17 @@ describe('CSSKeyframeRule', () => {
         const rule = parentRule.cssRules[0]
 
         // CSSRule
-        expect(rule.cssText).toBe('100% { color: green; }')
-        expect(rule.parentRule).toBe(parentRule)
-        expect(rule.parentStyleSheet).toBe(styleSheet)
+        assert.equal(rule.cssText, '100% { color: green; }')
+        assert.equal(rule.parentRule, parentRule)
+        assert.equal(rule.parentStyleSheet, styleSheet)
 
         // CSSKeyframeRule
-        expect(rule.keyText).toBe('100%')
+        assert.equal(rule.keyText, '100%')
         rule.keyText = 'from'
-        expect(rule.keyText).toBe('0%')
-        expect(rule.cssText).toBe('0% { color: green; }')
-        expect(() => rule.keyText = '101%').toThrow(SET_INVALID_KEYFRAME_SELECTOR_ERROR)
-        expect(CSSKeyframeProperties.is(rule.style)).toBeTruthy()
+        assert.equal(rule.keyText, '0%')
+        assert.equal(rule.cssText, '0% { color: green; }')
+        assert.throws(() => rule.keyText = '101%', SET_INVALID_KEYFRAME_SELECTOR_ERROR)
+        assert.equal(CSSKeyframeProperties.is(rule.style), true)
     })
 })
 describe('CSSKeyframesRule', () => {
@@ -826,63 +825,63 @@ describe('CSSKeyframesRule', () => {
         const rule = styleSheet.cssRules[0]
 
         // CSSRule
-        expect(rule.cssText).toBe('@keyframes name { 100% {} }')
-        expect(rule.parentRule).toBeNull()
-        expect(rule.parentStyleSheet).toBe(styleSheet)
+        assert.equal(rule.cssText, '@keyframes name { 100% {} }')
+        assert.equal(rule.parentRule, null)
+        assert.equal(rule.parentStyleSheet, styleSheet)
 
         // CSSKeyframesRule
-        expect(CSSRuleList.is(rule.cssRules)).toBeTruthy()
-        expect(rule).toHaveLength(1)
-        expect(rule[0]).toBe(rule.cssRules[0])
-        expect(rule.name).toBe('name')
+        assert.equal(CSSRuleList.is(rule.cssRules), true)
+        assert.equal(rule.length, 1)
+        assert.equal(rule[0], rule.cssRules[0])
+        assert.equal(rule.name, 'name')
         rule.name = '\n'
-        expect(rule.name).toBe('\\a')
-        expect(rule.cssText).toBe('@keyframes \\a { 100% {} }')
-        expect(() => rule.name = '').toThrow(SET_INVALID_KEYFRAMES_NAME_ERROR)
+        assert.equal(rule.name, '\\a')
+        assert.equal(rule.cssText, '@keyframes \\a { 100% {} }')
+        assert.throws(() => rule.name = '', SET_INVALID_KEYFRAMES_NAME_ERROR)
     })
     test('methods', () => {
 
         const rule = createStyleSheet('@keyframes name {}').cssRules[0]
         const keyframes = rule.cssRules
 
-        expect(keyframes).toHaveLength(0)
+        assert.equal(keyframes.length, 0)
 
         rule.appendRule('to { color: orange }')
 
-        expect(rule.findRule('to')).toBe(keyframes[0])
-        expect(rule.findRule('100%')).toBe(keyframes[0])
-        expect(keyframes).toHaveLength(1)
-        expect(keyframes[0].style.color).toBe('orange')
-        expect(() => rule.appendRule('invalid')).toThrow(INVALID_RULE_ERROR)
+        assert.equal(rule.findRule('to'), keyframes[0])
+        assert.equal(rule.findRule('100%'), keyframes[0])
+        assert.equal(keyframes.length, 1)
+        assert.equal(keyframes[0].style.color, 'orange')
+        assert.throws(() => rule.appendRule('invalid'), INVALID_RULE_ERROR)
 
         rule.appendRule('to { color: green }')
         const to = keyframes[1]
 
-        expect(keyframes).toHaveLength(2)
-        expect(to.style.color).toBe('green')
-        expect(rule.findRule('to')).toBe(to)
+        assert.equal(keyframes.length, 2)
+        assert.equal(to.style.color, 'green')
+        assert.equal(rule.findRule('to'), to)
 
         rule.deleteRule('to')
 
-        expect(keyframes).toHaveLength(1)
-        expect(to.parentRule).toBeNull()
-        expect(rule.findRule('to')).toBe(keyframes[0])
+        assert.equal(keyframes.length, 1)
+        assert.equal(to.parentRule, null)
+        assert.equal(rule.findRule('to'), keyframes[0])
 
         rule.appendRule('50%, 100% {}')
 
-        expect(keyframes).toHaveLength(2)
-        expect(rule.findRule('50%')).toBeNull()
-        expect(rule.findRule('100%, 50%')).toBeNull()
-        expect(rule.findRule('50%, 100%')).toBe(keyframes[1])
-        expect(rule.findRule('50%,100%')).toBe(keyframes[1])
+        assert.equal(keyframes.length, 2)
+        assert.equal(rule.findRule('50%'), null)
+        assert.equal(rule.findRule('100%, 50%'), null)
+        assert.equal(rule.findRule('50%, 100%'), keyframes[1])
+        assert.equal(rule.findRule('50%,100%'), keyframes[1])
 
         rule.deleteRule('50%')
 
-        expect(keyframes).toHaveLength(2)
+        assert.equal(keyframes.length, 2)
 
         rule.deleteRule('50%, 100%')
 
-        expect(keyframes).toHaveLength(1)
+        assert.equal(keyframes.length, 1)
     })
 })
 describe('CSSLayerBlockRule', () => {
@@ -892,15 +891,15 @@ describe('CSSLayerBlockRule', () => {
         const rule = styleSheet.cssRules[0]
 
         // CSSRule
-        expect(rule.cssText).toBe('@layer name { style {} }')
-        expect(rule.parentRule).toBeNull()
-        expect(rule.parentStyleSheet).toBe(styleSheet)
+        assert.equal(rule.cssText, '@layer name { style {} }')
+        assert.equal(rule.parentRule, null)
+        assert.equal(rule.parentStyleSheet, styleSheet)
 
         // CSSGroupingRule
-        expect(CSSRuleList.is(rule.cssRules)).toBeTruthy()
+        assert.equal(CSSRuleList.is(rule.cssRules), true)
 
         // CSSLayerBlockRule
-        expect(rule.name).toBe('name')
+        assert.equal(rule.name, 'name')
     })
 })
 describe('CSSLayerStatementRule', () => {
@@ -910,12 +909,12 @@ describe('CSSLayerStatementRule', () => {
         const rule = styleSheet.cssRules[0]
 
         // CSSRule
-        expect(rule.cssText).toBe('@layer name;')
-        expect(rule.parentRule).toBeNull()
-        expect(rule.parentStyleSheet).toBe(styleSheet)
+        assert.equal(rule.cssText, '@layer name;')
+        assert.equal(rule.parentRule, null)
+        assert.equal(rule.parentStyleSheet, styleSheet)
 
         // CSSLayerStatementRule
-        expect(rule.nameList).toBe('name')
+        assert.equal(rule.nameList, 'name')
     })
 })
 describe('CSSMarginRule', () => {
@@ -926,13 +925,13 @@ describe('CSSMarginRule', () => {
         const rule = parentRule.cssRules[0]
 
         // CSSRule
-        expect(rule.cssText).toBe('@top-left { color: green; }')
-        expect(rule.parentRule).toBe(parentRule)
-        expect(rule.parentStyleSheet).toBe(styleSheet)
+        assert.equal(rule.cssText, '@top-left { color: green; }')
+        assert.equal(rule.parentRule, parentRule)
+        assert.equal(rule.parentStyleSheet, styleSheet)
 
         // CSSMarginRule
-        expect(rule.name).toBe('top-left')
-        expect(CSSMarginDescriptors.is(rule.style)).toBeTruthy()
+        assert.equal(rule.name, 'top-left')
+        assert.equal(CSSMarginDescriptors.is(rule.style), true)
     })
 })
 describe('CSSMediaRule', () => {
@@ -942,27 +941,27 @@ describe('CSSMediaRule', () => {
         let rule = styleSheet.cssRules[0]
 
         // CSSRule
-        expect(rule.cssText).toBe('@media all { style {} }')
-        expect(rule.parentRule).toBeNull()
-        expect(rule.parentStyleSheet).toBe(styleSheet)
+        assert.equal(rule.cssText, '@media all { style {} }')
+        assert.equal(rule.parentRule, null)
+        assert.equal(rule.parentStyleSheet, styleSheet)
 
         // CSSGroupingRule
-        expect(CSSRuleList.is(rule.cssRules)).toBeTruthy()
+        assert.equal(CSSRuleList.is(rule.cssRules), true)
 
         // CSSConditionRule
-        expect(rule.conditionText).toBe('all')
+        assert.equal(rule.conditionText, 'all')
 
         // CSSMediaRule
-        expect(MediaList.is(rule.media)).toBeTruthy()
-        expect(rule.matches).toBeTruthy()
+        assert.equal(MediaList.is(rule.media), true)
+        assert.equal(rule.matches, true)
 
         styleSheet = new globalThis.CSSStyleSheet()
         styleSheet.insertRule('@media all {}')
         rule = styleSheet.cssRules[0]
 
-        expect(rule.matches).toBeFalsy()
+        assert.equal(rule.matches, false)
         document.adoptedStyleSheets.push(styleSheet)
-        expect(rule.matches).toBeTruthy()
+        assert.equal(rule.matches, true)
     })
 })
 describe('CSSNamespaceRule', () => {
@@ -972,13 +971,13 @@ describe('CSSNamespaceRule', () => {
         const rule = styleSheet.cssRules[0]
 
         // CSSRule
-        expect(rule.cssText).toBe('@namespace svg url("http://www.w3.org/2000/svg");')
-        expect(rule.parentRule).toBeNull()
-        expect(rule.parentStyleSheet).toBe(styleSheet)
+        assert.equal(rule.cssText, '@namespace svg url("http://www.w3.org/2000/svg");')
+        assert.equal(rule.parentRule, null)
+        assert.equal(rule.parentStyleSheet, styleSheet)
 
         // CSSNamespaceRule
-        expect(rule.namespaceURI).toBe('http://www.w3.org/2000/svg')
-        expect(rule.prefix).toBe('svg')
+        assert.equal(rule.namespaceURI, 'http://www.w3.org/2000/svg')
+        assert.equal(rule.prefix, 'svg')
     })
 })
 describe('CSSNestedDeclarations', () => {
@@ -1000,12 +999,12 @@ describe('CSSNestedDeclarations', () => {
             const rule = parentRule.cssRules[0]
 
             // CSSRule
-            expect(rule.cssText).toBe('color: green;')
-            expect(rule.parentRule).toBe(parentRule)
-            expect(rule.parentStyleSheet).toBe(styleSheet)
+            assert.equal(rule.cssText, 'color: green;')
+            assert.equal(rule.parentRule, parentRule)
+            assert.equal(rule.parentStyleSheet, styleSheet)
 
             // CSSNestedDeclarations
-            expect(CSSStyleProperties.is(rule.style)).toBeTruthy()
+            assert.equal(CSSStyleProperties.is(rule.style), true)
         }
     })
 })
@@ -1022,24 +1021,24 @@ describe('CSSPageRule, CSSPageDeclarations', () => {
         const declarations = rule.cssRules[1]
 
         // CSSRule
-        expect(rule.cssText).toBe('@page intro { @top-left {} color: green; }')
-        expect(rule.parentRule).toBeNull()
-        expect(rule.parentStyleSheet).toBe(styleSheet)
-        expect(declarations.cssText).toBe('color: green;')
-        expect(declarations.parentRule).toBe(rule)
-        expect(declarations.parentStyleSheet).toBe(styleSheet)
+        assert.equal(rule.cssText, '@page intro { @top-left {} color: green; }')
+        assert.equal(rule.parentRule, null)
+        assert.equal(rule.parentStyleSheet, styleSheet)
+        assert.equal(declarations.cssText, 'color: green;')
+        assert.equal(declarations.parentRule, rule)
+        assert.equal(declarations.parentStyleSheet, styleSheet)
 
         // CSSGroupingRule
-        expect(CSSRuleList.is(rule.cssRules)).toBeTruthy()
+        assert.equal(CSSRuleList.is(rule.cssRules), true)
 
         // CSSPageRule
-        expect(rule.selectorText).toBe('intro')
+        assert.equal(rule.selectorText, 'intro')
         rule.selectorText = 'outro'
-        expect(rule.selectorText).toBe('outro')
-        expect(CSSPageDescriptors.is(rule.style)).toBeTruthy()
+        assert.equal(rule.selectorText, 'outro')
+        assert.equal(CSSPageDescriptors.is(rule.style), true)
 
         // CSSPageDeclarations
-        expect(CSSPageDescriptors.is(declarations.style)).toBeTruthy()
+        assert.equal(CSSPageDescriptors.is(declarations.style), true)
     })
 })
 describe('CSSPositionTryRule', () => {
@@ -1049,13 +1048,13 @@ describe('CSSPositionTryRule', () => {
         const rule = styleSheet.cssRules[0]
 
         // CSSRule
-        expect(rule.cssText).toBe('@position-try --name { top: 1px; }')
-        expect(rule.parentRule).toBeNull()
-        expect(rule.parentStyleSheet).toBe(styleSheet)
+        assert.equal(rule.cssText, '@position-try --name { top: 1px; }')
+        assert.equal(rule.parentRule, null)
+        assert.equal(rule.parentStyleSheet, styleSheet)
 
         // CSSPositionTryRule
-        expect(rule.name).toBe('--name')
-        expect(CSSPositionTryDescriptors.is(rule.style)).toBeTruthy()
+        assert.equal(rule.name, '--name')
+        assert.equal(CSSPositionTryDescriptors.is(rule.style), true)
     })
 })
 describe('CSSPropertyRule', () => {
@@ -1065,14 +1064,14 @@ describe('CSSPropertyRule', () => {
         const rule = styleSheet.cssRules[0]
 
         // CSSRule
-        expect(rule.cssText).toBe('@property --name { syntax: "*"; inherits: true; }')
-        expect(rule.parentRule).toBeNull()
-        expect(rule.parentStyleSheet).toBe(styleSheet)
+        assert.equal(rule.cssText, '@property --name { syntax: "*"; inherits: true; }')
+        assert.equal(rule.parentRule, null)
+        assert.equal(rule.parentStyleSheet, styleSheet)
 
         // CSSPropertyRule
-        expect(rule.name).toBe('--name')
-        expect(rule.syntax).toBe('"*"')
-        expect(rule.inherits).toBe('true')
+        assert.equal(rule.name, '--name')
+        assert.equal(rule.syntax, '"*"')
+        assert.equal(rule.inherits, 'true')
     })
 })
 describe('CSSScopeRule', () => {
@@ -1087,16 +1086,16 @@ describe('CSSScopeRule', () => {
         const rule = styleSheet.cssRules[0]
 
         // CSSRule
-        expect(rule.cssText).toBe('@scope (start) to (end) { style {} color: green; }')
-        expect(rule.parentRule).toBeNull()
-        expect(rule.parentStyleSheet).toBe(styleSheet)
+        assert.equal(rule.cssText, '@scope (start) to (end) { style {} color: green; }')
+        assert.equal(rule.parentRule, null)
+        assert.equal(rule.parentStyleSheet, styleSheet)
 
         // CSSGroupingRule
-        expect(CSSRuleList.is(rule.cssRules)).toBeTruthy()
+        assert.equal(CSSRuleList.is(rule.cssRules), true)
 
         // CSSLayerBlockRule
-        expect(rule.end).toBe('end')
-        expect(rule.start).toBe('start')
+        assert.equal(rule.end, 'end')
+        assert.equal(rule.start, 'start')
     })
 })
 describe('CSSStartingStyleRule', () => {
@@ -1106,12 +1105,12 @@ describe('CSSStartingStyleRule', () => {
         const rule = styleSheet.cssRules[0]
 
         // CSSRule
-        expect(rule.cssText).toBe('@starting-style { style {} }')
-        expect(rule.parentRule).toBeNull()
-        expect(rule.parentStyleSheet).toBe(styleSheet)
+        assert.equal(rule.cssText, '@starting-style { style {} }')
+        assert.equal(rule.parentRule, null)
+        assert.equal(rule.parentStyleSheet, styleSheet)
 
         // CSSGroupingRule
-        expect(CSSRuleList.is(rule.cssRules)).toBeTruthy()
+        assert.equal(CSSRuleList.is(rule.cssRules), true)
     })
 })
 describe('CSSStyleRule', () => {
@@ -1133,70 +1132,70 @@ describe('CSSStyleRule', () => {
         const scopedStyleRule = scopeRule.cssRules[0]
 
         // CSSRule
-        expect(styleRule.cssText).toBe('style { @scope { scoped { & nested {} } } & nested {} color: green; }')
-        expect(scopedStyleRule.cssText).toBe('scoped { & nested {} }')
-        expect(nestedStyleRule.cssText).toBe('& nested {}')
-        expect(styleRule.parentRule).toBeNull()
-        expect(scopedStyleRule.parentRule).toBe(scopeRule)
-        expect(nestedStyleRule.parentRule).toBe(styleRule)
-        expect(styleRule.parentStyleSheet).toBe(styleSheet)
-        expect(scopedStyleRule.parentStyleSheet).toBe(styleSheet)
-        expect(nestedStyleRule.parentStyleSheet).toBe(styleSheet)
+        assert.equal(styleRule.cssText, 'style { @scope { scoped { & nested {} } } & nested {} color: green; }')
+        assert.equal(scopedStyleRule.cssText, 'scoped { & nested {} }')
+        assert.equal(nestedStyleRule.cssText, '& nested {}')
+        assert.equal(styleRule.parentRule, null)
+        assert.equal(scopedStyleRule.parentRule, scopeRule)
+        assert.equal(nestedStyleRule.parentRule, styleRule)
+        assert.equal(styleRule.parentStyleSheet, styleSheet)
+        assert.equal(scopedStyleRule.parentStyleSheet, styleSheet)
+        assert.equal(nestedStyleRule.parentStyleSheet, styleSheet)
 
         // CSSGroupingRule
-        expect(CSSRuleList.is(styleRule.cssRules)).toBeTruthy()
-        expect(CSSRuleList.is(scopedStyleRule.cssRules)).toBeTruthy()
-        expect(CSSRuleList.is(nestedStyleRule.cssRules)).toBeTruthy()
+        assert.equal(CSSRuleList.is(styleRule.cssRules), true)
+        assert.equal(CSSRuleList.is(scopedStyleRule.cssRules), true)
+        assert.equal(CSSRuleList.is(nestedStyleRule.cssRules), true)
 
         // CSSStyleRule
-        expect(styleRule.selectorText).toBe('style')
-        expect(scopedStyleRule.selectorText).toBe('scoped')
-        expect(nestedStyleRule.selectorText).toBe('& nested')
+        assert.equal(styleRule.selectorText, 'style')
+        assert.equal(scopedStyleRule.selectorText, 'scoped')
+        assert.equal(nestedStyleRule.selectorText, '& nested')
         styleRule.selectorText = 'parent'
         scopedStyleRule.selectorText = 'scoped-parent'
         nestedStyleRule.selectorText = 'child'
-        expect(styleRule.selectorText).toBe('parent')
-        expect(scopedStyleRule.selectorText).toBe('scoped-parent')
-        expect(nestedStyleRule.selectorText).toBe('& child')
-        expect(CSSStyleProperties.is(styleRule.style)).toBeTruthy()
-        expect(CSSStyleProperties.is(scopedStyleRule.style)).toBeTruthy()
-        expect(CSSStyleProperties.is(nestedStyleRule.style)).toBeTruthy()
+        assert.equal(styleRule.selectorText, 'parent')
+        assert.equal(scopedStyleRule.selectorText, 'scoped-parent')
+        assert.equal(nestedStyleRule.selectorText, '& child')
+        assert.equal(CSSStyleProperties.is(styleRule.style), true)
+        assert.equal(CSSStyleProperties.is(scopedStyleRule.style), true)
+        assert.equal(CSSStyleProperties.is(nestedStyleRule.style), true)
     })
     test('methods', () => {
 
         const { cssRules: [rule] } = createStyleSheet('style {}')
         const { cssRules } = rule
 
-        expect(cssRules).toHaveLength(0)
+        assert.equal(cssRules.length, 0)
 
         rule.insertRule('@media screen {}')
 
-        expect(() => rule.insertRule('style {}', -1)).toThrow(INVALID_RULE_INDEX_ERROR)
-        expect(() => rule.insertRule(' ')).toThrow(MISSING_RULE_ERROR)
-        expect(() => rule.insertRule('style {};')).toThrow(EXTRA_RULE_ERROR)
-        expect(() => rule.insertRule('style;')).toThrow(INVALID_RULE_ERROR)
-        expect(() => rule.insertRule('@charset "utf-8";')).toThrow(INVALID_RULE_ERROR)
-        expect(() => rule.insertRule('@import "./global.css";')).toThrow(INVALID_RULE_ERROR)
-        expect(() => rule.insertRule('@media screen;')).toThrow(INVALID_RULE_ERROR)
+        assert.throws(() => rule.insertRule('style {}', -1), INVALID_RULE_INDEX_ERROR)
+        assert.throws(() => rule.insertRule(' '), MISSING_RULE_ERROR)
+        assert.throws(() => rule.insertRule('style {};'), EXTRA_RULE_ERROR)
+        assert.throws(() => rule.insertRule('style;'), INVALID_RULE_ERROR)
+        assert.throws(() => rule.insertRule('@charset "utf-8";'), INVALID_RULE_ERROR)
+        assert.throws(() => rule.insertRule('@import "./global.css";'), INVALID_RULE_ERROR)
+        assert.throws(() => rule.insertRule('@media screen;'), INVALID_RULE_ERROR)
 
         rule.insertRule('@media print {}')
 
-        expect(cssRules).toHaveLength(2)
+        assert.equal(cssRules.length, 2)
 
         rule.insertRule('@media all {}', 2)
         const mediaRule = cssRules[0]
 
-        expect(cssRules).toHaveLength(3)
-        expect(mediaRule.conditionText).toBe('print')
-        expect(cssRules[1].conditionText).toBe('screen')
-        expect(cssRules[2].conditionText).toBe('all')
+        assert.equal(cssRules.length, 3)
+        assert.equal(mediaRule.conditionText, 'print')
+        assert.equal(cssRules[1].conditionText, 'screen')
+        assert.equal(cssRules[2].conditionText, 'all')
 
         rule.deleteRule(0)
 
-        expect(cssRules).toHaveLength(2)
-        expect(mediaRule.parentRule).toBeNull()
-        expect(cssRules[0].conditionText).toBe('screen')
-        expect(cssRules[1].conditionText).toBe('all')
+        assert.equal(cssRules.length, 2)
+        assert.equal(mediaRule.parentRule, null)
+        assert.equal(cssRules[0].conditionText, 'screen')
+        assert.equal(cssRules[1].conditionText, 'all')
     })
 })
 describe('CSSSupportsRule', () => {
@@ -1206,18 +1205,18 @@ describe('CSSSupportsRule', () => {
         const rule = styleSheet.cssRules[0]
 
         // CSSRule
-        expect(rule.cssText).toBe('@supports (color: green) { style {} }')
-        expect(rule.parentRule).toBeNull()
-        expect(rule.parentStyleSheet).toBe(styleSheet)
+        assert.equal(rule.cssText, '@supports (color: green) { style {} }')
+        assert.equal(rule.parentRule, null)
+        assert.equal(rule.parentStyleSheet, styleSheet)
 
         // CSSGroupingRule
-        expect(CSSRuleList.is(rule.cssRules)).toBeTruthy()
+        assert.equal(CSSRuleList.is(rule.cssRules), true)
 
         // CSSConditionRule
-        expect(rule.conditionText).toBe('(color: green)')
+        assert.equal(rule.conditionText, '(color: green)')
 
         // CSSSupportsRule
-        expect(rule.matches).toBeTruthy()
+        assert.equal(rule.matches, true)
     })
 })
 describe('CSSViewTransitionRule', () => {
@@ -1227,14 +1226,14 @@ describe('CSSViewTransitionRule', () => {
         const rule = styleSheet.cssRules[0]
 
         // CSSRule
-        expect(rule.cssText).toBe('@view-transition { navigation: none; types: type-1 type-2; }')
-        expect(rule.parentRule).toBeNull()
-        expect(rule.parentStyleSheet).toBe(styleSheet)
+        assert.equal(rule.cssText, '@view-transition { navigation: none; types: type-1 type-2; }')
+        assert.equal(rule.parentRule, null)
+        assert.equal(rule.parentStyleSheet, styleSheet)
 
         // CSSViewTransitionRule
-        expect(rule.navigation).toBe('none')
-        expect(rule.types).toEqual(['type-1', 'type-2'])
-        expect(() => rule.types.push('type-3')).toThrow(TypeError)
+        assert.equal(rule.navigation, 'none')
+        assert.deepEqual(rule.types, ['type-1', 'type-2'])
+        assert.throws(() => rule.types.push('type-3'), TypeError)
     })
 })
 
@@ -1251,7 +1250,7 @@ describe('CSSViewTransitionRule', () => {
  */
 test('Setting CSSRule.cssText does nothing', () => {
     const rule = createStyleSheet('style {}').cssRules[0]
-    expect(() => rule.cssText = 'override {}').toThrow()
+    assert.throws(() => rule.cssText = 'override {}')
 })
 
 describe('CSS grammar - syntax', () => {
@@ -1262,10 +1261,10 @@ describe('CSS grammar - syntax', () => {
             @media } style {}
             style-2 {}
         `)
-        expect(cssRules).toHaveLength(3)
-        expect(cssRules[0].cssText).toBe('style-1 {}')
-        expect(cssRules[1].cssText).toBe('@media not all {}')
-        expect(cssRules[2].cssText).toBe('style-2 {}')
+        assert.equal(cssRules.length, 3)
+        assert.equal(cssRules[0].cssText, 'style-1 {}')
+        assert.equal(cssRules[1].cssText, '@media not all {}')
+        assert.equal(cssRules[2].cssText, 'style-2 {}')
     })
     test('qualified rules start with anything but <at-keyword-token> and only end with {} block', () => {
         const { cssRules } = createStyleSheet(`
@@ -1274,9 +1273,9 @@ describe('CSS grammar - syntax', () => {
             color: red } style {}
             style-2 {}
         `)
-        expect(cssRules).toHaveLength(2)
-        expect(cssRules[0].cssText).toBe('style-1 {}')
-        expect(cssRules[1].cssText).toBe('style-2 {}')
+        assert.equal(cssRules.length, 2)
+        assert.equal(cssRules[0].cssText, 'style-1 {}')
+        assert.equal(cssRules[1].cssText, 'style-2 {}')
     })
     test('top-level rule starting like a custom property declaration', () => {
         const { cssRules } = createStyleSheet(`
@@ -1285,8 +1284,8 @@ describe('CSS grammar - syntax', () => {
             --custom :hover {}
             --custom a:hover {}
         `)
-        expect(cssRules).toHaveLength(1)
-        expect(cssRules[0].cssText).toBe('--custom a:hover {}')
+        assert.equal(cssRules.length, 1)
+        assert.equal(cssRules[0].cssText, '--custom a:hover {}')
     })
     test('} breaks consuming a declaration and a nested rule prelude', () => {
         const { cssRules } = createStyleSheet(`
@@ -1305,12 +1304,12 @@ describe('CSS grammar - syntax', () => {
                 src: }, local("monospace");
             }
         `)
-        expect(cssRules).toHaveLength(5)
-        expect(cssRules[0].cssText).toBe('style-1 { --custom: ; }')
-        expect(cssRules[1].cssText).toBe('style-2 {}')
-        expect(cssRules[2].cssText).toBe('style-3 { color: green; }')
-        expect(cssRules[3].cssText).toBe('style-4 {}')
-        expect(cssRules[4].cssText).toBe('@font-face {}')
+        assert.equal(cssRules.length, 5)
+        assert.equal(cssRules[0].cssText, 'style-1 { --custom: ; }')
+        assert.equal(cssRules[1].cssText, 'style-2 {}')
+        assert.equal(cssRules[2].cssText, 'style-3 { color: green; }')
+        assert.equal(cssRules[3].cssText, 'style-4 {}')
+        assert.equal(cssRules[4].cssText, '@font-face {}')
     })
     test('; breaks consuming a declaration and a nested rule prelude', () => {
         const { cssRules } = createStyleSheet(`
@@ -1325,9 +1324,9 @@ describe('CSS grammar - syntax', () => {
                 src: ;, local("serif");
             }
         `)
-        expect(cssRules).toHaveLength(2)
-        expect(cssRules[0].cssText).toBe('style { color: green; }')
-        expect(cssRules[1].cssText).toBe('@font-face {}')
+        assert.equal(cssRules.length, 2)
+        assert.equal(cssRules[0].cssText, 'style { color: green; }')
+        assert.equal(cssRules[1].cssText, '@font-face {}')
     })
     test('! does not break consuming a declaration value', () => {
         // but is interpreted as a bad token if not followed by `important`
@@ -1342,8 +1341,8 @@ describe('CSS grammar - syntax', () => {
                 src: !, !important, local("serif");
             }
         `)
-        expect(styleSheet.cssRules[0].cssText).toBe('style { --custom:  !important; }')
-        expect(styleSheet.cssRules[1].cssText).toBe('@font-face { src: local("serif"); }')
+        assert.equal(styleSheet.cssRules[0].cssText, 'style { --custom:  !important; }')
+        assert.equal(styleSheet.cssRules[1].cssText, '@font-face { src: local("serif"); }')
     })
     test('! and ; are not interpreted as bad tokens when nested in a block or function', () => {
 
@@ -1354,8 +1353,8 @@ describe('CSS grammar - syntax', () => {
             @media (;) {}
         `)
 
-        expect(cssRules[0].cssText).toBe(`style { ${declarations}; }`)
-        expect(cssRules[1].cssText).toBe('@media (;) {}')
+        assert.equal(cssRules[0].cssText, `style { ${declarations}; }`)
+        assert.equal(cssRules[1].cssText, '@media (;) {}')
     })
     test('positioned {} block in a declaration value not for a custom property', () => {
         // It is always consumed as a rule
@@ -1372,8 +1371,8 @@ describe('CSS grammar - syntax', () => {
                 src: {}, local("monospace");
             }
         `)
-        expect(cssRules[0].cssText).toBe('style { color: ({} 1) var(--custom) (1 {}); & style:hover {} }')
-        expect(cssRules[1].cssText).toBe('@font-face { src: local("serif"); }')
+        assert.equal(cssRules[0].cssText, 'style { color: ({} 1) var(--custom) (1 {}); & style:hover {} }')
+        assert.equal(cssRules[1].cssText, '@font-face { src: local("serif"); }')
     })
     test('positioned {} block in a declaration value for a custom property', () => {
         // It is never consumed as a qualified rule in a nested context
@@ -1384,13 +1383,13 @@ describe('CSS grammar - syntax', () => {
                 style:hover {}
             }
         `)
-        expect(styleSheet.cssRules[0].cssText).toBe('style { --custom: 1 {} 1; }')
+        assert.equal(styleSheet.cssRules[0].cssText, 'style { --custom: 1 {} 1; }')
     })
     test('unclosed rule, declaration, function', () => {
         let styleSheet = createStyleSheet('style { & { color: var(--custom) fn(')
-        expect(styleSheet.cssRules[0].cssText).toBe('style { & { color: var(--custom) fn(); } }')
+        assert.equal(styleSheet.cssRules[0].cssText, 'style { & { color: var(--custom) fn(); } }')
         styleSheet = createStyleSheet('style { & { color: var(--custom, fn(')
-        expect(styleSheet.cssRules[0].cssText).toBe('style { & { color: var(--custom, fn()); } }')
+        assert.equal(styleSheet.cssRules[0].cssText, 'style { & { color: var(--custom, fn()); } }')
     })
 })
 
@@ -1405,7 +1404,7 @@ describe('CSS grammar - semantic', () => {
             @top-left {}
             0% {}
         `)
-        expect(styleSheet.cssRules).toHaveLength(0)
+        assert.equal(styleSheet.cssRules.length, 0)
     })
     test('top-level - opening and ending HTML comment tokens', () => {
 
@@ -1418,8 +1417,8 @@ describe('CSS grammar - semantic', () => {
             }
         `)
 
-        expect(cssRules).toHaveLength(2)
-        expect(cssRules[1].style.color).toBe('green')
+        assert.equal(cssRules.length, 2)
+        assert.equal(cssRules[1].style.color, 'green')
     })
     test('top-level - ignored @import following any non-ignored rule other than @layer', () => {
 
@@ -1428,8 +1427,8 @@ describe('CSS grammar - semantic', () => {
             @import "./global.css";
         `)
 
-        expect(cssRules).toHaveLength(1)
-        expect(CSSNamespaceRule.is(cssRules[0])).toBeTruthy()
+        assert.equal(cssRules.length, 1)
+        assert.equal(CSSNamespaceRule.is(cssRules[0]), true)
     })
     test('top-level - ignored @import following @layer interleaved after another @import', async () => {
 
@@ -1439,8 +1438,8 @@ describe('CSS grammar - semantic', () => {
             @import "./page.css";
         `)
 
-        expect(cssRules).toHaveLength(2)
-        expect(CSSLayerStatementRule.is(cssRules[1])).toBeTruthy()
+        assert.equal(cssRules.length, 2)
+        assert.equal(CSSLayerStatementRule.is(cssRules[1]), true)
 
         await CSSImportRule.convert(globalThis, cssRules[0])._promise
     })
@@ -1453,8 +1452,8 @@ describe('CSS grammar - semantic', () => {
             @import "./global.css";
         `)
 
-        expect(cssRules).toHaveLength(2)
-        expect(CSSImportRule.is(cssRules[1])).toBeTruthy()
+        assert.equal(cssRules.length, 2)
+        assert.equal(CSSImportRule.is(cssRules[1]), true)
 
         await CSSImportRule.convert(globalThis, cssRules[1])._promise
     })
@@ -1468,8 +1467,8 @@ describe('CSS grammar - semantic', () => {
             @import "./page.css";
         `)
 
-        expect(cssRules).toHaveLength(2)
-        expect(CSSImportRule.is(cssRules[1])).toBeTruthy()
+        assert.equal(cssRules.length, 2)
+        assert.equal(CSSImportRule.is(cssRules[1]), true)
 
         await CSSImportRule.convert(globalThis, cssRules[0])._promise
         await CSSImportRule.convert(globalThis, cssRules[1])._promise
@@ -1481,8 +1480,8 @@ describe('CSS grammar - semantic', () => {
             @namespace svg "http://www.w3.org/2000/svg";
         `)
 
-        expect(cssRules).toHaveLength(1)
-        expect(CSSStyleRule.is(cssRules[0])).toBeTruthy()
+        assert.equal(cssRules.length, 1)
+        assert.equal(CSSStyleRule.is(cssRules[0]), true)
     })
     test('top-level - ignored @namespace following @layer interleaved after another @namespace', () => {
 
@@ -1492,8 +1491,8 @@ describe('CSS grammar - semantic', () => {
             @namespace svg "http://www.w3.org/2000/svg";
         `)
 
-        expect(cssRules).toHaveLength(2)
-        expect(CSSLayerStatementRule.is(cssRules[1])).toBeTruthy()
+        assert.equal(cssRules.length, 2)
+        assert.equal(CSSLayerStatementRule.is(cssRules[1]), true)
     })
     test('top-level - ignored @namespace following @layer interleaved after @import', async () => {
 
@@ -1503,8 +1502,8 @@ describe('CSS grammar - semantic', () => {
             @namespace svg "http://www.w3.org/2000/svg";
         `)
 
-        expect(cssRules).toHaveLength(2)
-        expect(CSSLayerStatementRule.is(cssRules[1])).toBeTruthy()
+        assert.equal(cssRules.length, 2)
+        assert.equal(CSSLayerStatementRule.is(cssRules[1]), true)
 
         await CSSImportRule.convert(globalThis, cssRules[0])._promise
     })
@@ -1517,8 +1516,8 @@ describe('CSS grammar - semantic', () => {
             @namespace svg "http://www.w3.org/2000/svg";
         `)
 
-        expect(cssRules).toHaveLength(3)
-        expect(CSSNamespaceRule.is(cssRules[2])).toBeTruthy()
+        assert.equal(cssRules.length, 3)
+        assert.equal(CSSNamespaceRule.is(cssRules[2]), true)
 
         await CSSImportRule.convert(globalThis, cssRules[1])._promise
     })
@@ -1532,8 +1531,8 @@ describe('CSS grammar - semantic', () => {
             @namespace svg "http://www.w3.org/2000/svg";
         `)
 
-        expect(cssRules).toHaveLength(2)
-        expect(CSSNamespaceRule.is(cssRules[1])).toBeTruthy()
+        assert.equal(cssRules.length, 2)
+        assert.equal(CSSNamespaceRule.is(cssRules[1]), true)
     })
     // Rule contents
     test('@color-profile - invalid block contents', () => {
@@ -1552,7 +1551,7 @@ describe('CSS grammar - semantic', () => {
                 src: url("profile.icc");
             }
         `)
-        expect(styleSheet.cssRules[0].cssText).toBe('@color-profile --name { src: url("profile.icc"); }')
+        assert.equal(styleSheet.cssRules[0].cssText, '@color-profile --name { src: url("profile.icc"); }')
     })
     test('@color-profile - valid block contents', () => {
         const input = `
@@ -1562,7 +1561,7 @@ describe('CSS grammar - semantic', () => {
             }
         `
         const styleSheet = createStyleSheet(input)
-        expect(styleSheet.cssRules[0].cssText).toBe(normalizeText(input))
+        assert.equal(styleSheet.cssRules[0].cssText, normalizeText(input))
     })
     test('@container - invalid block contents', () => {
         const styleSheet = createStyleSheet(`
@@ -1582,7 +1581,7 @@ describe('CSS grammar - semantic', () => {
                 @media {}
             }
         `)
-        expect(styleSheet.cssRules[0].cssText).toBe('@container name { @media {} }')
+        assert.equal(styleSheet.cssRules[0].cssText, '@container name { @media {} }')
     })
     test('@container - valid block contents', () => {
         const rules = [
@@ -1607,7 +1606,7 @@ describe('CSS grammar - semantic', () => {
         ]
         const input = `@CONTAINER name { ${rules.join(' ')} }`
         const styleSheet = createStyleSheet(input)
-        expect(styleSheet.cssRules[0].cssText).toBe(input.toLowerCase())
+        assert.equal(styleSheet.cssRules[0].cssText, input.toLowerCase())
     })
     test('@counter-style - invalid block contents', () => {
         const { cssRules: [rule1, rule2] } = createStyleSheet(`
@@ -1632,8 +1631,8 @@ describe('CSS grammar - semantic', () => {
                 additive-symbols: 1 one, 2 two;
             }
         `)
-        expect(rule1.cssText).toBe('@counter-style name-one { system: numeric; }')
-        expect(rule2.cssText).toBe('@counter-style name-two { system: numeric; }')
+        assert.equal(rule1.cssText, '@counter-style name-one { system: numeric; }')
+        assert.equal(rule2.cssText, '@counter-style name-two { system: numeric; }')
     })
     test('@counter-style - valid block contents', () => {
         const input = `
@@ -1643,7 +1642,7 @@ describe('CSS grammar - semantic', () => {
             }
         `
         const styleSheet = createStyleSheet(input)
-        expect(styleSheet.cssRules[0].cssText).toBe(normalizeText(input))
+        assert.equal(styleSheet.cssRules[0].cssText, normalizeText(input))
     })
     test('@font-face - invalid block contents', () => {
         const styleSheet = createStyleSheet(`
@@ -1670,7 +1669,7 @@ describe('CSS grammar - semantic', () => {
                 font-family: name;
             }
         `)
-        expect(styleSheet.cssRules[0].cssText).toBe('@font-face { font-family: name; }')
+        assert.equal(styleSheet.cssRules[0].cssText, '@font-face { font-family: name; }')
     })
     test('@font-face - valid block contents', () => {
         const declarations = [
@@ -1682,7 +1681,7 @@ describe('CSS grammar - semantic', () => {
         declarations.forEach(declaration => {
             const input = `@FONT-FACE { ${declaration}; }`
             const styleSheet = createStyleSheet(input)
-            expect(styleSheet.cssRules[0].cssText).toBe(normalizeText(input))
+            assert.equal(styleSheet.cssRules[0].cssText, normalizeText(input))
         })
     })
     test('@font-feature-values - invalid block contents', () => {
@@ -1726,7 +1725,7 @@ describe('CSS grammar - semantic', () => {
                 font-display: block;
             }
         `)
-        expect(styleSheet.cssRules[0].cssText).toBe('@font-feature-values name { font-display: block; }')
+        assert.equal(styleSheet.cssRules[0].cssText, '@font-feature-values name { font-display: block; }')
     })
     test('@font-feature-values - valid block contents', () => {
 
@@ -1740,7 +1739,7 @@ describe('CSS grammar - semantic', () => {
         ]
         const input = `@FONT-FEATURE-VALUES name { ${rules.join(' ')} }`
         const styleSheet = createStyleSheet(input)
-        expect(styleSheet.cssRules[0].cssText).toBe(input.toLowerCase())
+        assert.equal(styleSheet.cssRules[0].cssText, input.toLowerCase())
 
         const declarations = [
             'FONT-DISPLAY: {env(name)}',
@@ -1749,11 +1748,11 @@ describe('CSS grammar - semantic', () => {
         declarations.forEach(declaration => {
             const input = `@FONT-FEATURE-VALUES name { ${declaration}; }`
             const styleSheet = createStyleSheet(input)
-            expect(styleSheet.cssRules[0].cssText).toBe(normalizeText(input))
+            assert.equal(styleSheet.cssRules[0].cssText, normalizeText(input))
         })
     })
     test('@font-palette-values - missing declaration for font-family', () => {
-        expect(createStyleSheet('@font-palette-values --name {}').cssRules).toHaveLength(0)
+        assert.equal(createStyleSheet('@font-palette-values --name {}').cssRules.length, 0)
     })
     test('@font-palette-values - invalid block contents', () => {
         const styleSheet = createStyleSheet(`
@@ -1779,7 +1778,7 @@ describe('CSS grammar - semantic', () => {
                 font-family: name;
             }
         `)
-        expect(styleSheet.cssRules[0].cssText).toBe('@font-palette-values --name { font-family: name; }')
+        assert.equal(styleSheet.cssRules[0].cssText, '@font-palette-values --name { font-family: name; }')
     })
     test('@font-palette-values - valid block contents', () => {
         const input = `
@@ -1789,11 +1788,11 @@ describe('CSS grammar - semantic', () => {
             }
         `
         const styleSheet = createStyleSheet(input)
-        expect(styleSheet.cssRules[0].cssText).toBe(normalizeText(input))
+        assert.equal(styleSheet.cssRules[0].cssText, normalizeText(input))
     })
     test('@function - invalid prelude', () => {
         const styleSheet = createStyleSheet('@function --name(--parameter-1, --parameter-2, --parameter-2) {}')
-        expect(styleSheet.cssRules).toHaveLength(0)
+        assert.equal(styleSheet.cssRules.length, 0)
     })
     test('@function - invalid block contents', () => {
         const styleSheet = createStyleSheet(`
@@ -1830,7 +1829,7 @@ describe('CSS grammar - semantic', () => {
                 @media {}
             }
         `)
-        expect(styleSheet.cssRules[0].cssText).toBe('@function --name() { @media {} }')
+        assert.equal(styleSheet.cssRules[0].cssText, '@function --name() { @media {} }')
     })
     test('@function - valid block contents', () => {
         const contents = [
@@ -1842,7 +1841,7 @@ describe('CSS grammar - semantic', () => {
         ]
         const input = `@FUNCTION --name() { ${contents.join(' ')} }`
         const styleSheet = createStyleSheet(input)
-        expect(styleSheet.cssRules[0].cssText).toBe(input.toLowerCase())
+        assert.equal(styleSheet.cssRules[0].cssText, input.toLowerCase())
     })
     test('@keyframes - invalid block contents', () => {
         const styleSheet = createStyleSheet(`
@@ -1879,11 +1878,11 @@ describe('CSS grammar - semantic', () => {
                 0% {}
             }
         `)
-        expect(styleSheet.cssRules[0].cssText).toBe('@keyframes name { 0% {} }')
+        assert.equal(styleSheet.cssRules[0].cssText, '@keyframes name { 0% {} }')
     })
     test('@keyframes - valid block contents', () => {
         const styleSheet = createStyleSheet('@KEYFRAMES name { 0% {} }')
-        expect(styleSheet.cssRules[0].cssText).toBe('@keyframes name { 0% {} }')
+        assert.equal(styleSheet.cssRules[0].cssText, '@keyframes name { 0% {} }')
     })
     test('@layer - invalid block contents', () => {
         const styleSheet = createStyleSheet(`
@@ -1903,7 +1902,7 @@ describe('CSS grammar - semantic', () => {
                 @media {}
             }
         `)
-        expect(styleSheet.cssRules[0].cssText).toBe('@layer { @media {} }')
+        assert.equal(styleSheet.cssRules[0].cssText, '@layer { @media {} }')
     })
     test('@layer - valid block contents', () => {
         const rules = [
@@ -1928,7 +1927,7 @@ describe('CSS grammar - semantic', () => {
         ]
         const input = `@LAYER { ${rules.join(' ')} }`
         const styleSheet = createStyleSheet(input)
-        expect(styleSheet.cssRules[0].cssText).toBe(input.toLowerCase())
+        assert.equal(styleSheet.cssRules[0].cssText, input.toLowerCase())
     })
     test('@media - invalid block contents', () => {
         const styleSheet = createStyleSheet(`
@@ -1948,7 +1947,7 @@ describe('CSS grammar - semantic', () => {
                 @media {}
             }
         `)
-        expect(styleSheet.cssRules[0].cssText).toBe('@media { @media {} }')
+        assert.equal(styleSheet.cssRules[0].cssText, '@media { @media {} }')
     })
     test('@media - valid block contents', () => {
         const rules = [
@@ -1973,7 +1972,7 @@ describe('CSS grammar - semantic', () => {
         ]
         const input = `@MEDIA { ${rules.join(' ')} }`
         const styleSheet = createStyleSheet(input)
-        expect(styleSheet.cssRules[0].cssText).toBe(input.toLowerCase())
+        assert.equal(styleSheet.cssRules[0].cssText, input.toLowerCase())
     })
     test('@page - invalid block contents', () => {
         const styleSheet = createStyleSheet(`
@@ -2010,7 +2009,7 @@ describe('CSS grammar - semantic', () => {
                 @top-left {}
             }
         `)
-        expect(styleSheet.cssRules[0].cssText).toBe('@page { @top-left {} }')
+        assert.equal(styleSheet.cssRules[0].cssText, '@page { @top-left {} }')
     })
     test('@page - valid block contents', () => {
         const contents = [
@@ -2038,7 +2037,7 @@ describe('CSS grammar - semantic', () => {
         contents.forEach(content => {
             const input = `@PAGE { ${content} }`
             const styleSheet = createStyleSheet(input)
-            expect(styleSheet.cssRules[0].cssText).toBe(normalizeText(input))
+            assert.equal(styleSheet.cssRules[0].cssText, normalizeText(input))
         })
     })
     test('@position-try - invalid block contents', () => {
@@ -2052,7 +2051,7 @@ describe('CSS grammar - semantic', () => {
                 bottom: 1px;
             }
         `)
-        expect(styleSheet.cssRules[0].cssText).toBe('@position-try --name { bottom: 1px; }')
+        assert.equal(styleSheet.cssRules[0].cssText, '@position-try --name { bottom: 1px; }')
     })
     test('@position-try - valid block contents', () => {
         const declarations = [
@@ -2068,14 +2067,14 @@ describe('CSS grammar - semantic', () => {
         declarations.forEach(declaration => {
             const input = `@POSITION-TRY --name { ${declaration}; }`
             const styleSheet = createStyleSheet(input)
-            expect(styleSheet.cssRules[0].cssText).toBe(normalizeText(input))
+            assert.equal(styleSheet.cssRules[0].cssText, normalizeText(input))
         })
     })
     test('@property - missing declaration for inherits', () => {
-        expect(createStyleSheet('@property --name { syntax: "*"; initial-value: 1; }').cssRules).toHaveLength(0)
+        assert.equal(createStyleSheet('@property --name { syntax: "*"; initial-value: 1; }').cssRules.length, 0)
     })
     test('@property - missing declaration for syntax', () => {
-        expect(createStyleSheet('@property --name { inherits: true; initial-value: 1; }').cssRules).toHaveLength(0)
+        assert.equal(createStyleSheet('@property --name { inherits: true; initial-value: 1; }').cssRules.length, 0)
     })
     test('@property - invalid block contents', () => {
         const styleSheet = createStyleSheet(`
@@ -2094,7 +2093,7 @@ describe('CSS grammar - semantic', () => {
                 inherits: false !important;
             }
         `)
-        expect(styleSheet.cssRules[0].cssText).toBe('@property --name { syntax: "*"; inherits: true; }')
+        assert.equal(styleSheet.cssRules[0].cssText, '@property --name { syntax: "*"; inherits: true; }')
     })
     test('@property - valid block contents', () => {
         const declarations = [
@@ -2104,7 +2103,7 @@ describe('CSS grammar - semantic', () => {
         declarations.forEach(declaration => {
             const input = `@PROPERTY --name { syntax: "*"; ${declaration}; }`
             const styleSheet = createStyleSheet(input)
-            expect(styleSheet.cssRules[0].cssText).toBe(normalizeText(input))
+            assert.equal(styleSheet.cssRules[0].cssText, normalizeText(input))
         })
     })
     test('@property - invalid and valid initial-value', () => {
@@ -2160,7 +2159,7 @@ describe('CSS grammar - semantic', () => {
                         inherits: true;
                     }
                 `)
-                expect(styleSheet.cssRules).toHaveLength(index)
+                assert.equal(styleSheet.cssRules.length, index)
             }))
     })
     test('@scope - invalid block contents', () => {
@@ -2179,7 +2178,7 @@ describe('CSS grammar - semantic', () => {
                 @media {}
             }
         `)
-        expect(styleSheet.cssRules[0].cssText).toBe('@scope { @media {} }')
+        assert.equal(styleSheet.cssRules[0].cssText, '@scope { @media {} }')
     })
     test('@scope - valid block contents', () => {
 
@@ -2206,7 +2205,7 @@ describe('CSS grammar - semantic', () => {
         const input = `@SCOPE { ${rules.join(' ')} }`
         const styleSheet = createStyleSheet(input)
 
-        expect(styleSheet.cssRules[0].cssText).toBe(input.toLowerCase())
+        assert.equal(styleSheet.cssRules[0].cssText, input.toLowerCase())
 
         const declarations = [
             '--custom: 1',
@@ -2224,7 +2223,7 @@ describe('CSS grammar - semantic', () => {
         declarations.forEach(declaration => {
             const input = `@SCOPE { ${declaration}; }`
             const styleSheet = createStyleSheet(input)
-            expect(styleSheet.cssRules[0].cssText).toBe(normalizeText(input))
+            assert.equal(styleSheet.cssRules[0].cssText, normalizeText(input))
         })
     })
     test('@starting-style - invalid block contents', () => {
@@ -2245,7 +2244,7 @@ describe('CSS grammar - semantic', () => {
                 @media {}
             }
         `)
-        expect(styleSheet.cssRules[0].cssText).toBe('@starting-style { @media {} }')
+        assert.equal(styleSheet.cssRules[0].cssText, '@starting-style { @media {} }')
     })
     test('@starting-style - valid block contents', () => {
         const rules = [
@@ -2270,7 +2269,7 @@ describe('CSS grammar - semantic', () => {
         ]
         const input = `@STARTING-STYLE { ${rules.join(' ')} }`
         const styleSheet = createStyleSheet(input)
-        expect(styleSheet.cssRules[0].cssText).toBe(input.toLowerCase())
+        assert.equal(styleSheet.cssRules[0].cssText, input.toLowerCase())
     })
     test('@supports - invalid block contents', () => {
         const styleSheet = createStyleSheet(`
@@ -2290,7 +2289,7 @@ describe('CSS grammar - semantic', () => {
                 @media {}
             }
         `)
-        expect(styleSheet.cssRules[0].cssText).toBe('@supports (color: green) { @media {} }')
+        assert.equal(styleSheet.cssRules[0].cssText, '@supports (color: green) { @media {} }')
     })
     test('@supports - valid block contents', () => {
         const rules = [
@@ -2315,7 +2314,7 @@ describe('CSS grammar - semantic', () => {
         ]
         const input = `@SUPPORTS (color: green) { ${rules.join(' ')} }`
         const styleSheet = createStyleSheet(input)
-        expect(styleSheet.cssRules[0].cssText).toBe(input.toLowerCase())
+        assert.equal(styleSheet.cssRules[0].cssText, input.toLowerCase())
     })
     test('@view-transition - invalid block contents', () => {
         const styleSheet = createStyleSheet(`
@@ -2333,7 +2332,7 @@ describe('CSS grammar - semantic', () => {
                 navigation: auto;
             }
         `)
-        expect(styleSheet.cssRules[0].cssText).toBe('@view-transition { navigation: auto; }')
+        assert.equal(styleSheet.cssRules[0].cssText, '@view-transition { navigation: auto; }')
     })
     test('@view-transition - valid block contents', () => {
         const declarations = [
@@ -2343,7 +2342,7 @@ describe('CSS grammar - semantic', () => {
         declarations.forEach(declaration => {
             const input = `@VIEW-TRANSITION { ${declaration}; }`
             const styleSheet = createStyleSheet(input)
-            expect(styleSheet.cssRules[0].cssText).toBe(normalizeText(input))
+            assert.equal(styleSheet.cssRules[0].cssText, normalizeText(input))
         })
     })
     test('font feature value type rule - invalid block contents', () => {
@@ -2388,7 +2387,7 @@ describe('CSS grammar - semantic', () => {
                 }
             }
         `)
-        expect(styleSheet.cssRules[0].cssText).toBe('@font-feature-values name {}')
+        assert.equal(styleSheet.cssRules[0].cssText, '@font-feature-values name {}')
     })
     test('font feature value type rule - valid block contents', () => {
         const contents = [
@@ -2401,7 +2400,7 @@ describe('CSS grammar - semantic', () => {
         ]
         const input = `@font-feature-values name { ${contents.join(' ')} }`
         const styleSheet = createStyleSheet(input)
-        expect(styleSheet.cssRules[0].cssText).toBe(input.toLowerCase())
+        assert.equal(styleSheet.cssRules[0].cssText, input.toLowerCase())
     })
     test('keyframe rule - invalid block contents', () => {
         const styleSheet = createStyleSheet(`
@@ -2416,7 +2415,7 @@ describe('CSS grammar - semantic', () => {
                 }
             }
         `)
-        expect(styleSheet.cssRules[0].cssText).toBe('@keyframes name { 0% { animation-timing-function: linear; } }')
+        assert.equal(styleSheet.cssRules[0].cssText, '@keyframes name { 0% { animation-timing-function: linear; } }')
     })
     test('keyframe rule - valid block contents', () => {
         const declarations = [
@@ -2433,7 +2432,7 @@ describe('CSS grammar - semantic', () => {
         ]
         declarations.forEach(declaration => {
             const styleSheet = createStyleSheet(`@keyframes name { FROM { ${declaration}; } }`)
-            expect(styleSheet.cssRules[0].cssText).toBe(`@keyframes name { 0% { ${normalizeText(declaration)}; } }`)
+            assert.equal(styleSheet.cssRules[0].cssText, `@keyframes name { 0% { ${normalizeText(declaration)}; } }`)
         })
     })
     test('margin rule - invalid block contents', () => {
@@ -2446,7 +2445,7 @@ describe('CSS grammar - semantic', () => {
                 }
             }
         `)
-        expect(styleSheet.cssRules[0].cssText).toBe('@page { @top-left { margin-bottom: 1px; } }')
+        assert.equal(styleSheet.cssRules[0].cssText, '@page { @top-left { margin-bottom: 1px; } }')
     })
     test('margin rule - valid block contents', () => {
         const declarations = [
@@ -2464,7 +2463,7 @@ describe('CSS grammar - semantic', () => {
         declarations.forEach(declaration => {
             const input = `@page { @TOP-LEFT { ${declaration}; } }`
             const styleSheet = createStyleSheet(input)
-            expect(styleSheet.cssRules[0].cssText).toBe(normalizeText(input))
+            assert.equal(styleSheet.cssRules[0].cssText, normalizeText(input))
         })
     })
     test('nested group rule - invalid block contents', () => {
@@ -2497,7 +2496,7 @@ describe('CSS grammar - semantic', () => {
                 }
             }
         `)
-        expect(styleSheet.cssRules[0].cssText).toBe('style { @media { @media {} } }')
+        assert.equal(styleSheet.cssRules[0].cssText, 'style { @media { @media {} } }')
     })
     test('nested group rule - valid block contents', () => {
 
@@ -2513,7 +2512,7 @@ describe('CSS grammar - semantic', () => {
         const input = `style { @media { ${rules.join(' ')} } }`
         const styleSheet = createStyleSheet(input)
 
-        expect(styleSheet.cssRules[0].cssText).toBe(input.toLowerCase())
+        assert.equal(styleSheet.cssRules[0].cssText, input.toLowerCase())
 
         const declarations = [
             '--custom: 1',
@@ -2531,7 +2530,7 @@ describe('CSS grammar - semantic', () => {
         declarations.forEach(declaration => {
             const input = `style { @media { & { ${declaration}; } } }`
             const styleSheet = createStyleSheet(input)
-            expect(styleSheet.cssRules[0].cssText).toBe(normalizeText(input))
+            assert.equal(styleSheet.cssRules[0].cssText, normalizeText(input))
         })
     })
     test('nested conditional rule inside @function - invalid block contents', () => {
@@ -2572,7 +2571,7 @@ describe('CSS grammar - semantic', () => {
                 }
             }
         `)
-        expect(styleSheet.cssRules[0].cssText).toBe('@function --name() { @media { @media {} } }')
+        assert.equal(styleSheet.cssRules[0].cssText, '@function --name() { @media { @media {} } }')
     })
     test('nested conditional rule inside @function - valid block contents', () => {
         const contents = [
@@ -2584,7 +2583,7 @@ describe('CSS grammar - semantic', () => {
         ]
         const input = `@FUNCTION --name() { @media { ${contents.join(' ')} } }`
         const styleSheet = createStyleSheet(input)
-        expect(styleSheet.cssRules[0].cssText).toBe(input.toLowerCase())
+        assert.equal(styleSheet.cssRules[0].cssText, input.toLowerCase())
     })
     test('nested style rule - invalid prelude containing an undeclared namespace prefix', () => {
         const styleSheet = createStyleSheet(`
@@ -2594,7 +2593,7 @@ describe('CSS grammar - semantic', () => {
                 svg|nested {}
             }
         `)
-        expect(styleSheet.cssRules[1].cssText).toBe('style { & svg|nested {} }')
+        assert.equal(styleSheet.cssRules[1].cssText, 'style { & svg|nested {} }')
     })
     test('nested style rule - invalid block contents', () => {
         const styleSheet = createStyleSheet(`
@@ -2626,7 +2625,7 @@ describe('CSS grammar - semantic', () => {
                 }
             }
         `)
-        expect(styleSheet.cssRules[0].cssText).toBe('style { & { @media {} } }')
+        assert.equal(styleSheet.cssRules[0].cssText, 'style { & { @media {} } }')
     })
     test('nested style rule - valid block contents', () => {
 
@@ -2642,7 +2641,7 @@ describe('CSS grammar - semantic', () => {
         const input = `style { & { ${rules.join(' ')} } }`
         const styleSheet = createStyleSheet(input)
 
-        expect(styleSheet.cssRules[0].cssText).toBe(input.toLowerCase())
+        assert.equal(styleSheet.cssRules[0].cssText, input.toLowerCase())
 
         const declarations = [
             '--custom: 1',
@@ -2660,7 +2659,7 @@ describe('CSS grammar - semantic', () => {
         declarations.forEach(declaration => {
             const input = `style { & { ${declaration}; } }`
             const styleSheet = createStyleSheet(input)
-            expect(styleSheet.cssRules[0].cssText).toBe(normalizeText(input))
+            assert.equal(styleSheet.cssRules[0].cssText, normalizeText(input))
         })
     })
     test('nested style rule - invalid contents between valid declarations', () => {
@@ -2676,7 +2675,7 @@ describe('CSS grammar - semantic', () => {
                 color: green;
             }
         `)
-        expect(styleSheet.cssRules[0].cssText).toBe('style { color: green; }')
+        assert.equal(styleSheet.cssRules[0].cssText, 'style { color: green; }')
     })
     test('style rule - invalid prelude containing an undeclared namespace prefix', () => {
 
@@ -2688,16 +2687,16 @@ describe('CSS grammar - semantic', () => {
             html|type {}
         `)
 
-        expect(cssRules).toHaveLength(2)
+        assert.equal(cssRules.length, 2)
 
         const styleRule = cssRules[1]
 
-        expect(CSSStyleRule.is(styleRule)).toBeTruthy()
+        assert.equal(CSSStyleRule.is(styleRule), true)
 
         const { selectorText, style } = styleRule
 
-        expect(selectorText).toBe('svg|rect')
-        expect(style.fill).toBe('green')
+        assert.equal(selectorText, 'svg|rect')
+        assert.equal(style.fill, 'green')
     })
     test('style rule - invalid block contents', () => {
         const styleSheet = createStyleSheet(`
@@ -2727,7 +2726,7 @@ describe('CSS grammar - semantic', () => {
                 @media {}
             }
         `)
-        expect(styleSheet.cssRules[0].cssText).toBe('style { @media {} }')
+        assert.equal(styleSheet.cssRules[0].cssText, 'style { @media {} }')
     })
     test('style rule - valid block contents', () => {
 
@@ -2743,7 +2742,7 @@ describe('CSS grammar - semantic', () => {
         const input = `style { ${rules.join(' ')} }`
         const styleSheet = createStyleSheet(input)
 
-        expect(styleSheet.cssRules[0].cssText).toBe(input.toLowerCase())
+        assert.equal(styleSheet.cssRules[0].cssText, input.toLowerCase())
 
         const declarations = [
             '--custom: 1',
@@ -2760,17 +2759,17 @@ describe('CSS grammar - semantic', () => {
         declarations.forEach(declaration => {
             const input = `style { ${declaration}; }`
             const styleSheet = createStyleSheet(input)
-            expect(styleSheet.cssRules[0].cssText).toBe(normalizeText(input))
+            assert.equal(styleSheet.cssRules[0].cssText, normalizeText(input))
         })
     })
     // Legacy names
     test('legacy rule name', () => {
         const rule = createStyleSheet('@-webkit-keyframes name {}').cssRules[0]
-        expect(CSSKeyframesRule.is(rule)).toBeTruthy()
-        expect(rule.cssText).toBe('@keyframes name {}')
+        assert.equal(CSSKeyframesRule.is(rule), true)
+        assert.equal(rule.cssText, '@keyframes name {}')
     })
     test('legacy property name', () => {
         const styleSheet = createStyleSheet('style { -webkit-order: 1 }')
-        expect(styleSheet.cssRules[0].cssText).toBe('style { order: 1; }')
+        assert.equal(styleSheet.cssRules[0].cssText, 'style { order: 1; }')
     })
 })
