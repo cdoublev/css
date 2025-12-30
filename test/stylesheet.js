@@ -52,7 +52,6 @@ function createStyleSheet(rules = '', properties = {}) {
         encoding: globalThis.document.characterSet,
         location: baseURL,
         media: '',
-        originClean: true,
         rules,
         ...properties,
     }
@@ -214,13 +213,7 @@ describe('CSSStyleSheet', () => {
         const media = 'all'
         const ownerNode = { type: 'HTMLLinkElement' }
         const title = 'Main CSS'
-        const properties = {
-            location,
-            media,
-            originClean: true,
-            ownerNode,
-            title,
-        }
+        const properties = { location, media, ownerNode, title }
         const styleSheet = createStyleSheet('', properties)
 
         // StyleSheet properties
