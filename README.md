@@ -7,7 +7,7 @@ JavaScript implementation of CSS.
 
 ```js
 const {
-  CSSStyleDeclaration,
+  CSSStyleProperties,
   CSSStyleSheet,
   install,
   parseGrammar,
@@ -20,9 +20,9 @@ const {
  */
 install(/*myGlobalObject*/)
 
-// Create a CSSStyleSheet or CSSStyleDeclaration wrapper
+// Create a CSSStyleSheet or CSSStyleProperties wrapper
 const stylesheet = CSSStyleSheet.create(myGlobalObject, undefined, privateProperties)
-const style = CSSStyleDeclaration.create(myGlobalObject, undefined, privateProperties)
+const style = CSSStyleProperties.create(myGlobalObject, undefined, privateProperties)
 
 // Parse something according to a CSS grammar
 const color = parseGrammar('green', '<color>')
@@ -31,7 +31,7 @@ const color = parseGrammar('green', '<color>')
 const list = parseGrammarList('(width < 30rem), (orientation: portrait)', '<media-query-list>')
 ```
 
-`CSSStyleSheet` and `CSSStyleDeclaration` are [`webidl2js`](https://github.com/jsdom/webidl2js) wrappers intended to implement:
+`CSSStyleSheet` and `CSSStyleProperties` are [`webidl2js`](https://github.com/jsdom/webidl2js) wrappers intended to implement:
 
 - *create a CSS style sheet*: when processing or updating the content of [`HTMLStyleElement`](https://html.spec.whatwg.org/multipage/semantics.html#the-style-element), when processing the resource referenced by [`HTMLLinkElement`](https://html.spec.whatwg.org/multipage/links.html#link-type-stylesheet) or an HTTP `Link` header with `rel="stylesheet"`
 - (get) [the `style` attribute of an `HTMLElement`](https://html.spec.whatwg.org/multipage/dom.html#the-style-attribute)
@@ -52,7 +52,7 @@ Below are their accepted `privateProperties`:
   - *parent CSS style sheet*: `parentStyleSheet` (`CSSStyleSheet`, optional, default: `null`)
   - *title*: `title` (`String`, optional, default: `''`)
 
-[**`CSSStyleDeclaration`**](https://drafts.csswg.org/cssom-1/#css-declaration-block)
+[**`CSSStyleProperties`**](https://drafts.csswg.org/cssom-1/#css-declaration-block)
 
   - *computed flag*: `computed` (`Boolean`, optional, default: `false`)
   - *declarations*: `declarations` (`[Declaration]`, optional, default: `[]`)

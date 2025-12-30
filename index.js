@@ -19,6 +19,6 @@ function install(globalObject = globalThis) {
     globalObject.CSS = cssom.CSS.create(globalObject)
 }
 
-export { CSSStyleDeclaration, CSSStyleSheet } from './lib/cssom/index.js'
+export { CSSStyleProperties, CSSStyleSheet } from './lib/cssom/index.js'
 export { parseGrammar, parseGrammarList } from './lib/parse/parser.js'
 export { install }
