@@ -907,7 +907,8 @@ describe('CSSLayerStatementRule', () => {
         assert.equal(rule.parentStyleSheet, styleSheet)
 
         // CSSLayerStatementRule
-        assert.equal(rule.nameList, 'name')
+        assert.deepEqual(rule.nameList, ['name'])
+        assert.throws(() => rule.types.push('other-name'), TypeError)
     })
 })
 describe('CSSMarginRule', () => {
