@@ -1,6 +1,5 @@
 
 import * as compatibility from '../lib/compatibility.js'
-import * as display from '../lib/values/display.js'
 import * as substitutions from '../lib/values/substitutions.js'
 import * as whiteSpace from '../lib/values/white-space.js'
 import {
@@ -776,16 +775,37 @@ describe('cue-after, cue-before', () => {
 describe('display', () => {
     test('valid', () => {
         const style = createStyleBlock()
-        // Alias value
-        display.aliases.forEach((to, from) => {
-            style.display = from
-            assert.equal(style.display, to)
+        const valid = [
+            // Omitted value
+            ['block flex', 'flex'],
+            ['block flow', 'block'],
+            ['block flow list-item', 'list-item'],
+            ['block flow-root', 'flow-root'],
+            ['block flow-root list-item', 'flow-root list-item'],
+            ['block grid', 'grid'],
+            ['block list-item', 'list-item'],
+            ['block ruby'],
+            ['block table', 'table'],
+            ['inline flow', 'inline'],
+            ['inline flow list-item', 'inline list-item'],
+            ['inline flow-root list-item'],
+            ['inline ruby', 'ruby'],
+            ['run-in flow', 'run-in'],
+            ['run-in flow list-item', 'run-in list-item'],
+            ['flow', 'block'],
+            ['flow list-item', 'list-item'],
+            // Backward-compatible value
+            ['inline flex', 'inline-flex'],
+            ['inline flow-root', 'inline-block'],
+            ['inline grid', 'inline-grid'],
+            ['inline table', 'inline-table'],
+            // Legacy mapped value
+            ...compatibility.values.keywords['display'].mappings.keys().map(mapping => [mapping]),
+        ]
+        valid.forEach(([input, expected = input]) => {
+            style.cssText = `display: ${input}`
+            assert.equal(style.display, expected)
         })
-        // Legacy mapped value
-        for (const mapped of compatibility.values.keywords['display'].mappings.keys()) {
-            style.display = mapped
-            assert.equal(style.display, mapped)
-        }
     })
 })
 describe('float', () => {
