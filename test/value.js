@@ -242,6 +242,12 @@ describe('multiplied values', () => {
         assert.valid(definition, 'a a')
         assert.valid(definition, 'a a a')
     })
+    test('a#{3}', () => {
+        assert.invalid('a#{3}', 'a, a')
+        assert.invalid('a#{3}', 'a a a')
+        assert.valid('a#{3}', 'a, a, a')
+        assert.invalid('a#{3}', 'a, a, a,')
+    })
     test('[a b]?', () => {
         const definition = '[a b]?'
         assert.representation(definition, '', omitted)
