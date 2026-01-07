@@ -288,7 +288,7 @@ Examples of `context.globals` entries are `namespaces` from `@namespace` rules, 
 
 `context.trees` allows to traverse root nodes in order to access the root of the current tree with `trees.at(-1)`, find a higher level tree with `trees.findLast(accept)`, etc.
 
-A context must be initially created by the parser entry point with an optional instance of `CSSStyleSheet`, `CSSRule`, `CSSFontFeatureValuesMap`, `CSSStyleDeclaration`, or one or more rule production names (to create an arbitrary context).
+A context must be initially created by the parser entry point with an optional instance of `CSSStyleSheet`, `CSSRule`, `CSSFontFeatureValuesMap`, `CSSStyleDeclaration`, or one or more rule production names (to create an arbitrary context). Any other context value is assumed to be an instance of `Element`.
 
 It can be overriden in `configure` transition actions, eg. by returning `{ ...context, strict: true }`.
 
