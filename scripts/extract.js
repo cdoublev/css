@@ -630,8 +630,8 @@ const excluded = {
     },
 }
 
-const descriptors = [...Object.keys(initial.descriptors).map(rule => [rule, Object.entries(initial.descriptors[rule])])]
-const properties = [...Object.entries(initial.properties)]
+const descriptors = Object.keys(initial.descriptors).map(rule => [rule, Object.entries(initial.descriptors[rule])])
+const properties = Object.entries(initial.properties)
 const types = [...Object.entries(initial.types), ...Object.entries(replaced.types)]
 
 // TODO: periodically review this list to remove errors that no longer occur

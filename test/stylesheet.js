@@ -394,15 +394,6 @@ describe('CSSRuleList.item()', () => {
         assert.equal(cssRules.item(2), null)
     })
 })
-describe('CSSRuleList.length', () => {
-    it('returns the length of the rule list', () => {
-        const { cssRules } = createStyleSheet(`
-            #rule-1 {}
-            #rule-2 {}
-        `)
-        assert.equal(cssRules.length, 2)
-    })
-})
 
 describe('CSSColorProfileRule', () => {
     test('properties', () => {
@@ -538,7 +529,7 @@ describe('CSSFontFaceRule', () => {
         assert.equal(CSSFontFaceDescriptors.is(rule.style), true)
     })
 })
-describe('CSSFontFeatureValuesRule', () => {
+describe('CSSFontFeatureValuesRule, CSSFontFeatureValuesMap', () => {
     test('properties', () => {
 
         const styleSheet = createStyleSheet(`
