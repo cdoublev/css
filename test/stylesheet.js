@@ -534,14 +534,14 @@ describe('CSSFontFeatureValuesRule, CSSFontFeatureValuesMap', () => {
 
         const styleSheet = createStyleSheet(`
             @font-feature-values name {
-                @annotation { name: 1 }
-                @annotation { name: 2 }
+                @annotation { a: 1; b: 1 }
+                @annotation { a: 2 }
                 font-display: block;
             }`)
         const rule = styleSheet.cssRules[0]
 
         // CSSRule
-        assert.equal(rule.cssText, '@font-feature-values name { font-display: block; @annotation { name: 2; } }')
+        assert.equal(rule.cssText, '@font-feature-values name { font-display: block; @annotation { a: 2; b: 1; } }')
         assert.equal(rule.parentRule, null)
         assert.equal(rule.parentStyleSheet, styleSheet)
 
@@ -551,12 +551,12 @@ describe('CSSFontFeatureValuesRule, CSSFontFeatureValuesMap', () => {
         // CSSFontFeatureValuesMap
         rule.styleset.set('double-W', 0)
         assert.deepEqual(rule.styleset.get('double-W'), [0])
-        assert.equal(rule.cssText, '@font-feature-values name { font-display: block; @annotation { name: 2; } @styleset { double-W: 0; } }')
+        assert.equal(rule.cssText, '@font-feature-values name { font-display: block; @annotation { a: 2; b: 1; } @styleset { double-W: 0; } }')
         rule.styleset.set('double-W', [0, 1])
         assert.deepEqual(rule.styleset.get('double-W'), [0, 1])
-        assert.equal(rule.cssText, '@font-feature-values name { font-display: block; @annotation { name: 2; } @styleset { double-W: 0 1; } }')
+        assert.equal(rule.cssText, '@font-feature-values name { font-display: block; @annotation { a: 2; b: 1; } @styleset { double-W: 0 1; } }')
         rule.styleset.delete('double-W')
-        assert.equal(rule.cssText, '@font-feature-values name { font-display: block; @annotation { name: 2; } }')
+        assert.equal(rule.cssText, '@font-feature-values name { font-display: block; @annotation { a: 2; b: 1; } }')
         assert.throws(() => rule.annotation.set('boxed', [0, 1]), INVALID_FONT_FEATURE_VALUE_ERROR)
         assert.throws(() => rule.annotation.set('boxed', [-1]), INVALID_FONT_FEATURE_VALUE_ERROR)
         assert.throws(() => rule.characterVariant.set('alpha-2', [0, 1, 2]), INVALID_FONT_FEATURE_VALUE_ERROR)
