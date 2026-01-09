@@ -1103,48 +1103,53 @@ describe('CSSStyleRule', () => {
 
         const styleSheet = createStyleSheet(`
             style {
+                @media {
+                    nested {}
+                    nested & {}
+                    > nested & {}
+                }
                 @scope {
                     scoped {
                         nested {}
                     }
                 }
-                nested {}
                 color: green;
             }
         `)
         const styleRule = styleSheet.cssRules[0]
-        const { cssRules: [scopeRule, nestedStyleRule] } = styleRule
+        const { cssRules: [mediaRule, scopeRule] } = styleRule
+        const nestedStyleRule = mediaRule.cssRules[0]
         const scopedStyleRule = scopeRule.cssRules[0]
 
         // CSSRule
-        assert.equal(styleRule.cssText, 'style { @scope { scoped { & nested {} } } & nested {} color: green; }')
-        assert.equal(scopedStyleRule.cssText, 'scoped { & nested {} }')
+        assert.equal(styleRule.cssText, 'style { @media { & nested {} nested & {} & > nested & {} } @scope { scoped { & nested {} } } color: green; }')
         assert.equal(nestedStyleRule.cssText, '& nested {}')
+        assert.equal(scopedStyleRule.cssText, 'scoped { & nested {} }')
         assert.equal(styleRule.parentRule, null)
+        assert.equal(nestedStyleRule.parentRule, mediaRule)
         assert.equal(scopedStyleRule.parentRule, scopeRule)
-        assert.equal(nestedStyleRule.parentRule, styleRule)
         assert.equal(styleRule.parentStyleSheet, styleSheet)
-        assert.equal(scopedStyleRule.parentStyleSheet, styleSheet)
         assert.equal(nestedStyleRule.parentStyleSheet, styleSheet)
+        assert.equal(scopedStyleRule.parentStyleSheet, styleSheet)
 
         // CSSGroupingRule
         assert.equal(CSSRuleList.is(styleRule.cssRules), true)
-        assert.equal(CSSRuleList.is(scopedStyleRule.cssRules), true)
         assert.equal(CSSRuleList.is(nestedStyleRule.cssRules), true)
+        assert.equal(CSSRuleList.is(scopedStyleRule.cssRules), true)
 
         // CSSStyleRule
         assert.equal(styleRule.selectorText, 'style')
-        assert.equal(scopedStyleRule.selectorText, 'scoped')
         assert.equal(nestedStyleRule.selectorText, '& nested')
+        assert.equal(scopedStyleRule.selectorText, 'scoped')
         styleRule.selectorText = 'parent'
-        scopedStyleRule.selectorText = 'scoped-parent'
         nestedStyleRule.selectorText = 'child'
+        scopedStyleRule.selectorText = 'scoped-parent'
         assert.equal(styleRule.selectorText, 'parent')
-        assert.equal(scopedStyleRule.selectorText, 'scoped-parent')
         assert.equal(nestedStyleRule.selectorText, '& child')
+        assert.equal(scopedStyleRule.selectorText, 'scoped-parent')
         assert.equal(CSSStyleProperties.is(styleRule.style), true)
-        assert.equal(CSSStyleProperties.is(scopedStyleRule.style), true)
         assert.equal(CSSStyleProperties.is(nestedStyleRule.style), true)
+        assert.equal(CSSStyleProperties.is(scopedStyleRule.style), true)
     })
     test('methods', () => {
 
