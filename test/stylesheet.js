@@ -730,8 +730,8 @@ describe('CSSImportRule', () => {
             ['@import "sheet.css"'],
             ['@import "/sheet.css"'],
             // Redirected
-            // https://github.com/nodejs/undici/issues/4647
-            // [`@import "${crossOrigin}/redirected.css?url=${baseURL}/sheet.css"`],
+            // https://github.com/nodejs/undici/issues/4740
+            // [`@import "${crossOrigin}/redirected.css?url=${baseURL}/sheet.css"`, false],
             // [`@import "redirected.css?url=${crossOrigin}/sheet.css"`, false],
             // Encoding
             ['@import "bom-utf-8.css"'],

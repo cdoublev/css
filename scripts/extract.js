@@ -100,7 +100,7 @@ const replaced = {
         // TODO: fix `value` of `voice-family`
         // Implementation dependent
         'font-family': { initial: 'monospace' },
-        'voice-family': { initial: 'female', value: '[<family-name> | <generic-voice>]# | preserve' },
+        'voice-family': { initial: 'female' },
         // https://github.com/w3c/csswg-drafts/issues/8032
         'glyph-orientation-vertical': { value: 'auto | <angle> | <number>' },
         // https://github.com/w3c/svgwg/issues/888
@@ -108,6 +108,9 @@ const replaced = {
         'stop-opacity': { initial: '1', value: "<'opacity'>" },
         // TODO: fix `value` of `transition-property`
         'transition-property': { value: '[none | <single-transition-property>]#' },
+        // https://github.com/w3c/csswg-drafts/issues/13262
+        'voice-pitch': { value: '<frequency [0,∞]> && absolute | [x-low | low | medium | high | x-high] || [<frequency> | <semitones> | <percentage>]' },
+        'voice-range': { value: '<frequency [0,∞]> && absolute | [x-low | low | medium | high | x-high] || [<frequency> | <semitones> | <percentage>]' },
     },
     types: {
         // Extensions (https://github.com/w3c/reffy/issues/1647)
@@ -177,13 +180,18 @@ const replaced = {
         '<target-name>': '<string>',
         '<time>': '<dimension>',
         '<timeline-range-center-subject>': 'source | target',
-        '<timeline-range-name>': 'contain | cover | entry | entry-crossing | exit | exit-crossing | fill | fit',
+        '<timeline-range-name>': 'contain | cover | entry | entry-crossing | exit | exit-crossing | fill | fit | scroll',
         '<transform-function>': '<matrix()> | <matrix3d()> | <perspective()> | <translate()> | <translateX()> | <translateY()> | <translateZ()> | <translate3d()> | <scale()> | <scaleX()> | <scaleY()> | <scaleZ()> | <scale3d()> | <rotate()> | <rotateX()> | <rotateY()> | <rotateZ()> | <rotate3d()> | <skew()> | <skewX()> | <skewY()>',
         '<uri>': '<url>',
         '<url-modifier>': '<request-url-modifier> | <param()> | <ident> | <function-token> <any-value>? )',
         '<url-set>': '<image-set()>',
+        '<voice-family-name>': '<string> | <custom-ident>+',
         '<whole-value>': '<declaration-value>?',
         '<zero>': '<number-token>',
+        // https://github.com/w3c/csswg-drafts/pull/13359
+        '<auto-line-color-list>': '<line-color-or-repeat>#? , <auto-repeat-line-color> , <line-color-or-repeat>#?',
+        '<auto-line-style-list>': '<line-style-or-repeat>#? , <auto-repeat-line-style> , <line-style-or-repeat>#?',
+        '<auto-line-width-list>': '<line-width-or-repeat>#? , <auto-repeat-line-width> , <line-width-or-repeat>#?',
         // https://github.com/w3c/csswg-drafts/issues/12849
         '<bg-layer>': "<'background-image'> || <'background-position'> [/ <'background-size'>]? || <'background-repeat'> || <'background-attachment'> || <'background-origin'> || <'background-clip'>",
         '<final-bg-layer>': "<'background-image'> || <'background-position'> [/ <'background-size'>]? || <'background-repeat'> || <'background-attachment'> || <'background-origin'> || <'background-clip'> || <'background-color'>",
@@ -195,6 +203,10 @@ const replaced = {
         '<radial-size>': 'closest-corner | farthest-corner | <radial-radius>{1,2}',
         // https://github.com/w3c/csswg-drafts/issues/11842
         '<control-value()>': 'control-value(<syntax-type-name>?)',
+        // https://github.com/w3c/csswg-drafts/pull/13324
+        '<feature-index>': '<integer>',
+        // https://github.com/w3c/csswg-drafts/issues/13309
+        '<filter-function>': '<blur()> | <brightness()> | <contrast()> | <drop-shadow()> | <grayscale()> | <hue-rotate()> | <invert()> | <opacity()> | <sepia()> | <saturate()>',
         // https://github.com/w3c/csswg-drafts/issues/13010
         '<event-trigger-event>': 'activate | click | touch | dblclick | keypress(<string>)',
         // https://github.com/w3c/csswg-drafts/issues/12487
@@ -243,6 +255,7 @@ const excluded = {
             'cross-origin()',
             'integrity()',
             'referrer-policy()',
+            'type()',
         ],
     },
     properties: {
@@ -473,6 +486,10 @@ const excluded = {
             // https://github.com/w3c/csswg-drafts/issues/6433
             'shape-inside',
         ],
+        'css-ruby': [
+            // https://github.com/w3c/csswg-drafts/pull/13341
+            'display',
+        ],
         'css-ui': [
             // Prefer SVG
             'pointer-events',
@@ -501,6 +518,7 @@ const excluded = {
         'css-conditional-values',
         'css-extensions',
         'css-grid-3',
+        'css-navigation',
         'webvtt',
         // Prefer SVG 2
         'fill-stroke',
@@ -1030,7 +1048,7 @@ function addDescriptors(definitions = [], rule, key) {
  */
 function addRules(definitions = [], key) {
     const { rules: { aliases, mappings } } = compatibility
-    definitions.forEach(({ descriptors: definitions, name, value }) => {
+    definitions.forEach(({ descriptors: definitions, name, value, values }) => {
         if (aliases.has(name) || mappings.has(name)) {
             return
         }
@@ -1043,6 +1061,7 @@ function addRules(definitions = [], key) {
         } else if (environment.development) {
             reportError(key, name, `${name} is a new rule`)
         }
+        addTypes(values, key)
     })
 }
 

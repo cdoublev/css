@@ -3089,28 +3089,19 @@ describe('<drop-shadow()>', () => {
 })
 describe('<family-name>', () => {
     test('invalid', () => {
-        const invalid = [
-            [
-                [
-                    [createContext(styleRule), 'font-family'],
-                    [createContext('@font-face'), 'src'],
-                    [createContext('@font-feature-values')],
-                ],
-                // <generic-family>, <system-family-name>
-                ['SERIF', 'caption'],
-            ],
-            [
-                [[createContext(styleRule), 'voice-family']],
-                // <gender>, preserve
-                ['MALE', 'preserve'],
-            ],
+        // <generic-family>, <system-family-name>
+        const invalid = ['SERIF', 'caption']
+        const contexts = [
+            [createContext(styleRule), 'font-family'],
+            [createContext('@font-face'), 'src'],
+            [createContext('@font-feature-values')],
         ]
-        invalid.forEach(([contexts, inputs]) =>
+        invalid.forEach(input =>
             contexts.forEach(([context, name]) => {
                 if (name) {
                     context = { ...context, context, definition: { name, type: 'declaration' } }
                 }
-                inputs.forEach(input => assert.invalid('<family-name>', input, context))
+                assert.invalid('<family-name>', input, context)
             }))
     })
     test('representation', () => {
@@ -4089,6 +4080,16 @@ describe('<view()>', () => {
         assert.valid('<view()>', 'view(block auto)', 'view()')
         assert.valid('<view()>', 'view(block 1px)', 'view(1px)')
         assert.valid('<view()>', 'view(inline auto)', 'view(inline)')
+    })
+})
+describe('<voice-family-name>', () => {
+    test('invalid', () => {
+        assert.invalid('<voice-family-name>', 'MALE')
+        assert.invalid('<voice-family-name>', 'preserve')
+    })
+    test('representation', () => {
+        assert.representation('<voice-family-name>', '"comedian"', string('comedian', ['<voice-family-name>']))
+        assert.representation('<voice-family-name>', 'the comedian', list([customIdent('the'), customIdent('comedian')], ' ', ['<voice-family-name>']))
     })
 })
 describe('<wq-name>', () => {

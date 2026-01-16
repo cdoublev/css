@@ -341,6 +341,10 @@ describe('support', () => {
         assert.equal(match('font-format("woff")'), false)
         assert.equal(match('font-format(woff)'), true)
     })
+    // TODO: fix `value` of `<supports-feature-named-feature-fn>`
+    test.skip('named feature', () => {
+        assert.equal(match('named-feature(unknown)', false))
+    })
     test('selector', () => {
         const selectors = [
             // <general-enclosed>
