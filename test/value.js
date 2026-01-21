@@ -2427,6 +2427,7 @@ describe('<attr-matcher>', () => {
     })
     test('valid', () => {
         assert.valid('<attribute-selector>', '[attr|=value]')
+        assert.valid('<attribute-selector>', '[attr |= value i]', '[attr|=value i]')
     })
 })
 describe('<attr-name>', () => {
@@ -4202,7 +4203,7 @@ describe('<selector-list>', () => {
     test('valid', () => {
         const valid = [
             // No invalid whitespace
-            ['#id.class[ *|attr ^= value ]:hover > [attr=value]::before', '#id.class[*|attr ^= value]:hover > [attr = value]::before'],
+            ['#id.class[ *|attr ^= value ]:hover > [attr=value]::before', '#id.class[*|attr^=value]:hover > [attr=value]::before'],
             ['html|*'],
             ['html|a'],
             ['*|a'],
