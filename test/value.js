@@ -2425,6 +2425,9 @@ describe('<attr-matcher>', () => {
     test('representation', () => {
         assert.representation('<attr-matcher>', '=', list([omitted, delimiter('=')], '', ['<attr-matcher>']))
     })
+    test('valid', () => {
+        assert.valid('<attribute-selector>', '[attr|=value]')
+    })
 })
 describe('<attr-name>', () => {
     test('invalid', () => {
