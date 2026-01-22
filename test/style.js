@@ -2007,8 +2007,8 @@ describe('column-rule-inset, row-rule-inset', () => {
         const values = [
             ['1px', { 'column-rule-edge-inset-start': '1px' }],
             ['1px 1px', {
-                'column-rule-edge-inset-start': '1px',
                 'column-rule-edge-inset-end': '1px',
+                'column-rule-edge-inset-start': '1px',
             }],
             ['1px / 1px', {
                 'column-rule-edge-inset-start': '1px',
@@ -2016,12 +2016,12 @@ describe('column-rule-inset, row-rule-inset', () => {
             }],
             ['1px / 1px 1px', {
                 'column-rule-edge-inset-start': '1px',
-                'column-rule-interior-inset-start': '1px',
                 'column-rule-interior-inset-end': '1px',
+                'column-rule-interior-inset-start': '1px',
             }],
             ['1px 1px / 1px', {
-                'column-rule-edge-inset-start': '1px',
                 'column-rule-edge-inset-end': '1px',
+                'column-rule-edge-inset-start': '1px',
                 'column-rule-interior-inset-start': '1px',
             }],
         ]
@@ -3446,10 +3446,10 @@ describe('rule-inset', () => {
                 'row-rule-edge-inset-start': '1px',
             }],
             ['1px 1px', {
-                'column-rule-edge-inset-start': '1px',
                 'column-rule-edge-inset-end': '1px',
-                'row-rule-edge-inset-start': '1px',
+                'column-rule-edge-inset-start': '1px',
                 'row-rule-edge-inset-end': '1px',
+                'row-rule-edge-inset-start': '1px',
             }],
             ['1px / 1px', {
                 'column-rule-edge-inset-start': '1px',
@@ -3459,18 +3459,18 @@ describe('rule-inset', () => {
             }],
             ['1px / 1px 1px', {
                 'column-rule-edge-inset-start': '1px',
-                'column-rule-interior-inset-start': '1px',
                 'column-rule-interior-inset-end': '1px',
+                'column-rule-interior-inset-start': '1px',
                 'row-rule-edge-inset-start': '1px',
-                'row-rule-interior-inset-start': '1px',
                 'row-rule-interior-inset-end': '1px',
+                'row-rule-interior-inset-start': '1px',
             }],
             ['1px 1px / 1px', {
-                'column-rule-edge-inset-start': '1px',
                 'column-rule-edge-inset-end': '1px',
+                'column-rule-edge-inset-start': '1px',
                 'column-rule-interior-inset-start': '1px',
-                'row-rule-edge-inset-start': '1px',
                 'row-rule-edge-inset-end': '1px',
+                'row-rule-edge-inset-start': '1px',
                 'row-rule-interior-inset-start': '1px',
             }],
         ]

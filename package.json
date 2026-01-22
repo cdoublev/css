@@ -34,8 +34,8 @@
     "build:interface": "node ./scripts/interface.js",
     "lint": "eslint",
     "safe-publish": "npm run build && npm run lint && npm run test && npm publish",
-    "test": "node --test",
-    "test:inspect": "node --watch --inspect-wait=0.0.0.0:9222",
+    "test": "NODE_ENV=test node --test",
+    "test:inspect": "NODE_ENV=test node --watch --inspect-wait=0.0.0.0:9222",
     "test:watch": "npm run test -- --watch"
   },
   "dependencies": {

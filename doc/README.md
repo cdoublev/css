@@ -116,22 +116,23 @@ Before the introduction of these at-rules and nested style and group rules, it c
 Instead of modifying this behavior to interpret rules, the CSSWG decided to represent lists of declarations appearing after a nested rule, with a `CSSStyleDeclaration` contained in `CSSNestedDeclarations`, which is a "transparent" rule that only contains this list of declarations.
 
 ```css
-/* CSSStyleRule { */
+/* CSSStyleRule {              */
 style {
-  /* CSSStyleRule.style { */
+  /* .style: {                 */
   foo: 1;
   bar: 1;
   /* } */
-  /* CSSStyleRule.cssRules { */
+  /* .cssRules: [              */
   @media all {}
   /*   CSSNestedDeclarations { */
-  /*     CSSNestedDeclarations.style { */
+  /*     .style {              */
   baz: 1;
   qux: 1;
-  /*     } */
-  /*   } */
-  /* } */
+  /*     },                    */
+  /*   },                      */
+  /* ],                        */
 }
+/* }                           */
 ```
 
 `CSSStyleDeclaration` is now extended by subclasses defined with a restricted set of property and descriptor attributes: `CSSStyleProperties`, `CSSFontFaceDescriptors`, `CSSPageDescriptors`, etc. Their names also helped to remove confusion about the context in which these declarations are accepted.
@@ -174,7 +175,7 @@ To overcome these challenges, this library defines the following requirements fo
 
 A CSS parser must validate rules and declarations *in the context*, which is not defined anywhere nor passed as an argument.
 
-When grouping at-rules like `@media` and `@supports` are nested in a style rule, the grammar of their block value changes. When using `CSSRule.insertRule()`, the node representing `CSSRule` does not exist. So the context must be initialized with its CSSOM representation.
+When grouping at-rules like `@media` and `@supports` are nested in a style rule, the grammar of their block value changes. When using `CSSGroupingRule.insertRule()`, the node representing `CSSGroupingRule` does not exist. So the context must be initialized with its CSSOM representation.
 
 The context representation must allow accessing the parent rule definition, which must tell:
 
