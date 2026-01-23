@@ -418,7 +418,7 @@ describe('CSSContainerRule', () => {
         const rule = styleSheet.cssRules[0]
 
         // CSSRule
-        assert.equal(rule.cssText, '@container name { style {} }')
+        assert.equal(rule.cssText, '@container name { style { } }')
         assert.equal(rule.parentRule, null)
         assert.equal(rule.parentStyleSheet, styleSheet)
 
@@ -618,7 +618,7 @@ describe('CSSFunctionRule, CSSFunctionDeclarations', () => {
         const declarations = rule.cssRules[1]
 
         // CSSRule
-        assert.equal(rule.cssText, `@function --name(${parameters.map(([input, expected = input]) => expected).join(', ')}) { @media {} result: 1; }`)
+        assert.equal(rule.cssText, `@function --name(${parameters.map(([input, expected = input]) => expected).join(', ')}) { @media { } result: 1; }`)
         assert.equal(rule.parentRule, null)
         assert.equal(rule.parentStyleSheet, styleSheet)
         assert.equal(declarations.cssText, 'result: 1;')
@@ -809,7 +809,7 @@ describe('CSSKeyframesRule', () => {
         const rule = styleSheet.cssRules[0]
 
         // CSSRule
-        assert.equal(rule.cssText, '@keyframes name { 100% {} }')
+        assert.equal(rule.cssText, '@keyframes name { 100% { } }')
         assert.equal(rule.parentRule, null)
         assert.equal(rule.parentStyleSheet, styleSheet)
 
@@ -820,7 +820,7 @@ describe('CSSKeyframesRule', () => {
         assert.equal(rule.name, 'name')
         rule.name = '\n'
         assert.equal(rule.name, '\\a')
-        assert.equal(rule.cssText, '@keyframes \\a { 100% {} }')
+        assert.equal(rule.cssText, '@keyframes \\a { 100% { } }')
         assert.throws(() => rule.name = '', SET_INVALID_KEYFRAMES_NAME_ERROR)
     })
     test('methods', () => {
@@ -875,7 +875,7 @@ describe('CSSLayerBlockRule', () => {
         const rule = styleSheet.cssRules[0]
 
         // CSSRule
-        assert.equal(rule.cssText, '@layer name { style {} }')
+        assert.equal(rule.cssText, '@layer name { style { } }')
         assert.equal(rule.parentRule, null)
         assert.equal(rule.parentStyleSheet, styleSheet)
 
@@ -926,7 +926,7 @@ describe('CSSMediaRule', () => {
         let rule = styleSheet.cssRules[0]
 
         // CSSRule
-        assert.equal(rule.cssText, '@media all { style {} }')
+        assert.equal(rule.cssText, '@media all { style { } }')
         assert.equal(rule.parentRule, null)
         assert.equal(rule.parentStyleSheet, styleSheet)
 
@@ -1006,7 +1006,7 @@ describe('CSSPageRule, CSSPageDeclarations', () => {
         const declarations = rule.cssRules[1]
 
         // CSSRule
-        assert.equal(rule.cssText, '@page intro { @top-left {} color: green; }')
+        assert.equal(rule.cssText, '@page intro { @top-left { } color: green; }')
         assert.equal(rule.parentRule, null)
         assert.equal(rule.parentStyleSheet, styleSheet)
         assert.equal(declarations.cssText, 'color: green;')
@@ -1071,7 +1071,7 @@ describe('CSSScopeRule', () => {
         const rule = styleSheet.cssRules[0]
 
         // CSSRule
-        assert.equal(rule.cssText, '@scope (start) to (end) { style {} color: green; }')
+        assert.equal(rule.cssText, '@scope (start) to (end) { style { } color: green; }')
         assert.equal(rule.parentRule, null)
         assert.equal(rule.parentStyleSheet, styleSheet)
 
@@ -1090,7 +1090,7 @@ describe('CSSStartingStyleRule', () => {
         const rule = styleSheet.cssRules[0]
 
         // CSSRule
-        assert.equal(rule.cssText, '@starting-style { style {} }')
+        assert.equal(rule.cssText, '@starting-style { style { } }')
         assert.equal(rule.parentRule, null)
         assert.equal(rule.parentStyleSheet, styleSheet)
 
@@ -1122,9 +1122,9 @@ describe('CSSStyleRule', () => {
         const scopedStyleRule = scopeRule.cssRules[0]
 
         // CSSRule
-        assert.equal(styleRule.cssText, 'style { @media { & nested {} nested & {} & > nested & {} } @scope { scoped { & nested {} } } color: green; }')
-        assert.equal(nestedStyleRule.cssText, '& nested {}')
-        assert.equal(scopedStyleRule.cssText, 'scoped { & nested {} }')
+        assert.equal(styleRule.cssText, 'style { @media { & nested { } nested & { } & > nested & { } } @scope { scoped { & nested { } } } color: green; }')
+        assert.equal(nestedStyleRule.cssText, '& nested { }')
+        assert.equal(scopedStyleRule.cssText, 'scoped { & nested { } }')
         assert.equal(styleRule.parentRule, null)
         assert.equal(nestedStyleRule.parentRule, mediaRule)
         assert.equal(scopedStyleRule.parentRule, scopeRule)
@@ -1195,7 +1195,7 @@ describe('CSSSupportsRule', () => {
         const rule = styleSheet.cssRules[0]
 
         // CSSRule
-        assert.equal(rule.cssText, '@supports (color: green) { style {} }')
+        assert.equal(rule.cssText, '@supports (color: green) { style { } }')
         assert.equal(rule.parentRule, null)
         assert.equal(rule.parentStyleSheet, styleSheet)
 
@@ -1252,9 +1252,9 @@ describe('CSS grammar - syntax', () => {
             style-2 {}
         `)
         assert.equal(cssRules.length, 3)
-        assert.equal(cssRules[0].cssText, 'style-1 {}')
-        assert.equal(cssRules[1].cssText, '@media not all {}')
-        assert.equal(cssRules[2].cssText, 'style-2 {}')
+        assert.equal(cssRules[0].cssText, 'style-1 { }')
+        assert.equal(cssRules[1].cssText, '@media not all { }')
+        assert.equal(cssRules[2].cssText, 'style-2 { }')
     })
     test('qualified rules start with anything but <at-keyword-token> and only end with {} block', () => {
         const { cssRules } = createStyleSheet(`
@@ -1264,8 +1264,8 @@ describe('CSS grammar - syntax', () => {
             style-2 {}
         `)
         assert.equal(cssRules.length, 2)
-        assert.equal(cssRules[0].cssText, 'style-1 {}')
-        assert.equal(cssRules[1].cssText, 'style-2 {}')
+        assert.equal(cssRules[0].cssText, 'style-1 { }')
+        assert.equal(cssRules[1].cssText, 'style-2 { }')
     })
     test('top-level rule starting like a custom property declaration', () => {
         const { cssRules } = createStyleSheet(`
@@ -1275,7 +1275,7 @@ describe('CSS grammar - syntax', () => {
             --custom a:hover {}
         `)
         assert.equal(cssRules.length, 1)
-        assert.equal(cssRules[0].cssText, '--custom a:hover {}')
+        assert.equal(cssRules[0].cssText, '--custom a:hover { }')
     })
     test('} breaks consuming a declaration and a nested rule prelude', () => {
         const { cssRules } = createStyleSheet(`
@@ -1296,10 +1296,10 @@ describe('CSS grammar - syntax', () => {
         `)
         assert.equal(cssRules.length, 5)
         assert.equal(cssRules[0].cssText, 'style-1 { --custom: ; }')
-        assert.equal(cssRules[1].cssText, 'style-2 {}')
+        assert.equal(cssRules[1].cssText, 'style-2 { }')
         assert.equal(cssRules[2].cssText, 'style-3 { color: green; }')
-        assert.equal(cssRules[3].cssText, 'style-4 {}')
-        assert.equal(cssRules[4].cssText, '@font-face {}')
+        assert.equal(cssRules[3].cssText, 'style-4 { }')
+        assert.equal(cssRules[4].cssText, '@font-face { }')
     })
     test('; breaks consuming a declaration and a nested rule prelude', () => {
         const { cssRules } = createStyleSheet(`
@@ -1316,7 +1316,7 @@ describe('CSS grammar - syntax', () => {
         `)
         assert.equal(cssRules.length, 2)
         assert.equal(cssRules[0].cssText, 'style { color: green; }')
-        assert.equal(cssRules[1].cssText, '@font-face {}')
+        assert.equal(cssRules[1].cssText, '@font-face { }')
     })
     test('! does not break consuming a declaration value', () => {
         // but is interpreted as a bad token if not followed by `important`
@@ -1344,7 +1344,7 @@ describe('CSS grammar - syntax', () => {
         `)
 
         assert.equal(cssRules[0].cssText, `style { ${declarations}; }`)
-        assert.equal(cssRules[1].cssText, '@media (;) {}')
+        assert.equal(cssRules[1].cssText, '@media (;) { }')
     })
     test('positioned {} block in a declaration value not for a custom property', () => {
         // It is always consumed as a rule
@@ -1361,7 +1361,7 @@ describe('CSS grammar - syntax', () => {
                 src: {}, local("monospace");
             }
         `)
-        assert.equal(cssRules[0].cssText, 'style { color: ({} 1) var(--custom) (1 {}); & style:hover {} }')
+        assert.equal(cssRules[0].cssText, 'style { color: ({} 1) var(--custom) (1 {}); & style:hover { } }')
         assert.equal(cssRules[1].cssText, '@font-face { src: local("serif"); }')
     })
     test('positioned {} block in a declaration value for a custom property', () => {
@@ -1571,28 +1571,28 @@ describe('CSS grammar - semantic', () => {
                 @media {}
             }
         `)
-        assert.equal(styleSheet.cssRules[0].cssText, '@container name { @media {} }')
+        assert.equal(styleSheet.cssRules[0].cssText, '@container name { @media { } }')
     })
     test('@container - valid block contents', () => {
         const rules = [
-            '@color-profile --name {}',
-            '@container name {}',
-            '@counter-style name {}',
-            '@font-face {}',
-            '@font-feature-values name {}',
+            '@color-profile --name { }',
+            '@container name { }',
+            '@counter-style name { }',
+            '@font-face { }',
+            '@font-feature-values name { }',
             '@font-palette-values --name { font-family: name; }',
-            '@function --name() {}',
-            '@keyframes name {}',
+            '@function --name() { }',
+            '@keyframes name { }',
             '@layer name;',
-            '@media {}',
-            '@page {}',
-            '@position-try --name {}',
+            '@media { }',
+            '@page { }',
+            '@position-try --name { }',
             '@property --name { syntax: "*"; inherits: false; }',
-            '@scope {}',
-            '@starting-style {}',
-            '@supports (color: green) {}',
-            '@view-transition {}',
-            'style:hover {}',
+            '@scope { }',
+            '@starting-style { }',
+            '@supports (color: green) { }',
+            '@view-transition { }',
+            'style:hover { }',
         ]
         const input = `@CONTAINER name { ${rules.join(' ')} }`
         const styleSheet = createStyleSheet(input)
@@ -1819,13 +1819,13 @@ describe('CSS grammar - semantic', () => {
                 @media {}
             }
         `)
-        assert.equal(styleSheet.cssRules[0].cssText, '@function --name() { @media {} }')
+        assert.equal(styleSheet.cssRules[0].cssText, '@function --name() { @media { } }')
     })
     test('@function - valid block contents', () => {
         const contents = [
-            '@container name {}',
-            '@media {}',
-            '@supports (color: green) {}',
+            '@container name { }',
+            '@media { }',
+            '@supports (color: green) { }',
             '--custom: 1;',
             'RESULT: {env(name)};',
         ]
@@ -1868,11 +1868,11 @@ describe('CSS grammar - semantic', () => {
                 0% {}
             }
         `)
-        assert.equal(styleSheet.cssRules[0].cssText, '@keyframes name { 0% {} }')
+        assert.equal(styleSheet.cssRules[0].cssText, '@keyframes name { 0% { } }')
     })
     test('@keyframes - valid block contents', () => {
-        const styleSheet = createStyleSheet('@KEYFRAMES name { 0% {} }')
-        assert.equal(styleSheet.cssRules[0].cssText, '@keyframes name { 0% {} }')
+        const styleSheet = createStyleSheet('@KEYFRAMES name { 0% { } }')
+        assert.equal(styleSheet.cssRules[0].cssText, '@keyframes name { 0% { } }')
     })
     test('@layer - invalid block contents', () => {
         const styleSheet = createStyleSheet(`
@@ -1892,28 +1892,28 @@ describe('CSS grammar - semantic', () => {
                 @media {}
             }
         `)
-        assert.equal(styleSheet.cssRules[0].cssText, '@layer { @media {} }')
+        assert.equal(styleSheet.cssRules[0].cssText, '@layer { @media { } }')
     })
     test('@layer - valid block contents', () => {
         const rules = [
-            '@color-profile --name {}',
-            '@container name {}',
-            '@counter-style name {}',
-            '@font-face {}',
-            '@font-feature-values name {}',
+            '@color-profile --name { }',
+            '@container name { }',
+            '@counter-style name { }',
+            '@font-face { }',
+            '@font-feature-values name { }',
             '@font-palette-values --name { font-family: name; }',
-            '@function --name() {}',
-            '@keyframes name {}',
+            '@function --name() { }',
+            '@keyframes name { }',
             '@layer name;',
-            '@media {}',
-            '@page {}',
-            '@position-try --name {}',
+            '@media { }',
+            '@page { }',
+            '@position-try --name { }',
             '@property --name { syntax: "*"; inherits: false; }',
-            '@scope {}',
-            '@starting-style {}',
-            '@supports (color: green) {}',
-            '@view-transition {}',
-            'style:hover {}',
+            '@scope { }',
+            '@starting-style { }',
+            '@supports (color: green) { }',
+            '@view-transition { }',
+            'style:hover { }',
         ]
         const input = `@LAYER { ${rules.join(' ')} }`
         const styleSheet = createStyleSheet(input)
@@ -1937,22 +1937,22 @@ describe('CSS grammar - semantic', () => {
                 @media {}
             }
         `)
-        assert.equal(styleSheet.cssRules[0].cssText, '@media { @media {} }')
+        assert.equal(styleSheet.cssRules[0].cssText, '@media { @media { } }')
     })
     test('@media - valid block contents', () => {
         const rules = [
-            '@color-profile --name {}',
-            '@container name {}',
-            '@counter-style name {}',
-            '@font-face {}',
-            '@font-feature-values name {}',
+            '@color-profile --name { }',
+            '@container name { }',
+            '@counter-style name { }',
+            '@font-face { }',
+            '@font-feature-values name { }',
             '@font-palette-values --name { font-family: name; }',
-            '@function --name() {}',
-            '@keyframes name {}',
+            '@function --name() { }',
+            '@keyframes name { }',
             '@layer name;',
-            '@media {}',
-            '@page {}',
-            '@position-try --name {}',
+            '@media { }',
+            '@page { }',
+            '@position-try --name { }',
             '@property --name { syntax: "*"; inherits: false; }',
             '@scope {}',
             '@starting-style {}',
@@ -1999,11 +1999,11 @@ describe('CSS grammar - semantic', () => {
                 @top-left {}
             }
         `)
-        assert.equal(styleSheet.cssRules[0].cssText, '@page { @top-left {} }')
+        assert.equal(styleSheet.cssRules[0].cssText, '@page { @top-left { } }')
     })
     test('@page - valid block contents', () => {
         const contents = [
-            '@top-left {}',
+            '@top-left { }',
             '--custom: 1;',
             'MARGIN-TOP: initial;',
             'SIZE: initial;',
@@ -2168,23 +2168,23 @@ describe('CSS grammar - semantic', () => {
                 @media {}
             }
         `)
-        assert.equal(styleSheet.cssRules[0].cssText, '@scope { @media {} }')
+        assert.equal(styleSheet.cssRules[0].cssText, '@scope { @media { } }')
     })
     test('@scope - valid block contents', () => {
 
         const rules = [
-            '@color-profile --name {}',
-            '@container name {}',
-            '@counter-style name {}',
-            '@font-face {}',
-            '@font-feature-values name {}',
+            '@color-profile --name { }',
+            '@container name { }',
+            '@counter-style name { }',
+            '@font-face { }',
+            '@font-feature-values name { }',
             '@font-palette-values --name { font-family: name; }',
-            '@function --name() {}',
-            '@keyframes name {}',
+            '@function --name() { }',
+            '@keyframes name { }',
             '@layer name;',
-            '@media {}',
-            '@page {}',
-            '@position-try --name {}',
+            '@media { }',
+            '@page { }',
+            '@position-try --name { }',
             '@property --name { syntax: "*"; inherits: false; }',
             '@scope {}',
             '@starting-style {}',
@@ -2234,22 +2234,22 @@ describe('CSS grammar - semantic', () => {
                 @media {}
             }
         `)
-        assert.equal(styleSheet.cssRules[0].cssText, '@starting-style { @media {} }')
+        assert.equal(styleSheet.cssRules[0].cssText, '@starting-style { @media { } }')
     })
     test('@starting-style - valid block contents', () => {
         const rules = [
-            '@color-profile --name {}',
-            '@container name {}',
-            '@counter-style name {}',
-            '@font-face {}',
-            '@font-feature-values name {}',
+            '@color-profile --name { }',
+            '@container name { }',
+            '@counter-style name { }',
+            '@font-face { }',
+            '@font-feature-values name { }',
             '@font-palette-values --name { font-family: name; }',
-            '@function --name() {}',
-            '@keyframes name {}',
+            '@function --name() { }',
+            '@keyframes name { }',
             '@layer name;',
-            '@media {}',
-            '@page {}',
-            '@position-try --name {}',
+            '@media { }',
+            '@page { }',
+            '@position-try --name { }',
             '@property --name { syntax: "*"; inherits: false; }',
             '@scope {}',
             '@starting-style {}',
@@ -2279,22 +2279,22 @@ describe('CSS grammar - semantic', () => {
                 @media {}
             }
         `)
-        assert.equal(styleSheet.cssRules[0].cssText, '@supports (color: green) { @media {} }')
+        assert.equal(styleSheet.cssRules[0].cssText, '@supports (color: green) { @media { } }')
     })
     test('@supports - valid block contents', () => {
         const rules = [
-            '@color-profile --name {}',
-            '@container name {}',
-            '@counter-style name {}',
-            '@font-face {}',
-            '@font-feature-values name {}',
+            '@color-profile --name { }',
+            '@container name { }',
+            '@counter-style name { }',
+            '@font-face { }',
+            '@font-feature-values name { }',
             '@font-palette-values --name { font-family: name; }',
-            '@function --name() {}',
-            '@keyframes name {}',
+            '@function --name() { }',
+            '@keyframes name { }',
             '@layer name;',
-            '@media {}',
-            '@page {}',
-            '@position-try --name {}',
+            '@media { }',
+            '@page { }',
+            '@position-try --name { }',
             '@property --name { syntax: "*"; inherits: false; }',
             '@scope {}',
             '@starting-style {}',
@@ -2377,7 +2377,7 @@ describe('CSS grammar - semantic', () => {
                 }
             }
         `)
-        assert.equal(styleSheet.cssRules[0].cssText, '@font-feature-values name {}')
+        assert.equal(styleSheet.cssRules[0].cssText, '@font-feature-values name { }')
     })
     test('font feature value type rule - valid block contents', () => {
         const contents = [
@@ -2486,18 +2486,18 @@ describe('CSS grammar - semantic', () => {
                 }
             }
         `)
-        assert.equal(styleSheet.cssRules[0].cssText, 'style { @media { @media {} } }')
+        assert.equal(styleSheet.cssRules[0].cssText, 'style { @media { @media { } } }')
     })
     test('nested group rule - valid block contents', () => {
 
         const rules = [
-            '@CONTAINER name {}',
-            '@layer {}',
-            '@media {}',
-            '@scope {}',
-            '@starting-style {}',
-            '@supports (color: green) {}',
-            '& style {}',
+            '@CONTAINER name { }',
+            '@layer { }',
+            '@media { }',
+            '@scope { }',
+            '@starting-style { }',
+            '@supports (color: green) { }',
+            '& style { }',
         ]
         const input = `style { @media { ${rules.join(' ')} } }`
         const styleSheet = createStyleSheet(input)
@@ -2561,13 +2561,13 @@ describe('CSS grammar - semantic', () => {
                 }
             }
         `)
-        assert.equal(styleSheet.cssRules[0].cssText, '@function --name() { @media { @media {} } }')
+        assert.equal(styleSheet.cssRules[0].cssText, '@function --name() { @media { @media { } } }')
     })
     test('nested conditional rule inside @function - valid block contents', () => {
         const contents = [
-            '@container name {}',
-            '@media {}',
-            '@supports (color: green) {}',
+            '@container name { }',
+            '@media { }',
+            '@supports (color: green) { }',
             '--custom: 1;',
             'RESULT: {env(name)};',
         ]
@@ -2583,7 +2583,7 @@ describe('CSS grammar - semantic', () => {
                 svg|nested {}
             }
         `)
-        assert.equal(styleSheet.cssRules[1].cssText, 'style { & svg|nested {} }')
+        assert.equal(styleSheet.cssRules[1].cssText, 'style { & svg|nested { } }')
     })
     test('nested style rule - invalid block contents', () => {
         const styleSheet = createStyleSheet(`
@@ -2615,18 +2615,18 @@ describe('CSS grammar - semantic', () => {
                 }
             }
         `)
-        assert.equal(styleSheet.cssRules[0].cssText, 'style { & { @media {} } }')
+        assert.equal(styleSheet.cssRules[0].cssText, 'style { & { @media { } } }')
     })
     test('nested style rule - valid block contents', () => {
 
         const rules = [
-            '@CONTAINER name {}',
-            '@layer {}',
-            '@media {}',
-            '@scope {}',
-            '@starting-style {}',
-            '@supports (color: green) {}',
-            '& style {}',
+            '@CONTAINER name { }',
+            '@layer { }',
+            '@media { }',
+            '@scope { }',
+            '@starting-style { }',
+            '@supports (color: green) { }',
+            '& style { }',
         ]
         const input = `style { & { ${rules.join(' ')} } }`
         const styleSheet = createStyleSheet(input)
@@ -2716,7 +2716,7 @@ describe('CSS grammar - semantic', () => {
                 @media {}
             }
         `)
-        assert.equal(styleSheet.cssRules[0].cssText, 'style { @media {} }')
+        assert.equal(styleSheet.cssRules[0].cssText, 'style { @media { } }')
     })
     test('style rule - valid block contents', () => {
 
@@ -2754,9 +2754,9 @@ describe('CSS grammar - semantic', () => {
     })
     // Legacy names
     test('legacy rule name', () => {
-        const rule = createStyleSheet('@-webkit-keyframes name {}').cssRules[0]
+        const rule = createStyleSheet('@-webkit-keyframes name { }').cssRules[0]
         assert.equal(CSSKeyframesRule.is(rule), true)
-        assert.equal(rule.cssText, '@keyframes name {}')
+        assert.equal(rule.cssText, '@keyframes name { }')
     })
     test('legacy property name', () => {
         const styleSheet = createStyleSheet('style { -webkit-order: 1 }')
