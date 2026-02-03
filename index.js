@@ -20,5 +20,5 @@ function install(globalObject = globalThis) {
 }
 
 export { CSSStyleProperties, CSSStyleSheet, StyleSheetList } from './lib/cssom/index.js'
-export { parseGrammar, parseGrammarList } from './lib/parse/parser.js'
+export { parseGrammar, parseListGrammar } from './lib/parse/parser.js'
 export { install }

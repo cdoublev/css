@@ -12,7 +12,7 @@ const {
   StyleSheetList,
   install,
   parseGrammar,
-  parseGrammarList,
+  parseListGrammar,
 } = require('@cdoublev/css')
 
 /**
@@ -29,7 +29,7 @@ const style = CSSStyleProperties.create(myGlobalObject, undefined, privateProper
 const color = parseGrammar('green', '<color>')
 
 // Parse a comma-separated list according to a CSS grammar
-const list = parseGrammarList('(width < 30rem), (orientation: portrait)', '<media-query-list>')
+const list = parseListGrammar('(width < 30rem), (orientation: portrait)', '<media-query-list>')
 ```
 
 `CSSStyleSheet`, `CSSStyleProperties`, `StyleSheetList`, are [`webidl2js`](https://github.com/jsdom/webidl2js) wrappers intended to implement:

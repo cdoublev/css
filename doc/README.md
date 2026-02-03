@@ -328,15 +328,15 @@ Other entry points are not implemented:
 
   - [*parse a style sheet*](https://drafts.csswg.org/css-syntax-3/#parse-a-stylesheet), which is only used in [*fetch an `@import`*](https://drafts.csswg.org/css-cascade-4/#fetch-an-import) (but should not, cf. [issue](https://github.com/w3c/csswg-drafts/issues/13049)) and [*parse a CSS style sheet*](https://drafts.csswg.org/css-syntax-3/#parse-a-css-stylesheet), which is unused, barely specified, and also not implemented
   - [*parse a style sheet's contents*](https://drafts.csswg.org/css-cascade-4/#fetch-an-import), which is only used to parse rules from `CSSStyleSheet.replace()`, and is replaced with `parseGrammar()`
-  - [*parse a CSS declaration block*](https://drafts.csswg.org/cssom-1/#parse-a-css-declaration-block), which is only used to parse `CSSStyleDeclaration.cssText` (a list of declarations) by validating the declarations returned by [*parse a block's contents*](https://drafts.csswg.org/css-syntax-3/#parse-a-blocks-contents) (implemented with `parseDeclarationList()`), whereas they are already validated
+  - [*parse a CSS declaration block*](https://drafts.csswg.org/cssom-1/#parse-a-css-declaration-block), which is only used to parse `CSSStyleDeclaration.cssText` (a list of declarations) by validating the declarations returned by [*parse a block's contents*](https://drafts.csswg.org/css-syntax-3/#parse-a-blocks-contents) (implemented with `parseDeclarations()`), whereas they are already validated
   - [*parse a CSS rule*](https://drafts.csswg.org/cssom-1/#parse-a-css-rule), which is only used to parse the argument of `CSSStyleSheet.insertRule()` by validating the rule returned by [*parse a rule*](https://drafts.csswg.org/css-syntax-3/#parse-a-rule), whereas it is already validated
   - [*parse a declaration*](https://drafts.csswg.org/css-syntax-3/#parse-a-declaration), which is only used to parse `<declaration>`, and is replaced with `matchDeclaration()`
 
 Below is a list of all implemented entry points:
 
   - `parseGrammar(input, grammar, context, strategy?)`
-  - `parseGrammarList(input, grammar, context)`
-  - `parseDeclarationList(input, context)`
+  - `parseListGrammar(input, grammar, context)`
+  - `parseDeclarations(input, context)`
   - `parseRule(input, context)`
   - `parseDestructuredDeclaration(name, value, important, context)`
   - `parseDeclarationValue(input, grammar, context)`
@@ -418,9 +418,9 @@ Omitting component values is primarily intended for backward compatibility.
 
 `serializeValue()` is an implementation of the procedure to [serialize a CSS value](https://drafts.csswg.org/cssom-1/#serialize-a-css-value). It takes either a single longhand declaration or for a shorthand, a list of declarations that must be reduced to a single declaration (step 1). Then it represents the declaration value as a list of CSS component values simplified according to the shortest serialization principle (step 2).
 
-`serializeComponentValueList()` is an implementation of steps 3 to 5, which [serialize [each] component value](https://drafts.csswg.org/cssom-1/#serialize-a-css-component-value) according to its type, which is implemented with `serializeComponentValue()`, and separates them with a whitespace when appropriate.
+`serializeComponentValues()` is an implementation of steps 3 to 5, which [serialize [each] component value](https://drafts.csswg.org/cssom-1/#serialize-a-css-component-value) according to its type, which is implemented with `serializeComponentValue()`, and separates them with a whitespace when appropriate.
 
-`serializeComponentValueList()` ignores any existing type on the provided list, like `<position>` for `background-position`, which requires serializing two component values even when it was declared with one. Therefore `serializeValue()` is implemented with `serializeComponentValue()` instead, which accepts a component value as a single object but also as a list of component values or a plain `String` produced at step 2 of `serializeValue()`, which is implemented with `representDeclarationValue()`.
+`serializeComponentValues()` ignores any existing type on the provided list, like `<position>` for `background-position`, which requires serializing two component values even when it was declared with one. Therefore `serializeValue()` is implemented with `serializeComponentValue()` instead, which accepts a component value as a single object but also as a list of component values or a plain `String` produced at step 2 of `serializeValue()`, which is implemented with `representDeclarationValue()`.
 
 `represent<PropertyOrDescriptor>()` takes a single declaration for a longhand or a list of declarations for a shorthand, and returns a simplified/reified value that is often partially or fully serialized (and is then passed to `serializeComponentValue()`), which avoids writing imperative code to serialize each part.
 
