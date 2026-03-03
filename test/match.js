@@ -507,6 +507,13 @@ describe('selector', () => {
         }
 
         /**
+         * @returns {string}
+         */
+        get baseURI() {
+            return this.ownerDocument.baseURI
+        }
+
+        /**
          * @param {Node} node
          * @returns {boolean}
          */
@@ -559,7 +566,6 @@ describe('selector', () => {
     class Document extends Node {
 
         fullscreenElement = null
-        location = new URL('http://localhost/#current-target')
         nodeType = DOCUMENT_NODE_TYPE
         pictureInPictureElement = null
 
@@ -567,9 +573,14 @@ describe('selector', () => {
          * @param {object} [properties]
          */
         constructor(properties = {}) {
+
             super(properties)
-            const { activeViewTransition = null } = properties
+
+            const { activeViewTransition = null, baseURI = 'http://localhost/' } = properties
+
             this.activeViewTransition = activeViewTransition
+            this.baseURI = baseURI
+            this.location = new URL(this.baseURI)
         }
 
         /**
@@ -753,9 +764,11 @@ describe('selector', () => {
 
             super(properties)
 
-            let href = this.getAttribute('href') ?? ''
-            if (href) {
-                const url = URL.parse(href, `${this.ownerDocument.location}`)
+            let href = this.getAttribute('href')
+            if (href === null) {
+                href = ''
+            } else {
+                const url = URL.parse(href, this.ownerDocument.baseURI)
                 if (url) {
                     href = `${url}`
                 }
@@ -776,7 +789,7 @@ describe('selector', () => {
 
             let href = this.getAttribute('href') ?? ''
             if (href) {
-                const url = URL.parse(href, `${this.ownerDocument.location}`)
+                const url = URL.parse(href, this.ownerDocument.baseURI)
                 if (url) {
                     href = `${url}`
                 }
@@ -4379,7 +4392,7 @@ describe('selector', () => {
         selections.forEach(([selector, expected]) => assert.match(selector, expected, document))
     })
     // Navigation
-    test(':any-link, :link, :local-link', ':target', ':visited', () => {
+    test(':any-link, :link, :target, :visited', () => {
 
         /**
          * <html>
@@ -4392,7 +4405,7 @@ describe('selector', () => {
          *   </body>
          * </html>
          */
-        const document = new HTMLDocument
+        const document = new HTMLDocument({ baseURI: 'http://localhost/#current-target' })
         const html = new HTMLHtmlElement({ ownerDocument: document, parentNode: document })
         const body = new HTMLBodyElement({ ownerDocument: document, parentNode: html })
 
@@ -4432,6 +4445,115 @@ describe('selector', () => {
             [':target', [currentTargetLinkAnchor]],
         ]
         selections.forEach(([selector, expected]) => assert.match(selector, expected, document))
+    })
+    test(':local-link, :local-link()', () => {
+
+        /**
+         * <html>
+         *   <body>
+         *
+         *     <!-- neither :local-link or :local-link() -->
+         *     <a href="https://localhost/level-1/level-2/"></a>
+         *     <a href="http://sub.localhost/level-1/level-2/"></a>
+         *     <a href="http://localhost:8080/level-1/level-2/"></a>
+         *     <a href="/level-1/level-2/?parameter"></a>
+         *
+         *     <-- :local-link or :local-link() -->
+         *     <a href="http://localhost"></a>
+         *     <a href=""></a>
+         *     <a href="#"></a>
+         *     <a href="/"></a>
+         *     <a href="/level-1"></a>
+         *     <a href="/level-1/"></a>
+         *     <a href="/level-1/level-2/#other-target"></a>
+         *     <a href="/level-1/level-2/level-3"></a>
+         *   </body>
+         * </html>
+         */
+        const document = new HTMLDocument({ baseURI: 'http://localhost/level-1/level-2/#target' })
+        const html = new HTMLHtmlElement({ ownerDocument: document, parentNode: document })
+        const body = new HTMLBodyElement({ ownerDocument: document, parentNode: html })
+
+        // Neither :local-link or :local-link()
+        new HTMLAnchorElement({
+            attributes: [{ localName: 'href', value: 'https://localhost/level-1/level-2/' }],
+            ownerDocument: document,
+            parentNode: body,
+        })
+        new HTMLAnchorElement({
+            attributes: [{ localName: 'href', value: 'http://sub.localhost/level-1/level-2/' }],
+            ownerDocument: document,
+            parentNode: body,
+        })
+        new HTMLAnchorElement({
+            attributes: [{ localName: 'href', value: 'http://localhost:8080/level-1/level-2/' }],
+            ownerDocument: document,
+            parentNode: body,
+        })
+        new HTMLAnchorElement({
+            attributes: [{ localName: 'href', value: '/level-1/level-2/?parameter' }],
+            ownerDocument: document,
+            parentNode: body,
+        })
+
+        // :local-link or :local-link()
+        new HTMLAnchorElement({
+            attributes: [{ localName: 'href', value: 'http://localhost' }],
+            ownerDocument: document,
+            parentNode: body,
+            selectors: [':local-link(0)'],
+        })
+        new HTMLAnchorElement({
+            attributes: [{ localName: 'href' }],
+            ownerDocument: document,
+            parentNode: body,
+            selectors: [':local-link', ':local-link(0)', ':local-link(1)', ':local-link(2)', ':local-link(3)'],
+        })
+        new HTMLAnchorElement({
+            attributes: [{ localName: 'href', value: '#' }],
+            ownerDocument: document,
+            parentNode: body,
+            selectors: [':local-link', ':local-link(0)', ':local-link(1)', ':local-link(2)', ':local-link(3)'],
+        })
+        new HTMLAnchorElement({
+            attributes: [{ localName: 'href', value: '/' }],
+            ownerDocument: document,
+            parentNode: body,
+            selectors: [':local-link(0)'],
+        })
+        new HTMLAnchorElement({
+            attributes: [{ localName: 'href', value: '/level-1' }],
+            ownerDocument: document,
+            parentNode: body,
+            selectors: [':local-link(0)', ':local-link(1)'],
+        })
+        new HTMLAnchorElement({
+            attributes: [{ localName: 'href', value: '/level-1/' }],
+            ownerDocument: document,
+            parentNode: body,
+            selectors: [':local-link(0)', ':local-link(1)'],
+        })
+        new HTMLAnchorElement({
+            attributes: [{ localName: 'href', value: '/level-1/level-2/#other-target' }],
+            ownerDocument: document,
+            parentNode: body,
+            selectors: [':local-link', ':local-link(0)', ':local-link(1)', ':local-link(2)', ':local-link(3)'],
+        })
+        new HTMLAnchorElement({
+            attributes: [{ localName: 'href', value: '/level-1/level-2/level-3' }],
+            ownerDocument: document,
+            parentNode: body,
+            selectors: [':local-link', ':local-link(0)', ':local-link(1)', ':local-link(2)'],
+        })
+
+        const selectors = [
+            ':local-link',
+            ':local-link(0)',
+            ':local-link(1)',
+            ':local-link(2)',
+            ':local-link(3)',
+        ]
+        selectors.forEach(selector => assert.match(selector, expected.get(selector), document))
     })
     // Resource
     test(':buffering, :muted, :paused, :playing, :seeking, :stalled, :volume-locked', () => {
