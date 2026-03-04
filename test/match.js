@@ -576,11 +576,18 @@ describe('selector', () => {
 
             super(properties)
 
-            const { activeViewTransition = null, baseURI = 'http://localhost/' } = properties
+            const { activeViewTransition = null, url = 'http://localhost/' } = properties
 
             this.activeViewTransition = activeViewTransition
-            this.baseURI = baseURI
-            this.location = new URL(this.baseURI)
+            this.location = new URL(url)
+            this.URL = url
+        }
+
+        /**
+         * @returns {string}
+         */
+        get baseURI() {
+            return this.URL
         }
 
         /**
@@ -768,7 +775,7 @@ describe('selector', () => {
             if (href === null) {
                 href = ''
             } else {
-                const url = URL.parse(href, this.ownerDocument.baseURI)
+                const url = URL.parse(href, this.baseURI)
                 if (url) {
                     href = `${url}`
                 }
@@ -789,7 +796,7 @@ describe('selector', () => {
 
             let href = this.getAttribute('href') ?? ''
             if (href) {
-                const url = URL.parse(href, this.ownerDocument.baseURI)
+                const url = URL.parse(href, this.baseURI)
                 if (url) {
                     href = `${url}`
                 }
@@ -4405,7 +4412,7 @@ describe('selector', () => {
          *   </body>
          * </html>
          */
-        const document = new HTMLDocument({ baseURI: 'http://localhost/#current-target' })
+        const document = new HTMLDocument({ url: 'http://localhost/#current-target' })
         const html = new HTMLHtmlElement({ ownerDocument: document, parentNode: document })
         const body = new HTMLBodyElement({ ownerDocument: document, parentNode: html })
 
@@ -4470,7 +4477,7 @@ describe('selector', () => {
          *   </body>
          * </html>
          */
-        const document = new HTMLDocument({ baseURI: 'http://localhost/level-1/level-2/#target' })
+        const document = new HTMLDocument({ url: 'http://localhost/level-1/level-2/#target' })
         const html = new HTMLHtmlElement({ ownerDocument: document, parentNode: document })
         const body = new HTMLBodyElement({ ownerDocument: document, parentNode: html })
 
@@ -4543,7 +4550,7 @@ describe('selector', () => {
             attributes: [{ localName: 'href', value: '/level-1/level-2/level-3' }],
             ownerDocument: document,
             parentNode: body,
-            selectors: [':local-link', ':local-link(0)', ':local-link(1)', ':local-link(2)'],
+            selectors: [':local-link(0)', ':local-link(1)', ':local-link(2)'],
         })
 
         const selectors = [
