@@ -65,7 +65,7 @@ class CSSAssert extends Assert {
      * @param {object} [context]
      */
     invalid(definition, input, context) {
-        this.strictEqual(parse(definition, input, false, context), null)
+        this.equal(parse(definition, input, false, context), null)
     }
 
     partialDeepEqual = super.partialDeepStrictEqual
@@ -87,7 +87,7 @@ class CSSAssert extends Assert {
      * @param {object} [context]
      */
     valid(definition, input, expected = input, context) {
-        this.strictEqual(parse(definition, input, true, context), expected)
+        this.equal(parse(definition, input, true, context), expected)
     }
 }
 
