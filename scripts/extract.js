@@ -73,6 +73,10 @@ const replaced = {
             // https://github.com/w3c/csswg-drafts/issues/8835
             'unicode-range': { value: '<urange>#' },
         },
+        '@page': {
+            // https://github.com/w3c/csswg-drafts/pull/13596
+            'page-margin-safety': { value: 'none | auto | clamp | add' },
+        },
         '@property': {
             // https://github.com/w3c/webref/issues/707
             'initial-value': { initial: null },
@@ -97,7 +101,6 @@ const replaced = {
         // TODO: fix `value` of `fill-opacity`, `stroke-opacity`
         'fill-opacity': { value: "<'opacity'>" },
         'stroke-opacity': { value: "<'opacity'>" },
-        // TODO: fix `value` of `voice-family`
         // Implementation dependent
         'font-family': { initial: 'monospace' },
         'voice-family': { initial: 'female' },
@@ -188,10 +191,6 @@ const replaced = {
         '<voice-family-name>': '<string> | <custom-ident>+',
         '<whole-value>': '<declaration-value>?',
         '<zero>': '<number-token>',
-        // https://github.com/w3c/csswg-drafts/pull/13359
-        '<auto-line-color-list>': '<line-color-or-repeat>#? , <auto-repeat-line-color> , <line-color-or-repeat>#?',
-        '<auto-line-style-list>': '<line-style-or-repeat>#? , <auto-repeat-line-style> , <line-style-or-repeat>#?',
-        '<auto-line-width-list>': '<line-width-or-repeat>#? , <auto-repeat-line-width> , <line-width-or-repeat>#?',
         // https://github.com/w3c/csswg-drafts/issues/12849
         '<bg-layer>': "<'background-image'> || <'background-position'> [/ <'background-size'>]? || <'background-repeat'> || <'background-attachment'> || <'background-origin'> || <'background-clip'>",
         '<final-bg-layer>': "<'background-image'> || <'background-position'> [/ <'background-size'>]? || <'background-repeat'> || <'background-attachment'> || <'background-origin'> || <'background-clip'> || <'background-color'>",
@@ -205,8 +204,6 @@ const replaced = {
         '<control-value()>': 'control-value(<syntax-type-name>?)',
         // https://github.com/w3c/csswg-drafts/pull/13324
         '<feature-index>': '<integer>',
-        // https://github.com/w3c/csswg-drafts/issues/13309
-        '<filter-function>': '<blur()> | <brightness()> | <contrast()> | <drop-shadow()> | <grayscale()> | <hue-rotate()> | <invert()> | <opacity()> | <sepia()> | <saturate()>',
         // https://github.com/w3c/csswg-drafts/issues/13010
         '<event-trigger-event>': 'activate | click | touch | dblclick | keypress(<string>)',
         // https://github.com/w3c/csswg-drafts/issues/12487
@@ -218,6 +215,8 @@ const replaced = {
         '<media-in-parens>': '(<media-condition>) | (<media-feature>) | <general-enclosed>',
         // TODO: fix `value` of `<pseudo-page>`
         '<pseudo-page>': ': [left | right | first | blank | nth(<an+b> [of <custom-ident>]?)]',
+        // https://github.com/w3c/csswg-drafts/pull/13602
+        '<rounding-strategy>': 'nearest | up | down | to-zero | line-width',
         // https://github.com/w3c/csswg-drafts/issues/7897
         '<single-transition>': '<time> || <easing-function> || <time> || <transition-behavior-value> || [none | <single-transition-property>]',
         // https://github.com/w3c/csswg-drafts/issues/12426
@@ -674,7 +673,9 @@ const errors = {
         links: ['https://github.com/w3c/csswg-drafts/issues/9926'],
     },
     '@layer': { cause: 'It is the only rule with alternative definitions therefore only the first (block) definition is correctly checked.' },
+    '@macro': { cause: 'It is not yet supported.' },
     '@mixin': { cause: 'It is not yet supported.' },
+    '@result': { cause: 'It is not yet supported.' },
     '@supports-condition': { cause: 'It is not yet supported.' },
     '@when': { cause: 'It is not yet supported.' },
     '<box>': {
@@ -691,6 +692,7 @@ const errors = {
         cause: 'It is a generic type whose production rule is incorrectly defined, that is not used anywhere, and should not be exported.',
         links: ['https://github.com/w3c/csswg-drafts/issues/11385'],
     },
+    '<safe-printable-inset>': { cause: 'It represents a value that is never included in a CSS input or output.' },
     '<segment-options>': {
         cause: 'It is a generic type that should be defined informatively.',
         links: ['https://github.com/w3c/csswg-drafts/issues/6245'],

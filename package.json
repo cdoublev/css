@@ -39,12 +39,12 @@
     "test:watch": "npm run test -- --watch"
   },
   "dependencies": {
-    "undici": "^7.18.0"
+    "undici": "^7.22.0"
   },
   "devDependencies": {
     "@cdoublev/eslint-config": "^0.12.0",
     "webidl2js": "cdoublev/webidl2js",
-    "webref": "w3c/webref#630745e1ebbd49fbe85347ed1a654e34e05d772b"
+    "webref": "w3c/webref#36f97e94c9b3a8aa3891152c39669a13d2e7b352"
   },
   "publishConfig": {
     "access": "public"

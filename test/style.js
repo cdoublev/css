@@ -542,7 +542,14 @@ describe('animation-range-center', () => {
         assert.equal(style.animationRangeCenter, 'source')
     })
 })
-describe('animation-range-start, animation-range-end, timeline-trigger-exit-range-end, timeline-trigger-exit-range-start, timeline-trigger-range-end, timeline-trigger-range-start', () => {
+describe('animation-range-end, timeline-trigger-activation-range-end, timeline-trigger-active-range-end', () => {
+    test('valid', () => {
+        const style = createStyleBlock()
+        style.animationRangeEnd = 'entry 100%'
+        assert.equal(style.animationRangeEnd, 'entry')
+    })
+})
+describe('animation-range-start, timeline-trigger-activation-range-start, timeline-trigger-active-range-start', () => {
     test('valid', () => {
         const style = createStyleBlock()
         style.animationRangeStart = 'entry 0%'
@@ -1975,21 +1982,20 @@ describe('column-rule-edge-inset, column-rule-interior-inset, row-rule-edge-inse
         const style = createStyleBlock()
         const longhands = shorthands.get('column-rule-edge-inset')[0]
 
-        style.columnRuleEdgeInset = '1px 1px'
+        // Initial longhand values
+        style.columnRuleEdgeInset = '0px 0px'
         assert.equal(style.length, longhands.length)
-        longhands.forEach(longhand => assert.equal(style[longhand], '1px'))
-        assert.equal(style.columnRuleEdgeInset, '1px 1px')
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.columnRuleEdgeInset, '0px')
 
         // Omitted values
         style.columnRuleEdgeInset = '1px'
-        assert.equal(style.columnRuleEdgeInsetStart, '1px')
-        assert.equal(style.columnRuleEdgeInsetEnd, initial('column-rule-edge-inset-end'))
+        longhands.forEach(longhand => assert.equal(style[longhand], '1px'))
         assert.equal(style.columnRuleEdgeInset, '1px')
-
-        // All longhands cannot be represented
-        style.columnRuleEdgeInsetStart = initial('column-rule-edge-inset-start')
-        assert.equal(style.columnRuleEdgeInset, '')
-        assert.equal(style.cssText, 'column-rule-edge-inset-start: auto; column-rule-edge-inset-end: auto;')
+        style.columnRuleEdgeInset = '0px 1px'
+        assert.equal(style.columnRuleEdgeInsetStart, initial('column-rule-edge-inset-end'))
+        assert.equal(style.columnRuleEdgeInsetEnd, '1px')
+        assert.equal(style.columnRuleEdgeInset, '0px 1px')
     })
 })
 describe('column-rule-inset, row-rule-inset', () => {
@@ -1998,31 +2004,30 @@ describe('column-rule-inset, row-rule-inset', () => {
         const style = createStyleBlock()
         const longhands = shorthands.get('column-rule-inset')[0]
 
-        style.columnRuleInset = '1px 1px / 1px 1px'
+        // Initial longhand values
+        style.columnRuleInset = '0px 0px / 0px 0px'
         assert.equal(style.length, longhands.length)
-        longhands.forEach(longhand => assert.equal(style[longhand], '1px'))
-        assert.equal(style.columnRuleInset, '1px 1px / 1px 1px')
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.columnRuleInset, '0px')
 
         // Omitted values
         const values = [
-            ['1px', { 'column-rule-edge-inset-start': '1px' }],
-            ['1px 1px', {
+            ['1px', {
                 'column-rule-edge-inset-end': '1px',
-                'column-rule-edge-inset-start': '1px',
-            }],
-            ['1px / 1px', {
-                'column-rule-edge-inset-start': '1px',
-                'column-rule-interior-inset-start': '1px',
-            }],
-            ['1px / 1px 1px', {
                 'column-rule-edge-inset-start': '1px',
                 'column-rule-interior-inset-end': '1px',
                 'column-rule-interior-inset-start': '1px',
             }],
-            ['1px 1px / 1px', {
+            ['0px 1px', {
                 'column-rule-edge-inset-end': '1px',
-                'column-rule-edge-inset-start': '1px',
+                'column-rule-interior-inset-end': '1px',
+            }],
+            ['0px / 1px', {
+                'column-rule-interior-inset-end': '1px',
                 'column-rule-interior-inset-start': '1px',
+            }],
+            ['0px / 0px 1px', {
+                'column-rule-interior-inset-end': '1px',
             }],
         ]
         values.forEach(([input, declared]) => {
@@ -2031,16 +2036,6 @@ describe('column-rule-inset, row-rule-inset', () => {
                 assert.equal(style[longhand], declared[longhand] ?? initial(longhand)))
             assert.equal(style.columnRuleInset, input)
         })
-
-        // All longhands cannot be represented
-        style.columnRuleInteriorInsetEnd = '1px'
-        style.columnRuleEdgeInsetStart = initial('column-rule-edge-inset-start')
-        assert.equal(style.columnRuleInset, '')
-        assert.equal(style.cssText, 'column-rule-edge-inset-start: auto; column-rule-inset-end: 1px; column-rule-interior-inset-start: 1px;')
-        style.columnRuleEdgeInsetStart = '1px'
-        style.columnRuleInteriorInsetStart = initial('column-rule-interior-inset-start')
-        assert.equal(style.columnRuleInset, '')
-        assert.equal(style.cssText, 'column-rule-edge-inset: 1px 1px; column-rule-interior-inset-start: auto; column-rule-interior-inset-end: 1px;')
     })
 })
 describe('column-rule-inset-end, column-rule-inset-start, row-rule-inset-end, row-rule-inset-start, rule-inset-end, rule-inset-start', () => {
@@ -2050,15 +2045,15 @@ describe('column-rule-inset-end, column-rule-inset-start, row-rule-inset-end, ro
         const longhands = shorthands.get('column-rule-inset-end')[0]
 
         // All equal longhand values
-        style.columnRuleInsetEnd = 'auto'
+        style.columnRuleInsetEnd = '0px'
         assert.equal(style.length, longhands.length)
         longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
-        assert.equal(style.columnRuleInsetEnd, 'auto')
+        assert.equal(style.columnRuleInsetEnd, '0px')
 
         // All longhands cannot be represented
         style.columnRuleEdgeInsetEnd = '1px'
         assert.equal(style.columnRuleInsetEnd, '')
-        assert.equal(style.cssText, 'column-rule-edge-inset-end: 1px; column-rule-interior-inset-end: auto;')
+        assert.equal(style.cssText, 'column-rule-edge-inset-end: 1px; column-rule-interior-inset-end: 0px;')
     })
 })
 describe('columns', () => {
@@ -3367,15 +3362,15 @@ describe('rule-break', () => {
         const longhands = shorthands.get('rule-break')[0]
 
         // All equal longhand values
-        style.ruleBreak = 'spanning-item'
+        style.ruleBreak = 'normal'
         assert.equal(style.length, longhands.length)
         longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
-        assert.equal(style.ruleBreak, 'spanning-item')
+        assert.equal(style.ruleBreak, 'normal')
 
         // All longhands cannot be represented
         style.rowRuleBreak = 'none'
         assert.equal(style.ruleBreak, '')
-        assert.equal(style.cssText, 'row-rule-break: none; column-rule-break: spanning-item;')
+        assert.equal(style.cssText, 'row-rule-break: none; column-rule-break: normal;')
     })
 })
 describe('rule-color', () => {
@@ -3402,30 +3397,29 @@ describe('rule-edge-inset, rule-interior-inset', () => {
         const style = createStyleBlock()
         const longhands = shorthands.get('rule-edge-inset')[0]
 
-        style.ruleEdgeInset = '1px 1px'
+        // Initial longhand values
+        style.ruleEdgeInset = '0px 0px'
         assert.equal(style.length, longhands.length)
-        longhands.forEach(longhand => assert.equal(style[longhand], '1px'))
-        assert.equal(style.ruleEdgeInset, '1px 1px')
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.ruleEdgeInset, '0px')
 
         // Omitted values
         style.ruleEdgeInset = '1px'
-        longhands.forEach(longhand =>
-            assert.equal(style[longhand], longhand.endsWith('start') ? '1px' : initial(longhand)))
+        longhands.forEach(longhand => assert.equal(style[longhand], '1px'))
         assert.equal(style.ruleEdgeInset, '1px')
+        style.ruleEdgeInset = '0px 1px'
+        longhands.forEach(longhand =>
+            assert.equal(style[longhand], longhand.endsWith('start') ? initial(longhand) : '1px'))
+        assert.equal(style.ruleEdgeInset, '0px 1px')
 
         // All longhands cannot be represented
-        style.rowRuleEdgeInsetStart = '2px'
-        assert.equal(style.ruleEdgeInset, '')
-        assert.equal(style.cssText, 'row-rule-edge-inset: 2px; column-rule-edge-inset: 1px;')
         style.rowRuleEdgeInsetStart = '1px'
-        style.rowRuleEdgeInsetEnd = '1px'
         assert.equal(style.ruleEdgeInset, '')
-        assert.equal(style.cssText, 'row-rule-edge-inset: 1px 1px; column-rule-edge-inset: 1px;')
-        style.rowRuleEdgeInsetStart = initial('row-rule-edge-inset-start')
-        style.columnRuleEdgeInsetStart = initial('column-rule-edge-inset-start')
-        style.rowRuleEdgeInsetEnd = '1px'
+        assert.equal(style.cssText, 'row-rule-edge-inset: 1px; column-rule-edge-inset: 0px 1px;')
+        style.rowRuleEdgeInsetStart = '0px'
+        style.rowRuleEdgeInsetEnd = '0px'
         assert.equal(style.ruleEdgeInset, '')
-        assert.equal(style.cssText, 'row-rule-edge-inset-start: auto; column-rule-edge-inset-start: auto; row-rule-edge-inset-end: 1px; column-rule-edge-inset-end: auto;')
+        assert.equal(style.cssText, 'row-rule-edge-inset: 0px; column-rule-edge-inset: 0px 1px;')
     })
 })
 describe('rule-inset', () => {
@@ -3434,44 +3428,39 @@ describe('rule-inset', () => {
         const style = createStyleBlock()
         const longhands = shorthands.get('rule-inset')[0]
 
-        style.ruleInset = '1px 1px / 1px 1px'
+        // Initial longhand values
+        style.ruleInset = '0px 0px / 0px 0px'
         assert.equal(style.length, longhands.length)
-        longhands.forEach(longhand => assert.equal(style[longhand], '1px'))
-        assert.equal(style.ruleInset, '1px 1px / 1px 1px')
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.ruleInset, '0px')
 
         // Omitted values
         const values = [
             ['1px', {
-                'column-rule-edge-inset-start': '1px',
-                'row-rule-edge-inset-start': '1px',
-            }],
-            ['1px 1px', {
                 'column-rule-edge-inset-end': '1px',
-                'column-rule-edge-inset-start': '1px',
-                'row-rule-edge-inset-end': '1px',
-                'row-rule-edge-inset-start': '1px',
-            }],
-            ['1px / 1px', {
-                'column-rule-edge-inset-start': '1px',
-                'column-rule-interior-inset-start': '1px',
-                'row-rule-edge-inset-start': '1px',
-                'row-rule-interior-inset-start': '1px',
-            }],
-            ['1px / 1px 1px', {
                 'column-rule-edge-inset-start': '1px',
                 'column-rule-interior-inset-end': '1px',
                 'column-rule-interior-inset-start': '1px',
+                'row-rule-edge-inset-end': '1px',
                 'row-rule-edge-inset-start': '1px',
                 'row-rule-interior-inset-end': '1px',
                 'row-rule-interior-inset-start': '1px',
             }],
-            ['1px 1px / 1px', {
+            ['0px 1px', {
                 'column-rule-edge-inset-end': '1px',
-                'column-rule-edge-inset-start': '1px',
-                'column-rule-interior-inset-start': '1px',
+                'column-rule-interior-inset-end': '1px',
                 'row-rule-edge-inset-end': '1px',
-                'row-rule-edge-inset-start': '1px',
+                'row-rule-interior-inset-end': '1px',
+            }],
+            ['0px / 1px', {
+                'column-rule-interior-inset-end': '1px',
+                'column-rule-interior-inset-start': '1px',
+                'row-rule-interior-inset-end': '1px',
                 'row-rule-interior-inset-start': '1px',
+            }],
+            ['0px / 0px 1px', {
+                'column-rule-interior-inset-end': '1px',
+                'row-rule-interior-inset-end': '1px',
             }],
         ]
         values.forEach(([input, declared]) => {
@@ -3482,35 +3471,21 @@ describe('rule-inset', () => {
         })
 
         // All longhands cannot be represented
-        style.rowRuleInteriorInsetEnd = '1px'
-        style.columnRuleInteriorInsetEnd = '1px'
-        style.rowRuleInteriorInsetStart = initial('row-rule-interior-inset-start')
-        style.columnInteriorInsetStart = initial('column-rule-interior-inset-start')
-        assert.equal(style.ruleInset, '')
-        assert.equal(style.cssText, 'rule-edge-inset: 1px 1px; row-rule-interior-inset-start: auto; column-rule-interior-inset: 1px 1px; row-rule-interior-inset-end: 1px;')
         style.rowRuleEdgeInsetStart = '1px'
-        style.columnRuleEdgeInsetStart = '1px'
-        style.rowRuleInteriorInsetStart = initial('row-rule-interior-inset-start')
-        style.columnRuleInteriorInsetStart = initial('column-rule-interior-inset-start')
         assert.equal(style.ruleInset, '')
-        assert.equal(style.cssText, 'rule-edge-inset: 1px 1px; row-rule-interior-inset-start: auto; column-rule-interior-inset-start: auto; row-rule-interior-inset-end: 1px; column-rule-interior-inset-end: 1px;')
-        style.rowRuleInteriorInsetStart = '1px'
-        style.columnRuleInteriorInsetStart = '1px'
-        style.rowRuleEdgeInsetStart = '2px'
-        assert.equal(style.ruleInset, '')
-        assert.equal(style.cssText, 'row-rule-inset: 2px 1px / 1px 1px; column-rule-inset: 1px 1px / 1px 1px;')
-        style.rowRuleEdgeInsetStart = '1px'
-        style.rowRuleEdgeInsetEnd = '2px'
-        assert.equal(style.ruleInset, '')
-        assert.equal(style.cssText, 'row-rule-inset: 1px 2px / 1px 1px; column-rule-inset: 1px 1px / 1px 1px;')
+        assert.equal(style.cssText, 'row-rule-inset: 1px 0px / 0px 1px; column-rule-inset: 0px / 0px 1px;')
+        style.rowRuleEdgeInsetStart = '0px'
         style.rowRuleEdgeInsetEnd = '1px'
-        style.rowRuleInteriorInsetStart = '2px'
         assert.equal(style.ruleInset, '')
-        assert.equal(style.cssText, 'row-rule-inset: 1px 1px / 2px 1px; column-rule-inset: 1px 1px / 1px 1px;')
+        assert.equal(style.cssText, 'row-rule-inset: 0px 1px; column-rule-inset: 0px / 0px 1px;')
+        style.rowRuleEdgeInsetEnd = '0px'
         style.rowRuleInteriorInsetStart = '1px'
-        style.rowRuleInteriorInsetEnd = '2px'
         assert.equal(style.ruleInset, '')
-        assert.equal(style.cssText, 'row-rule-inset: 1px 1px / 1px 2px; column-rule-inset: 1px 1px / 1px 1px;')
+        assert.equal(style.cssText, 'row-rule-inset: 0px / 1px; column-rule-inset: 0px / 0px 1px;')
+        style.rowRuleInteriorInsetStart = '0px'
+        style.rowRuleInteriorInsetEnd = '0px'
+        assert.equal(style.ruleInset, '')
+        assert.equal(style.cssText, 'row-rule-inset: 0px; column-rule-inset: 0px / 0px 1px;')
     })
 })
 describe('rule-style', () => {
@@ -3529,6 +3504,24 @@ describe('rule-style', () => {
         style.rowRuleStyle = 'solid'
         assert.equal(style.ruleStyle, '')
         assert.equal(style.cssText, 'row-rule-style: solid; column-rule-style: none;')
+    })
+})
+describe('rule-visibility-items', () => {
+    test('expansion and reification', () => {
+
+        const style = createStyleBlock()
+        const longhands = shorthands.get('rule-visibility-items')[0]
+
+        // All equal longhand values
+        style.ruleVisibilityItems = 'all'
+        assert.equal(style.length, longhands.length)
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.ruleVisibilityItems, 'all')
+
+        // All longhands cannot be represented
+        style.rowRuleVisibilityItems = 'around'
+        assert.equal(style.ruleVisibilityItems, '')
+        assert.equal(style.cssText, 'row-rule-visibility-items: around; column-rule-visibility-items: all;')
     })
 })
 describe('rule-width', () => {
@@ -3898,17 +3891,17 @@ describe('timeline-trigger', () => {
         const values = [
             ['none'],
             ['none auto normal', {}, 'none'],
-            ['none auto 10%', { 'timeline-trigger-range-start': '10%' }],
+            ['none auto 10%', { 'timeline-trigger-activation-range-start': '10%' }],
             ['none auto entry', {
-                'timeline-trigger-range-end': 'entry',
-                'timeline-trigger-range-start': 'entry',
+                'timeline-trigger-activation-range-end': 'entry',
+                'timeline-trigger-activation-range-start': 'entry',
             }],
-            ['none auto normal 10%', { 'timeline-trigger-range-end': '10%' }],
-            ['none auto normal normal / 10%', { 'timeline-trigger-exit-range-start': '10%' }, 'none auto normal / 10%'],
+            ['none auto normal 10%', { 'timeline-trigger-activation-range-end': '10%' }],
+            ['none auto normal normal / 10%', { 'timeline-trigger-active-range-start': '10%' }, 'none auto normal / 10%'],
             ['none auto normal normal / entry',
                 {
-                    'timeline-trigger-exit-range-end': 'entry',
-                    'timeline-trigger-exit-range-start': 'entry',
+                    'timeline-trigger-active-range-end': 'entry',
+                    'timeline-trigger-active-range-start': 'entry',
                 },
                 'none auto normal / entry',
             ],
@@ -3922,7 +3915,7 @@ describe('timeline-trigger', () => {
         // All longhands cannot be represented
         style.timelineTriggerName = '--trigger, --trigger'
         assert.equal(style.timelineTrigger, '')
-        assert.equal(style.cssText, 'timeline-trigger-name: --trigger, --trigger; timeline-trigger-source: auto; timeline-trigger-range: normal; timeline-trigger-exit-range: entry;')
+        assert.equal(style.cssText, 'timeline-trigger-name: --trigger, --trigger; timeline-trigger-source: auto; timeline-trigger-activation-range: normal; timeline-trigger-active-range: entry;')
 
         // Coordinated value list
         style.timelineTrigger = 'none auto normal, none auto normal'
@@ -3930,59 +3923,17 @@ describe('timeline-trigger', () => {
         assert.equal(style.timelineTrigger, 'none auto normal, none auto normal')
     })
 })
-describe('timeline-trigger-exit-range', () => {
+describe('timeline-trigger-activation-range', () => {
     test('expansion and reification', () => {
 
         const style = createStyleBlock()
-        const longhands = shorthands.get('timeline-trigger-exit-range')[0]
+        const longhands = shorthands.get('timeline-trigger-activation-range')[0]
 
         // Initial longhand values
-        style.timelineTriggerExitRange = 'auto auto'
+        style.timelineTriggerActivationRange = 'normal normal'
         assert.equal(style.length, longhands.length)
         longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
-        assert.equal(style.timelineTriggerExitRange, 'auto')
-
-        // Omitted values
-        const values = [
-            ['auto'],
-            ['0%', '0%', 'auto'],
-            ['auto 0%', 'auto', '0%'],
-            ['entry'],
-            ['entry 10%', 'entry 10%', 'entry'],
-            ['entry 0% entry 100%', 'entry', 'entry', 'entry'],
-            ['entry exit 100%', 'entry', 'exit', 'entry exit'],
-            ['entry 0% 100%', 'entry', '100%', 'entry 0% 100%'],
-            ['entry auto', 'entry', 'auto', 'entry auto'],
-        ]
-        values.forEach(([input, start = input, end = input, expected = input]) => {
-            style.timelineTriggerExitRange = input
-            assert.equal(style.timelineTriggerExitRangeStart, start)
-            assert.equal(style.timelineTriggerExitRangeEnd, end)
-            assert.equal(style.timelineTriggerExitRange, expected)
-        })
-
-        // All longhands cannot be represented
-        style.timelineTriggerExitRangeStart = 'auto, auto'
-        assert.equal(style.animationRange, '')
-        assert.equal(style.cssText, 'timeline-trigger-exit-range-start: auto, auto; timeline-trigger-exit-range-end: auto;')
-
-        // Coordinated value list
-        style.timelineTriggerExitRange = 'auto, auto'
-        longhands.forEach(longhand => assert.equal(style[longhand], `${initial(longhand)}, ${initial(longhand)}`))
-        assert.equal(style.timelineTriggerExitRange, 'auto, auto')
-    })
-})
-describe('timeline-trigger-range', () => {
-    test('expansion and reification', () => {
-
-        const style = createStyleBlock()
-        const longhands = shorthands.get('timeline-trigger-range')[0]
-
-        // Initial longhand values
-        style.timelineTriggerRange = 'normal normal'
-        assert.equal(style.length, longhands.length)
-        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
-        assert.equal(style.timelineTriggerRange, 'normal')
+        assert.equal(style.timelineTriggerActivationRange, 'normal')
 
         // Omitted values
         const values = [
@@ -3997,21 +3948,63 @@ describe('timeline-trigger-range', () => {
             ['entry normal', 'entry', 'normal', 'entry normal'],
         ]
         values.forEach(([input, start = input, end = input, expected = input]) => {
-            style.timelineTriggerRange = input
-            assert.equal(style.timelineTriggerRangeStart, start)
-            assert.equal(style.timelineTriggerRangeEnd, end)
-            assert.equal(style.timelineTriggerRange, expected)
+            style.timelineTriggerActivationRange = input
+            assert.equal(style.timelineTriggerActivationRangeStart, start)
+            assert.equal(style.timelineTriggerActivationRangeEnd, end)
+            assert.equal(style.timelineTriggerActivationRange, expected)
         })
 
         // All longhands cannot be represented
-        style.timelineTriggerRangeStart = 'normal, normal'
+        style.timelineTriggerActivationRangeStart = 'normal, normal'
         assert.equal(style.animationRange, '')
-        assert.equal(style.cssText, 'timeline-trigger-range-start: normal, normal; timeline-trigger-range-end: normal;')
+        assert.equal(style.cssText, 'timeline-trigger-activation-range-start: normal, normal; timeline-trigger-activation-range-end: normal;')
 
         // Coordinated value list
-        style.timelineTriggerRange = 'normal, normal'
+        style.timelineTriggerActivationRange = 'normal, normal'
         longhands.forEach(longhand => assert.equal(style[longhand], `${initial(longhand)}, ${initial(longhand)}`))
-        assert.equal(style.timelineTriggerRange, 'normal, normal')
+        assert.equal(style.timelineTriggerActivationRange, 'normal, normal')
+    })
+})
+describe('timeline-trigger-active-range', () => {
+    test('expansion and reification', () => {
+
+        const style = createStyleBlock()
+        const longhands = shorthands.get('timeline-trigger-active-range')[0]
+
+        // Initial longhand values
+        style.timelineTriggerActiveRange = 'auto auto'
+        assert.equal(style.length, longhands.length)
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.timelineTriggerActiveRange, 'auto')
+
+        // Omitted values
+        const values = [
+            ['auto'],
+            ['0%', '0%', 'auto'],
+            ['auto 0%', 'auto', '0%'],
+            ['entry'],
+            ['entry 10%', 'entry 10%', 'entry'],
+            ['entry 0% entry 100%', 'entry', 'entry', 'entry'],
+            ['entry exit 100%', 'entry', 'exit', 'entry exit'],
+            ['entry 0% 100%', 'entry', '100%', 'entry 0% 100%'],
+            ['entry auto', 'entry', 'auto', 'entry auto'],
+        ]
+        values.forEach(([input, start = input, end = input, expected = input]) => {
+            style.timelineTriggerActiveRange = input
+            assert.equal(style.timelineTriggerActiveRangeStart, start)
+            assert.equal(style.timelineTriggerActiveRangeEnd, end)
+            assert.equal(style.timelineTriggerActiveRange, expected)
+        })
+
+        // All longhands cannot be represented
+        style.timelineTriggerActiveRangeStart = 'auto, auto'
+        assert.equal(style.animationRange, '')
+        assert.equal(style.cssText, 'timeline-trigger-active-range-start: auto, auto; timeline-trigger-active-range-end: auto;')
+
+        // Coordinated value list
+        style.timelineTriggerActiveRange = 'auto, auto'
+        longhands.forEach(longhand => assert.equal(style[longhand], `${initial(longhand)}, ${initial(longhand)}`))
+        assert.equal(style.timelineTriggerActiveRange, 'auto, auto')
     })
 })
 describe('transition', () => {

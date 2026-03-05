@@ -19,7 +19,7 @@ interface CSSStyleSheet : StyleSheet {
 
 // https://drafts.csswg.org/cssom-1/#dictdef-cssstylesheetinit
 dictionary CSSStyleSheetInit {
-    DOMString baseURL = null;
+    DOMString? baseURL = null;
     (MediaList or DOMString) media = "";
     boolean disabled = false;
 };

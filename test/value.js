@@ -2955,6 +2955,13 @@ describe('<color>', () => {
         assert.valid('<color>', 'contrast-color(rgba(-100% 200% 0 / 101%))', 'contrast-color(rgb(-255 510 0))')
         assert.valid('<color>', 'contrast-color(hsla(540deg -1% 0 / 50%))', 'contrast-color(hsl(180 -1 0 / 0.5))')
     })
+    test('valid <hdr-color()>', () => {
+        // Preserve color components except <hue> and <alpha-value>
+        assert.valid(
+            '<color>',
+            'color-hdr(rgba(-100% 200% 0 / 101%) 0, hsla(540deg -1% 0 / 50%) 1)',
+            'color-hdr(rgb(-255 510 0), hsl(180 -1 0 / 0.5) 1)')
+    })
     test('valid <light-dark()>', () => {
         // Preserve color components except <hue> and <alpha-value>
         assert.valid(
