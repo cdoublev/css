@@ -15,6 +15,12 @@ function createMediaList(text) {
     return media
 }
 
+test('MediaList[index]', () => {
+    const media = createMediaList('all')
+    assert.equal(media[0], 'all')
+    assert.equal(Object.values(media)[0], 'all')
+    assert.equal(media[1], null)
+})
 test('MediaList.length', () => {
     const media = createMediaList('all, screen')
     assert.equal(media.length, 2)

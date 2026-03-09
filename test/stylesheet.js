@@ -384,6 +384,17 @@ describe('CSSStyleSheet.replace(), CSSStyleSheet.replaceSync()', () => {
     })
 })
 
+describe('CSSRuleList[index]', () => {
+    it('returns the rule at the specified index', () => {
+        const { cssRules } = createStyleSheet(`
+            #rule-1 {}
+            #rule-2 {}
+        `)
+        assert.equal(cssRules[1], cssRules[1])
+        assert.equal(Object.values(cssRules)[1], cssRules[1])
+        assert.equal(cssRules[2], null)
+    })
+})
 describe('CSSRuleList.item()', () => {
     it('returns the rule at the given index', () => {
         const { cssRules } = createStyleSheet(`
@@ -817,6 +828,7 @@ describe('CSSKeyframesRule', () => {
         assert.equal(CSSRuleList.is(rule.cssRules), true)
         assert.equal(rule.length, 1)
         assert.equal(rule[0], rule.cssRules[0])
+        assert.equal(Object.values(rule)[0], rule.cssRules[0])
         assert.equal(rule.name, 'name')
         rule.name = '\n'
         assert.equal(rule.name, '\\a')

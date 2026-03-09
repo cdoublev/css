@@ -100,6 +100,7 @@ describe('CSSStyleDeclaration / CSSStyleProperties', () => {
 
         assert.equal(style.length, 1)
         assert.equal(style[0], 'color')
+        assert.equal(Object.values(style)[0], 'color')
         assert.equal(style.item(0), 'color')
     })
     it('reflects a dashed property with its camel-cased and webkit cased variants', () => {
