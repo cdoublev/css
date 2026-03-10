@@ -628,11 +628,13 @@ describe('CSSFunctionRule, CSSFunctionDeclarations', () => {
         const rule = styleSheet.cssRules[0]
         const declarations = rule.cssRules[1]
 
+        declarations.style.result = '2'
+
         // CSSRule
-        assert.equal(rule.cssText, `@function --name(${parameters.map(([input, expected = input]) => expected).join(', ')}) { @media { } result: 1; }`)
+        assert.equal(rule.cssText, `@function --name(${parameters.map(([input, expected = input]) => expected).join(', ')}) { @media { } result: 2; }`)
         assert.equal(rule.parentRule, null)
         assert.equal(rule.parentStyleSheet, styleSheet)
-        assert.equal(declarations.cssText, 'result: 1;')
+        assert.equal(declarations.cssText, 'result: 2;')
         assert.equal(declarations.parentRule, rule)
         assert.equal(declarations.parentStyleSheet, styleSheet)
 
@@ -982,26 +984,28 @@ describe('CSSNestedDeclarations', () => {
 
         const styleSheet = createStyleSheet(`
             style {
-                @container name { color: green }
-                @layer { color: green }
-                @media { color: green }
-                @scope { color: green }
-                @starting-style { color: green }
-                @supports (color: green) { color: green }
+                @container name { color: red }
+                @layer { color: red }
+                @media { color: red }
+                @scope { color: red }
+                @starting-style { color: red }
+                @supports (color: green) { color: red }
             }
         `)
 
         for (const parentRule of styleSheet.cssRules[0].cssRules) {
 
-            const rule = parentRule.cssRules[0]
+            const declarations = parentRule.cssRules[0]
+
+            declarations.style.color = 'green'
 
             // CSSRule
-            assert.equal(rule.cssText, 'color: green;')
-            assert.equal(rule.parentRule, parentRule)
-            assert.equal(rule.parentStyleSheet, styleSheet)
+            assert.equal(declarations.cssText, 'color: green;')
+            assert.equal(declarations.parentRule, parentRule)
+            assert.equal(declarations.parentStyleSheet, styleSheet)
 
             // CSSNestedDeclarations
-            assert.equal(CSSStyleProperties.is(rule.style), true)
+            assert.equal(CSSStyleProperties.is(declarations.style), true)
         }
     })
 })
@@ -1011,11 +1015,13 @@ describe('CSSPageRule, CSSPageDeclarations', () => {
         const styleSheet = createStyleSheet(`
             @page intro {
                 @top-left {}
-                color: green;
+                color: red;
             }
         `)
         const rule = styleSheet.cssRules[0]
         const declarations = rule.cssRules[1]
+
+        declarations.style.color = 'green'
 
         // CSSRule
         assert.equal(rule.cssText, '@page intro { @top-left { } color: green; }')
