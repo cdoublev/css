@@ -34,7 +34,7 @@ function initial(property) {
 }
 
 install()
-globalThis.document = { href: 'https://github.com/cdoublev/' }
+globalThis.document = {}
 
 const styleSheet = CSSStyleSheet.createImpl(globalThis, [{ media: '' }])
 

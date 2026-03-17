@@ -164,7 +164,6 @@ globalThis.document = {
     characterSet: 'UTF-8',
     styleSheets: wrapperForImpl(styleSheets),
 }
-globalThis.origin = baseURL
 
 afterEach(() => {
     styleSheets._list.splice(0)
