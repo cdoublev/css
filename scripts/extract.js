@@ -42,7 +42,7 @@ const initial = {
     },
     properties: {
         // https://github.com/w3c/reffy/issues/1567
-        '--*': { initial: null, value: '<declaration-value>?' },
+        '--*': { inherited: 'yes', initial: null, value: '<declaration-value>?' },
     },
     types: {
         // https://github.com/w3c/csswg-drafts/issues/13092
@@ -107,8 +107,8 @@ const replaced = {
         // https://github.com/w3c/csswg-drafts/issues/8032
         'glyph-orientation-vertical': { value: 'auto | <angle> | <number>' },
         // https://github.com/w3c/svgwg/issues/888
-        'stop-color': { initial: 'black', value: "<'color'>" },
-        'stop-opacity': { initial: '1', value: "<'opacity'>" },
+        'stop-color': { inherited: 'no', initial: 'black', value: "<'color'>" },
+        'stop-opacity': { inherited: 'no', initial: '1', value: "<'opacity'>" },
         // TODO: fix `value` of `transition-property`
         'transition-property': { value: '[none | <single-transition-property>]#' },
         // https://github.com/w3c/csswg-drafts/issues/13262
@@ -815,7 +815,7 @@ function serializeTypes(types) {
  */
 function serializeProperties(properties) {
     properties = properties.reduce(
-        (string, [property, { animationType, initial, logicalPropertyGroup, value }, key]) => {
+        (string, [property, { animationType, inherited, initial, logicalPropertyGroup, value }, key]) => {
             string += `${tab(1)}${quote(property)}: {\n`
             if (animationType === 'not animatable') {
                 string += `${tab(2)}animate: false,\n`
@@ -827,6 +827,9 @@ function serializeProperties(properties) {
                 }
                 if (group) {
                     string += `${tab(2)}group: ${quote(group)},\n`
+                }
+                if (inherited === 'yes') {
+                    string += `${tab(2)}inherited: true,\n`
                 }
                 string += `${tab(2)}initial: ${initial ? quote(initial) : null},\n`
             }

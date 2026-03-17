@@ -105,13 +105,16 @@ function getInitialValue(name, value, context, depth) {
  */
 function serializePropertyDefinitions(properties) {
     return Object.entries(properties).reduce(
-        (string, [property, { animate, group, initial, value }]) => {
+        (string, [property, { animate, group, inherited, initial, value }]) => {
             string += `${tab(1)}${quote(property)}: {\n`
             if (animate === false || shorthands.get(property)?.flat().every(name => properties[name]?.animate === false)) {
                 string += `${tab(2)}animate: false,\n`
             }
             if (group) {
                 string += `${tab(2)}group: ${quote(group)},\n`
+            }
+            if (inherited) {
+                string += `${tab(2)}inherited: true,\n`
             }
             if (initial !== undefined) {
                 const [parsed, serialized] = getInitialValue(property, initial, '@style', 3)
