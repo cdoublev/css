@@ -771,6 +771,8 @@ describe('container-name', () => {
         const style = createStyleBlock()
         style.containerName = 'none'
         assert.equal(style.containerName, 'none')
+        style.containerName = 'name'
+        assert.equal(style.containerName, 'name')
     })
 })
 describe('cue-after, cue-before', () => {
