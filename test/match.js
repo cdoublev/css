@@ -1,4 +1,41 @@
 
+import {
+    Comment,
+    Element,
+    HTMLAnchorElement,
+    HTMLAreaElement,
+    HTMLBodyElement,
+    HTMLButtonElement,
+    HTMLDataListElement,
+    HTMLDetailsElement,
+    HTMLDialogElement,
+    HTMLDivElement,
+    HTMLDocument,
+    HTMLElement,
+    HTMLFieldSetElement,
+    HTMLFormElement,
+    HTMLHeadingElement,
+    HTMLHtmlElement,
+    HTMLInputElement,
+    HTMLLegendElement,
+    HTMLMediaElement,
+    HTMLMeterElement,
+    HTMLOptGroupElement,
+    HTMLOptionElement,
+    HTMLProgressElement,
+    HTMLSectionElement,
+    HTMLSelectElement,
+    HTMLSlotElement,
+    HTMLTextAreaElement,
+    HTMLVideoElement,
+    HTML_NAMESPACE,
+    SVGSVGElement,
+    SVGUseElement,
+    SVG_NAMESPACE,
+    ShadowRoot,
+    Text,
+    XLINK_NAMESPACE,
+} from './dom.js'
 import assert, { Assert, AssertionError } from 'node:assert'
 import { createContext, parseGrammar } from '../lib/parse/parser.js'
 import { describe, test } from 'node:test'
@@ -307,71 +344,6 @@ describe('media', () => {
 
 describe('selector', () => {
 
-    const HTML_NAMESPACE = 'http://www.w3.org/1999/xhtml'
-    const SVG_NAMESPACE = 'http://www.w3.org/2000/svg'
-    const XLINK_NAMESPACE = 'http://www.w3.org/1999/xlink'
-
-    const ELEMENT_NODE_TYPE = 1
-    const ATTRIBUTE_NODE_TYPE = 2
-    const TEXT_NODE_TYPE = 3
-    const CDATA_SECTION_NODE_TYPE = 4
-    const ENTITY_REFERENCE_NODE_TYPE = 5
-    const ENTITY_NODE_TYPE = 6
-    const PROCESSING_INSTRUCTION_NODE_TYPE = 7
-    const COMMENT_NODE_TYPE = 8
-    const DOCUMENT_NODE_TYPE = 9
-    const DOCUMENT_TYPE_NODE_TYPE = 10
-    const DOCUMENT_FRAGMENT_NODE_TYPE = 11
-    const NOTATION_NODE_TYPE = 12
-
-    /**
-     * @param {Element} element
-     * @param {function} accept
-     * @returns {Element}
-     */
-    function findParentElement({ parentElement }, accept) {
-        while (parentElement) {
-            if (accept(parentElement)) {
-                return parentElement
-            }
-            parentElement = parentElement.parentElement
-        }
-    }
-
-    /**
-     * @param {Element} element
-     * @returns {Element|null}
-     */
-    function getNextElementSibling(element) {
-        const { parentElement } = element
-        if (parentElement) {
-            const { children } = parentElement
-            const index = children.indexOf(element)
-            const child = children[index + 1]
-            if (child) {
-                return child
-            }
-        }
-        return null
-    }
-
-    /**
-     * @param {Element} element
-     * @returns {Element|null}
-     */
-    function getPreviousElementSibling(element) {
-        const { parentElement } = element
-        if (parentElement) {
-            const { children } = parentElement
-            const index = children.indexOf(element)
-            const child = children[index - 1]
-            if (child) {
-                return child
-            }
-        }
-        return null
-    }
-
     /**
      * @param {Element} element
      * @param {number} number
@@ -446,697 +418,7 @@ describe('selector', () => {
         }
     }
 
-    class DOMTokenList {
-
-        /**
-         * @param {string[]} list
-         */
-        constructor(list = []) {
-            this.list = new Set(list)
-        }
-
-        /**
-         * @param {string} token
-         * @returns {boolean}
-         */
-        contains(token) {
-            return this.list.has(token)
-        }
-    }
-
-    class Node {
-
-        static ATTRIBUTE_NODE = ATTRIBUTE_NODE_TYPE
-        static CDATA_SECTION_NODE = CDATA_SECTION_NODE_TYPE
-        static COMMENT_NODE = COMMENT_NODE_TYPE
-        static DOCUMENT_FRAGMENT_NODE = DOCUMENT_FRAGMENT_NODE_TYPE
-        static DOCUMENT_NODE = DOCUMENT_NODE_TYPE
-        static DOCUMENT_TYPE_NODE = DOCUMENT_TYPE_NODE_TYPE
-        static ELEMENT_NODE = ELEMENT_NODE_TYPE
-        static ENTITY_NODE = ENTITY_NODE_TYPE
-        static ENTITY_REFERENCE_NODE = ENTITY_REFERENCE_NODE_TYPE
-        static NOTATION_NODE = NOTATION_NODE_TYPE
-        static PROCESSING_INSTRUCTION_NODE = PROCESSING_INSTRUCTION_NODE_TYPE
-        static TEXT_NODE = TEXT_NODE_TYPE
-
-        childNodes = []
-
-        /**
-         * @param {object} properties
-         */
-        constructor(properties = {}) {
-
-            const {
-                fullscreen = false,
-                ownerDocument = null,
-                parentNode = null,
-                pictureInPicture = false,
-            } = properties
-
-            this.ownerDocument = ownerDocument
-            this.parentNode = parentNode
-            if (parentNode) {
-                parentNode.childNodes.push(this)
-            }
-            if (fullscreen) {
-                this.getRootNode().fullscreenElement = this
-            }
-            if (pictureInPicture) {
-                this.getRootNode().pictureInPictureElement = this
-            }
-        }
-
-        /**
-         * @returns {string}
-         */
-        get baseURI() {
-            return this.ownerDocument.baseURI
-        }
-
-        /**
-         * @param {Node} node
-         * @returns {boolean}
-         */
-        contains(node) {
-            return this === node || this.childNodes.some(child => child === node || child.contains(node))
-        }
-
-        /**
-         * @returns {Element|null}
-         */
-        get parentElement() {
-            const { parentNode } = this
-            return parentNode instanceof Element ? parentNode : null
-        }
-
-        /**
-         * @param {object} [options]
-         * @returns {Node}
-         */
-        getRootNode(options = {}) {
-            const { parentNode } = this
-            if (parentNode) {
-                if (!options.composed && parentNode instanceof ShadowRoot) {
-                    return parentNode
-                }
-                return parentNode.getRootNode(options)
-            }
-            return this
-        }
-    }
-
-    class CharacterData extends Node {
-
-        /**
-         * @param {object} properties
-         */
-        constructor(properties) {
-
-            super(properties)
-
-            const { data } = properties
-
-            this.data = data
-            this.length = data.length
-        }
-    }
-    class Comment extends CharacterData { nodeType = COMMENT_NODE_TYPE }
-    class Text extends CharacterData { nodeType = TEXT_NODE_TYPE }
-
-    class Document extends Node {
-
-        fullscreenElement = null
-        nodeType = DOCUMENT_NODE_TYPE
-        pictureInPictureElement = null
-
-        /**
-         * @param {object} [properties]
-         */
-        constructor(properties = {}) {
-
-            super(properties)
-
-            const { activeViewTransition = null, url = 'http://localhost/' } = properties
-
-            this.activeViewTransition = activeViewTransition
-            this.location = new URL(url)
-            this.URL = url
-        }
-
-        /**
-         * @returns {string}
-         */
-        get baseURI() {
-            return this.URL
-        }
-
-        /**
-         * @returns {Element}
-         */
-        get children() {
-            return this.childNodes.filter(node => node instanceof Element)
-        }
-
-        /**
-         * @returns {Element}
-         */
-        get documentElement() {
-            return this.children[0]
-        }
-    }
-    class HTMLDocument extends Document { contentType = 'text/html' }
-
-    class DocumentFragment extends Node {
-
-        nodeType = DOCUMENT_FRAGMENT_NODE_TYPE
-
-        /**
-         * @returns {Element}
-         */
-        get children() {
-            return this.childNodes.filter(node => node instanceof Element)
-        }
-
-        /**
-         * @returns {Element|null}
-         */
-        get nextElementSibling() {
-            return getNextElementSibling(this)
-        }
-
-        /**
-         * @returns {Element|null}
-         */
-        get previousElementSibling() {
-            return getPreviousElementSibling(this)
-        }
-    }
-    class ShadowRoot extends DocumentFragment {
-
-        fullscreenElement = null
-
-        /**
-         * @param {object} properties
-         */
-        constructor(properties) {
-
-            super(properties)
-
-            const { host } = properties
-
-            this.host = host
-            host.shadowRoot = this
-        }
-    }
-
-    class Element extends Node {
-
-        namespaceURI = null
-        nodeType = ELEMENT_NODE_TYPE
-        prefix = null
-        shadowRoot = null
-
-        /**
-         * @param {object} properties
-         */
-        constructor(properties) {
-
-            super(properties)
-
-            const {
-                attributes = [],
-                fieldSet,
-                form = null,
-                indeterminate,
-                isContentEditable = false,
-                localName,
-                selectors = [],
-            } = properties
-
-            this.attributes = attributes.map(({ localName, namespaceURI = null, value = '' }) =>
-                ({ localName, namespaceURI, ownerElement: this, value }))
-            this.classList = new DOMTokenList(this.getAttribute('class')?.split(' '))
-            this.indeterminate = indeterminate
-            this.isContentEditable = isContentEditable
-            this.localName = localName
-
-            this.disabled = !!this.getAttributeNode('disabled')
-            this.id = this.getAttribute('id') ?? ''
-            this.form = form
-            form?.elements.push(this)
-            fieldSet?.elements.push(this)
-            this.name = this.getAttribute('name') ?? ''
-            this.readOnly = !!this.getAttributeNode('readonly')
-            this.required = !!this.getAttributeNode('required')
-            this.slot = this.getAttribute('slot') ?? ''
-
-            const { parentElement } = this
-            if (parentElement?.shadowRoot) {
-                parentElement.shadowRoot.children.find(element => element.name === this.slot)._slotted.push(this)
-            }
-
-            selectors.forEach(selector => {
-                if (expected.has(selector)) {
-                    expected.get(selector).push(this)
-                } else {
-                    expected.set(selector, [this])
-                }
-            })
-        }
-
-        /**
-         * @returns {Element}
-         */
-        get children() {
-            return this.childNodes.filter(node => node instanceof Element)
-        }
-
-        /**
-         * @returns {Element|null}
-         */
-        get firstElementChild() {
-            return this.childNodes.find(node => node instanceof Element) ?? null
-        }
-
-        /**
-         * @param {string} name
-         * @returns {object|null}
-         */
-        getAttribute(name) {
-            return this.getAttributeNode(name)?.value ?? null
-        }
-
-        /**
-         * @param {string} name
-         * @returns {object|null}
-         */
-        getAttributeNode(name) {
-            return this.attributes.find(attribute => attribute.localName === name && attribute.namespaceURI === null) ?? null
-        }
-
-        /**
-         * @returns {Element|null}
-         */
-        get nextElementSibling() {
-            return getNextElementSibling(this)
-        }
-
-        /**
-         * @returns {Element|null}
-         */
-        get previousElementSibling() {
-            return getPreviousElementSibling(this)
-        }
-
-        /**
-         * @returns {string}
-         */
-        get tagName() {
-            if (this.prefix) {
-                return `${this.prefix}:${this.localName}`
-            }
-            return this.localName
-        }
-    }
-
-    class HTMLElement extends Element { namespaceURI = HTML_NAMESPACE }
-    class HTMLAnchorElement extends HTMLElement {
-
-        localName = 'a'
-
-        /**
-         * @param {object} properties
-         */
-        constructor(properties) {
-
-            super(properties)
-
-            let href = this.getAttribute('href')
-            if (href === null) {
-                href = ''
-            } else {
-                const url = URL.parse(href, this.baseURI)
-                if (url) {
-                    href = `${url}`
-                }
-            }
-            this.href = href
-        }
-    }
-    class HTMLAreaElement extends HTMLElement {
-
-        localName = 'area'
-
-        /**
-         * @param {object} properties
-         */
-        constructor(properties) {
-
-            super(properties)
-
-            let href = this.getAttribute('href') ?? ''
-            if (href) {
-                const url = URL.parse(href, this.baseURI)
-                if (url) {
-                    href = `${url}`
-                }
-            }
-            this.href = href
-        }
-    }
-    class HTMLBodyElement extends HTMLElement { localName = 'body' }
-    class HTMLButtonElement extends HTMLElement {
-
-        localName = 'button'
-        value = ''
-
-        /**
-         * @returns {string}
-         */
-        get type() {
-            const type = this.getAttribute('type')
-            switch (type) {
-                case 'button':
-                case 'reset':
-                case 'submit':
-                    return type
-                default:
-                    if (
-                        this.getAttributeNode('command')
-                        || this.getAttributeNode('commandFor')
-                        || this.parentNode instanceof HTMLSelectElement
-                    ) {
-                        return 'button'
-                    }
-                    return 'submit'
-            }
-        }
-
-        /**
-         * @returns {object}
-         */
-        get validity() {
-            return { valid: true }
-        }
-    }
-    class HTMLDataListElement extends HTMLElement { localName = 'datalist' }
-    class HTMLDetailsElement extends HTMLElement {
-
-        localName = 'details'
-
-        /**
-         * @param {object} properties
-         */
-        constructor(properties) {
-            super(properties)
-            this.open = properties.open ?? !!this.getAttributeNode('open')
-        }
-    }
-    class HTMLDialogElement extends HTMLElement {
-
-        localName = 'dialog'
-
-        /**
-         * @param {object} properties
-         */
-        constructor(properties) {
-            super(properties)
-            this.open = properties.open ?? !!this.getAttributeNode('open')
-        }
-    }
-    class HTMLDivElement extends HTMLElement { localName = 'div' }
-    class HTMLFieldSetElement extends HTMLElement {
-        elements = []
-        localName = 'fieldset'
-        type = 'fieldset'
-    }
-    class HTMLFormElement extends HTMLElement {
-        elements = []
-        localName = 'form'
-    }
-    class HTMLHeadingElement extends HTMLElement {
-
-        /**
-         * @param {object} properties
-         */
-        constructor(properties) {
-            super(properties)
-            const { localName } = properties
-            this.localName = localName
-        }
-    }
-    class HTMLHtmlElement extends HTMLElement { localName = 'html' }
-    class HTMLInputElement extends HTMLElement {
-
-        localName = 'input'
-
-        /**
-         * @param {object} properties
-         */
-        constructor(properties) {
-
-            super(properties)
-
-            const { checked, value } = properties
-
-            this.defaultChecked = !!this.getAttributeNode('checked')
-            this.checked = checked ?? this.defaultChecked
-            this.max = this.getAttribute('max') ?? ''
-            this.min = this.getAttribute('min') ?? ''
-            this.step = this.getAttribute('step') ?? ''
-            this.type = this.getAttribute('type') ?? 'text'
-            this.value = value ?? this.getAttribute('value') ?? ''
-        }
-
-        /**
-         * @returns {object}
-         */
-        get validity() {
-            switch (this.type) {
-                case 'checkbox':
-                case 'radio':
-                    return this.required && !this.checked
-                        ? { valueMissing: true }
-                        : { valid: true }
-                case 'date':
-                case 'datetime-local':
-                case 'month':
-                case 'number':
-                case 'range':
-                case 'time':
-                case 'week':
-                    if (expected.get(':out-of-range')?.includes(this)) {
-                        return { rangeOverflow: true, rangeUnderflow: true }
-                    }
-                    if (this.type === 'range') {
-                        return { valid: true }
-                    }
-                    // falls through
-                case 'email':
-                case 'file':
-                case 'password':
-                case 'search':
-                case 'tel':
-                case 'text':
-                case 'url':
-                    if (this.required && !this.value) {
-                        return { valueMissing: true }
-                    }
-                    // falls through
-                default:
-                    return { valid: true }
-            }
-        }
-    }
-    class HTMLLegendElement extends HTMLElement { localName = 'legend' }
-    class HTMLMeterElement extends HTMLElement {
-
-        localName = 'meter'
-
-        /**
-         * @param {object} properties
-         */
-        constructor(properties) {
-
-            super(properties)
-
-            this.min = this.getAttribute('min') ?? '0'
-            this.max = this.getAttribute('max') ?? '1'
-            this.low = this.getAttribute('low') ?? this.min
-            this.high = this.getAttribute('high') ?? this.max
-            this.value = this.getAttribute('value') ?? '0'
-            this.optimum = this.getAttribute('optimum') ?? `${(this.max - this.min) / 2}`
-        }
-    }
-    class HTMLOptionElement extends HTMLElement {
-
-        localName = 'option'
-        value = ''
-
-        /**
-         * @param {object} properties
-         */
-        constructor(properties = {}) {
-
-            super(properties)
-
-            this.defaultSelected = !!this.getAttributeNode('selected')
-            this.selected = properties.selected ?? this.defaultSelected
-
-            const select = findParentElement(this, element => element instanceof HTMLSelectElement)
-            if (select) {
-                select.options.push(this)
-                const { multiple, options, selectedIndex } = select
-                const selected = options[selectedIndex]
-                if (!multiple && !this.selected && !selected?.getAttributeNode('selected')) {
-                    if (selectedIndex === -1) {
-                        this.selected = true
-                    } else {
-                        selected.selected = false
-                    }
-                }
-            }
-        }
-    }
-    class HTMLOptGroupElement extends HTMLElement { localName = 'optgroup' }
-    class HTMLProgressElement extends HTMLElement {
-        localName = 'progress'
-        value = ''
-    }
-    class HTMLSectionElement extends HTMLElement { localName = 'section' }
-    class HTMLSelectElement extends HTMLElement {
-
-        options = []
-        localName = 'select'
-
-        /**
-         * @param {object} properties
-         */
-        constructor(properties) {
-            super(properties)
-            this.multiple = properties.multiple ?? !!this.getAttributeNode('multiple')
-        }
-
-        /**
-         * @returns {number}
-         */
-        get selectedIndex() {
-            return this.options.findIndex(option => option.selected)
-        }
-
-        /**
-         * @returns {Element[]}
-         */
-        get selectedOptions() {
-            return this.options.filter(option => option.selected)
-        }
-
-        /**
-         * @returns {string}
-         */
-        get type() {
-            return `select-${this.multiple ? 'multiple' : 'one'}`
-        }
-
-        /**
-         * @returns {object}
-         */
-        get validity() {
-            if (this.required && this.selectedIndex === -1) {
-                return { valueMissing: true }
-            }
-            return { valid: true }
-        }
-
-        /**
-         * @returns {string|undefined}
-         */
-        get value() {
-            return this.selectedOptions[0]?.value ?? ''
-        }
-    }
-    class HTMLSlotElement extends HTMLElement {
-
-        localName = 'slot'
-        _slotted = []
-
-        /**
-         * @param {object} options
-         * @returns {Node}
-         */
-        assignedNodes({ flatten }) {
-            if (flatten) {
-                return this._slotted.flat(Infinity)
-            }
-            return this._slotted
-        }
-    }
-    class HTMLTextAreaElement extends HTMLElement {
-
-        localName = 'textarea'
-        type = 'textarea'
-
-        /**
-         * @param {object} properties
-         */
-        constructor(properties) {
-            super(properties)
-            this.value = properties.value ?? ''
-        }
-
-        /**
-         * @returns {object}
-         */
-        get validity() {
-            if (this.required && !this.value) {
-                return { valueMissing: true }
-            }
-            return { valid: true }
-        }
-    }
-    class HTMLMediaElement extends HTMLElement {
-
-        static NETWORK_EMPTY = 0
-        static NETWORK_IDLE = 1
-        static NETWORK_LOADING = 2
-        static NETWORK_NO_SOURCE = 3
-
-        static HAVE_NOTHING = 0
-        static HAVE_METADATA = 1
-        static HAVE_CURRENT_DATA = 2
-        static HAVE_FUTURE_DATA = 3
-        static HAVE_ENOUGH_DATA = 4
-
-        /**
-         * @param {object} properties
-         */
-        constructor(properties) {
-
-            super(properties)
-
-            const {
-                muted,
-                networkState = HTMLMediaElement.NETWORK_EMPTY,
-                paused = true,
-                readyState = HTMLMediaElement.HAVE_NOTHING,
-                seeking = false,
-            } = properties
-
-            this.muted = muted ?? !!this.getAttributeNode('muted')
-            this.paused = paused
-            this.networkState = networkState
-            this.readyState = readyState
-            this.seeking = seeking
-        }
-    }
-    class HTMLVideoElement extends HTMLMediaElement { localName = 'video' }
-
-    class SVGElement extends Element { namespaceURI = SVG_NAMESPACE }
-    class SVGSVGElement extends SVGElement { localName = 'svg' }
-    class SVGUseElement extends SVGElement { localName = 'use' }
-
     const assert = new CSSAssert({ skipPrototype: true })
-    const expected = new Map
 
     test('type', () => {
 
@@ -1480,7 +762,7 @@ describe('selector', () => {
          *   </body>
          * </html>
          */
-        const document = new HTMLDocument
+        const document = new HTMLDocument({ selected: new Map })
         const html = new HTMLHtmlElement({ ownerDocument: document, parentNode: document })
         const body = new HTMLBodyElement({ ownerDocument: document, parentNode: html })
         const form = new HTMLFormElement({ ownerDocument: document, parentNode: body })
@@ -1664,7 +946,7 @@ describe('selector', () => {
             selectors: [':blank'],
         })
 
-        assert.match(':blank', expected.get(':blank'), document)
+        assert.match(':blank', document.selected.get(':blank'), document)
     })
     test(':checked, :unchecked', () => {
 
@@ -1700,7 +982,7 @@ describe('selector', () => {
          *   </body>
          * </html>
          */
-        const document = new HTMLDocument
+        const document = new HTMLDocument({ selected: new Map })
         const html = new HTMLHtmlElement({ ownerDocument: document, parentNode: document })
         const body = new HTMLBodyElement({ ownerDocument: document, parentNode: html })
         const form = new HTMLFormElement({ ownerDocument: document, parentNode: body })
@@ -1821,8 +1103,8 @@ describe('selector', () => {
             selectors: [':checked'],
         })
 
-        assert.match(':unchecked', expected.get(':unchecked'), document)
-        assert.match(':checked', expected.get(':checked'), document)
+        assert.match(':unchecked', document.selected.get(':unchecked'), document)
+        assert.match(':checked', document.selected.get(':checked'), document)
     })
     test(':default', () => {
 
@@ -1886,7 +1168,7 @@ describe('selector', () => {
          *   </body>
          * </html>
          */
-        const document = new HTMLDocument
+        const document = new HTMLDocument({ selected: new Map })
         const html = new HTMLHtmlElement({ ownerDocument: document, parentNode: document })
         const body = new HTMLBodyElement({ ownerDocument: document, parentNode: html })
 
@@ -2072,7 +1354,7 @@ describe('selector', () => {
             selectors: [':default'],
         })
 
-        assert.match(':default', expected.get(':default'), document)
+        assert.match(':default', document.selected.get(':default'), document)
     })
     test(':disabled, :enabled', () => {
 
@@ -2134,7 +1416,7 @@ describe('selector', () => {
          *   </body>
          * </html>
          */
-        const document = new HTMLDocument
+        const document = new HTMLDocument({ selected: new Map })
         const html = new HTMLHtmlElement({ ownerDocument: document, parentNode: document })
         const body = new HTMLBodyElement({ ownerDocument: document, parentNode: html })
         const form = new HTMLFormElement({
@@ -2340,8 +1622,8 @@ describe('selector', () => {
             selectors: [':disabled'],
         })
 
-        assert.match(':disabled', expected.get(':disabled'), document)
-        assert.match(':enabled', expected.get(':enabled'), document)
+        assert.match(':disabled', document.selected.get(':disabled'), document)
+        assert.match(':enabled', document.selected.get(':enabled'), document)
     })
     test(':high-value, :low-value, :optimal-value', () => {
 
@@ -2570,7 +1852,7 @@ describe('selector', () => {
          *   </body>
          * </html>
          */
-        const document = new HTMLDocument
+        const document = new HTMLDocument({ selected: new Map })
         const html = new HTMLHtmlElement({ ownerDocument: document, parentNode: document })
         const body = new HTMLBodyElement({ ownerDocument: document, parentNode: html })
         const form = new HTMLFormElement({ ownerDocument: document, parentNode: body })
@@ -2903,8 +2185,8 @@ describe('selector', () => {
             selectors: [':in-range'],
         })
 
-        assert.match(':out-of-range', expected.get(':out-of-range'), document)
-        assert.match(':in-range', expected.get(':in-range'), document)
+        assert.match(':out-of-range', document.selected.get(':out-of-range'), document)
+        assert.match(':in-range', document.selected.get(':in-range'), document)
     })
     test(':invalid, :valid', () => {
 
@@ -2967,7 +2249,7 @@ describe('selector', () => {
          *   </body>
          * </html>
          */
-        const document = new HTMLDocument
+        const document = new HTMLDocument({ selected: new Map })
         const html = new HTMLHtmlElement({ ownerDocument: document, parentNode: document })
         const body = new HTMLBodyElement({ ownerDocument: document, parentNode: html })
 
@@ -3214,8 +2496,8 @@ describe('selector', () => {
             selectors: [':valid'],
         })
 
-        assert.match(':valid', expected.get(':valid'), document)
-        assert.match(':invalid', expected.get(':invalid'), document)
+        assert.match(':valid', document.selected.get(':valid'), document)
+        assert.match(':invalid', document.selected.get(':invalid'), document)
     })
     test(':indeterminate', () => {
 
@@ -3252,7 +2534,7 @@ describe('selector', () => {
          *   </body>
          * </html>
          */
-        const document = new HTMLDocument
+        const document = new HTMLDocument({ selected: new Map })
         const html = new HTMLHtmlElement({ ownerDocument: document, parentNode: document })
         const body = new HTMLBodyElement({ ownerDocument: document, parentNode: html })
 
@@ -3365,7 +2647,7 @@ describe('selector', () => {
             selectors: [':indeterminate'],
         })
 
-        assert.match(':indeterminate', expected.get(':indeterminate'), document)
+        assert.match(':indeterminate', document.selected.get(':indeterminate'), document)
     })
     test(':optional, :required', () => {
 
@@ -3434,7 +2716,7 @@ describe('selector', () => {
          *   </body>
          * </html>
          */
-        const document = new HTMLDocument
+        const document = new HTMLDocument({ selected: new Map })
         const html = new HTMLHtmlElement({ ownerDocument: document, parentNode: document })
         const body = new HTMLBodyElement({ ownerDocument: document, parentNode: html })
         const form = new HTMLFormElement({ ownerDocument: document, parentNode: body })
@@ -3818,8 +3100,8 @@ describe('selector', () => {
             selectors: [':required'],
         })
 
-        assert.match(':optional', expected.get(':optional'), document)
-        assert.match(':required', expected.get(':required'), document)
+        assert.match(':optional', document.selected.get(':optional'), document)
+        assert.match(':required', document.selected.get(':required'), document)
     })
     test(':placeholder-shown', () => {
 
@@ -3843,7 +3125,7 @@ describe('selector', () => {
          *   </body>
          * </html>
          */
-        const document = new HTMLDocument
+        const document = new HTMLDocument({ selected: new Map })
         const html = new HTMLHtmlElement({ ownerDocument: document, parentNode: document })
         const body = new HTMLBodyElement({ ownerDocument: document, parentNode: html })
         const form = new HTMLFormElement({ ownerDocument: document, parentNode: body })
@@ -3922,7 +3204,7 @@ describe('selector', () => {
             selectors: [':placeholder-shown'],
         })
 
-        assert.match(':placeholder-shown', expected.get(':placeholder-shown'), document)
+        assert.match(':placeholder-shown', document.selected.get(':placeholder-shown'), document)
     })
     test(':read-only, :read-write', () => {
 
@@ -3988,7 +3270,7 @@ describe('selector', () => {
          *   </body>
          * </html>
          */
-        const document = new HTMLDocument
+        const document = new HTMLDocument({ selected: new Map })
         const html = new HTMLHtmlElement({ ownerDocument: document, parentNode: document, selectors: [':read-only'] })
         const body = new HTMLBodyElement({ ownerDocument: document, parentNode: html, selectors: [':read-only'] })
         const form = new HTMLFormElement({ ownerDocument: document, parentNode: body, selectors: [':read-only'] })
@@ -4370,8 +3652,8 @@ describe('selector', () => {
             selectors: [':read-write'],
         })
 
-        assert.match(':read-only', expected.get(':read-only'), document)
-        assert.match(':read-write', expected.get(':read-write'), document)
+        assert.match(':read-only', document.selected.get(':read-only'), document)
+        assert.match(':read-write', document.selected.get(':read-write'), document)
     })
     // Logical
     test(':is(), :not(), :where()', () => {
@@ -4477,7 +3759,7 @@ describe('selector', () => {
          *   </body>
          * </html>
          */
-        const document = new HTMLDocument({ url: 'http://localhost/level-1/level-2/#target' })
+        const document = new HTMLDocument({ selected: new Map, url: 'http://localhost/level-1/level-2/#target' })
         const html = new HTMLHtmlElement({ ownerDocument: document, parentNode: document })
         const body = new HTMLBodyElement({ ownerDocument: document, parentNode: html })
 
@@ -4560,7 +3842,7 @@ describe('selector', () => {
             ':local-link(2)',
             ':local-link(3)',
         ]
-        selectors.forEach(selector => assert.match(selector, expected.get(selector), document))
+        selectors.forEach(selector => assert.match(selector, document.selected.get(selector), document))
     })
     // Resource
     test(':buffering, :muted, :paused, :playing, :seeking, :stalled, :volume-locked', () => {
@@ -4574,7 +3856,7 @@ describe('selector', () => {
          *   </body>
          * </html>
          */
-        const document = new HTMLDocument
+        const document = new HTMLDocument({ selected: new Map })
         const html = new HTMLHtmlElement({ ownerDocument: document, parentNode: document })
         const body = new HTMLBodyElement({ ownerDocument: document, parentNode: html })
 
@@ -4606,7 +3888,7 @@ describe('selector', () => {
             ':stalled',
             ':volume-locked',
         ]
-        selectors.forEach(selector => assert.match(selector, expected.get(selector), document))
+        selectors.forEach(selector => assert.match(selector, document.selected.get(selector), document))
     })
     // Tree-structural
     test(':root, :host, :host(), :host-context(), :scope, &', () => {

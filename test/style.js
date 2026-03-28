@@ -12,8 +12,9 @@ import {
     CSSStyleProperties,
     CSSStyleSheet,
 } from '../lib/cssom/index.js'
+import { HTMLBodyElement, HTMLDivElement, HTMLDocument, HTMLHtmlElement, HTMLStyleElement } from './dom.js'
 import { describe, it, test } from 'node:test'
-import { UPDATE_COMPUTED_STYLE_DECLARATION_ERROR } from '../lib/error.js'
+import { UPDATE_READONLY_STYLE_DECLARATION_ERROR } from '../lib/error.js'
 import assert from 'node:assert'
 import { install } from '@cdoublev/css'
 import properties from '../lib/properties/definitions.js'
@@ -161,33 +162,41 @@ describe('CSSStyleDeclaration / CSSStyleProperties', () => {
     })
 })
 describe('CSSStyleDeclaration.cssText', () => {
+    it('throws an error when trying to set declarations while the readonly flag is set', () => {
+        const style = createStyleBlock({ readOnly: true })
+        assert.throws(() => style.cssText = 'color: red', UPDATE_READONLY_STYLE_DECLARATION_ERROR)
+    })
+    it('returns an empty string when the computed flag is set', () => {
+        const style = createStyleBlock({ computed: true })
+        assert.equal(style.cssText, '')
+    })
     it('does not store a declaration with an invalid name', () => {
         const style = createStyleBlock()
         style.cssText = 'webkitLineClamp: 1; WebkitLineClamp: 1'
         assert.equal(style.cssText, '')
     })
-    it('stores a declaration for the target of a property alias', () => {
+    it('sets a declaration for the target of a property alias', () => {
         const style = createStyleBlock()
         style.cssText = '-webkit-order: 1; grid-gap: 1px'
         assert.equal(style.cssText, 'order: 1; gap: 1px;')
     })
-    it('stores a declaration for a property mapping to another property', () => {
+    it('sets a declaration for a property mapping to another property', () => {
         const style = createStyleBlock()
         style.cssText = '-webkit-box-align: start'
         assert.equal(style.cssText, '-webkit-box-align: start;')
     })
-    it('stores a custom property declaration with an escaped code point', () => {
+    it('sets a custom property declaration with an escaped code point', () => {
         const style = createStyleBlock()
         style.cssText = '--custom\\ property: 1'
         assert.equal(style.cssText, '--custom\\ property: 1;')
     })
-    it('stores a custom property declaration with an empty string value', () => {
+    it('sets a custom property declaration with an empty string value', () => {
         const style = createStyleBlock()
         style.cssText = '--custom:;'
         assert.equal(style.cssText, '--custom: ;')
         assert.equal(style.getPropertyValue('--custom'), ' ')
     })
-    it('stores declarations in specified order', () => {
+    it('sets declarations in specified order', () => {
         const style = createStyleBlock()
         style.cssText = 'color: orange; width: 1px; color: green'
         assert.equal(style.cssText, 'width: 1px; color: green;')
@@ -206,6 +215,11 @@ describe('CSSStyleDeclaration.cssText', () => {
     })
 })
 describe('CSSStyleDeclaration.setProperty(), CSSStyleDeclaration.getPropertyValue(), CSSStyleDeclaration.removeProperty()', () => {
+    it('throws an error when trying to set or remove a declaration while the readonly flag is set', () => {
+        const style = createStyleBlock({ readOnly: true })
+        assert.throws(() => style.setProperty('color', 'red'), UPDATE_READONLY_STYLE_DECLARATION_ERROR)
+        assert.throws(() => style.removeProperty('color'), UPDATE_READONLY_STYLE_DECLARATION_ERROR)
+    })
     it('does not store a declaration with an invalid name', () => {
 
         const style = createStyleBlock()
@@ -368,6 +382,184 @@ describe('CSSStyleDeclaration.setProperty(), CSSStyleDeclaration.getPropertyValu
         style.borderBlockStartColor = 'green'
         assert.equal(style.cssText, 'border-top-color: green; border-block-start-color: green;')
     })
+    it('resolves a value by collecting declarations in conditional rules', () => {
+
+        const styleSheet = `
+            html {
+                container-name: name;
+            }
+            body {
+
+                @container name {
+                    margin-top: 1px;
+                }
+                @container other-name {
+                    margin-top: 0px;
+                }
+                @media all {
+                    margin-right: 1px;
+                }
+                @media not all {
+                    margin-right: 0px;
+                }
+                @supports (color: green) {
+                    margin-bottom: 1px;
+                }
+                @supports (color: unknown) {
+                    margin-bottom: 0px;
+                }
+            }
+        `
+        const document = new HTMLDocument
+        const html = new HTMLHtmlElement({ ownerDocument: document, parentNode: document })
+        const body = new HTMLBodyElement({ ownerDocument: document, parentNode: html })
+        new HTMLStyleElement({ innerText: styleSheet, ownerDocument: document, parentNode: body })
+        const style = createStyleBlock({ computed: true, ownerNode: body, readOnly: true })
+
+        assert.equal(style.marginTop, '1px')
+        assert.equal(style.marginRight, '1px')
+        assert.equal(style.marginBottom, '1px')
+    })
+    it('resolves a value by collecting declared values in scoped style rules', () => {
+
+        /**
+         * <html>
+         *   <body id="root">
+         *     <div class="limit"></div>
+         *     <div></div>
+         *   </body>
+         * </html>
+         */
+        const userStyleSheet = `
+            @scope (#root) to (.limit) {
+                &, * {
+                    margin-top: 1px;
+                }
+            }
+        `
+        const document = new HTMLDocument({ userStyleSheet })
+        const html = new HTMLHtmlElement({ ownerDocument: document, parentNode: document })
+        const root = new HTMLBodyElement({
+            attributes: [{ localName: 'id', value: 'root' }],
+            ownerDocument: document,
+            parentNode: html,
+        })
+        const limit = new HTMLDivElement({
+            attributes: [{ localName: 'class', value: 'limit' }],
+            ownerDocument: document,
+            parentNode: root,
+        })
+        const div = new HTMLDivElement({
+            ownerDocument: document,
+            parentNode: root,
+        })
+
+        assert.equal(createStyleBlock({ computed: true, ownerNode: root, readOnly: true }).marginTop, '1px')
+        assert.equal(createStyleBlock({ computed: true, ownerNode: limit, readOnly: true }).marginTop, '0px')
+        assert.equal(createStyleBlock({ computed: true, ownerNode: div, readOnly: true }).marginTop, '1px')
+    })
+    it('resolves a value by cascading declared values', () => {
+
+        const document = new HTMLDocument({
+            userAgentStyleSheet: 'html { order: 2 !important }',
+            userStyleSheet: 'html { order: 3 !important }',
+        })
+        const { userAgentStyleSheet, userStyleSheet } = document
+        const html = new HTMLHtmlElement({
+            attributes: [
+                { localName: 'id', value: 'id' },
+                { localName: 'class', value: 'class' },
+                { localName: 'style', value: 'order: 1 !important' },
+            ],
+            ownerDocument: document,
+            parentNode: document,
+        })
+        const style = createStyleBlock({ computed: true, ownerNode: html, readOnly: true })
+        const { sheet: authorStyleSheet } = new HTMLStyleElement({
+            innerText: 'html { order: 4 !important }',
+            ownerDocument: document,
+            parentNode: html,
+        })
+
+        assert.equal(style.order, '1')
+        html.style.order = '5'
+        assert.equal(style.order, '2')
+        userAgentStyleSheet.cssRules[0].style.order = '8'
+        assert.equal(style.order, '3')
+        userStyleSheet.cssRules[0].style.order = '7'
+        assert.equal(style.order, '4')
+        authorStyleSheet.cssRules[0].style.order = '6'
+        assert.equal(style.order, '5')
+        html.style.removeProperty('order')
+        assert.equal(style.order, '6')
+        authorStyleSheet.deleteRule(0)
+        assert.equal(style.order, '7')
+        userStyleSheet.deleteRule(0)
+        assert.equal(style.order, '8')
+        userAgentStyleSheet.deleteRule(0)
+
+        const constructedStyleSheet = new globalThis.CSSStyleSheet()
+
+        authorStyleSheet.insertRule(`
+            @layer one { html { order: 2 !important } }
+        `)
+        constructedStyleSheet.replaceSync(`
+                         html { order: 4 !important }
+            @layer one { html { order: 1 !important } }
+            @layer two { html { order: 3 !important } }
+        `)
+        document.adoptedStyleSheets.push(constructedStyleSheet)
+
+        assert.equal(style.order, '1')
+        constructedStyleSheet.cssRules[1].cssRules[0].style.order = '6'
+        assert.equal(style.order, '2')
+        authorStyleSheet.cssRules[0].cssRules[0].style.order = '7'
+        assert.equal(style.order, '3')
+        constructedStyleSheet.cssRules[2].cssRules[0].style.order = '5'
+        assert.equal(style.order, '4')
+        constructedStyleSheet.cssRules[0].style.order = '4'
+        assert.equal(style.order, '4')
+        constructedStyleSheet.deleteRule(0)
+        assert.equal(style.order, '5')
+        constructedStyleSheet.deleteRule(1)
+        assert.equal(style.order, '6')
+        constructedStyleSheet.deleteRule(0)
+        assert.equal(style.order, '7')
+        authorStyleSheet.deleteRule(0)
+
+        constructedStyleSheet.replaceSync(`
+            #id { order: 1 }                       /* [1, 0, 0] */
+            .class[style]:first-child { order: 2 } /* [0, 3, 0] */
+            .class { order: 3 }                    /* [0, 1, 0] */
+            html { order: 5 }                      /* [0, 0, 1] */
+            html { order: 4 }                      /* [0, 0, 1] */
+        `)
+        assert.equal(style.order, '1')
+        constructedStyleSheet.deleteRule(0)
+        assert.equal(style.order, '2')
+        constructedStyleSheet.deleteRule(0)
+        assert.equal(style.order, '3')
+        constructedStyleSheet.deleteRule(0)
+        assert.equal(style.order, '4')
+    })
+    it('resolves a value by defaulting the cascaded value', () => {
+
+        const userStyleSheet = `
+            html {
+                --custom-1: 1;
+                font-size: 1px;
+                margin-top: 1px;
+            }`
+        const document = new HTMLDocument({ userStyleSheet })
+        const html = new HTMLHtmlElement({ ownerDocument: document, parentNode: document })
+        const body = new HTMLBodyElement({ ownerDocument: document, parentNode: html })
+        const style = createStyleBlock({ computed: true, ownerNode: body, readOnly: true })
+
+        assert.equal(style.getPropertyValue('--custom-1'), '1')
+        assert.equal(style.getPropertyValue('--custom-2'), '')
+        assert.equal(style.fontSize, '1px')
+        assert.equal(style.marginTop, '0px')
+    })
 })
 
 describe('CSS-wide keywords', () => {
@@ -377,6 +569,47 @@ describe('CSS-wide keywords', () => {
             style.opacity = keyword.toUpperCase()
             assert.equal(style.opacity, keyword)
         })
+    })
+    test('resolved', () => {
+
+        const userAgentStyleSheet = 'body { margin-bottom: 1px }'
+        const userStyleSheet = `
+            html {
+                font-style: italic;
+                visibility: hidden;
+                margin-top: 1px;
+                margin-right: 1px;
+            }
+            body {
+
+                font-style: initial;
+                margin-top: inherit;
+                margin-right: unset;
+                visibility: unset;
+                margin-bottom: revert;
+
+                @layer one {
+                    margin-left: 1px;
+                }
+                @layer two {
+                    margin-left: 2px;
+                    & {
+                        margin-left: revert-layer;
+                    }
+                }
+            }
+        `
+        const document = new HTMLDocument({ userAgentStyleSheet, userStyleSheet })
+        const html = new HTMLHtmlElement({ ownerDocument: document, parentNode: document })
+        const body = new HTMLBodyElement({ ownerDocument: document, parentNode: html })
+        const style = createStyleBlock({ computed: true, ownerNode: body, readOnly: true })
+
+        assert.equal(style.fontStyle, 'normal')
+        assert.equal(style.marginTop, '1px')
+        assert.equal(style.marginRight, '0px')
+        assert.equal(style.marginLeft, '1px')
+        assert.equal(style.marginBottom, '1px')
+        assert.equal(style.visibility, 'hidden')
     })
 })
 describe('arbitrary substitution', () => {
@@ -557,6 +790,17 @@ describe('animation-range-start, timeline-trigger-activation-range-start, timeli
         assert.equal(style.animationRangeStart, 'entry')
     })
 })
+describe('background-color', () => {
+    test('resolved', () => {
+
+        const document = new HTMLDocument({ userStyleSheet: 'html { color: green }' })
+        const html = new HTMLHtmlElement({ ownerDocument: document, parentNode: document })
+        const style = createStyleBlock({ computed: true, ownerNode: html, readOnly: true })
+
+        html.style.backgroundColor = 'currentcolor'
+        assert.equal(style.backgroundColor, 'rgb(0, 128, 0)')
+    })
+})
 describe('background-position', () => {
     test('valid', () => {
         const style = createStyleBlock()
@@ -726,6 +970,32 @@ describe('clip-path', () => {
         const style = createStyleBlock()
         style.clipPath = 'inset(1px) border-box'
         assert.equal(style.clipPath, 'inset(1px)')
+    })
+})
+describe('color', () => {
+    test('resolved', () => {
+
+        const document = new HTMLDocument({ userStyleSheet: 'html { color: green }' })
+        const html = new HTMLHtmlElement({ ownerDocument: document, parentNode: document })
+        const body = new HTMLBodyElement({ ownerDocument: document, parentNode: html })
+        const style = createStyleBlock({ computed: true, ownerNode: body, readOnly: true })
+
+        const resolved = [
+            // currentColor
+            ['currentcolor', 'rgb(0, 128, 0)'],
+            // transparent
+            ['transparent', 'rgba(0, 0, 0, 0)'],
+            // <named-color>
+            ['green', 'rgb(0, 128, 0)'],
+            // <system-color>
+            ['graytext', 'rgb(96, 0, 0)'],
+            // <deprecated-color>
+            ['inactivecaptiontext', 'rgb(96, 0, 0)'],
+        ]
+        resolved.forEach(([input, expected]) => {
+            body.style.color = input
+            assert.equal(style.color, expected)
+        })
     })
 })
 describe('color-scheme', () => {
