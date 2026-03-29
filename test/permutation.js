@@ -1,6 +1,6 @@
 
 import { createPermutationIterator, getNthPermutation, getPermutationIndex } from '../lib/parse/permutation.js'
-import assert from 'node:assert'
+import assert from 'node:assert/strict'
 import test from 'node:test'
 
 const a = { type: 'keyword', value: 'a' }

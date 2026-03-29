@@ -30,7 +30,7 @@ import {
 import { createContext, parseGrammar } from '../lib/parse/parser.js'
 import { describe, test } from 'node:test'
 import { toDegrees, toRadians } from '../lib/utils/math.js'
-import { Assert } from 'node:assert'
+import { Assert } from 'node:assert/strict'
 import { keywords as cssWideKeywords } from '../lib/values/substitutions.js'
 import { isFailure } from '../lib/utils/value.js'
 import properties from '../lib/properties/definitions.js'

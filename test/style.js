@@ -15,7 +15,7 @@ import {
 import { HTMLBodyElement, HTMLDivElement, HTMLDocument, HTMLHtmlElement, HTMLStyleElement } from './dom.js'
 import { describe, it, test } from 'node:test'
 import { UPDATE_READONLY_STYLE_DECLARATION_ERROR } from '../lib/error.js'
-import assert from 'node:assert'
+import assert from 'node:assert/strict'
 import { install } from '@cdoublev/css'
 import properties from '../lib/properties/definitions.js'
 import shorthands from '../lib/properties/shorthands.js'

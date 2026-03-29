@@ -8,7 +8,7 @@ import {
     MISSING_INITIAL_CUSTOM_PROPERTY_VALUE,
 } from '../lib/error.js'
 import { describe, it } from 'node:test'
-import assert from 'node:assert'
+import assert from 'node:assert/strict'
 import { install } from '@cdoublev/css'
 
 install()

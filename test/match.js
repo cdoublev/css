@@ -36,7 +36,7 @@ import {
     Text,
     XLINK_NAMESPACE,
 } from './dom.js'
-import assert, { Assert, AssertionError } from 'node:assert'
+import assert, { Assert, AssertionError } from 'node:assert/strict'
 import { createContext, parseGrammar } from '../lib/parse/parser.js'
 import { describe, test } from 'node:test'
 import { install } from '@cdoublev/css'

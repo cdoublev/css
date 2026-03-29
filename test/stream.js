@@ -1,7 +1,7 @@
 
 import { beforeEach, describe, it } from 'node:test'
 import Stream from '../lib/parse/stream.js'
-import assert from 'node:assert'
+import assert from 'node:assert/strict'
 
 const string = 'hello'
 const stream = new Stream(string)

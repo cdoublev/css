@@ -1,6 +1,6 @@
 
 import { describe, test } from 'node:test'
-import { Assert } from 'node:assert'
+import { Assert } from 'node:assert/strict'
 import parseDefinition from '../lib/parse/definition.js'
 import properties from '../lib/properties/definitions.js'
 import { serializeDefinition as serialize } from '../lib/serialize.js'

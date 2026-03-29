@@ -32,7 +32,7 @@ import {
     StyleSheetList,
 } from '../lib/cssom/index.js'
 import { after, afterEach, describe, it, test } from 'node:test'
-import assert from 'node:assert'
+import assert from 'node:assert/strict'
 import fs from 'node:fs/promises'
 import http from 'node:http'
 import { install } from '@cdoublev/css'
@@ -391,7 +391,7 @@ describe('CSSRuleList[index]', () => {
         `)
         assert.equal(cssRules[1], cssRules[1])
         assert.equal(Object.values(cssRules)[1], cssRules[1])
-        assert.equal(cssRules[2], null)
+        assert.equal(cssRules[2], undefined)
     })
 })
 describe('CSSRuleList.item()', () => {
