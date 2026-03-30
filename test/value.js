@@ -2962,7 +2962,7 @@ describe('<color>', () => {
             'color-hdr(rgba(-100% 200% 0 / 101%) 0, hsla(540deg -1% 0 / 50%) 1)',
             'color-hdr(rgb(-255 510 0), hsl(180 -1 0 / 0.5) 1)')
     })
-    test('valid <light-dark()>', () => {
+    test('valid <light-dark-color>', () => {
         // Preserve color components except <hue> and <alpha-value>
         assert.valid(
             '<color>',

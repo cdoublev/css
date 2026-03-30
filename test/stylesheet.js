@@ -424,11 +424,11 @@ describe('CSSColorProfileRule', () => {
 describe('CSSContainerRule', () => {
     test('properties', () => {
 
-        const styleSheet = createStyleSheet('@container name { style {} }')
-        const rule = styleSheet.cssRules[0]
+        const styleSheet = createStyleSheet('@container name, (1px < width) { style {} }')
+        let rule = styleSheet.cssRules[0]
 
         // CSSRule
-        assert.equal(rule.cssText, '@container name { style { } }')
+        assert.equal(rule.cssText, '@container name, (1px < width) { style { } }')
         assert.equal(rule.parentRule, null)
         assert.equal(rule.parentStyleSheet, styleSheet)
 
@@ -436,7 +436,18 @@ describe('CSSContainerRule', () => {
         assert.equal(CSSRuleList.is(rule.cssRules), true)
 
         // CSSConditionRule
-        assert.equal(rule.conditionText, 'name')
+        assert.equal(rule.conditionText, 'name, (1px < width)')
+
+        // CSSContainerRule
+        assert.deepEqual(rule.conditions, [{ name: 'name', query: '' }, { name: '', query: '(1px < width)'}])
+        assert.throws(() => rule.conditions.push('type-3'), TypeError)
+        assert.throws(() => rule.conditions[1].name += 'name', TypeError)
+        // (Deprecated)
+        assert.equal(rule.containerName, '')
+        assert.equal(rule.containerQuery, '')
+        rule = createStyleSheet('@container name (1px < width) { style {} }').cssRules[0]
+        assert.equal(rule.containerName, 'name')
+        assert.equal(rule.containerQuery, '(1px < width)')
     })
 })
 describe('CSSCounterStyleRule', () => {
@@ -703,15 +714,15 @@ describe('CSSImportRule', () => {
         assert.equal(rule.styleSheet.type, 'text/css')
 
         // Alternative CSSImportRule attribute syntax
-        rule = createStyleSheet('@import url(./global.css) layer supports(color: green) all;').cssRules[0]
+        rule = createStyleSheet('@import url(./global.css) layer scope supports(color: green) all;').cssRules[0]
         assert.equal(rule.href, './global.css')
         assert.equal(rule.layerName, '')
         assert.equal(rule.supportsText, 'color: green')
-        assert.equal(rule.cssText, '@import url("./global.css") layer supports(color: green);')
-        rule = createStyleSheet('@import url("./global.css") layer(global) all;').cssRules[0]
+        assert.equal(rule.cssText, '@import url("./global.css") layer scope supports(color: green);')
+        rule = createStyleSheet('@import url("./global.css") layer(global) scope((start) to (end)) all;').cssRules[0]
         assert.equal(rule.href, './global.css')
         assert.equal(rule.layerName, 'global')
-        assert.equal(rule.cssText, '@import url("./global.css") layer(global);')
+        assert.equal(rule.cssText, '@import url("./global.css") layer(global) scope((start) to (end));')
 
         await CSSImportRule.convert(globalThis, rule)._promise
     })

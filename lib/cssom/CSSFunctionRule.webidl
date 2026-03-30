@@ -11,5 +11,5 @@ interface CSSFunctionRule : CSSGroupingRule {
 dictionary FunctionParameter {
     required CSSOMString name;
     required CSSOMString type;
-    CSSOMString? defaultValue;
+    CSSOMString defaultValue;
 };

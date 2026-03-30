@@ -59,8 +59,6 @@ const initial = {
                 value: '<declaration-value>#?',
             },
         },
-        // https://github.com/w3c/csswg-drafts/issues/12440
-        '<env-args>': 'env(<declaration-value> , <declaration-value>?)',
         // TODO: fix parsing/serializing `<radial-gradient-syntax>`, `<radial-size>`
         '<radial-radius>': 'closest-side | farthest-side | <length-percentage [0,∞]>',
         // https://github.com/w3c/csswg-drafts/issues/8835
@@ -83,8 +81,6 @@ const replaced = {
         },
     },
     properties: {
-        // https://github.com/w3c/fxtf-drafts/issues/547
-        'background-blend-mode': { value: "<'mix-blend-mode'>#" },
         // https://github.com/w3c/csswg-drafts/issues/7366
         'border-end-end-radius': { initial: '0' },
         'border-end-start-radius': { initial: '0' },
@@ -117,7 +113,7 @@ const replaced = {
     },
     types: {
         // Extensions (https://github.com/w3c/reffy/issues/1647)
-        '<color>': '<color-base> | currentColor | <system-color> | <contrast-color()> | <device-cmyk()> | <light-dark()> | <color-interpolate()>',
+        '<color>': '<color-base> | currentColor | <system-color> | <contrast-color()> | <device-cmyk()> | <light-dark-color> | <color-interpolate()>',
         '<display-inside>': 'flow | flow-root | table | flex | grid | ruby | math | layout(<ident>)',
         '<keyframe-selector>': 'from | to | <percentage [0,100]> | <timeline-range-name> <percentage>',
         '<image>': '<url> | <image()> | <image-set()> | <cross-fade()> | <element()> | <gradient> | <paint()>',
@@ -209,13 +205,8 @@ const replaced = {
         '<if-args-branch>': '<declaration-value> [: <declaration-value>?]?',
         // https://github.com/w3c/fxtf-drafts/issues/532
         '<mask-reference>': 'none | <image>',
-        // https://github.com/w3c/csswg-drafts/pull/10131
-        '<media-feature>': '<mf-plain> | <mf-boolean> | <mf-range>',
-        '<media-in-parens>': '(<media-condition>) | (<media-feature>) | <general-enclosed>',
         // TODO: fix `value` of `<pseudo-page>`
         '<pseudo-page>': ': [left | right | first | blank | nth(<an+b> [of <custom-ident>]?)]',
-        // https://github.com/w3c/csswg-drafts/pull/13602
-        '<rounding-strategy>': 'nearest | up | down | to-zero | line-width',
         // https://github.com/w3c/csswg-drafts/issues/7897
         '<single-transition>': '<time> || <easing-function> || <time> || <transition-behavior-value> || [none | <single-transition-property>]',
         // https://github.com/w3c/csswg-drafts/issues/12426
@@ -229,6 +220,10 @@ const replaced = {
 const excluded = {
     descriptors: {},
     functions: {
+        'css-color-5': [
+            // Defined inline
+            'light-dark()',
+        ],
         'css-grid': [
             // Defined inline
             'fit-content()',
@@ -583,6 +578,10 @@ const excluded = {
             // Superseded by CSS Borders
             '<line-style>',
             '<line-width>',
+        ],
+        'css-cascade': [
+            // Obsoleted by CSS Cascade 6
+            '<import-conditions>',
         ],
         'css-color': [
             // Dangling

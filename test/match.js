@@ -43,6 +43,7 @@ import { install } from '@cdoublev/css'
 import matchMediaQueryList from '../lib/match/media.js'
 import matchSupport from '../lib/match/support.js'
 import { matchTreesAgainstSelectors } from '../lib/match/selector.js'
+import { omitted } from '../lib/values/value.js'
 
 install()
 
@@ -4189,8 +4190,8 @@ describe('selector', () => {
 
 describe('support', () => {
 
-    function match(query) {
-        return matchSupport(parseGrammar(`(${query})`, '<supports-condition>'))
+    function match(query, globalObject) {
+        return matchSupport(parseGrammar(`(${query})`, '<supports-condition>'), globalObject)
     }
 
     test('at-rule', () => {
@@ -4216,6 +4217,15 @@ describe('support', () => {
             ['-webkit-box-align: center'],
         ]
         declarations.forEach(([declaration, expected = true]) => assert.equal(match(declaration), expected))
+    })
+    test('environment variable', () => {
+
+        const environment = new Map([['--custom', omitted]])
+        const globalObject = { document: { _registeredEnvironmentVariables: environment } }
+
+        assert.equal(match('env(--CUSTOM)', globalObject), false)
+        assert.equal(match('env(--custom)', globalObject), true)
+        assert.equal(match('env(PREFERRED-TEXT-SCALE)'), true)
     })
     test('font technology', () => {
         assert.equal(match('font-tech(color-svg)'), true)
