@@ -2591,7 +2591,7 @@ describe('<calc-size()>', () => {
         assert.representation('<calc-size()>', 'calc-size(any, 1px)', size, context)
     })
     test('valid', () => {
-        assert.valid('<calc-size()>', 'CALC-SIZE(auto, 1 * 1% + 1px + size)', 'calc-size(auto, 1% + 1px + size)', context)
+        assert.valid('<calc-size()>', 'CALC-SIZE(AUTO, 1 * 1% + 1px + size)', 'calc-size(auto, 1% + 1px + size)', context)
     })
 })
 describe('<color>', () => {
@@ -3438,7 +3438,7 @@ describe('<media-type>', () => {
         assert.invalid('<media-type>', 'layer')
     })
     test('representation', () => {
-        assert.representation('<media-type>', 'all', ident('all', ['<media-type>']))
+        assert.representation('<media-type>', 'ALL', ident('all', ['<media-type>']))
     })
 })
 describe('<mf-comparison>', () => {
@@ -3851,17 +3851,17 @@ describe('<style-feature>', () => {
             types: ['<declaration>', '<style-feature-plain>', '<style-feature>'],
             value: keyword('green', ['<named-color>', '<color-base>', '<color>', 'color']),
         }
-        assert.representation('<style-feature>', 'color: green !important', feature, containerRule)
+        assert.representation('<style-feature>', 'COLOR: green !important', feature, containerRule)
     })
     test('valid', () => {
         const valid = [
             // Standard property name
             ['color'],
             // Aliased and mapped property name
-            ['-webkit-order'],
+            ['-webkit-order', 'order'],
             ['-webkit-box-align'],
             // Custom property
-            ['--custom: fn(  /**/  1e0  /**/  )'],
+            ['--CUSTOM: fn(  /**/  1e0  /**/  )'],
             // Substitution of a declaration value
             ['width: env(name)'],
             ['width: first-valid(1px)', 'width: 1px'],
@@ -3875,6 +3875,24 @@ describe('<style-feature>', () => {
         ]
         valid.forEach(([input, expected]) =>
             assert.valid('<style-feature>', input, expected, containerRule))
+    })
+})
+describe('<supports-at-rule-fn>', () => {
+    test('representation', () => {
+        assert.representation('<supports-at-rule-fn>', 'at-rule(@MEDIA)', {
+            name: 'at-rule',
+            types: ['<supports-at-rule-fn>'],
+            value: { types: ['<at-keyword-token>'], value: 'media' },
+        })
+    })
+})
+describe('<supports-env-fn>', () => {
+    test('representation', () => {
+        assert.representation('<supports-env-fn>', 'env(PREFERRED-TEXT-SCALE)', {
+            name: 'env',
+            types: ['<supports-env-fn>'],
+            value: ident('preferred-text-scale'),
+        })
     })
 })
 describe('<syntax-string>', () => {
@@ -3896,7 +3914,7 @@ describe('<syntax-component>', () => {
     test('representation', () => {
         const componentUnit = ident('a', ['<syntax-single-component>'])
         const component = list([componentUnit, omitted], '', ['<syntax-component>'])
-        assert.representation('<syntax-component>', 'a', component)
+        assert.representation('<syntax-component>', 'A', component)
     })
 })
 describe('<supports-decl>', () => {

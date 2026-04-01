@@ -4196,7 +4196,7 @@ describe('support', () => {
 
     test('at-rule', () => {
         assert.equal(match('at-rule(@style)'), false)
-        assert.equal(match('at-rule(@ANNOTATION)'), true)
+        assert.equal(match('at-rule(@annotation)'), true)
     })
     test('declaration', () => {
         const declarations = [
@@ -4205,7 +4205,6 @@ describe('support', () => {
             ['unknown: 1', false],
             ['color: invalid', false],
             // Property value range
-            ['COLOR: green'],
             ['color: green !important'],
             ['--custom: 1'],
             // Property value substitution
@@ -4220,12 +4219,11 @@ describe('support', () => {
     })
     test('environment variable', () => {
 
-        const environment = new Map([['--custom', omitted]])
-        const globalObject = { document: { _registeredEnvironmentVariables: environment } }
+        const globalObject = { document: { _registeredEnvironmentVariables: new Map([['--custom', omitted]]) } }
 
         assert.equal(match('env(--CUSTOM)', globalObject), false)
         assert.equal(match('env(--custom)', globalObject), true)
-        assert.equal(match('env(PREFERRED-TEXT-SCALE)'), true)
+        assert.equal(match('env(preferred-text-scale)'), true)
     })
     test('font technology', () => {
         assert.equal(match('font-tech(color-svg)'), true)
