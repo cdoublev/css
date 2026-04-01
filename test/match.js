@@ -4226,15 +4226,18 @@ describe('support', () => {
         assert.equal(match('env(preferred-text-scale)'), true)
     })
     test('font technology', () => {
+        assert.equal(match('font-tech(unknown)'), false)
         assert.equal(match('font-tech(color-svg)'), true)
     })
     test('font format', () => {
         assert.equal(match('font-format("woff")'), false)
         assert.equal(match('font-format(woff)'), true)
     })
-    // TODO: fix `value` of `<supports-feature-named-feature-fn>`
-    test.skip('named feature', () => {
-        assert.equal(match('named-feature(unknown)', false))
+    test('named feature', () => {
+        assert.equal(match('named-feature(unknown)'), false)
+    })
+    test('named condition', () => {
+        assert.equal(match('(--unknown)'), false)
     })
     test('selector', () => {
         const selectors = [
