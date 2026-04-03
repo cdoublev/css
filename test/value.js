@@ -3878,6 +3878,9 @@ describe('<style-feature>', () => {
     })
 })
 describe('<supports-at-rule-fn>', () => {
+    test('invalid', () => {
+        assert.invalid('<supports-at-rule-fn>', 'at-rule(@unknown)')
+    })
     test('representation', () => {
         assert.representation('<supports-at-rule-fn>', 'at-rule(@MEDIA)', {
             name: 'at-rule',
@@ -3923,6 +3926,9 @@ describe('<supports-decl>', () => {
     })
 })
 describe('<supports-env-fn>', () => {
+    test('invalid', () => {
+        assert.invalid('<supports-env-fn>', 'env(unknown)')
+    })
     test('representation', () => {
         assert.representation('<supports-env-fn>', 'env(PREFERRED-TEXT-SCALE)', {
             name: 'env',
@@ -3949,6 +3955,18 @@ describe('<supports-feature>', () => {
             },
         }
         assert.representation('<supports-feature>', '(color: green)', feature, supportsRule)
+    })
+})
+describe('<supports-font-format-fn>', () => {
+    test('invalid', () => {
+        assert.invalid('<supports-font-format-fn>', 'font-format("collection")')
+    })
+    test('representation', () => {
+        assert.representation('<supports-font-format-fn>', 'font-format(collection)', {
+            name: 'font-format',
+            types: ['<supports-font-format-fn>'],
+            value: ident('collection'),
+        })
     })
 })
 describe('<syntax-component>', () => {
