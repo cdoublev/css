@@ -4083,6 +4083,9 @@ describe('<url-set>', () => {
     })
 })
 describe('<var()>', () => {
+    test('invalid', () => {
+        assert.invalid('<var()>', 'var(--custom, {} a)')
+    })
     test('representation', () => {
         const property = dashedIdent('--custom', ['<custom-property-name>'])
         const variable = {
@@ -4093,8 +4096,13 @@ describe('<var()>', () => {
         assert.representation('<var()>', 'var(--custom)', variable)
     })
     test('valid', () => {
+        assert.valid('<var()>', 'var(--custom,)')
         assert.valid('<var()>', 'var(--custom,,)')
-        assert.valid('<var()>', 'var(--custom, 1 {})')
+        assert.valid('<var()>', 'var(--custom, {})', 'var(--custom,)')
+        assert.valid('<var()>', 'var(--custom,, {})')
+        assert.valid('<var()>', 'var(--custom, {,})', 'var(--custom,,)')
+        assert.valid('<var()>', 'var(--custom, {{}})')
+        assert.valid('<var()>', 'var(--custom, {{} a})')
     })
 })
 describe('<view()>', () => {
