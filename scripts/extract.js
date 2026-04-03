@@ -213,6 +213,8 @@ const replaced = {
         '<style-feature-plain>': '<declaration>',
         // https://github.com/w3c/csswg-drafts/issues/12425
         '<style-range-value>': '<custom-property-name> | <number> | <percentage> | <dimension>',
+        // https://github.com/w3c/csswg-drafts/issues/13012, https://github.com/w3c/csswg-drafts/issues/13759
+        '<supports-import-condition>': 'supports(<supports-condition> | <declaration> | <supports-condition-name> | <any-value>)',
         // https://github.com/w3c/csswg-drafts/pull/12460
         '<superellipse()>': 'superellipse(<number> | infinity | -infinity)',
     },
