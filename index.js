@@ -2,7 +2,7 @@
 import * as cssom from './lib/cssom/index.js'
 
 /**
- * @param {DocumentOrShadowRoot} globalObject
+ * @param {Window} globalObject
  */
 function install(globalObject = globalThis) {
     const entries = Object.entries(cssom)

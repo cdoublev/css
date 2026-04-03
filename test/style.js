@@ -23,10 +23,18 @@ import { toIDLAttribute } from '../lib/utils/string.js'
 
 /**
  * @param {object} [privateData]
- * @returns {CSSStyleDeclaration}
+ * @returns {CSSStyleProperties}
  */
-function createStyleBlock(privateData = { parentRule: styleRule }) {
+function createStyle(privateData = { parentRule: styleRule }) {
     return CSSStyleProperties.create(globalThis, undefined, privateData)
+}
+
+/**
+ * @param {Element} ownerNode
+ * @returns {CSSStyleProperties}
+ */
+function createResolvedStyle(ownerNode) {
+    return createStyle({ computed: true, ownerNode, readOnly: true })
 }
 
 // Helper to get initial property value (with better readability)
@@ -55,7 +63,7 @@ const { cssRules: { _rules: [marginRule] } } = pageRule
 describe('CSSStyleDeclaration / CSSStyleProperties', () => {
     it('has all standard properties', () => {
 
-        const style = createStyleBlock()
+        const style = createStyle()
         const prototype = Object.getPrototypeOf(style)
         const { properties: { aliases, mappings } } = compatibility
         const names = [...aliases.keys(), ...mappings.keys(), ...Object.keys(properties)]
@@ -79,7 +87,7 @@ describe('CSSStyleDeclaration / CSSStyleProperties', () => {
         const value = properties.color.initial
         const declarations = [{ name: 'color', value: value.parsed }]
         const parentRule = {}
-        const style = createStyleBlock({ declarations, parentRule })
+        const style = createStyle({ declarations, parentRule })
 
         assert.equal(style.color, value.serialized)
         assert.equal(style.parentRule, parentRule)
@@ -90,12 +98,12 @@ describe('CSSStyleDeclaration / CSSStyleProperties', () => {
                 return 'color: green !important; color: orange;'
             },
         }
-        const style = createStyleBlock({ ownerNode: element })
+        const style = createStyle({ ownerNode: element })
         assert.equal(style.color, 'green')
     })
     it('has array-like properties and methods', () => {
 
-        const style = createStyleBlock()
+        const style = createStyle()
 
         style.color = 'green'
 
@@ -106,7 +114,7 @@ describe('CSSStyleDeclaration / CSSStyleProperties', () => {
     })
     it('reflects a dashed property with its camel-cased and webkit cased variants', () => {
 
-        const style = createStyleBlock()
+        const style = createStyle()
 
         style['-webkit-line-clamp'] = '1'
 
@@ -128,7 +136,7 @@ describe('CSSStyleDeclaration / CSSStyleProperties', () => {
     })
     it('reflects a longhand property with its alias', () => {
 
-        const style = createStyleBlock()
+        const style = createStyle()
 
         style.order = '1'
 
@@ -142,7 +150,7 @@ describe('CSSStyleDeclaration / CSSStyleProperties', () => {
     })
     it('reflects a shorthand property with its alias', () => {
 
-        const style = createStyleBlock()
+        const style = createStyle()
 
         style.gap = '1px'
 
@@ -155,74 +163,76 @@ describe('CSSStyleDeclaration / CSSStyleProperties', () => {
         assert.equal(style['grid-gap'], '2px')
     })
     it('sets a declaration for a longhand property mapping to another property', () => {
-        const style = createStyleBlock()
+        const style = createStyle()
         style['-webkit-box-align'] = 'start'
         assert.equal(style['-webkit-box-align'], 'start')
         assert.equal(style['align-items'], '')
     })
+    it.todo('sets a declaration for a shorthand property mapping to another property')
 })
 describe('CSSStyleDeclaration.cssText', () => {
     it('throws an error when trying to set declarations while the readonly flag is set', () => {
-        const style = createStyleBlock({ readOnly: true })
+        const style = createStyle({ readOnly: true })
         assert.throws(() => style.cssText = 'color: red', UPDATE_READONLY_STYLE_DECLARATION_ERROR)
     })
     it('returns an empty string when the computed flag is set', () => {
-        const style = createStyleBlock({ computed: true })
+        const style = createStyle({ computed: true })
         assert.equal(style.cssText, '')
     })
     it('does not store a declaration with an invalid name', () => {
-        const style = createStyleBlock()
+        const style = createStyle()
         style.cssText = 'webkitLineClamp: 1; WebkitLineClamp: 1'
         assert.equal(style.cssText, '')
     })
     it('sets a declaration for the target of a property alias', () => {
-        const style = createStyleBlock()
+        const style = createStyle()
         style.cssText = '-webkit-order: 1; grid-gap: 1px'
         assert.equal(style.cssText, 'order: 1; gap: 1px;')
     })
     it('sets a declaration for a property mapping to another property', () => {
-        const style = createStyleBlock()
+        const style = createStyle()
         style.cssText = '-webkit-box-align: start'
         assert.equal(style.cssText, '-webkit-box-align: start;')
     })
     it('sets a custom property declaration with an escaped code point', () => {
-        const style = createStyleBlock()
+        const style = createStyle()
         style.cssText = '--custom\\ property: 1'
         assert.equal(style.cssText, '--custom\\ property: 1;')
     })
     it('sets a custom property declaration with an empty string value', () => {
-        const style = createStyleBlock()
+        const style = createStyle()
         style.cssText = '--custom:;'
         assert.equal(style.cssText, '--custom: ;')
         assert.equal(style.getPropertyValue('--custom'), ' ')
     })
     it('sets declarations in specified order', () => {
-        const style = createStyleBlock()
+        const style = createStyle()
         style.cssText = 'color: orange; width: 1px; color: green'
         assert.equal(style.cssText, 'width: 1px; color: green;')
         style.cssText = 'color: green !important; width: 1px; color: orange'
         assert.equal(style.cssText, 'color: green !important; width: 1px;')
     })
     it('ignores rules', () => {
-        const style = createStyleBlock()
+        const style = createStyle()
         style.cssText = 'color: green; @page { color: red }; .selector { color: red }; font-size: 12px'
         assert.equal(style.cssText, 'color: green; font-size: 12px;')
     })
     it('ignores an orphan }', () => {
-        const style = createStyleBlock()
+        const style = createStyle()
         style.cssText = 'color: green; } font-size: 12px'
         assert.equal(style.cssText, 'color: green; font-size: 12px;')
     })
 })
+// TODO: add test for filtering declared values in @import style sheet
 describe('CSSStyleDeclaration.setProperty(), CSSStyleDeclaration.getPropertyValue(), CSSStyleDeclaration.removeProperty()', () => {
     it('throws an error when trying to set or remove a declaration while the readonly flag is set', () => {
-        const style = createStyleBlock({ readOnly: true })
+        const style = createStyle({ readOnly: true })
         assert.throws(() => style.setProperty('color', 'red'), UPDATE_READONLY_STYLE_DECLARATION_ERROR)
         assert.throws(() => style.removeProperty('color'), UPDATE_READONLY_STYLE_DECLARATION_ERROR)
     })
     it('does not store a declaration with an invalid name', () => {
 
-        const style = createStyleBlock()
+        const style = createStyle()
 
         style.setProperty(' -webkit-line-clamp', '1')
         style.setProperty('-webkit-line-clamp ', '1')
@@ -232,19 +242,19 @@ describe('CSSStyleDeclaration.setProperty(), CSSStyleDeclaration.getPropertyValu
         assert.equal(style.getPropertyValue('-webkit-line-clamp'), '')
     })
     it('does not store a declaration with a value including a priority', () => {
-        const style = createStyleBlock()
+        const style = createStyle()
         style.setProperty('font-size', '1px !important')
         assert.equal(style.getPropertyValue('font-size'), '')
     })
     it('does not store a declaration with an invalid priority', () => {
-        const style = createStyleBlock()
+        const style = createStyle()
         style.setProperty('font-size', '1px', ' ')
         style.setProperty('font-size', '1px', '!important')
         assert.equal(style.getPropertyValue('font-size'), '')
     })
     it('sets and removes a declaration for a standard property normalized to lowercase', () => {
 
-        const style = createStyleBlock()
+        const style = createStyle()
 
         style.setProperty('-WEBKIT-LINE-CLAMP', '1')
 
@@ -258,7 +268,7 @@ describe('CSSStyleDeclaration.setProperty(), CSSStyleDeclaration.getPropertyValu
     })
     it('sets and removes a declaration for the target of a longhand property alias', () => {
 
-        const style = createStyleBlock()
+        const style = createStyle()
 
         style.setProperty('-webkit-order', '1')
 
@@ -272,7 +282,7 @@ describe('CSSStyleDeclaration.setProperty(), CSSStyleDeclaration.getPropertyValu
     })
     it('sets and removes a declaration for the target of a shorthand property alias', () => {
 
-        const style = createStyleBlock()
+        const style = createStyle()
 
         style.setProperty('grid-gap', '1px')
 
@@ -286,7 +296,7 @@ describe('CSSStyleDeclaration.setProperty(), CSSStyleDeclaration.getPropertyValu
     })
     it('sets a declaration for a longhand property mapping to another property', () => {
 
-        const style = createStyleBlock()
+        const style = createStyle()
 
         style.setProperty('-webkit-box-align', 'start')
 
@@ -295,7 +305,7 @@ describe('CSSStyleDeclaration.setProperty(), CSSStyleDeclaration.getPropertyValu
     })
     it('sets and removes a declaration for a custom property with an escaped name', () => {
 
-        const style = createStyleBlock()
+        const style = createStyle()
 
         style.setProperty('--custom PROP', '1')
 
@@ -308,7 +318,7 @@ describe('CSSStyleDeclaration.setProperty(), CSSStyleDeclaration.getPropertyValu
     })
     it('sets and removes a declaration for a custom property containing an escaped code point', () => {
 
-        const style = createStyleBlock()
+        const style = createStyle()
 
         style.setProperty('--custom\ PROP', '1')
 
@@ -321,7 +331,7 @@ describe('CSSStyleDeclaration.setProperty(), CSSStyleDeclaration.getPropertyValu
     })
     it('sets a declaration with a priority', () => {
 
-        const style = createStyleBlock()
+        const style = createStyle()
 
         // Standard property
         style.setProperty('font-size', '10px', 'important')
@@ -343,7 +353,7 @@ describe('CSSStyleDeclaration.setProperty(), CSSStyleDeclaration.getPropertyValu
     })
     it('removes a declaration for the specified name when the specified value is an empty string', () => {
 
-        const style = createStyleBlock()
+        const style = createStyle()
 
         style.cssText = 'color: green; --custom: 1;'
         style.setProperty('color', '')
@@ -355,7 +365,7 @@ describe('CSSStyleDeclaration.setProperty(), CSSStyleDeclaration.getPropertyValu
     })
     it('updates a declaration not preceded by a declaration for a property of the same logical property group', () => {
 
-        const style = createStyleBlock()
+        const style = createStyle()
 
         style.borderTopColor = 'orange'
         style.width = '1px'
@@ -371,7 +381,7 @@ describe('CSSStyleDeclaration.setProperty(), CSSStyleDeclaration.getPropertyValu
     })
     it('removes then append a declaration followed by a declaration for a property of the same logical property group and with a different mapping', () => {
 
-        const style = createStyleBlock()
+        const style = createStyle()
 
         style.borderTopColor = 'green'
         style.borderBlockStartColor = 'orange'
@@ -414,13 +424,13 @@ describe('CSSStyleDeclaration.setProperty(), CSSStyleDeclaration.getPropertyValu
         const html = new HTMLHtmlElement({ ownerDocument: document, parentNode: document })
         const body = new HTMLBodyElement({ ownerDocument: document, parentNode: html })
         new HTMLStyleElement({ innerText: styleSheet, ownerDocument: document, parentNode: body })
-        const style = createStyleBlock({ computed: true, ownerNode: body, readOnly: true })
+        const style = createResolvedStyle(body)
 
         assert.equal(style.marginTop, '1px')
         assert.equal(style.marginRight, '1px')
         assert.equal(style.marginBottom, '1px')
     })
-    it('resolves a value by collecting declared values in scoped style rules', () => {
+    it('resolves a value by filtering declared values in scoped style rules', () => {
 
         /**
          * <html>
@@ -454,9 +464,9 @@ describe('CSSStyleDeclaration.setProperty(), CSSStyleDeclaration.getPropertyValu
             parentNode: root,
         })
 
-        assert.equal(createStyleBlock({ computed: true, ownerNode: root, readOnly: true }).marginTop, '1px')
-        assert.equal(createStyleBlock({ computed: true, ownerNode: limit, readOnly: true }).marginTop, '0px')
-        assert.equal(createStyleBlock({ computed: true, ownerNode: div, readOnly: true }).marginTop, '1px')
+        assert.equal(createResolvedStyle(root).marginTop, '1px')
+        assert.equal(createResolvedStyle(limit).marginTop, '0px')
+        assert.equal(createResolvedStyle(div).marginTop, '1px')
     })
     it('resolves a value by cascading declared values', () => {
 
@@ -474,7 +484,7 @@ describe('CSSStyleDeclaration.setProperty(), CSSStyleDeclaration.getPropertyValu
             ownerDocument: document,
             parentNode: document,
         })
-        const style = createStyleBlock({ computed: true, ownerNode: html, readOnly: true })
+        const style = createResolvedStyle(html)
         const { sheet: authorStyleSheet } = new HTMLStyleElement({
             innerText: 'html { order: 4 !important }',
             ownerDocument: document,
@@ -553,7 +563,7 @@ describe('CSSStyleDeclaration.setProperty(), CSSStyleDeclaration.getPropertyValu
         const document = new HTMLDocument({ userStyleSheet })
         const html = new HTMLHtmlElement({ ownerDocument: document, parentNode: document })
         const body = new HTMLBodyElement({ ownerDocument: document, parentNode: html })
-        const style = createStyleBlock({ computed: true, ownerNode: body, readOnly: true })
+        const style = createResolvedStyle(body)
 
         assert.equal(style.getPropertyValue('--custom-1'), '1')
         assert.equal(style.getPropertyValue('--custom-2'), '')
@@ -564,7 +574,7 @@ describe('CSSStyleDeclaration.setProperty(), CSSStyleDeclaration.getPropertyValu
 
 describe('CSS-wide keywords', () => {
     test('valid', () => {
-        const style = createStyleBlock()
+        const style = createStyle()
         substitutions.keywords.forEach(keyword => {
             style.opacity = keyword.toUpperCase()
             assert.equal(style.opacity, keyword)
@@ -602,7 +612,7 @@ describe('CSS-wide keywords', () => {
         const document = new HTMLDocument({ userAgentStyleSheet, userStyleSheet })
         const html = new HTMLHtmlElement({ ownerDocument: document, parentNode: document })
         const body = new HTMLBodyElement({ ownerDocument: document, parentNode: html })
-        const style = createStyleBlock({ computed: true, ownerNode: body, readOnly: true })
+        const style = createResolvedStyle(body)
 
         assert.equal(style.fontStyle, 'normal')
         assert.equal(style.marginTop, '1px')
@@ -614,7 +624,7 @@ describe('CSS-wide keywords', () => {
 })
 describe('arbitrary substitution', () => {
     test('invalid', () => {
-        const style = createStyleBlock()
+        const style = createStyle()
         const invalid = [
             // Top-level or nested <bad-*-token>, ), ], }
             'env(name) fn("\n)',
@@ -637,7 +647,7 @@ describe('arbitrary substitution', () => {
         assert.equal(style.length, 0)
     })
     test('valid', () => {
-        const style = createStyleBlock()
+        const style = createStyle()
         const valid = [
             // Nested ; and !
             ['env(name) (;)'],
@@ -668,7 +678,7 @@ describe('arbitrary substitution', () => {
 })
 describe('<whole-value>', () => {
     test('invalid', () => {
-        const style = createStyleBlock()
+        const style = createStyle()
         const invalid = [
             // Not the <whole-value>
             ['first-valid(0) 0', 'margin'],
@@ -689,7 +699,7 @@ describe('<whole-value>', () => {
         assert.equal(style.length, 0)
     })
     test('valid', () => {
-        const style = createStyleBlock()
+        const style = createStyle()
         const valid = [
             // Resolved at parse time
             ['FIRST-VALID(1)', '1', 'opacity'],
@@ -717,7 +727,7 @@ describe('<whole-value>', () => {
 
 describe('--*', () => {
     test('invalid', () => {
-        const style = createStyleBlock()
+        const style = createStyle()
         const invalid = [
             // Top-level or nested <bad-*-token>, ), ], }
             'fn("\n)',
@@ -733,7 +743,7 @@ describe('--*', () => {
         assert.equal(style.length, 0)
     })
     test('valid', () => {
-        const style = createStyleBlock()
+        const style = createStyle()
         const valid = [
             // Nested ; and !
             ['(;)'],
@@ -762,7 +772,7 @@ describe('--*', () => {
 })
 describe('alignment-baseline', () => {
     test('valid', () => {
-        const style = createStyleBlock()
+        const style = createStyle()
         style.alignmentBaseline = 'text-before-edge'
         assert.equal(style.alignmentBaseline, 'text-top')
         style.alignmentBaseline = 'text-after-edge'
@@ -771,21 +781,21 @@ describe('alignment-baseline', () => {
 })
 describe('animation-range-center', () => {
     test('valid', () => {
-        const style = createStyleBlock()
+        const style = createStyle()
         style.animationRangeCenter = 'source 50%'
         assert.equal(style.animationRangeCenter, 'source')
     })
 })
 describe('animation-range-end, timeline-trigger-activation-range-end, timeline-trigger-active-range-end', () => {
     test('valid', () => {
-        const style = createStyleBlock()
+        const style = createStyle()
         style.animationRangeEnd = 'entry 100%'
         assert.equal(style.animationRangeEnd, 'entry')
     })
 })
 describe('animation-range-start, timeline-trigger-activation-range-start, timeline-trigger-active-range-start', () => {
     test('valid', () => {
-        const style = createStyleBlock()
+        const style = createStyle()
         style.animationRangeStart = 'entry 0%'
         assert.equal(style.animationRangeStart, 'entry')
     })
@@ -795,7 +805,7 @@ describe('background-color', () => {
 
         const document = new HTMLDocument({ userStyleSheet: 'html { color: green }' })
         const html = new HTMLHtmlElement({ ownerDocument: document, parentNode: document })
-        const style = createStyleBlock({ computed: true, ownerNode: html, readOnly: true })
+        const style = createResolvedStyle(html)
 
         html.style.backgroundColor = 'currentcolor'
         assert.equal(style.backgroundColor, 'rgb(0, 128, 0)')
@@ -803,7 +813,7 @@ describe('background-color', () => {
 })
 describe('background-position', () => {
     test('valid', () => {
-        const style = createStyleBlock()
+        const style = createStyle()
         const valid = [
             ['left', 'left center'],
             ['top', 'center top'],
@@ -818,14 +828,14 @@ describe('background-position', () => {
 })
 describe('background-size, mask-size', () => {
     test('valid', () => {
-        const style = createStyleBlock()
+        const style = createStyle()
         style.backgroundSize = '100%'
         assert.equal(style.backgroundSize, '100% auto')
     })
 })
 describe('border-end-end-radius, border-end-start-radius, border-bottom-left-radius, border-bottom-right-radius, border-start-end-radius, border-start-start-radius, border-top-left-radius, border-top-right-radius', () => {
     test('valid', () => {
-        const style = createStyleBlock()
+        const style = createStyle()
         style.borderBottomLeftRadius = '1px 1px'
         assert.equal(style.borderBottomLeftRadius, '1px')
         style.borderBottomLeftRadius = '1px 2px'
@@ -834,7 +844,7 @@ describe('border-end-end-radius, border-end-start-radius, border-bottom-left-rad
 })
 describe('border-image-outset, mask-border-outset', () => {
     test('valid', () => {
-        const style = createStyleBlock()
+        const style = createStyle()
         const valid = [
             ['0 1 2 2'],
             ['0 1 2 1', '0 1 2'],
@@ -849,14 +859,14 @@ describe('border-image-outset, mask-border-outset', () => {
 })
 describe('border-image-repeat, mask-border-repeat', () => {
     test('valid', () => {
-        const style = createStyleBlock()
+        const style = createStyle()
         style.borderImageRepeat = 'stretch stretch'
         assert.equal(style.borderImageRepeat, 'stretch')
     })
 })
 describe('border-image-slice, mask-border-slice', () => {
     test('valid', () => {
-        const style = createStyleBlock()
+        const style = createStyle()
         const valid = [
             ['0 1 2 2 fill'],
             ['0 1 2 1', '0 1 2'],
@@ -871,7 +881,7 @@ describe('border-image-slice, mask-border-slice', () => {
 })
 describe('border-image-width, mask-border-width', () => {
     test('valid', () => {
-        const style = createStyleBlock()
+        const style = createStyle()
         const valid = [
             ['0 1 2 2'],
             ['0 1 2 1', '0 1 2'],
@@ -886,27 +896,27 @@ describe('border-image-width, mask-border-width', () => {
 })
 describe('border-spacing', () => {
     test('valid', () => {
-        const style = createStyleBlock()
+        const style = createStyle()
         style.borderSpacing = '1px 1px'
         assert.equal(style.borderSpacing, '1px')
     })
 })
 describe('box-shadow-offset', () => {
     test('valid', () => {
-        const style = createStyleBlock()
+        const style = createStyle()
         style.boxShadowOffset = '0px'
         assert.equal(style.boxShadowOffset, '0px 0px')
     })
 })
 describe('break-after, break-before, page-break-after, page-break-before', () => {
     test('invalid', () => {
-        const style = createStyleBlock()
+        const style = createStyle()
         style.pageBreakAfter = 'recto'
         assert.equal(style.length, 0)
     })
     test('valid', () => {
 
-        const style = createStyleBlock()
+        const style = createStyle()
 
         // Unmapped value
         style.breakAfter = 'recto'
@@ -939,13 +949,13 @@ describe('break-after, break-before, page-break-after, page-break-before', () =>
 })
 describe('break-inside, page-break-inside', () => {
     test('invalid', () => {
-        const style = createStyleBlock()
+        const style = createStyle()
         style.pageBreakInside = 'avoid-page'
         assert.equal(style.length, 0)
     })
     test('valid', () => {
 
-        const style = createStyleBlock()
+        const style = createStyle()
 
         // Unmapped value
         style.breakInside = 'avoid-page'
@@ -967,7 +977,7 @@ describe('break-inside, page-break-inside', () => {
 })
 describe('clip-path', () => {
     test('valid', () => {
-        const style = createStyleBlock()
+        const style = createStyle()
         style.clipPath = 'inset(1px) border-box'
         assert.equal(style.clipPath, 'inset(1px)')
     })
@@ -978,7 +988,7 @@ describe('color', () => {
         const document = new HTMLDocument({ userStyleSheet: 'html { color: green }' })
         const html = new HTMLHtmlElement({ ownerDocument: document, parentNode: document })
         const body = new HTMLBodyElement({ ownerDocument: document, parentNode: html })
-        const style = createStyleBlock({ computed: true, ownerNode: body, readOnly: true })
+        const style = createResolvedStyle(body)
 
         const resolved = [
             // currentColor
@@ -1000,7 +1010,7 @@ describe('color', () => {
 })
 describe('color-scheme', () => {
     test('invalid', () => {
-        const style = createStyleBlock()
+        const style = createStyle()
         style.colorScheme = 'NORMAL only'
         style.colorScheme = 'only only'
         assert.equal(style.length, 0)
@@ -1008,7 +1018,7 @@ describe('color-scheme', () => {
 })
 describe('counter-increment, counter-set, counter-reset', () => {
     test('valid', () => {
-        const style = createStyleBlock()
+        const style = createStyle()
         style.counterIncrement = 'counter 0'
         assert.equal(style.counterIncrement, 'counter 0')
         style.counterIncrement = 'counter 1'
@@ -1027,7 +1037,7 @@ describe('counter-increment, counter-set, counter-reset', () => {
 })
 describe('container-name', () => {
     test('invalid', () => {
-        const style = createStyleBlock()
+        const style = createStyle()
         const invalid = [
             'AND',
             'or',
@@ -1038,7 +1048,7 @@ describe('container-name', () => {
         assert.equal(style.length, 0)
     })
     test('valid', () => {
-        const style = createStyleBlock()
+        const style = createStyle()
         style.containerName = 'none'
         assert.equal(style.containerName, 'none')
         style.containerName = 'name'
@@ -1047,14 +1057,14 @@ describe('container-name', () => {
 })
 describe('cue-after, cue-before', () => {
     test('valid', () => {
-        const style = createStyleBlock()
+        const style = createStyle()
         style.cueAfter = 'url("icon.wav") 0db'
         assert.equal(style.cueAfter, 'url("icon.wav")')
     })
 })
 describe('display', () => {
     test('valid', () => {
-        const style = createStyleBlock()
+        const style = createStyle()
         const valid = [
             // Omitted value
             ['block flex', 'flex'],
@@ -1094,7 +1104,7 @@ describe('display', () => {
 })
 describe('float', () => {
     test('mirroring with cssFloat', () => {
-        const style = createStyleBlock()
+        const style = createStyle()
         style.cssFloat = 'left'
         assert.equal(style.float, 'left')
         assert.equal(style.cssText, 'float: left;')
@@ -1104,7 +1114,7 @@ describe('float', () => {
 })
 describe('flow-into', () => {
     test('invalid', () => {
-        const style = createStyleBlock()
+        const style = createStyle()
         style.flowInto = 'AUTO'
         style.flowInto = 'none element'
         assert.equal(style.length, 0)
@@ -1112,21 +1122,21 @@ describe('flow-into', () => {
 })
 describe('font-size-adjust', () => {
     test('valid', () => {
-        const style = createStyleBlock()
+        const style = createStyle()
         style.fontSizeAdjust = 'ex-height 1'
         assert.equal(style.fontSizeAdjust, '1')
     })
 })
 describe('font-style', () => {
     test('valid', () => {
-        const style = createStyleBlock()
+        const style = createStyle()
         style.fontStyle = 'oblique 0deg'
         assert.equal(style.fontStyle, 'normal')
     })
 })
 describe('glyph-orientation-vertical, text-orientation', () => {
     test('invalid', () => {
-        const style = createStyleBlock()
+        const style = createStyle()
         const invalid = [
             '1',
             '1deg',
@@ -1138,7 +1148,7 @@ describe('glyph-orientation-vertical, text-orientation', () => {
     })
     test('valid', () => {
 
-        const style = createStyleBlock()
+        const style = createStyle()
 
         // Legacy mapped value
         const mapping = [
@@ -1173,14 +1183,14 @@ describe('glyph-orientation-vertical, text-orientation', () => {
 })
 describe('grid-auto-flow', () => {
     test('valid', () => {
-        const style = createStyleBlock()
+        const style = createStyle()
         style.gridAutoFlow = 'row dense'
         assert.equal(style.gridAutoFlow, 'dense')
     })
 })
 describe('grid-template-areas', () => {
     test('invalid', () => {
-        const style = createStyleBlock()
+        const style = createStyle()
         const invalid = [
             // Trash token
             '"a !"',
@@ -1204,14 +1214,14 @@ describe('grid-template-areas', () => {
         assert.equal(style.length, 0)
     })
     test('valid', () => {
-        const style = createStyleBlock()
+        const style = createStyle()
         style.gridTemplateAreas = '"  a  .b.  c  " "a . . . c'
         assert.equal(style.gridTemplateAreas, '"a . b . c" "a . . . c"')
     })
 })
 describe('grid-template-columns, grid-template-rows', () => {
     test('valid', () => {
-        const style = createStyleBlock()
+        const style = createStyle()
         const valid = [
             // Empty line names are omitted except for subgrid axis (browser conformance)
             ['subgrid [] repeat(1, [] [a] [])'],
@@ -1226,7 +1236,7 @@ describe('grid-template-columns, grid-template-rows', () => {
 })
 describe('hyphenate-limit-chars', () => {
     test('valid', () => {
-        const style = createStyleBlock()
+        const style = createStyle()
         style.hyphenateLimitChars = '0 1 1'
         assert.equal(style.hyphenateLimitChars, '0 1')
         style.hyphenateLimitChars = '0 auto auto'
@@ -1235,14 +1245,14 @@ describe('hyphenate-limit-chars', () => {
 })
 describe('image-orientation', () => {
     test('valid', () => {
-        const style = createStyleBlock()
+        const style = createStyle()
         style.imageOrientation = '0deg flip'
         assert.equal(style.imageOrientation, 'flip')
     })
 })
 describe('image-rendering', () => {
     test('valid', () => {
-        const style = createStyleBlock()
+        const style = createStyle()
         // Legacy mapped value
         style.imageRendering = 'optimizeSpeed'
         assert.equal(style.imageRendering, 'optimizespeed')
@@ -1252,28 +1262,28 @@ describe('image-rendering', () => {
 })
 describe('image-resolution', () => {
     test('valid', () => {
-        const style = createStyleBlock()
+        const style = createStyle()
         style.imageResolution = 'from-image 1dppx'
         assert.equal(style.imageResolution, 'from-image')
     })
 })
 describe('initial-letter', () => {
     test('valid', () => {
-        const style = createStyleBlock()
+        const style = createStyle()
         style.initialLetter = '1 drop'
         assert.equal(style.initialLetter, '1')
     })
 })
 describe('object-fit', () => {
     test('valid', () => {
-        const style = createStyleBlock()
+        const style = createStyle()
         style.objectFit = 'contain scale-down'
         assert.equal(style.objectFit, 'scale-down')
     })
 })
 describe('offset-path', () => {
     test('valid', () => {
-        const style = createStyleBlock()
+        const style = createStyle()
         const valid = [
             // Omitted value
             ['url("path.svg") border-box', 'url("path.svg")'],
@@ -1292,7 +1302,7 @@ describe('offset-path', () => {
 })
 describe('offset-rotate', () => {
     test('valid', () => {
-        const style = createStyleBlock()
+        const style = createStyle()
         const valid = [
             ['auto 0deg', 'auto'],
             ['auto 180deg', 'reverse'],
@@ -1309,14 +1319,14 @@ describe('offset-rotate', () => {
 })
 describe('overflow-clip-margin-block-end, overflow-clip-margin-block-start, overflow-clip-margin-bottom, overflow-clip-margin-inline-end, overflow-clip-margin-inline-starty, overflow-clip-margin-left, overflow-clip-margin-right, overflow-clip-margin-top', () => {
     test('valid', () => {
-        const style = createStyleBlock()
+        const style = createStyle()
         style.overflowClipMarginBlockEnd = 'content-box 0px'
         assert.equal(style.overflowClipMarginBlockEnd, 'content-box')
     })
 })
 describe('paint-order', () => {
     test('valid', () => {
-        const style = createStyleBlock()
+        const style = createStyle()
         const valid = [
             ['fill', 'normal'],
             ['fill stroke', 'normal'],
@@ -1336,28 +1346,28 @@ describe('paint-order', () => {
 })
 describe('scale', () => {
     test('valid', () => {
-        const style = createStyleBlock()
+        const style = createStyle()
         style.scale = '100% 100% 1'
         assert.equal(style.scale, '100%')
     })
 })
 describe('scroll-snap-align', () => {
     test('valid', () => {
-        const style = createStyleBlock()
+        const style = createStyle()
         style.scrollSnapAlign = 'none none'
         assert.equal(style.scrollSnapAlign, 'none')
     })
 })
 describe('scroll-snap-type', () => {
     test('valid', () => {
-        const style = createStyleBlock()
+        const style = createStyle()
         style.scrollSnapType = 'x proximity'
         assert.equal(style.scrollSnapType, 'x')
     })
 })
 describe('shape-outside', () => {
     test('valid', () => {
-        const style = createStyleBlock()
+        const style = createStyle()
         style.shapeOutside = 'inset(1px) margin-box'
         assert.equal(style.shapeOutside, 'inset(1px)')
     })
@@ -1389,42 +1399,42 @@ describe('@font-face/src', () => {
 })
 describe('text-align-all', () => {
     test('invalid', () => {
-        const style = createStyleBlock()
+        const style = createStyle()
         style.textAlignAll = '"12"'
         assert.equal(style.length, 0)
     })
 })
 describe('text-autospace', () => {
     test('valid', () => {
-        const style = createStyleBlock()
+        const style = createStyle()
         style.textAutospace = 'ideograph-alpha ideograph-numeric'
         assert.equal(style.textAutospace, 'normal')
     })
 })
 describe('text-decoration-inset', () => {
     test('valid', () => {
-        const style = createStyleBlock()
+        const style = createStyle()
         style.textDecorationInset = '1px 1px'
         assert.equal(style.textDecorationInset, '1px')
     })
 })
 describe('text-decoration-skip-self', () => {
     test('valid', () => {
-        const style = createStyleBlock()
+        const style = createStyle()
         style.textDecorationSkipSelf = 'skip-underline skip-overline skip-line-through'
         assert.equal(style.textDecorationSkipSelf, 'skip-all')
     })
 })
 describe('text-emphasis-position', () => {
     test('valid', () => {
-        const style = createStyleBlock()
+        const style = createStyle()
         style.textEmphasisPosition = 'over right'
         assert.equal(style.textEmphasisPosition, 'over')
     })
 })
 describe('text-justify', () => {
     test('valid', () => {
-        const style = createStyleBlock()
+        const style = createStyle()
         // Legacy value alias
         style.textJustify = 'distribute'
         assert.equal(style.textJustify, 'inter-character')
@@ -1432,28 +1442,28 @@ describe('text-justify', () => {
 })
 describe('translate', () => {
     test('valid', () => {
-        const style = createStyleBlock()
+        const style = createStyle()
         style.translate = '0px 0px 0px'
         assert.equal(style.translate, '0px')
     })
 })
 describe('view-timeline-inset', () => {
     test('valid', () => {
-        const style = createStyleBlock()
+        const style = createStyle()
         style.viewTimelineInset = 'auto auto'
         assert.equal(style.viewTimelineInset, 'auto')
     })
 })
 describe('view-transition-class', () => {
     test('invalid', () => {
-        const style = createStyleBlock()
+        const style = createStyle()
         style.viewTransitionClass = 'class NONE'
         assert.equal(style.length, 0)
     })
 })
 describe('view-transition-name', () => {
     test('invalid', () => {
-        const style = createStyleBlock()
+        const style = createStyle()
         style.viewTransitionName = 'AUTO'
         style.viewTransitionName = 'match-element'
         assert.equal(style.length, 0)
@@ -1461,7 +1471,7 @@ describe('view-transition-name', () => {
 })
 describe('voice-pitch, voice-range', () => {
     test('valid', () => {
-        const style = createStyleBlock()
+        const style = createStyle()
         const valid = [
             'x-low 0hz',
             'x-low 0st',
@@ -1475,7 +1485,7 @@ describe('voice-pitch, voice-range', () => {
 })
 describe('voice-rate', () => {
     test('valid', () => {
-        const style = createStyleBlock()
+        const style = createStyle()
         style.voiceRate = 'normal 100%'
         assert.equal(style.voiceRate, 'normal')
         style.voiceRate = '100%'
@@ -1486,7 +1496,7 @@ describe('voice-rate', () => {
 describe('-webkit-line-clamp', () => {
     test('expansion and reification', () => {
 
-        const style = createStyleBlock()
+        const style = createStyle()
         const longhands = shorthands.get('-webkit-line-clamp')[0]
 
         // none
@@ -1527,7 +1537,7 @@ describe('-webkit-line-clamp', () => {
 describe('-webkit-text-stroke', () => {
     test('expansion and reification', () => {
 
-        const style = createStyleBlock()
+        const style = createStyle()
         const longhands = shorthands.get('-webkit-text-stroke')[0]
 
         // Initial longhand values
@@ -1549,7 +1559,7 @@ describe('-webkit-text-stroke', () => {
 describe('all', () => {
     test('expansion and reification', () => {
 
-        const style = createStyleBlock()
+        const style = createStyle()
         const longhands = shorthands.get('all')[0]
 
         style.all = 'initial'
@@ -1593,7 +1603,7 @@ describe('all', () => {
 describe('animation', () => {
     test('expansion and reification', () => {
 
-        const style = createStyleBlock()
+        const style = createStyle()
         const subProperties = shorthands.get('animation')
         const longhands = subProperties.flat()
         const [, resetOnly] = subProperties
@@ -1633,7 +1643,7 @@ describe('animation', () => {
 describe('animation-range', () => {
     test('expansion and reification', () => {
 
-        const style = createStyleBlock()
+        const style = createStyle()
         const longhands = shorthands.get('animation-range')[0]
 
         // Initial longhand values
@@ -1675,7 +1685,7 @@ describe('animation-range', () => {
 describe('background', () => {
     test('expansion and reification', () => {
 
-        const style = createStyleBlock()
+        const style = createStyle()
         const subProperties = shorthands.get('background')
         const longhands = subProperties.flat()
         const [, resetOnly] = subProperties
@@ -1761,7 +1771,7 @@ describe('background', () => {
 describe('background-repeat', () => {
     test('expansion and reification', () => {
 
-        const style = createStyleBlock()
+        const style = createStyle()
         const longhands = shorthands.get('background-repeat')[0]
 
         // Initial longhand values
@@ -1788,7 +1798,7 @@ describe('background-repeat', () => {
 describe('block-step', () => {
     test('expansion and reification', () => {
 
-        const style = createStyleBlock()
+        const style = createStyle()
         const longhands = shorthands.get('block-step')[0]
 
         // Initial longhand values
@@ -1810,7 +1820,7 @@ describe('block-step', () => {
 describe('border', () => {
     test('expansion and reification', () => {
 
-        const style = createStyleBlock()
+        const style = createStyle()
         const longhands = shorthands.get('border').flat()
 
         // Initial longhand values
@@ -1853,7 +1863,7 @@ describe('border', () => {
 describe('border-block, border-inline', () => {
     test('expansion and reification', () => {
 
-        const style = createStyleBlock()
+        const style = createStyle()
         const longhands = shorthands.get('border-block')[0]
 
         // Initial longhand values
@@ -1888,7 +1898,7 @@ describe('border-block, border-inline', () => {
 describe('border-block-color, border-inline-color', () => {
     test('expansion and reification', () => {
 
-        const style = createStyleBlock()
+        const style = createStyle()
         const longhands = shorthands.get('border-block-color')[0]
 
         // Initial longhand values
@@ -1910,7 +1920,7 @@ describe('border-block-color, border-inline-color', () => {
 describe('border-block-end-radius, border-block-start-radius, border-bottom-radius, border-inline-end-radius, border-inline-start-radius, border-left-radius, border-right-radius, border-top-radius', () => {
     test('expansion and reification', () => {
 
-        const style = createStyleBlock()
+        const style = createStyle()
         const longhands = shorthands.get('border-block-end-radius')[0]
 
         // Initial longhand values
@@ -1938,7 +1948,7 @@ describe('border-block-end-radius, border-block-start-radius, border-bottom-radi
 describe('border-block-style, border-inline-style', () => {
     test('expansion and reification', () => {
 
-        const style = createStyleBlock()
+        const style = createStyle()
         const longhands = shorthands.get('border-block-style')[0]
 
         // Initial longhand values
@@ -1960,7 +1970,7 @@ describe('border-block-style, border-inline-style', () => {
 describe('border-block-width, border-inline-width', () => {
     test('expansion and reification', () => {
 
-        const style = createStyleBlock()
+        const style = createStyle()
         const longhands = shorthands.get('border-block-width')[0]
 
         // Initial longhand values
@@ -1982,7 +1992,7 @@ describe('border-block-width, border-inline-width', () => {
 describe('border-block-end, border-block-start, border-bottom, border-inline-end, border-inline-start, border-left, border-right, border-top', () => {
     test('expansion and reification', () => {
 
-        const style = createStyleBlock()
+        const style = createStyle()
         const longhands = shorthands.get('border-top')[0]
 
         // Initial longhand values
@@ -2004,7 +2014,7 @@ describe('border-block-end, border-block-start, border-bottom, border-inline-end
 describe('border-clip, border-block-clip, border-inline-clip', () => {
     test('expansion and reification', () => {
 
-        const style = createStyleBlock()
+        const style = createStyle()
         const longhands = shorthands.get('border-clip')[0]
 
         // All equal longhand values
@@ -2022,7 +2032,7 @@ describe('border-clip, border-block-clip, border-inline-clip', () => {
 describe('border-color', () => {
     test('expansion and reification', () => {
 
-        const style = createStyleBlock()
+        const style = createStyle()
         const longhands = shorthands.get('border-color')[0]
 
         // Initial longhand values
@@ -2055,7 +2065,7 @@ describe('border-color', () => {
 describe('border-image', () => {
     test('expansion and reification', () => {
 
-        const style = createStyleBlock()
+        const style = createStyle()
         const longhands = shorthands.get('border-image')[0]
 
         // Initial longhand values
@@ -2080,7 +2090,7 @@ describe('border-image', () => {
 describe('border-radius', () => {
     test('expansion and reification', () => {
 
-        const style = createStyleBlock()
+        const style = createStyle()
         const longhands = shorthands.get('border-radius')[0]
 
         // Initial longhand values
@@ -2110,7 +2120,7 @@ describe('border-radius', () => {
 describe('border-style', () => {
     test('expansion and reification', () => {
 
-        const style = createStyleBlock()
+        const style = createStyle()
         const longhands = shorthands.get('border-style')[0]
 
         // Initial longhand values
@@ -2135,7 +2145,7 @@ describe('border-style', () => {
 describe('border-width', () => {
     test('expansion and reification', () => {
 
-        const style = createStyleBlock()
+        const style = createStyle()
         const longhands = shorthands.get('border-width')[0]
 
         // Initial longhand values
@@ -2160,7 +2170,7 @@ describe('border-width', () => {
 describe('box-shadow', () => {
     test('expansion and reification', () => {
 
-        const style = createStyleBlock()
+        const style = createStyle()
         const longhands = shorthands.get('box-shadow')[0]
         const shadow = 'currentcolor none 0px 0px outset'
 
@@ -2196,7 +2206,7 @@ describe('box-shadow', () => {
 describe('caret', () => {
     test('expansion and reification', () => {
 
-        const style = createStyleBlock()
+        const style = createStyle()
         const longhands = shorthands.get('caret')[0]
 
         // Initial longhand values
@@ -2218,7 +2228,7 @@ describe('caret', () => {
 describe('column-rule, row-rule', () => {
     test('expansion and reification', () => {
 
-        const style = createStyleBlock()
+        const style = createStyle()
         const longhands = shorthands.get('column-rule')[0]
 
         // Initial longhand values
@@ -2256,7 +2266,7 @@ describe('column-rule, row-rule', () => {
 describe('column-rule-edge-inset, column-rule-interior-inset, row-rule-edge-inset, row-rule-interior-inset', () => {
     test('expansion and reification', () => {
 
-        const style = createStyleBlock()
+        const style = createStyle()
         const longhands = shorthands.get('column-rule-edge-inset')[0]
 
         // Initial longhand values
@@ -2278,7 +2288,7 @@ describe('column-rule-edge-inset, column-rule-interior-inset, row-rule-edge-inse
 describe('column-rule-inset, row-rule-inset', () => {
     test('expansion and reification', () => {
 
-        const style = createStyleBlock()
+        const style = createStyle()
         const longhands = shorthands.get('column-rule-inset')[0]
 
         // Initial longhand values
@@ -2318,7 +2328,7 @@ describe('column-rule-inset, row-rule-inset', () => {
 describe('column-rule-inset-end, column-rule-inset-start, row-rule-inset-end, row-rule-inset-start, rule-inset-end, rule-inset-start', () => {
     test('expansion and reification', () => {
 
-        const style = createStyleBlock()
+        const style = createStyle()
         const longhands = shorthands.get('column-rule-inset-end')[0]
 
         // All equal longhand values
@@ -2336,7 +2346,7 @@ describe('column-rule-inset-end, column-rule-inset-start, row-rule-inset-end, ro
 describe('columns', () => {
     test('expansion and reification', () => {
 
-        const style = createStyleBlock()
+        const style = createStyle()
         const longhands = shorthands.get('columns')[0]
 
         // Initial longhand values
@@ -2361,7 +2371,7 @@ describe('columns', () => {
 describe('contain-intrinsic-size', () => {
     test('expansion and reification', () => {
 
-        const style = createStyleBlock()
+        const style = createStyle()
         const longhands = shorthands.get('contain-intrinsic-size')[0]
 
         // Initial longhand values
@@ -2383,7 +2393,7 @@ describe('contain-intrinsic-size', () => {
 describe('container', () => {
     test('expansion and reification', () => {
 
-        const style = createStyleBlock()
+        const style = createStyle()
         const longhands = shorthands.get('container')[0]
 
         // Initial longhand values
@@ -2405,7 +2415,7 @@ describe('container', () => {
 describe('corner', () => {
     test('expansion and reification', () => {
 
-        const style = createStyleBlock()
+        const style = createStyle()
         const longhands = shorthands.get('corner')[0]
 
         // Initial longhand values
@@ -2459,7 +2469,7 @@ describe('corner', () => {
 describe('corner-block-end, corner-block-start, corner-bottom, corner-inline-end, corner-inline-start, corner-left, corner-right, corner-top', () => {
     test('expansion and reification', () => {
 
-        const style = createStyleBlock()
+        const style = createStyle()
         const longhands = shorthands.get('corner-block-end')[0]
 
         // Initial longhand values
@@ -2498,7 +2508,7 @@ describe('corner-block-end, corner-block-start, corner-bottom, corner-inline-end
 describe('corner-end-end, corner-end-start, corner-bottom-left, corner-bottom-right, corner-start-end, corner-start-start, corner-top-left, corner-top-right', () => {
     test('expansion and reification', () => {
 
-        const style = createStyleBlock()
+        const style = createStyle()
         const longhands = shorthands.get('corner-end-end')[0]
 
         // Initial longhand values
@@ -2520,7 +2530,7 @@ describe('corner-end-end, corner-end-start, corner-bottom-left, corner-bottom-ri
 describe('corner-shape', () => {
     test('expansion and reification', () => {
 
-        const style = createStyleBlock()
+        const style = createStyle()
         const longhands = shorthands.get('corner-shape')[0]
 
         // Initial longhand values
@@ -2545,7 +2555,7 @@ describe('corner-shape', () => {
 describe('corner-block-end-shape, corner-block-start-shape, corner-bottom-shape, corner-inline-end-shape, corner-inline-start-shape, corner-left-shape, corner-right-shape, corner-top-shape', () => {
     test('expansion and reification', () => {
 
-        const style = createStyleBlock()
+        const style = createStyle()
         const longhands = shorthands.get('corner-block-end-shape')[0]
 
         // Initial longhand values
@@ -2567,7 +2577,7 @@ describe('corner-block-end-shape, corner-block-start-shape, corner-bottom-shape,
 describe('cue, pause, rest', () => {
     test('expansion and reification', () => {
 
-        const style = createStyleBlock()
+        const style = createStyle()
         const longhands = shorthands.get('cue')[0]
 
         // Initial longhand values
@@ -2589,7 +2599,7 @@ describe('cue, pause, rest', () => {
 describe('event-trigger', () => {
     test('expansion and reification', () => {
 
-        const style = createStyleBlock()
+        const style = createStyle()
         const longhands = shorthands.get('event-trigger')[0]
 
         // Initial longhand values
@@ -2615,7 +2625,7 @@ describe('event-trigger', () => {
 describe('flex', () => {
     test('expansion and reification', () => {
 
-        const style = createStyleBlock()
+        const style = createStyle()
         const longhands = shorthands.get('flex')[0]
 
         // Initial longhand values
@@ -2654,7 +2664,7 @@ describe('flex', () => {
 describe('flex-flow', () => {
     test('expansion and reification', () => {
 
-        const style = createStyleBlock()
+        const style = createStyle()
         const longhands = shorthands.get('flex-flow')[0]
 
         // Initial longhand values
@@ -2676,7 +2686,7 @@ describe('flex-flow', () => {
 describe('font', () => {
     test('expansion and reification', () => {
 
-        const style = createStyleBlock()
+        const style = createStyle()
         const subProperties = shorthands.get('font')
         const [, resetOnly] = subProperties
         const longhands = subProperties.flat()
@@ -2718,7 +2728,7 @@ describe('font', () => {
 describe('font-synthesis', () => {
     test('expansion and reification', () => {
 
-        const style = createStyleBlock()
+        const style = createStyle()
         const longhands = shorthands.get('font-synthesis')[0]
 
         // Initial longhand values
@@ -2759,7 +2769,7 @@ describe('font-synthesis', () => {
 describe('font-variant', () => {
     test('expansion and reification', () => {
 
-        const style = createStyleBlock()
+        const style = createStyle()
         const longhands = shorthands.get('font-variant')[0]
 
         // Initial longhand values (not all longhands can be explicitly declared)
@@ -2787,7 +2797,7 @@ describe('font-variant', () => {
 describe('gap', () => {
     test('expansion and reification', () => {
 
-        const style = createStyleBlock()
+        const style = createStyle()
         const longhands = shorthands.get('gap')[0]
 
         // Initial longhand values
@@ -2809,7 +2819,7 @@ describe('gap', () => {
 describe('grid', () => {
     test('expansion and reification', () => {
 
-        const style = createStyleBlock()
+        const style = createStyle()
         const longhands = shorthands.get('grid')[0]
 
         // Explicit row and column templates
@@ -2870,7 +2880,7 @@ describe('grid', () => {
 describe('grid-area', () => {
     test('expansion and reification', () => {
 
-        const style = createStyleBlock()
+        const style = createStyle()
         const longhands = shorthands.get('grid-area')[0]
 
         // Initial longhand values
@@ -2910,7 +2920,7 @@ describe('grid-area', () => {
 describe('grid-column, grid-row', () => {
     test('expansion and reification', () => {
 
-        const style = createStyleBlock()
+        const style = createStyle()
         const longhands = shorthands.get('grid-column')[0]
 
         // Initial longhand values
@@ -2939,7 +2949,7 @@ describe('grid-column, grid-row', () => {
 describe('grid-template', () => {
     test('expansion and reification', () => {
 
-        const style = createStyleBlock()
+        const style = createStyle()
         const longhands = shorthands.get('grid-template')[0]
 
         // Row and column templates
@@ -3016,7 +3026,7 @@ describe('grid-template', () => {
 describe('inset', () => {
     test('expansion and reification', () => {
 
-        const style = createStyleBlock()
+        const style = createStyle()
         const longhands = shorthands.get('inset')[0]
 
         // Initial longhand values
@@ -3041,7 +3051,7 @@ describe('inset', () => {
 describe('inset-block, inset-inline', () => {
     test('expansion and reification', () => {
 
-        const style = createStyleBlock()
+        const style = createStyle()
         const longhands = shorthands.get('inset-block')[0]
 
         // Initial longhand values
@@ -3063,7 +3073,7 @@ describe('inset-block, inset-inline', () => {
 describe('interest-delay', () => {
     test('expansion and reification', () => {
 
-        const style = createStyleBlock()
+        const style = createStyle()
         const longhands = shorthands.get('interest-delay')[0]
 
         // Initial longhand values
@@ -3085,7 +3095,7 @@ describe('interest-delay', () => {
 describe('line-clamp', () => {
     test('expansion and reification', () => {
 
-        const style = createStyleBlock()
+        const style = createStyle()
         const longhands = shorthands.get('line-clamp')[0]
 
         // Initial longhand values (not all longhands can be explicitly declared)
@@ -3142,7 +3152,7 @@ describe('line-clamp', () => {
 describe('list-style', () => {
     test('expansion and reification', () => {
 
-        const style = createStyleBlock()
+        const style = createStyle()
         const longhands = shorthands.get('list-style')[0]
 
         // Initial longhand values
@@ -3168,7 +3178,7 @@ describe('list-style', () => {
 describe('margin', () => {
     test('expansion and reification', () => {
 
-        const style = createStyleBlock()
+        const style = createStyle()
         const longhands = shorthands.get('margin')[0]
 
         // Initial longhand values
@@ -3193,7 +3203,7 @@ describe('margin', () => {
 describe('margin-block, margin-inline', () => {
     test('expansion and reification', () => {
 
-        const style = createStyleBlock()
+        const style = createStyle()
         const longhands = shorthands.get('margin-block')[0]
 
         // Initial longhand values
@@ -3215,7 +3225,7 @@ describe('margin-block, margin-inline', () => {
 describe('marker', () => {
     test('expansion and reification', () => {
 
-        const style = createStyleBlock()
+        const style = createStyle()
         const longhands = shorthands.get('marker')[0]
 
         // All equal longhand values
@@ -3233,7 +3243,7 @@ describe('marker', () => {
 describe('mask', () => {
     test('expansion and reification', () => {
 
-        const style = createStyleBlock()
+        const style = createStyle()
         const subProperties = shorthands.get('mask')
         const [, resetOnly] = subProperties
         const longhands = subProperties.flat()
@@ -3276,7 +3286,7 @@ describe('mask', () => {
 describe('mask-border', () => {
     test('expansion and reification', () => {
 
-        const style = createStyleBlock()
+        const style = createStyle()
         const longhands = shorthands.get('mask-border')[0]
 
         // Initial longhand values
@@ -3301,7 +3311,7 @@ describe('mask-border', () => {
 describe('offset', () => {
     test('expansion and reification', () => {
 
-        const style = createStyleBlock()
+        const style = createStyle()
         const longhands = shorthands.get('offset')[0]
 
         // Initial longhand values
@@ -3328,7 +3338,7 @@ describe('offset', () => {
 describe('outline', () => {
     test('expansion and reification', () => {
 
-        const style = createStyleBlock()
+        const style = createStyle()
         const longhands = shorthands.get('outline')[0]
 
         // Initial longhand values
@@ -3350,7 +3360,7 @@ describe('outline', () => {
 describe('overflow', () => {
     test('expansion and reification', () => {
 
-        const style = createStyleBlock()
+        const style = createStyle()
         const longhands = shorthands.get('overflow')[0]
 
         // Initial longhand values
@@ -3377,7 +3387,7 @@ describe('overflow', () => {
 describe('overflow-clip-margin', () => {
     test('expansion and reification', () => {
 
-        const style = createStyleBlock()
+        const style = createStyle()
         const longhands = shorthands.get('overflow-clip-margin')[0]
 
         // All equal longhand values
@@ -3400,7 +3410,7 @@ describe('overflow-clip-margin', () => {
 describe('overflow-clip-margin-block, overflow-clip-margin-inline', () => {
     test('expansion and reification', () => {
 
-        const style = createStyleBlock()
+        const style = createStyle()
         const longhands = shorthands.get('overflow-clip-margin-block')[0]
 
         // All equal longhand values
@@ -3423,7 +3433,7 @@ describe('overflow-clip-margin-block, overflow-clip-margin-inline', () => {
 describe('overscroll-behavior', () => {
     test('expansion and reification', () => {
 
-        const style = createStyleBlock()
+        const style = createStyle()
         const longhands = shorthands.get('overscroll-behavior')[0]
 
         // Initial longhand values
@@ -3445,7 +3455,7 @@ describe('overscroll-behavior', () => {
 describe('padding', () => {
     test('expansion and reification', () => {
 
-        const style = createStyleBlock()
+        const style = createStyle()
         const longhands = shorthands.get('padding')[0]
 
         // Initial longhand values
@@ -3470,7 +3480,7 @@ describe('padding', () => {
 describe('padding-block, padding-inline', () => {
     test('expansion and reification', () => {
 
-        const style = createStyleBlock()
+        const style = createStyle()
         const longhands = shorthands.get('padding-block')[0]
 
         // Initial longhand values
@@ -3492,7 +3502,7 @@ describe('padding-block, padding-inline', () => {
 describe('place-content', () => {
     test('expansion and reification', () => {
 
-        const style = createStyleBlock()
+        const style = createStyle()
         const longhands = shorthands.get('place-content')[0]
 
         // Initial longhand values
@@ -3518,7 +3528,7 @@ describe('place-content', () => {
 describe('place-items', () => {
     test('expansion and reification', () => {
 
-        const style = createStyleBlock()
+        const style = createStyle()
         const longhands = shorthands.get('place-items')[0]
 
         // Initial longhand values
@@ -3540,7 +3550,7 @@ describe('place-items', () => {
 describe('place-self', () => {
     test('expansion and reification', () => {
 
-        const style = createStyleBlock()
+        const style = createStyle()
         const longhands = shorthands.get('place-self')[0]
 
         // Initial longhand values
@@ -3562,7 +3572,7 @@ describe('place-self', () => {
 describe('pointer-timeline', () => {
     test('expansion and reification', () => {
 
-        const style = createStyleBlock()
+        const style = createStyle()
         const longhands = shorthands.get('pointer-timeline')[0]
         const timeline = 'none block'
 
@@ -3595,7 +3605,7 @@ describe('pointer-timeline', () => {
 describe('position-try', () => {
     test('expansion and reification', () => {
 
-        const style = createStyleBlock()
+        const style = createStyle()
         const longhands = shorthands.get('position-try')[0]
 
         // Initial longhand values
@@ -3617,7 +3627,7 @@ describe('position-try', () => {
 describe('rule', () => {
     test('expansion and reification', () => {
 
-        const style = createStyleBlock()
+        const style = createStyle()
         const longhands = shorthands.get('rule')[0]
 
         // All equal longhand values
@@ -3635,7 +3645,7 @@ describe('rule', () => {
 describe('rule-break', () => {
     test('expansion and reification', () => {
 
-        const style = createStyleBlock()
+        const style = createStyle()
         const longhands = shorthands.get('rule-break')[0]
 
         // All equal longhand values
@@ -3653,7 +3663,7 @@ describe('rule-break', () => {
 describe('rule-color', () => {
     test('expansion and reification', () => {
 
-        const style = createStyleBlock()
+        const style = createStyle()
         const longhands = shorthands.get('rule-color')[0]
 
         // All equal longhand values
@@ -3671,7 +3681,7 @@ describe('rule-color', () => {
 describe('rule-edge-inset, rule-interior-inset', () => {
     test('expansion and reification', () => {
 
-        const style = createStyleBlock()
+        const style = createStyle()
         const longhands = shorthands.get('rule-edge-inset')[0]
 
         // Initial longhand values
@@ -3702,7 +3712,7 @@ describe('rule-edge-inset, rule-interior-inset', () => {
 describe('rule-inset', () => {
     test('expansion and reification', () => {
 
-        const style = createStyleBlock()
+        const style = createStyle()
         const longhands = shorthands.get('rule-inset')[0]
 
         // Initial longhand values
@@ -3768,7 +3778,7 @@ describe('rule-inset', () => {
 describe('rule-style', () => {
     test('expansion and reification', () => {
 
-        const style = createStyleBlock()
+        const style = createStyle()
         const longhands = shorthands.get('rule-style')[0]
 
         // All equal longhand values
@@ -3786,7 +3796,7 @@ describe('rule-style', () => {
 describe('rule-visibility-items', () => {
     test('expansion and reification', () => {
 
-        const style = createStyleBlock()
+        const style = createStyle()
         const longhands = shorthands.get('rule-visibility-items')[0]
 
         // All equal longhand values
@@ -3804,7 +3814,7 @@ describe('rule-visibility-items', () => {
 describe('rule-width', () => {
     test('expansion and reification', () => {
 
-        const style = createStyleBlock()
+        const style = createStyle()
         const longhands = shorthands.get('rule-width')[0]
 
         // All equal longhand values
@@ -3822,7 +3832,7 @@ describe('rule-width', () => {
 describe('scroll-margin', () => {
     test('expansion and reification', () => {
 
-        const style = createStyleBlock()
+        const style = createStyle()
         const longhands = shorthands.get('scroll-margin')[0]
 
         // Initial longhand values
@@ -3847,7 +3857,7 @@ describe('scroll-margin', () => {
 describe('scroll-margin-block, scroll-margin-inline', () => {
     test('expansion and reification', () => {
 
-        const style = createStyleBlock()
+        const style = createStyle()
         const longhands = shorthands.get('scroll-margin-block')[0]
 
         // Initial longhand values
@@ -3869,7 +3879,7 @@ describe('scroll-margin-block, scroll-margin-inline', () => {
 describe('scroll-padding', () => {
     test('expansion and reification', () => {
 
-        const style = createStyleBlock()
+        const style = createStyle()
         const longhands = shorthands.get('scroll-padding')[0]
 
         // Initial longhand values
@@ -3894,7 +3904,7 @@ describe('scroll-padding', () => {
 describe('scroll-padding-block, scroll-padding-inline', () => {
     test('expansion and reification', () => {
 
-        const style = createStyleBlock()
+        const style = createStyle()
         const longhands = shorthands.get('scroll-padding-block')[0]
 
         // Initial longhand values
@@ -3916,7 +3926,7 @@ describe('scroll-padding-block, scroll-padding-inline', () => {
 describe('scroll-timeline', () => {
     test('expansion and reification', () => {
 
-        const style = createStyleBlock()
+        const style = createStyle()
         const longhands = shorthands.get('scroll-timeline')[0]
         const timeline = 'none block'
 
@@ -3948,13 +3958,13 @@ describe('scroll-timeline', () => {
 })
 describe('text-align', () => {
     test('invalid', () => {
-        const style = createStyleBlock()
+        const style = createStyle()
         style.textAlign = '"12"'
         assert.equal(style.length, 0)
     })
     test('expansion and reification', () => {
 
-        const style = createStyleBlock()
+        const style = createStyle()
         const longhands = shorthands.get('text-align')[0]
 
         // Initial longhand values (not all longhands can be explicitly declared)
@@ -3989,7 +3999,7 @@ describe('text-align', () => {
 describe('text-box', () => {
     test('expansion and reification', () => {
 
-        const style = createStyleBlock()
+        const style = createStyle()
         const longhands = shorthands.get('text-box')[0]
 
         // Initial longhand values
@@ -4016,7 +4026,7 @@ describe('text-box', () => {
 describe('text-decoration', () => {
     test('expansion and reification', () => {
 
-        const style = createStyleBlock()
+        const style = createStyle()
         const longhands = shorthands.get('text-decoration')[0]
 
         // Initial longhand values
@@ -4038,7 +4048,7 @@ describe('text-decoration', () => {
 describe('text-decoration-skip', () => {
     test('expansion and reification', () => {
 
-        const style = createStyleBlock()
+        const style = createStyle()
         const longhands = shorthands.get('text-decoration-skip')[0]
 
         // All equal longhand values
@@ -4062,7 +4072,7 @@ describe('text-decoration-skip', () => {
 describe('text-emphasis', () => {
     test('expansion and reification', () => {
 
-        const style = createStyleBlock()
+        const style = createStyle()
         const longhands = shorthands.get('text-emphasis')[0]
 
         // Initial longhand values
@@ -4084,7 +4094,7 @@ describe('text-emphasis', () => {
 describe('text-spacing', () => {
     test('expansion and reification', () => {
 
-        const style = createStyleBlock()
+        const style = createStyle()
         const longhands = shorthands.get('text-spacing')[0]
 
         // Initial longhand values (not all longhands can be explicitly declared)
@@ -4133,7 +4143,7 @@ describe('text-spacing', () => {
 describe('text-wrap', () => {
     test('expansion and reification', () => {
 
-        const style = createStyleBlock()
+        const style = createStyle()
         const longhands = shorthands.get('text-wrap')[0]
 
         // Initial longhand values
@@ -4155,7 +4165,7 @@ describe('text-wrap', () => {
 describe('timeline-trigger', () => {
     test('expansion and reification', () => {
 
-        const style = createStyleBlock()
+        const style = createStyle()
         const longhands = shorthands.get('timeline-trigger')[0]
 
         // Initial longhand values
@@ -4203,7 +4213,7 @@ describe('timeline-trigger', () => {
 describe('timeline-trigger-activation-range', () => {
     test('expansion and reification', () => {
 
-        const style = createStyleBlock()
+        const style = createStyle()
         const longhands = shorthands.get('timeline-trigger-activation-range')[0]
 
         // Initial longhand values
@@ -4245,7 +4255,7 @@ describe('timeline-trigger-activation-range', () => {
 describe('timeline-trigger-active-range', () => {
     test('expansion and reification', () => {
 
-        const style = createStyleBlock()
+        const style = createStyle()
         const longhands = shorthands.get('timeline-trigger-active-range')[0]
 
         // Initial longhand values
@@ -4287,7 +4297,7 @@ describe('timeline-trigger-active-range', () => {
 describe('transition', () => {
     test('expansion and reification', () => {
 
-        const style = createStyleBlock()
+        const style = createStyle()
         const longhands = shorthands.get('transition')[0]
         const transition = '0s ease 0s all'
 
@@ -4319,14 +4329,14 @@ describe('transition', () => {
 })
 describe('vertical-align', () => {
     test('invalid', () => {
-        const style = createStyleBlock()
+        const style = createStyle()
         style.verticalAlign = 'text-before-edge'
         style.verticalAlign = 'text-after-edge'
         assert.equal(style.length, 0)
     })
     test('expansion and reification', () => {
 
-        const style = createStyleBlock()
+        const style = createStyle()
         const longhands = shorthands.get('vertical-align')[0]
 
         // Initial longhand values (not all longhands can be explicitly declared)
@@ -4352,7 +4362,7 @@ describe('vertical-align', () => {
 describe('view-timeline', () => {
     test('expansion and reification', () => {
 
-        const style = createStyleBlock()
+        const style = createStyle()
         const longhands = shorthands.get('view-timeline')[0]
         const timeline = 'none block auto'
 
@@ -4388,7 +4398,7 @@ describe('view-timeline', () => {
 describe('white-space', () => {
     test('expansion and reification', () => {
 
-        const style = createStyleBlock()
+        const style = createStyle()
         const longhands = shorthands.get('white-space')[0]
 
         // Initial longhand values

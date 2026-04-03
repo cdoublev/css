@@ -831,11 +831,10 @@ export class SVGElement extends Element {
     namespaceURI = SVG_NAMESPACE
 
     /**
-     * @param {object} properties
+     * @returns {CSSStyleProperties}
      */
-    constructor(properties) {
-        super(properties)
-        this.style = CSSStyleProperties.create(globalThis, undefined, { ownerNode: this })
+    get style() {
+        return this._style ??= CSSStyleProperties.create(globalThis, undefined, { ownerNode: this })
     }
 }
 

@@ -439,7 +439,7 @@ describe('CSSContainerRule', () => {
         assert.equal(rule.conditionText, 'name, (1px < width)')
 
         // CSSContainerRule
-        assert.deepEqual(rule.conditions, [{ name: 'name', query: '' }, { name: '', query: '(1px < width)'}])
+        assert.deepEqual(rule.conditions, [{ name: 'name', query: '' }, { name: '', query: '(1px < width)' }])
         assert.throws(() => rule.conditions.push('type-3'), TypeError)
         assert.throws(() => rule.conditions[1].name += 'name', TypeError)
         // (Deprecated)

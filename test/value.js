@@ -3886,37 +3886,6 @@ describe('<supports-at-rule-fn>', () => {
         })
     })
 })
-describe('<supports-env-fn>', () => {
-    test('representation', () => {
-        assert.representation('<supports-env-fn>', 'env(PREFERRED-TEXT-SCALE)', {
-            name: 'env',
-            types: ['<supports-env-fn>'],
-            value: ident('preferred-text-scale'),
-        })
-    })
-})
-describe('<syntax-string>', () => {
-    test('invalid', () => {
-        assert.invalid('<syntax-string>', '""')
-    })
-    test('representation', () => {
-        assert.representation('<syntax-string>', '"*"', delimiter('*', ['<syntax>']))
-    })
-})
-describe('<syntax-component>', () => {
-    test('invalid', () => {
-        assert.invalid('<syntax-component>', 'a #')
-        assert.invalid('<syntax-component>', '< angle>')
-        assert.invalid('<syntax-component>', '<angle >')
-        assert.invalid('<syntax-component>', '< transform-list>')
-        assert.invalid('<syntax-component>', '<transform-list >')
-    })
-    test('representation', () => {
-        const componentUnit = ident('a', ['<syntax-single-component>'])
-        const component = list([componentUnit, omitted], '', ['<syntax-component>'])
-        assert.representation('<syntax-component>', 'A', component)
-    })
-})
 describe('<supports-decl>', () => {
     test('invalid', () => {
         assert.invalid('<supports-decl>', '(unknown: initial)', supportsRule)
@@ -3953,6 +3922,15 @@ describe('<supports-decl>', () => {
             assert.valid('<supports-decl>', input, expected, styleRule))
     })
 })
+describe('<supports-env-fn>', () => {
+    test('representation', () => {
+        assert.representation('<supports-env-fn>', 'env(PREFERRED-TEXT-SCALE)', {
+            name: 'env',
+            types: ['<supports-env-fn>'],
+            value: ident('preferred-text-scale'),
+        })
+    })
+})
 describe('<supports-feature>', () => {
     test('invalid', () => {
         assert.invalid('<supports-feature>', 'selector(undeclared|type)', supportsRule)
@@ -3971,6 +3949,28 @@ describe('<supports-feature>', () => {
             },
         }
         assert.representation('<supports-feature>', '(color: green)', feature, supportsRule)
+    })
+})
+describe('<syntax-component>', () => {
+    test('invalid', () => {
+        assert.invalid('<syntax-component>', 'a #')
+        assert.invalid('<syntax-component>', '< angle>')
+        assert.invalid('<syntax-component>', '<angle >')
+        assert.invalid('<syntax-component>', '< transform-list>')
+        assert.invalid('<syntax-component>', '<transform-list >')
+    })
+    test('representation', () => {
+        const componentUnit = ident('a', ['<syntax-single-component>'])
+        const component = list([componentUnit, omitted], '', ['<syntax-component>'])
+        assert.representation('<syntax-component>', 'A', component)
+    })
+})
+describe('<syntax-string>', () => {
+    test('invalid', () => {
+        assert.invalid('<syntax-string>', '""')
+    })
+    test('representation', () => {
+        assert.representation('<syntax-string>', '"*"', delimiter('*', ['<syntax>']))
     })
 })
 describe('<symbols()>', () => {
