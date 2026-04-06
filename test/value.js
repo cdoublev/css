@@ -2591,7 +2591,7 @@ describe('<calc-size()>', () => {
         assert.representation('<calc-size()>', 'calc-size(any, 1px)', size, context)
     })
     test('valid', () => {
-        assert.valid('<calc-size()>', 'CALC-SIZE(AUTO, 1 * 1% + 1px + size)', 'calc-size(auto, 1% + 1px + size)', context)
+        assert.valid('<calc-size()>', 'CALC-SIZE(AUTO, 1 * 1% + 1px + calc(size))', 'calc-size(auto, 1% + 1px + size)', context)
     })
 })
 describe('<color>', () => {
