@@ -1,5 +1,5 @@
 
-# Parsing CSS
+# Parsing
 
 Established tools like ANTLR or Lex/Yacc take as input a grammar defined with production rules, and return as output a parser, often as efficient as any hand-written parser. So why implement one?
 
@@ -26,7 +26,7 @@ In abstract terms, LL parsers expand the left-hand side of a production with the
 
 Formal grammars are *generative grammars*: they can generate a language (and a parser) that has no ambiguity.
 
-An *ambiguity* exists when there are multiple derivations for the same input. A canonical example is the grammar of inline math expressions, aka. the infix notation, whose ambiguities must be resolved by associativity and precedence rules.
+An *ambiguity* exists when there are multiple derivations for the same input. A canonical example is the grammar of inline math expressions, aka. the infix notation, whose ambiguities are resolved with associativity and precedence rules.
 
 As in math expressions, whose operators are usually left associative, the parser must read the input from left to right: `1 - 2 + 3` must be interpreted to `2` instead of `4`. But to interpret `1 + 2 * 3` to `7` instead of `9`, precedence rules must be encoded with a more elaborate value definition than `<calc-value> [['+' | '-' | '*' | '/'] <calc-value>]*`.
 
@@ -192,7 +192,7 @@ Validating a value in the context, before or after matching its definition, ofte
 
 Other grammar rules require modifying the value definition. For example, math functions must support at least 32 arguments, which means the default value (20) of the `#` multiplier of `<calc-sum>` must be overridden. Similarly, `#` must be ignored at the top-level of a production rule for a property value range.
 
-Finally, the context representation must allow to determine the input token marking the end of the parsed node value. So it must be hierarchical, to allow to determine which of a function or block is the closest context, like in `fn([a])` and `[fn(a)]`.
+Finally, the context representation must allow determining the input token marking the end of the parsed node value. It must be hierarchical, to determine which of a function or block is the closest context, like in `fn([a])` and `[fn(a)]`.
 
 
 ### Backtracking
@@ -224,30 +224,9 @@ The only way to short-circuit recursive parse functions and immediately abort pa
 
 ### Data model
 
-A **node** is implemented as a plain object with the following properties:
+#### Token and component value
 
-| Property     | Type        | Description                                                          |
-| ------------ | ----------- | -------------------------------------------------------------------- |
-| `children`   | `Array`     | The parsed child nodes                                               |
-| `context`    | `Object`    | The parent context                                                   |
-| `definition` | `Object`    | The parsed [value definition](../memos/value-definition.md) to match |
-| `input`      | `Stream`    | The list of tokens                                                   |
-| `location`   | `Number`    | The location (`input.index`) where `value` can be found              |
-| `parent`     | `Node`      | The parent node                                                      |
-| `state`      | `String`    | The current processing state                                         |
-| `value`      | See below   | The result of successfully parsing `input` against `definition`      |
-
-`node.value` is initially `undefined`. Nodes representing a rule are is assigned its CSSOM representation before parsing its block value. All other nodes are assigned the successful parse result, which can be:
-
-  - a plain object representing a declaration or a token
-  - a `List` of component values
-  - a `List` of rules
-
-These values are all implemented with a `types` property that includes `node.definition.name`, to serialize it according to the appropriate rule.
-
-`node.definition.name` is also used to resolve specific state transition actions for this production.
-
-A **token** is implemented as a plain object with the following properties:
+A **token**, or a **commponent value** representing a preserved token, are implemented as a plain object with the following properties:
 
 | Property | Type             | Description                                                                            |
 | -------- | ---------------- | -------------------------------------------------------------------------------------- |
@@ -264,7 +243,36 @@ A **token** is implemented as a plain object with the following properties:
 
 **Note:** CSS Syntax only defines `unit` for `<dimension-token>`, but `<percentage-token>` can also be considered as a dimension (cf. w3c/csswg-drafts#7381), therefore it is also implemented with this property, to simplify parsing and serializing.
 
-A **context** is a node that does not have any child nodes, but is the "origin" of one or more nodes. It can represent:
+A `List` of component values is also a component value. Component values and `List` of rules have a `types` property.
+
+
+#### Node
+
+A **node** is implemented as a plain object with the following properties:
+
+| Property     | Type        | Description                                                          |
+| ------------ | ----------- | -------------------------------------------------------------------- |
+| `children`   | `Array`     | The parsed child nodes                                               |
+| `context`    | `Object`    | The parent [context](#Context)                                       |
+| `definition` | `Object`    | The parsed [value definition](../memos/value-definition.md) to match |
+| `input`      | `Stream`    | The list of [tokens](#Token-and-component-value)                     |
+| `location`   | `Number`    | The location (`input.index`) where `value` can be found              |
+| `parent`     | `Node`      | The parent node                                                      |
+| `state`      | `String`    | The current processing [state](#State-machine)                       |
+| `value`      | See below   | The result of successfully parsing `input` against `definition`      |
+
+`node.definition.name` is used to resolve specific [state transition actions](#State-machine) for this production, is pushed into `node.value.types` after parsing, and is used to serialize `node.value` according to the specific rules defined for this type.
+
+`node.value` is initially `undefined`. A node representing a rule is assigned its CSSOM representation *before* parsing its block value. All other nodes are assigned the successful parse result, which can be:
+
+  - a plain object representing a declaration or a token
+  - a `List` of component values
+  - a `List` of rules
+
+
+#### Context
+
+A **context** is a [node](#Node) that does not have children, but is the *origin* of one or more nodes. It can represent:
 
   - a style sheet
   - a rule
@@ -285,11 +293,11 @@ It is extended with the following properties:
 
 Examples of `context.globals` entries are `namespaces` from `@namespace` rules, and the number of `calc-terms` nested in a top-level math function.
 
-`context.separator` is reset before parsing the originated nodes, to allow a whitespace between tokens.
+`context.separator` is reset before parsing *originated* nodes, to allow a whitespace between tokens.
 
-`context.trees` allows to traverse root nodes in order to access the root of the current tree with `trees.at(-1)`, find a higher level tree with `trees.findLast(accept)`, etc.
+`context.trees` allows traversing root nodes to access the root of the current tree with `trees.at(-1)`, find a higher level tree with `trees.findLast(accept)`, etc.
 
-A context must be initially created by the parser entry point with an optional instance of `CSSStyleSheet`, `CSSRule`, `CSSFontFeatureValuesMap`, `CSSStyleDeclaration`, or one or more rule production names (to create an arbitrary context). Any other context value is assumed to be an instance of `Element`.
+A context is initially created by the parser entry point with an optional instance of `CSSStyleSheet`, `CSSRule`, `CSSFontFeatureValuesMap`, `CSSStyleDeclaration`, or one or more rule production names (to create an arbitrary context). Any other context value is assumed to be an instance of `Element`.
 
 It can be overriden in `configure` transition actions, eg. by returning `{ ...context, strict: true }`.
 
@@ -312,7 +320,13 @@ The parser implementation does not exactly match the procedures defined in CSS S
 
 As a quick overview, a conforming HTML parser creates a style sheet with unparsed rules provided as a string or byte stream, then `CSSStyleSheet.constructor()` runs `parseGrammar()` with the rules, the grammar of a style sheet, and a reference to this `CSSStyleSheet`.
 
-`parseGrammar()` is an implementation of [*parse something according to a CSS grammar*](https://drafts.csswg.org/css-syntax-3/#css-parse-something-according-to-a-css-grammar) that is also used to parse *something else* in the context being parsed. It creates a node with the provided input, grammar, and context, before parsing this node with a state machine. It is also responsible for normalizing the input into a stream of tokens, and the grammar and context into apppropriate representations.
+`parseGrammar()` is an implementation of [*parse something according to a CSS grammar*](https://drafts.csswg.org/css-syntax-3/#css-parse-something-according-to-a-css-grammar) that is recursively used to parse *something else* in the context being parsed. It creates a node with the provided input, grammar, and context, before parsing this node with a [state machine](#State-machine). It is also responsible for normalizing the input into a stream of tokens, and the grammar and context into apppropriate representations.
+
+`parseGrammar()` also takes an optional `strategy` (default: `backtrack`) to handle a valid parse result when the input is not at end in the context:
+
+  - `backtrack`: retry parsing by discarding the rightmost leaf node (aka. the tail node)
+  - `greedy`: return a failure (used for parsing a whole value substitution)
+  - `lazy`: return the first result (used for parsing a component value substitution and a value matching a generic grammar, like pseudo selectors)
 
 When the node transitions to the `matching` state, the machine runs the associated action, `matchStyleSheet()`, which is an implementation of [*consume a style sheet's contents*](https://drafts.csswg.org/css-syntax-3/#consume-a-stylesheets-contents).
 
@@ -348,15 +362,15 @@ Below is a list of all implemented entry points:
 
 #### Rules and declarations
 
-To parse a rule, its definition must first be resolved from the definitions of rules accepted in the context. If there is an `<at-keyword-token>` at the front of the input, it is the first definition whose `name` matches the value of this token or whose `names` include it. Otherwise, it must resolve to the definition of the `qualified` rules in this context, if any, which assumes that a context only accepts a single type of `qualified` rules.
+While the parser algorithms require validating a declaration and a rule immediately *after* consuming it, to disambiguate a declaration from a qualified rule in `style-1:hover {} style-2:hover {} ...`, there is no ambiguity between a qualified rule and an at-rule. Their implementation actually validate them in a single pass *when* consuming them, to avoid consuming the entire declaration value before backtracking and parse a qualified rule instead.
 
-After consuming and validating its prelude, its CSSOM representation is created, and its constructor parses its block value. `matchStyleSheet()` validates the order of the rule and registers `@namespace` in `context.globals`.
+To parse a rule, its definition is first resolved from the definitions of rules accepted in the [context](#Context). If there is an `<at-keyword-token>` at the front of the input, it is the first definition whose `name` matches the value of this token or whose `names` include it. Otherwise, it resolves to the definition of the `qualified` rules in this context, if any, which assumes that a context only accepts a single type of `qualified` rules.
 
-To parse a declaration, its definition must first be resolved with the `<ident-token>` at the front of the input from the dictionaries of properties and descriptors accepted in the context. Then its value must be validated. When they are allowed in the context, the parser first parses the input against CSS-wide keywords, which must be interpreted like for standard properties in a custom property value, then it looks for an arbitrary substitution, and returns a parse error if it finds a positioned {} block, which would mean that there might be a qualified rule at the front of the input, then it parses the input against the grammar of the property or descriptor, then against the grammar of the whole value substitutions.
+After consuming and validating its prelude, its CSSOM representation is created, then its constructor parses its block value, then `matchStyleSheet()` validates the order of the rule and registers `@namespace` in `context.globals`.
 
-**Note:** while looking for an arbitrary substitution, it does not *immediately* return `null` if it finds `<bad-*-token>`, `)`, `]`, `}`, `;`, `!`, which are all invalid tokens in `<declaration-value>`, when they do not close a parent structure in the input, to allow returning a parse error if it later finds a positioned {} block.
+To parse a declaration, its definition is first resolved from the dictionaries of properties and descriptors accepted in the [context](#Context), with the `<ident-token>` at the front of the input. Then its value is validated. When they are allowed in the context, the parser first tries to parse the input against CSS-wide keywords, which must be interpreted in a custom property value like in standard properties. Then it looks for an arbitrary substitution, and returns a parse error if it finds a positioned {} block, which would mean that there might be a qualified rule at the front of the input. Then it tries to parse the input against the grammar of the property or descriptor and finally, then against the grammar of whole value substitutions. Finally, it validates a priority, if any.
 
-Finally, it validates a priority, if any.
+**Note:** when looking for an arbitrary substitution, it does not *immediately* return `null` if it finds `<bad-*-token>`, `)`, `]`, `}`, `;`, `!` (when they do not close a parent structure in the input), which are all invalid tokens in `<declaration-value>`, to allow returning a parse error if it later finds a positioned {} block.
 
 
 #### State machine
@@ -387,17 +401,46 @@ Parsing a node whose state is `accepted` cannot be resumed after backtracking: i
 `node` represents a hierarchical state tree in the sense that `node.state` is always `matching` while parsing `node.children`.
 
 
-# Serializing CSS
+# Resolving
+
+When `CSSStyleDeclaration` is returned by [`getComputedStyle(element)`](https://drafts.csswg.org/cssom-1/#dom-window-getcomputedstyle), `CSSStyleDeclaration.getPropertyValue(property)` must return a [resolved value](https://drafts.csswg.org/cssom-1/#resolved-value) for `property`, which is either its used value or its computed value:
+
+  - the [used value](https://drafts.csswg.org/css-cascade-5/#used) is a fully absolutized representation of the computed value
+  - the [computed value](https://drafts.csswg.org/css-cascade-5/#computed) is a representation of the specified value sufficiently absolutized to be inherited
+  - the [specified value](https://drafts.csswg.org/css-cascade-5/#specified-value) is the cascaded value, if any, with CSS-wide keywords replaced with the appropriate value, otherwise the default value
+  - the default value is the computed value for the parent element if the property inherits, otherwise its initial value
+  - the [cascaded value](https://drafts.csswg.org/css-cascade-5/#cascaded) is the declared value that is the most specific according to the cascading criteria
+  - the [declared values](https://drafts.csswg.org/css-cascade-5/#declared-value) are all values explicitly declared for the property and element
+
+**[Issue](https://github.com/w3c/csswg-drafts/issues/6144):** CSSOM requires `Window.getComputedStyle(element)` to create `CSSStyleDeclaration` with the resolved values for `element`, but `CSSStyleDeclaration.getPropertyValue()` can return different values even if the property has not been updated via `CSSStyleDeclaration`.
+
+The process of determining used values is also performed for the initial rendering of the document, and for each subsequent update during the event loop. Since this is obviously a hot path, browsers apply various optimizations to avoid repeating the entire process when no change has occurred to the element or the declared values.
+
+Collecting the declared values requires looking at values:
+
+  - from transitions and animations
+  - from declarations in the user and user agent style sheets
+  - from declarations in the author style sheets added to the document or shadow root containing the element
+  - from declarations in the style sheet of `@import` in author style sheets
+  - from declarations in `Element.style`
+  - from attributes declared on `Element`
+
+Filtering the declared values requires excluding those nested in a conditional rule whose condition evaluates to `false`, and those outisde all scopes defined by `@scope`.
+
+The computed value requires replacing arbitrary and whole value substitutions, and relative values representing numeric values, using the available data and according to the property definition table and the component value type.
+
+All elements have a resolved value for each property, but they may not have a used value for all of properties.
+
+
+# Serializing
 
 This section focuses primarily on the serializaton of property values, given that descriptor values do not cascade and do not include relative values, and that the procedure to [serialize a rule](https://drafts.csswg.org/cssom-1/#serialize-a-css-rule) is quite explicit.
 
 Property values are either exposed as [resolved values](https://drafts.csswg.org/cssom-1/#resolved-values) from `getComputedStyle()`, or as [declared values](https://drafts.csswg.org/css-cascade-5/#declared) from `CSSStyleDeclaration`.
 
-The document may hold declared values for the same `Element` and property in `document.styleSheets`, `document.adoptedStyleSheets`, and `Element.style`. CSS cascade defines how to resolve a single [cascaded value](https://drafts.csswg.org/css-cascade-5/#cascaded). At later processing stages, it becomes a resolved value, which is either the [computed value](https://drafts.csswg.org/css-cascade-5/#computed) or the [used value](https://drafts.csswg.org/css-cascade-5/#used).
+A declared property value, a descriptor value, a rule prelude, may serialize to a slightly different value than the authored value, according to the general serialization principles, and because the lexical parser does not keep minor details like trailing decimal 0, unit character case, etc.
 
-Declared property values (and descriptor values, rule preludes) may serialize to a slightly different value than the authored value, according to the general serialization principles, and because the lexical parser does not keep minor details like trailing decimal 0, unit character case, etc.
-
-The computed and later value may serialize to the same value than the declared value, or a value closer to its absolute equivalent, computed using data that may not be available while parsing the declared value, like property values declared for an ancestor `Element` or the size of the block container.
+A resolved property value may serialize to the same value than the declared value, or a value closer to its absolute equivalent.
 
 
 ## General principles

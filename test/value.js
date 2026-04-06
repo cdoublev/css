@@ -986,8 +986,8 @@ describe('keyword', () => {
 })
 describe('<custom-ident>', () => {
     test('invalid', () => {
-        const invalid = [...cssWideKeywords, 'DEFAULT']
-        invalid.forEach(input => assert.invalid('<custom-ident>', input))
+        assert.invalid('<custom-ident>', 'DEFAULT')
+        cssWideKeywords.forEach(input => assert.invalid('<custom-ident>', input))
     })
     test('representation', () => {
         assert.representation('<custom-ident>', 'IDENTIFIER', customIdent('IDENTIFIER'))
@@ -3375,14 +3375,11 @@ describe('<keyframes-name>', () => {
 })
 describe('<layer-name>', () => {
     test('invalid', () => {
-        const invalid = [
-            // Invalid whitespace
-            'prefix .name',
-            'prefix. name',
-            // Invalid reserved keyword
-            ...cssWideKeywords,
-        ]
-        invalid.forEach(input => assert.invalid('<layer-name>', input))
+        // Invalid whitespace
+        assert.invalid('<layer-name>', 'prefix .name')
+        assert.invalid('<layer-name>', 'prefix. name')
+        // Invalid reserved keyword
+        cssWideKeywords.forEach(input => assert.invalid('<layer-name>', input))
     })
     test('representation', () => {
         assert.representation('<layer-name>', 'reset', list([ident('reset'), list([], '')], '', ['<layer-name>']))
