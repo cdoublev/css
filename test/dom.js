@@ -364,7 +364,33 @@ export class Element extends Node {
      * @returns {object|null}
      */
     getAttributeNode(name) {
-        return this.attributes.find(attribute => attribute.localName === name && attribute.namespaceURI === null) ?? null
+        return this.getAttributeNodeNS(null, name) ?? null
+    }
+
+    /**
+     * @param {string|null} namespace
+     * @param {string} name
+     * @returns {object|null}
+     */
+    getAttributeNodeNS(namespace, name) {
+        return this.attributes.find(attribute => attribute.localName === name && attribute.namespaceURI === namespace) ?? null
+    }
+
+    /**
+     * @param {string} name
+     * @returns {boolean}
+     */
+    hasAttribute(name) {
+        return this.hasAttributeNS(null, name)
+    }
+
+    /**
+     * @param {string|null} namespace
+     * @param {string} name
+     * @returns {boolean}
+     */
+    hasAttributeNS(namespace, name) {
+        return !!this.getAttributeNodeNS(namespace, name)
     }
 
     /**
