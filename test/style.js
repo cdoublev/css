@@ -656,7 +656,7 @@ describe('arbitrary substitution', () => {
             ['--custom(--custom(!))'],
             ['attr(name, attr())'],
             ['env(name, env())'],
-            ['if(if())', 'if(if())'],
+            ['if(if():)'],
             ['inherit(--custom, inherit())'],
             ['random-item(--key, random-item())'],
             ['var(--custom, var())'],

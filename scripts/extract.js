@@ -201,8 +201,6 @@ const replaced = {
         '<feature-index>': '<integer>',
         // https://github.com/w3c/csswg-drafts/issues/13010
         '<event-trigger-event>': 'activate | click | touch | dblclick | keypress(<string>)',
-        // https://github.com/w3c/csswg-drafts/issues/12487
-        '<if-args-branch>': '<declaration-value> [: <declaration-value>?]?',
         // https://github.com/w3c/fxtf-drafts/issues/532
         '<mask-reference>': 'none | <image>',
         // TODO: fix `value` of `<pseudo-page>`
