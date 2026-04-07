@@ -820,7 +820,7 @@ describe('blocks', () => {
 describe('functions', () => {
     test('invalid', () => {
         assert.invalid('fn()', 'fn(1)')
-        // Comma-containing production
+        // Free-form production
         assert.invalid('fn(<any-value>)', 'fn(,)')
         assert.invalid('fn(<any-value>)', 'fn(a {})')
         assert.invalid('fn(<any-value>)', 'fn({} a)')
@@ -835,7 +835,7 @@ describe('functions', () => {
         assert.valid('fn(a)', 'FN(a)', 'fn(a)')
         // Unclosed (parse error)
         assert.valid('fn()', 'fn(', 'fn()')
-        // Comma-containing production
+        // Free-form production
         assert.valid('fn([<declaration-value>?]#)', 'fn(, {})', 'fn(,)')
         assert.valid('fn([<declaration-value>?]#)', 'fn({ a }, { , }, {{}})', 'fn(a, {,}, {{}})')
         assert.valid('fn(<declaration-value>?, a)', 'fn(, a)')

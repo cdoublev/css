@@ -63,7 +63,7 @@ The CSS grammar could be defined only with production rules, but encoding semant
 
 The CSS grammar is defined in:
 
-  - [CSS Syntax](https://drafts.csswg.org/css-syntax-3/#rule-defs), with types representing the style sheet and rule block values, defined with an algorithm that consumes declarations and rules from the token stream, validates them in the context, and ignore those that are invalid, and with types representing an arbitrary value range for custom properties, `@property/initial-value`, substitution function arguments, container/media/support queries, pseudo selectors
+  - [CSS Syntax](https://drafts.csswg.org/css-syntax-3/#rule-defs), with types representing the style sheet and rule block values, defined with an algorithm that consumes declarations and rules from the token stream, validates them in the context, and ignore those that are invalid, and with types representing a free-form value range for custom properties, `@property/initial-value`, substitution function arguments, container/media/support queries, pseudo selectors
   - [CSS Value](https://drafts.csswg.org/css-values-4/#value-defs), with the basic data types, defined with their corresponding token, and other CSS types used in many CSS values
   - other CSS specifications, with productions defined either with a [value definition](./value-definition.md) and sometimes validation rules written in prose, or with an algorithm
 
