@@ -552,6 +552,27 @@ describe('CSSStyleDeclaration.setProperty(), CSSStyleDeclaration.getPropertyValu
         constructedStyleSheet.deleteRule(0)
         assert.equal(style.order, '4')
     })
+    it('resolves a value by cascading declared values in layers declared in a specific order', () => {
+
+        const userStyleSheet = `
+            @layer first, last;
+            @layer last {
+              html {
+                order: 2;
+              }
+            }
+            @layer first {
+              html {
+                order: 1;
+              }
+            }
+        `
+        const document = new HTMLDocument({ userStyleSheet })
+        const html = new HTMLHtmlElement({ ownerDocument: document, parentNode: document })
+        const style = createResolvedStyle(html)
+
+        assert.equal(style.order, '2')
+    })
     it('resolves a value by defaulting the cascaded value', () => {
 
         const userStyleSheet = `
