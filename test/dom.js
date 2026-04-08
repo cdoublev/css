@@ -356,7 +356,16 @@ export class Element extends Node {
      * @returns {object|null}
      */
     getAttribute(name) {
-        return this.getAttributeNode(name)?.value ?? null
+        return this.getAttributeNS(null, name)
+    }
+
+    /**
+     * @param {string|null} namespace
+     * @param {string} name
+     * @returns {object|null}
+     */
+    getAttributeNS(namespace, name) {
+        return this.getAttributeNodeNS(namespace, name)?.value ?? null
     }
 
     /**
@@ -364,7 +373,7 @@ export class Element extends Node {
      * @returns {object|null}
      */
     getAttributeNode(name) {
-        return this.getAttributeNodeNS(null, name) ?? null
+        return this.getAttributeNodeNS(null, name)
     }
 
     /**
