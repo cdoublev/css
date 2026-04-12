@@ -2944,11 +2944,16 @@ describe('<color>', () => {
             styleRule)
     })
     test('valid <color-mix()>', () => {
+        // Omitted <color-interpolation-method> and <percentage>
+        assert.valid('<color>', 'color-mix(in oklab, green 50%, green 50%)', 'color-mix(green, green)')
+        // Explicit <percentage>
+        assert.valid('<color>', 'color-mix(green 1%, green)', 'color-mix(green 1%, green 99%)')
+        assert.valid('<color>', 'color-mix(green calc(50%), green 50%)')
         // Preserve color components except <hue> and <alpha-value>
         assert.valid(
             '<color>',
-            'color-mix(in srgb, rgba(-100% 200% 0 / 101%), hsla(540deg -1% 0 / 50%))',
-            'color-mix(in srgb, rgb(-255 510 0), hsl(180 -1 0 / 0.5))')
+            'color-mix(rgba(-100% 200% 0 / 101%), hsla(540deg -1% 0 / 50%))',
+            'color-mix(rgb(-255 510 0), hsl(180 -1 0 / 0.5))')
     })
     test('valid <contrast-color()>', () => {
         // Preserve color components except <hue> and <alpha-value>
