@@ -21,7 +21,7 @@ For example, given all permutations of `a || b || c` in lexicographic order, it 
   14. `b`
   15. `c`
 
-Following the lexicographic order is required for ambiguous cases. For example, when parsing a declaration value for `background`, which is defined with  `... || <visual-box> || <visual-box>`, it prevents matching a value for `background-origin` with a value specified for `background-clip`.
+Following the lexicographic order is required for ambiguous cases. For example, when parsing a declaration value for `background`, which is defined with  `... || <visual-box> || <visual-box>`, it prevents matching a value for `background-origin` with a value declared for `background-clip`.
 
 ## Definitions
 

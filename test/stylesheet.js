@@ -384,7 +384,7 @@ describe('CSSStyleSheet.replace(), CSSStyleSheet.replaceSync()', () => {
 })
 
 describe('CSSRuleList[index]', () => {
-    it('returns the rule at the specified index', () => {
+    it('returns the rule at the given index', () => {
         const { cssRules } = createStyleSheet(`
             #rule-1 {}
             #rule-2 {}

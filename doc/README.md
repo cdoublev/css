@@ -90,7 +90,7 @@ Entry points [normalize the input into a token stream](https://drafts.csswg.org/
 <summary><strong>Note:</strong> CSS Syntax does not prescribe when and how to construct CSSOM representations, which causes some confusion.</summary>
 <br>
 
-CSSOM and HTML use [*create a CSS style sheet*](https://drafts.csswg.org/cssom-1/#create-a-css-style-sheet) when processing an HTTP `Link` header, `HTMLLinkElement`, `HTMLStyleElement`, but when and how to initiate parsing its contents is left unspecified.
+CSSOM and HTML use [*create a CSS style sheet*](https://drafts.csswg.org/cssom-1/#create-a-css-style-sheet) when processing an HTTP `Link` header, `HTMLLinkElement`, `HTMLStyleElement`, but when and how to initiate parsing its contents is left undefined.
 
 While [*parse a stylesheet*](https://drafts.csswg.org/css-syntax-3/#parse-a-stylesheet) is defined as *the normal parser entry point for parsing stylesheets*, creates and returns *a new style sheet, with its location set to `location`* (and *location* linking to its [definition](https://drafts.csswg.org/cssom-1/#concept-css-style-sheet-location) as a *state item* of `CSSStyleSheet`), and that *must be interpreted as a CSS style sheet* assigned to `CSSImportRule.styleSheet` when [fetching an `@import`](https://drafts.csswg.org/css-cascade-4/#fetch-an-import), [*parse a CSS stylesheet*](https://drafts.csswg.org/css-syntax-3/#parse-a-css-stylesheet), which is not used by any specification, runs *parse a stylesheet* and returns a value whose type is not defined but could be considered an instance of `CSSStyleSheet`, as its name suggests, and as opposed to an internal representation that would be returned by *parse a stylesheet*.
 
@@ -160,7 +160,7 @@ For example, the declaration value of a property defined with `rgb(...)` include
   >
   > Consume a token from `input`, and let `function` be a new function with its name equal the returned token’s value, and a value set to an empty list.
 
-However, the list is not specified as being produced and returned from matching against the grammar, whereas some values like math functions or `<an+b>` must be parsed into a specific representation.
+However, the list is not defined as being produced and returned from matching against the grammar, whereas some values like math functions or `<an+b>` must be parsed into a specific representation.
 
 Furthermore, while [*serialize a CSS value*](https://drafts.csswg.org/cssom-1/#serialize-a-css-value) only enforces idempotence, ie. `assert.equal(serialize(parse(input)), serialize(parse(serialize(parse(input)))))`, a component value must be associated the matched productions to apply their serialization rules. For example, a component value matching `<percentage>` and `<alpha-value>` must serialize as a `<number>` to the shortest possible form, rather than as a `<percentage>`.
 
@@ -340,7 +340,7 @@ A prelude or a declaration value containing a bad token (`<bad-*-token>` and orp
 
 Other entry points are not implemented:
 
-  - [*parse a style sheet*](https://drafts.csswg.org/css-syntax-3/#parse-a-stylesheet), which is only used in [*fetch an `@import`*](https://drafts.csswg.org/css-cascade-4/#fetch-an-import) (but should not, cf. [issue](https://github.com/w3c/csswg-drafts/issues/13049)) and [*parse a CSS style sheet*](https://drafts.csswg.org/css-syntax-3/#parse-a-css-stylesheet), which is unused, barely specified, and also not implemented
+  - [*parse a style sheet*](https://drafts.csswg.org/css-syntax-3/#parse-a-stylesheet), which is only used in [*fetch an `@import`*](https://drafts.csswg.org/css-cascade-4/#fetch-an-import) (but should not, cf. [issue](https://github.com/w3c/csswg-drafts/issues/13049)) and [*parse a CSS style sheet*](https://drafts.csswg.org/css-syntax-3/#parse-a-css-stylesheet), which is unused, barely defined, and also not implemented
   - [*parse a style sheet's contents*](https://drafts.csswg.org/css-cascade-4/#fetch-an-import), which is only used to parse rules from `CSSStyleSheet.replace()`, and is replaced with `parseGrammar()`
   - [*parse a CSS declaration block*](https://drafts.csswg.org/cssom-1/#parse-a-css-declaration-block), which is only used to parse `CSSStyleDeclaration.cssText` (a list of declarations) by validating the declarations returned by [*parse a block's contents*](https://drafts.csswg.org/css-syntax-3/#parse-a-blocks-contents) (implemented with `parseDeclarations()`), whereas they are already validated
   - [*parse a CSS rule*](https://drafts.csswg.org/cssom-1/#parse-a-css-rule), which is only used to parse the argument of `CSSStyleSheet.insertRule()` by validating the rule returned by [*parse a rule*](https://drafts.csswg.org/css-syntax-3/#parse-a-rule), whereas it is already validated
@@ -412,9 +412,11 @@ When `CSSStyleDeclaration` is returned by [`getComputedStyle(element)`](https://
   - the [cascaded value](https://drafts.csswg.org/css-cascade-5/#cascaded) is the declared value that is the most specific according to the cascading criteria
   - the [declared values](https://drafts.csswg.org/css-cascade-5/#declared-value) are all values explicitly declared for the property and element
 
+All elements have a resolved value for each property, but they may not have a used value for all of properties.
+
 **[Issue](https://github.com/w3c/csswg-drafts/issues/6144):** CSSOM requires `Window.getComputedStyle(element)` to create `CSSStyleDeclaration` with the resolved values for `element`, but `CSSStyleDeclaration.getPropertyValue()` can return different values even if the property has not been updated via `CSSStyleDeclaration`.
 
-The process of determining used values is also performed for the initial rendering of the document, and for each subsequent update during the event loop. Since this is obviously a hot path, browsers apply various optimizations to avoid repeating the entire process when no change has occurred to the element or the declared values.
+The process of determining used values is also performed for the initial rendering of the document, and for each subsequent update during the event loop. Since this is obviously a hot path, browsers apply various optimizations to avoid repeating the entire process when no change affecting the style and layout of element has occurred.
 
 Collecting the declared values requires looking at values:
 
@@ -425,11 +427,14 @@ Collecting the declared values requires looking at values:
   - from declarations in `Element.style`
   - from attributes declared on `Element`
 
-Filtering the declared values requires excluding those nested in a conditional rule whose condition evaluates to `false`, and those outisde all scopes defined by `@scope`.
+Filtering the declared values requires excluding those nested in a conditional rule whose condition evaluates to `false`, and those outside all scopes defined by `@scope`.
 
-The computed value requires replacing arbitrary and whole value substitutions, and relative values representing numeric values, using the available data and according to the property definition table and the component value type.
+The computed value requires replacing arbitrary and whole value substitutions, and relative values representing numeric values using the available data and according to the property definition table and the component value type.
 
-All elements have a resolved value for each property, but they may not have a used value for all of properties.
+The implementation to transform a specified value into a computed value according to the property definition table and to the type of each component values, is similar to the implementation to serialize a value:
+
+  - a function with switch cases for each property defined with specific requirements (ie. not *as specified*)
+  - a function with switch cases for each component value type (read from right to left) defined with specific requirements
 
 
 # Serializing

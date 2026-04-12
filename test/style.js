@@ -205,7 +205,7 @@ describe('CSSStyleDeclaration.cssText', () => {
         assert.equal(style.cssText, '--custom: ;')
         assert.equal(style.getPropertyValue('--custom'), ' ')
     })
-    it('sets declarations in specified order', () => {
+    it('sets declarations in declared order', () => {
         const style = createStyle()
         style.cssText = 'color: orange; width: 1px; color: green'
         assert.equal(style.cssText, 'width: 1px; color: green;')
@@ -351,7 +351,7 @@ describe('CSSStyleDeclaration.setProperty(), CSSStyleDeclaration.getPropertyValu
         style.setProperty('--custom', '1', 'important')
         assert.equal(style.getPropertyPriority('--custom'), 'important')
     })
-    it('removes a declaration for the specified name when the specified value is an empty string', () => {
+    it('removes a declaration when the value is an empty string', () => {
 
         const style = createStyle()
 
@@ -771,7 +771,7 @@ describe('--*', () => {
             ['(!)'],
             // Positioned {}-block
             ['positioned {} block'],
-            // Serialize exactly as specified but without leading and trailing whitespaces
+            // Serialize exactly as declared but without leading and trailing whitespaces
             [
                 '  /**/  Red  ,  (  orange  /**/  )  ,  green  /**/  ! /**/ important',
                 'Red  ,  (  orange  /**/  )  ,  green !important',
