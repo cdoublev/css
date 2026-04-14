@@ -28,8 +28,8 @@ function getNextSibling(element) {
     const { parentElement } = element
     if (parentElement) {
         const { children } = parentElement
-        const index = children.indexOf(element)
-        const child = children[index + 1]
+        const index = children._list.indexOf(element)
+        const child = children._list[index + 1]
         if (child) {
             return child
         }
@@ -45,8 +45,8 @@ function getPreviousSibling(element) {
     const { parentElement } = element
     if (parentElement) {
         const { children } = parentElement
-        const index = children.indexOf(element)
-        const child = children[index - 1]
+        const index = children._list.indexOf(element)
+        const child = children._list[index - 1]
         if (child) {
             return child
         }
@@ -60,7 +60,7 @@ export class DOMTokenList {
      * @param {string[]} list
      */
     constructor(list = []) {
-        this.list = new Set(list)
+        this._list = new Set(list)
     }
 
     /**
@@ -68,7 +68,57 @@ export class DOMTokenList {
      * @returns {boolean}
      */
     contains(token) {
-        return this.list.has(token)
+        return this._list.has(token)
+    }
+}
+
+export class HTMLCollection {
+
+    /**
+     * @param {NodeList} list
+     */
+    constructor(list) {
+        this._list = list._list
+    }
+
+    /**
+     * @param {number} index
+     * @returns {Element|null}
+     */
+    item(index) {
+        return this._list.filter(node => node instanceof Element)[index] ?? null
+    }
+
+    /**
+     * @returns {number}
+     */
+    get length() {
+        return this._list.reduce((sum, node) => sum += node instanceof Element ? 1 : 0, 0)
+    }
+}
+
+export class NodeList {
+
+    /**
+     * @param {Element[]} list
+     */
+    constructor(list = []) {
+        this._list = list
+    }
+
+    /**
+     * @param {number} index
+     * @returns {Element|null}
+     */
+    item(index) {
+        return this._list[index] ?? null
+    }
+
+    /**
+     * @returns {number}
+     */
+    get length() {
+        return this._list.length
     }
 }
 
@@ -87,7 +137,7 @@ export class Node {
     static PROCESSING_INSTRUCTION_NODE = PROCESSING_INSTRUCTION_NODE_TYPE
     static TEXT_NODE = TEXT_NODE_TYPE
 
-    childNodes = []
+    childNodes = new NodeList
 
     /**
      * @param {object} properties
@@ -104,7 +154,7 @@ export class Node {
         this.ownerDocument = ownerDocument
         this.parentNode = parentNode
         if (parentNode) {
-            parentNode.childNodes.push(this)
+            parentNode.childNodes._list.push(this)
         }
         if (fullscreen) {
             this.getRootNode().fullscreenElement = this
@@ -126,7 +176,7 @@ export class Node {
      * @returns {boolean}
      */
     contains(node) {
-        return this === node || this.childNodes.some(child => child === node || child.contains(node))
+        return this === node || this.childNodes._list.some(child => child === node || child.contains(node))
     }
 
     /**
@@ -198,16 +248,17 @@ export class Document extends Node {
         globalThis.document = this
 
         this.activeViewTransition = activeViewTransition
+        this.children = new HTMLCollection(this.childNodes)
         this.location = new URL(url)
         this.URL = url
 
         // Private
-        this.selected = selected
-        this.userAgentStyleSheet = CSSStyleSheet.create(globalThis, undefined, {
+        this._selected = selected
+        this._userAgentStyleSheet = CSSStyleSheet.create(globalThis, undefined, {
             location: this.baseURI,
             rules: userAgentStyleSheet,
         })
-        this.userStyleSheet = CSSStyleSheet.create(globalThis, undefined, {
+        this._userStyleSheet = CSSStyleSheet.create(globalThis, undefined, {
             location: this.baseURI,
             rules: userStyleSheet,
         })
@@ -223,15 +274,8 @@ export class Document extends Node {
     /**
      * @returns {Element}
      */
-    get children() {
-        return this.childNodes.filter(node => node instanceof Element)
-    }
-
-    /**
-     * @returns {Element}
-     */
     get documentElement() {
-        return this.children[0]
+        return this.children._list[0]
     }
 }
 
@@ -242,10 +286,11 @@ export class DocumentFragment extends Node {
     nodeType = DOCUMENT_FRAGMENT_NODE_TYPE
 
     /**
-     * @returns {Element}
+     * @param {object} properties
      */
-    get children() {
-        return this.childNodes.filter(node => node instanceof Element)
+    constructor(properties) {
+        super(properties)
+        this.children = new HTMLCollection(this.childNodes)
     }
 
     /**
@@ -307,48 +352,39 @@ export class Element extends Node {
 
         this.attributes = attributes.map(({ localName, namespaceURI = null, value = '' }) =>
             ({ localName, namespaceURI, ownerElement: this, value }))
+        this.children = new HTMLCollection(this.childNodes)
         this.classList = new DOMTokenList(this.getAttribute('class')?.split(' '))
         this.indeterminate = indeterminate
         this.isContentEditable = isContentEditable
         this.localName = localName
 
-        this.disabled = !!this.getAttributeNode('disabled')
-        this.id = this.getAttribute('id') ?? ''
         this.form = form
         form?.elements.push(this)
         fieldSet?.elements.push(this)
         this.name = this.getAttribute('name') ?? ''
-        this.readOnly = !!this.getAttributeNode('readonly')
         this.required = !!this.getAttributeNode('required')
         this.slot = this.getAttribute('slot') ?? ''
 
         const { parentElement } = this
         if (parentElement?.shadowRoot) {
-            parentElement.shadowRoot.children.find(element => element.name === this.slot)._slotted.push(this)
+            parentElement.shadowRoot.children._list.find(element => element.name === this.slot)._slotted.push(this)
         }
 
-        const { ownerDocument: { selected } } = this
+        const { ownerDocument: { _selected } } = this
         selectors.forEach(selector => {
-            if (selected.has(selector)) {
-                selected.get(selector).push(this)
+            if (_selected.has(selector)) {
+                _selected.get(selector).push(this)
             } else {
-                selected.set(selector, [this])
+                _selected.set(selector, [this])
             }
         })
-    }
-
-    /**
-     * @returns {Element}
-     */
-    get children() {
-        return this.childNodes.filter(node => node instanceof Element)
     }
 
     /**
      * @returns {Element|null}
      */
     get firstElementChild() {
-        return this.childNodes.find(node => node instanceof Element) ?? null
+        return this.childNodes._list.find(node => node instanceof Element) ?? null
     }
 
     /**
@@ -536,31 +572,9 @@ export class HTMLButtonElement extends HTMLElement {
 
 export class HTMLDataListElement extends HTMLElement { localName = 'datalist' }
 
-export class HTMLDetailsElement extends HTMLElement {
+export class HTMLDetailsElement extends HTMLElement { localName = 'details' }
 
-    localName = 'details'
-
-    /**
-     * @param {object} properties
-     */
-    constructor(properties) {
-        super(properties)
-        this.open = properties.open ?? !!this.getAttributeNode('open')
-    }
-}
-
-export class HTMLDialogElement extends HTMLElement {
-
-    localName = 'dialog'
-
-    /**
-     * @param {object} properties
-     */
-    constructor(properties) {
-        super(properties)
-        this.open = properties.open ?? !!this.getAttributeNode('open')
-    }
-}
+export class HTMLDialogElement extends HTMLElement { localName = 'dialog' }
 
 export class HTMLDivElement extends HTMLElement { localName = 'div' }
 
@@ -602,8 +616,7 @@ export class HTMLInputElement extends HTMLElement {
 
         const { checked, value } = properties
 
-        this.defaultChecked = !!this.getAttributeNode('checked')
-        this.checked = checked ?? this.defaultChecked
+        this.checked = checked ?? !!this.getAttributeNode('checked')
         this.max = this.getAttribute('max') ?? ''
         this.min = this.getAttribute('min') ?? ''
         this.step = this.getAttribute('step') ?? ''
@@ -628,7 +641,7 @@ export class HTMLInputElement extends HTMLElement {
             case 'range':
             case 'time':
             case 'week':
-                if (this.ownerDocument.selected.get(':out-of-range')?.includes(this)) {
+                if (this.ownerDocument._selected.get(':out-of-range')?.includes(this)) {
                     return { rangeOverflow: true, rangeUnderflow: true }
                 }
                 if (this.type === 'range') {
@@ -686,8 +699,7 @@ export class HTMLOptionElement extends HTMLElement {
 
         super(properties)
 
-        this.defaultSelected = !!this.getAttributeNode('selected')
-        this.selected = properties.selected ?? this.defaultSelected
+        this.selected = properties.selected ?? !!this.getAttributeNode('selected')
 
         const select = findAncestor(this, element => element instanceof HTMLSelectElement)
         if (select) {

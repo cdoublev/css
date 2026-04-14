@@ -474,7 +474,7 @@ describe('CSSStyleDeclaration.setProperty(), CSSStyleDeclaration.getPropertyValu
             userAgentStyleSheet: 'html { order: 2 !important }',
             userStyleSheet: 'html { order: 3 !important }',
         })
-        const { userAgentStyleSheet, userStyleSheet } = document
+        const { _userAgentStyleSheet, _userStyleSheet } = document
         const html = new HTMLHtmlElement({
             attributes: [
                 { localName: 'id', value: 'id' },
@@ -494,9 +494,9 @@ describe('CSSStyleDeclaration.setProperty(), CSSStyleDeclaration.getPropertyValu
         assert.equal(style.order, '1')
         html.style.order = '5'
         assert.equal(style.order, '2')
-        userAgentStyleSheet.cssRules[0].style.order = '8'
+        _userAgentStyleSheet.cssRules[0].style.order = '8'
         assert.equal(style.order, '3')
-        userStyleSheet.cssRules[0].style.order = '7'
+        _userStyleSheet.cssRules[0].style.order = '7'
         assert.equal(style.order, '4')
         authorStyleSheet.cssRules[0].style.order = '6'
         assert.equal(style.order, '5')
@@ -504,9 +504,9 @@ describe('CSSStyleDeclaration.setProperty(), CSSStyleDeclaration.getPropertyValu
         assert.equal(style.order, '6')
         authorStyleSheet.deleteRule(0)
         assert.equal(style.order, '7')
-        userStyleSheet.deleteRule(0)
+        _userStyleSheet.deleteRule(0)
         assert.equal(style.order, '8')
-        userAgentStyleSheet.deleteRule(0)
+        _userAgentStyleSheet.deleteRule(0)
 
         const constructedStyleSheet = new globalThis.CSSStyleSheet()
 

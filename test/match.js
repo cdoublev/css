@@ -652,10 +652,10 @@ describe('selector', () => {
         /**
          * <html>
          *   <body>
-         *     <details open></details>  <!-- closed by the user -->
-         *     <details></details>  <-- open by the user -->
-         *     <dialog open></dialog>  <!-- closed by the user -->
-         *     <dialog></dialog>  <-- open by the user -->
+         *     <details></details>
+         *     <dialog></dialog>
+         *     <details open></details>
+         *     <dialog open></dialog>
          *     <div>
          *       #shadow-root
          *         <video></video>
@@ -675,24 +675,20 @@ describe('selector', () => {
             pictureInPicture: true,
         })
         new HTMLDetailsElement({
-            attributes: [{ localName: 'open', value: 'true' }],
-            open: false,
-            ownerDocument: document,
-            parentNode: body,
-        })
-        const openDetails = new HTMLDetailsElement({
-            open: true,
             ownerDocument: document,
             parentNode: body,
         })
         new HTMLDialogElement({
+            ownerDocument: document,
+            parentNode: body,
+        })
+        const openDetails = new HTMLDetailsElement({
             attributes: [{ localName: 'open', value: 'true' }],
-            open: false,
             ownerDocument: document,
             parentNode: body,
         })
         const openDialog = new HTMLDialogElement({
-            open: true,
+            attributes: [{ localName: 'open', value: 'true' }],
             ownerDocument: document,
             parentNode: body,
         })
@@ -715,7 +711,7 @@ describe('selector', () => {
 
         const selections = [
             [':fullscreen', [host, video]],
-            [':modal', [openDialog, host, video]],
+            [':modal', [host, video]],
             [':open', [openDetails, openDialog]],
             [':picture-in-picture', [host, video]],
         ]
@@ -848,7 +844,7 @@ describe('selector', () => {
         new HTMLOptionElement({
             form,
             ownerDocument: document,
-            parentNode: form.childNodes.at(-1),
+            parentNode: form.childNodes._list.at(-1),
         })
         new HTMLSelectElement({
             attributes: [{ localName: 'multiple' }],
@@ -860,7 +856,7 @@ describe('selector', () => {
             attributes: [{ localName: 'selected' }],
             form,
             ownerDocument: document,
-            parentNode: form.childNodes.at(-1),
+            parentNode: form.childNodes._list.at(-1),
         })
         new HTMLTextAreaElement({
             form,
@@ -937,7 +933,7 @@ describe('selector', () => {
         new HTMLOptionElement({
             form,
             ownerDocument: document,
-            parentNode: form.childNodes.at(-1),
+            parentNode: form.childNodes._list.at(-1),
         })
         new HTMLTextAreaElement({
             attributes: [{ localName: 'value', value: 'value' }],
@@ -947,7 +943,7 @@ describe('selector', () => {
             selectors: [':blank'],
         })
 
-        assert.match(':blank', document.selected.get(':blank'), document)
+        assert.match(':blank', document._selected.get(':blank'), document)
     })
     test(':checked, :unchecked', () => {
 
@@ -1032,14 +1028,14 @@ describe('selector', () => {
             attributes: [{ localName: 'selected' }],
             form,
             ownerDocument: document,
-            parentNode: form.childNodes.at(-1),
+            parentNode: form.childNodes._list.at(-1),
             selected: false,
             selectors: [':unchecked'],
         })
         new HTMLOptionElement({
             form,
             ownerDocument: document,
-            parentNode: form.childNodes.at(-1),
+            parentNode: form.childNodes._list.at(-1),
             selectors: [':unchecked'],
         })
 
@@ -1080,7 +1076,7 @@ describe('selector', () => {
         new HTMLOptionElement({
             form,
             ownerDocument: document,
-            parentNode: form.childNodes.at(-1),
+            parentNode: form.childNodes._list.at(-1),
             selectors: [':checked'],
         })
         new HTMLSelectElement({
@@ -1093,19 +1089,19 @@ describe('selector', () => {
             attributes: [{ localName: 'selected' }],
             form,
             ownerDocument: document,
-            parentNode: form.childNodes.at(-1),
+            parentNode: form.childNodes._list.at(-1),
             selectors: [':checked'],
         })
         new HTMLOptionElement({
             attributes: [{ localName: 'selected' }],
             form,
             ownerDocument: document,
-            parentNode: form.childNodes.at(-1),
+            parentNode: form.childNodes._list.at(-1),
             selectors: [':checked'],
         })
 
-        assert.match(':unchecked', document.selected.get(':unchecked'), document)
-        assert.match(':checked', document.selected.get(':checked'), document)
+        assert.match(':unchecked', document._selected.get(':unchecked'), document)
+        assert.match(':checked', document._selected.get(':checked'), document)
     })
     test(':default', () => {
 
@@ -1281,7 +1277,7 @@ describe('selector', () => {
         new HTMLOptionElement({
             form: form4,
             ownerDocument: document,
-            parentNode: form4.childNodes.at(-1),
+            parentNode: form4.childNodes._list.at(-1),
         })
         new HTMLInputElement({
             attributes: [
@@ -1323,14 +1319,14 @@ describe('selector', () => {
             attributes: [{ localName: 'selected' }],
             form: form4,
             ownerDocument: document,
-            parentNode: form4.childNodes.at(-1),
+            parentNode: form4.childNodes._list.at(-1),
             selectors: [':default'],
         })
         new HTMLOptionElement({
             attributes: [{ localName: 'selected' }],
             form: form4,
             ownerDocument: document,
-            parentNode: form4.childNodes.at(-1),
+            parentNode: form4.childNodes._list.at(-1),
             selectors: [':default'],
         })
         new HTMLSelectElement({
@@ -1343,7 +1339,7 @@ describe('selector', () => {
             attributes: [{ localName: 'selected' }],
             form: form4,
             ownerDocument: document,
-            parentNode: form4.childNodes.at(-1),
+            parentNode: form4.childNodes._list.at(-1),
             selected: false,
             selectors: [':default'],
         })
@@ -1351,11 +1347,11 @@ describe('selector', () => {
             attributes: [{ localName: 'selected' }],
             form: form4,
             ownerDocument: document,
-            parentNode: form4.childNodes.at(-1),
+            parentNode: form4.childNodes._list.at(-1),
             selectors: [':default'],
         })
 
-        assert.match(':default', document.selected.get(':default'), document)
+        assert.match(':default', document._selected.get(':default'), document)
     })
     test(':disabled, :enabled', () => {
 
@@ -1450,13 +1446,13 @@ describe('selector', () => {
         new HTMLOptGroupElement({
             form,
             ownerDocument: document,
-            parentNode: form.childNodes.at(-1),
+            parentNode: form.childNodes._list.at(-1),
             selectors: [':enabled'],
         })
         new HTMLOptionElement({
             form,
             ownerDocument: document,
-            parentNode: form.childNodes.at(-1).childNodes.at(-1),
+            parentNode: form.childNodes._list.at(-1).childNodes._list.at(-1),
             selectors: [':enabled'],
         })
         new HTMLSelectElement({
@@ -1469,20 +1465,20 @@ describe('selector', () => {
             attributes: [{ localName: 'disabled' }],
             form,
             ownerDocument: document,
-            parentNode: form.childNodes.at(-1),
+            parentNode: form.childNodes._list.at(-1),
             selectors: [':disabled'],
         })
         new HTMLOptionElement({
             form,
             ownerDocument: document,
-            parentNode: form.childNodes.at(-1).childNodes.at(-1),
+            parentNode: form.childNodes._list.at(-1).childNodes._list.at(-1),
             selectors: [':disabled'],
         })
         new HTMLOptionElement({
             attributes: [{ localName: 'disabled' }],
             form,
             ownerDocument: document,
-            parentNode: form.childNodes.at(-1),
+            parentNode: form.childNodes._list.at(-1),
             selectors: [':disabled'],
         })
         new HTMLTextAreaElement({
@@ -1536,14 +1532,14 @@ describe('selector', () => {
         })
         new HTMLOptGroupElement({
             ownerDocument: document,
-            parentNode: legend.childNodes.at(-1),
+            parentNode: legend.childNodes._list.at(-1),
             selectors: [':enabled'],
         })
         new HTMLOptionElement({
             fieldSet: disabledFieldSet,
             form,
             ownerDocument: document,
-            parentNode: legend.childNodes.at(-1).childNodes.at(-1),
+            parentNode: legend.childNodes._list.at(-1).childNodes._list.at(-1),
             selectors: [':enabled'],
         })
         new HTMLTextAreaElement({
@@ -1581,7 +1577,7 @@ describe('selector', () => {
             fieldSet,
             form,
             ownerDocument: document,
-            parentNode: fieldSet.childNodes.at(-1),
+            parentNode: fieldSet.childNodes._list.at(-1),
             selectors: [':disabled'],
         })
         new HTMLButtonElement({
@@ -1607,12 +1603,12 @@ describe('selector', () => {
         })
         new HTMLOptGroupElement({
             ownerDocument: document,
-            parentNode: fieldSet.childNodes.at(-1),
+            parentNode: fieldSet.childNodes._list.at(-1),
             selectors: [':enabled'],
         })
         new HTMLOptionElement({
             ownerDocument: document,
-            parentNode: fieldSet.childNodes.at(-1).childNodes.at(-1),
+            parentNode: fieldSet.childNodes._list.at(-1).childNodes._list.at(-1),
             selectors: [':enabled'],
         })
         new HTMLTextAreaElement({
@@ -1623,8 +1619,8 @@ describe('selector', () => {
             selectors: [':disabled'],
         })
 
-        assert.match(':disabled', document.selected.get(':disabled'), document)
-        assert.match(':enabled', document.selected.get(':enabled'), document)
+        assert.match(':disabled', document._selected.get(':disabled'), document)
+        assert.match(':enabled', document._selected.get(':enabled'), document)
     })
     test(':high-value, :low-value, :optimal-value', () => {
 
@@ -1915,7 +1911,7 @@ describe('selector', () => {
             ],
             form,
             ownerDocument: document,
-            parentNode: form.childNodes.at(-1),
+            parentNode: form.childNodes._list.at(-1),
         })
 
         // :out-of-range
@@ -2186,8 +2182,8 @@ describe('selector', () => {
             selectors: [':in-range'],
         })
 
-        assert.match(':out-of-range', document.selected.get(':out-of-range'), document)
-        assert.match(':in-range', document.selected.get(':in-range'), document)
+        assert.match(':out-of-range', document._selected.get(':out-of-range'), document)
+        assert.match(':in-range', document._selected.get(':in-range'), document)
     })
     test(':invalid, :valid', () => {
 
@@ -2368,7 +2364,7 @@ describe('selector', () => {
         })
         const wrapper = new HTMLDivElement({
             ownerDocument: document,
-            parentNode: form3.childNodes.at(-1),
+            parentNode: form3.childNodes._list.at(-1),
         })
         new HTMLInputElement({
             ownerDocument: document,
@@ -2488,7 +2484,7 @@ describe('selector', () => {
         new HTMLOptionElement({
             form: form3,
             ownerDocument: document,
-            parentNode: form3.childNodes.at(-1),
+            parentNode: form3.childNodes._list.at(-1),
         })
         new HTMLTextAreaElement({
             form: form3,
@@ -2497,8 +2493,8 @@ describe('selector', () => {
             selectors: [':valid'],
         })
 
-        assert.match(':valid', document.selected.get(':valid'), document)
-        assert.match(':invalid', document.selected.get(':invalid'), document)
+        assert.match(':valid', document._selected.get(':valid'), document)
+        assert.match(':invalid', document._selected.get(':invalid'), document)
     })
     test(':indeterminate', () => {
 
@@ -2648,7 +2644,7 @@ describe('selector', () => {
             selectors: [':indeterminate'],
         })
 
-        assert.match(':indeterminate', document.selected.get(':indeterminate'), document)
+        assert.match(':indeterminate', document._selected.get(':indeterminate'), document)
     })
     test(':optional, :required', () => {
 
@@ -3101,8 +3097,8 @@ describe('selector', () => {
             selectors: [':required'],
         })
 
-        assert.match(':optional', document.selected.get(':optional'), document)
-        assert.match(':required', document.selected.get(':required'), document)
+        assert.match(':optional', document._selected.get(':optional'), document)
+        assert.match(':required', document._selected.get(':required'), document)
     })
     test(':placeholder-shown', () => {
 
@@ -3205,7 +3201,7 @@ describe('selector', () => {
             selectors: [':placeholder-shown'],
         })
 
-        assert.match(':placeholder-shown', document.selected.get(':placeholder-shown'), document)
+        assert.match(':placeholder-shown', document._selected.get(':placeholder-shown'), document)
     })
     test(':read-only, :read-write', () => {
 
@@ -3521,7 +3517,7 @@ describe('selector', () => {
             ],
             isContentEditable: true,
             ownerDocument: document,
-            parentNode: form.childNodes.at(-1),
+            parentNode: form.childNodes._list.at(-1),
             selectors: [':read-write'],
         })
         new HTMLInputElement({
@@ -3531,7 +3527,7 @@ describe('selector', () => {
             ],
             isContentEditable: true,
             ownerDocument: document,
-            parentNode: form.childNodes.at(-1),
+            parentNode: form.childNodes._list.at(-1),
             selectors: [':read-only'],
         })
         new HTMLInputElement({
@@ -3541,7 +3537,7 @@ describe('selector', () => {
             ],
             isContentEditable: true,
             ownerDocument: document,
-            parentNode: form.childNodes.at(-1),
+            parentNode: form.childNodes._list.at(-1),
             selectors: [':read-only'],
         })
         new HTMLTextAreaElement({
@@ -3550,7 +3546,7 @@ describe('selector', () => {
             ],
             isContentEditable: true,
             ownerDocument: document,
-            parentNode: form.childNodes.at(-1),
+            parentNode: form.childNodes._list.at(-1),
             selectors: [':read-only'],
         })
         new HTMLTextAreaElement({
@@ -3559,7 +3555,7 @@ describe('selector', () => {
             ],
             isContentEditable: true,
             ownerDocument: document,
-            parentNode: form.childNodes.at(-1),
+            parentNode: form.childNodes._list.at(-1),
             selectors: [':read-only'],
         })
         new HTMLButtonElement({
@@ -3653,8 +3649,8 @@ describe('selector', () => {
             selectors: [':read-write'],
         })
 
-        assert.match(':read-only', document.selected.get(':read-only'), document)
-        assert.match(':read-write', document.selected.get(':read-write'), document)
+        assert.match(':read-only', document._selected.get(':read-only'), document)
+        assert.match(':read-write', document._selected.get(':read-write'), document)
     })
     // Logical
     test(':is(), :not(), :where()', () => {
@@ -3843,7 +3839,7 @@ describe('selector', () => {
             ':local-link(2)',
             ':local-link(3)',
         ]
-        selectors.forEach(selector => assert.match(selector, document.selected.get(selector), document))
+        selectors.forEach(selector => assert.match(selector, document._selected.get(selector), document))
     })
     // Resource
     test(':buffering, :muted, :paused, :playing, :seeking, :stalled, :volume-locked', () => {
@@ -3889,7 +3885,7 @@ describe('selector', () => {
             ':stalled',
             ':volume-locked',
         ]
-        selectors.forEach(selector => assert.match(selector, document.selected.get(selector), document))
+        selectors.forEach(selector => assert.match(selector, document._selected.get(selector), document))
     })
     // Tree-structural
     test(':root, :host, :host(), :host-context(), :scope, &', () => {
