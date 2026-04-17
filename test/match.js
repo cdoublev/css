@@ -384,7 +384,7 @@ describe('selector', () => {
          * @param {object} [context]
          * @returns {*[]}
          */
-        match(selector, elements = [], tree, { namespaces: ns = {}, ...context } = {}) {
+        match(selector, elements = [], tree, { includeSubtrees = true, namespaces: ns = {}, ...context } = {}) {
 
             const ctx = createContext()
             const namespaces = ctx.globals.get('namespaces')
@@ -392,7 +392,7 @@ describe('selector', () => {
             Object.entries(ns).forEach(([key, value]) => namespaces.set(key, value))
 
             const selectorList = parseGrammar(selector, '<selector-list>', ctx)
-            const matched = matchTreesAgainstSelectors([tree], selectorList, { ...context, namespaces })
+            const matched = matchTreesAgainstSelectors([tree], selectorList, { ...context, includeSubtrees, namespaces })
             const length = Math.max(elements.length, matched.length)
 
             for (let index = 0; index < length; index++) {
