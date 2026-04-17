@@ -381,18 +381,18 @@ describe('selector', () => {
          * @param {string} selector
          * @param {Element[]} [elements]
          * @param {Document|Element|ShadowRoot} tree
-         * @param {object} [options]
+         * @param {object} [context]
          * @returns {*[]}
          */
-        match(selector, elements = [], tree, { namespaces: ns = {}, ...options } = {}) {
+        match(selector, elements = [], tree, { namespaces: ns = {}, ...context } = {}) {
 
-            const context = createContext()
-            const namespaces = context.globals.get('namespaces')
+            const ctx = createContext()
+            const namespaces = ctx.globals.get('namespaces')
 
             Object.entries(ns).forEach(([key, value]) => namespaces.set(key, value))
 
-            const selectorList = parseGrammar(selector, '<selector-list>', context)
-            const matched = matchTreesAgainstSelectors([tree], selectorList, { ...options, namespaces })
+            const selectorList = parseGrammar(selector, '<selector-list>', ctx)
+            const matched = matchTreesAgainstSelectors([tree], selectorList, { ...context, namespaces })
             const length = Math.max(elements.length, matched.length)
 
             for (let index = 0; index < length; index++) {
@@ -3947,8 +3947,8 @@ describe('selector', () => {
             [':has(&)', [html, body], document, { anchors: [host] }],
             [':has(&)', [], document, { scopes: { inclusive: true, roots: [host] } }],
         ]
-        selections.forEach(([selector, expected, tree = document, options]) =>
-            assert.match(selector, expected, tree, options))
+        selections.forEach(([selector, expected, tree = document, context]) =>
+            assert.match(selector, expected, tree, context))
     })
     test(':empty, :*-child, :*-of-type', () => {
 
