@@ -2975,6 +2975,16 @@ describe('<color>', () => {
             'light-dark(rgb(-255 510 0), hsl(180 -1 0 / 0.5))')
     })
 })
+describe('<color-interpolation-method>', () => {
+    test('representation', () => {
+        const colorSpace = keyword('srgb', ['<rectangular-color-space>'])
+        const method = list([keyword('in'), colorSpace], ' ', ['<color-interpolation-method>'])
+        assert.representation('<color-interpolation-method>', 'in srgb', method)
+    })
+    test('valid', () => {
+        assert.valid('<color-interpolation-method>', 'in hsl shorter hue', 'in hsl')
+    })
+})
 describe('<color-stripe>', () => {
     test('representation', () => {
         const color = keyword('green', ['<named-color>', '<color-base>', '<color>'])
