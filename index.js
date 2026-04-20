@@ -20,5 +20,6 @@ function install(globalObject = globalThis) {
 }
 
 export { CSSStyleProperties, CSSStyleSheet, StyleSheetList } from './lib/cssom/index.js'
+export { matchElementAgainstSelectors, matchTreesAgainstSelectors } from './lib/match/selector.js'
 export { parseGrammar, parseListGrammar } from './lib/parse/parser.js'
 export { install }
