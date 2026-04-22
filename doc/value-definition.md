@@ -93,7 +93,7 @@ Some definitions cannot be extracted by `w3c/reffy`, are written in prose, or ex
 
   - a specification is partially or entirely superseded by one or more specifications
   - a definition is duplicated instead of linking to a definition from an authoritative specification
-  - a definition only includes new values allowed in the definition from the authoritative specification
+  - a definition only includes new values accepted in the definition from the authoritative specification
 
 The following processing steps are applied to work around these problems:
 

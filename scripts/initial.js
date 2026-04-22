@@ -33,9 +33,8 @@ function serializeTypes(types) {
  * @returns {string}
  */
 function serializeListArguments(separator, types, tabs) {
-    // Remove default `types` argument (empty set)
+    // Do not serialize an optional argument with its default value
     if (types.length === 0) {
-        // Remove default `separator` argument (whitespace)
         if (separator === ' ') {
             return ''
         }

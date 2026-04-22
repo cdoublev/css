@@ -769,7 +769,7 @@ describe('--*', () => {
             // Nested ; and !
             ['(;)'],
             ['(!)'],
-            // Positioned {}-block
+            // Positioned {} block
             ['positioned {} block'],
             // Serialize exactly as declared but without leading and trailing whitespaces
             [

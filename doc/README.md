@@ -179,7 +179,7 @@ When grouping at-rules like `@media` and `@supports` are nested in a style rule,
 
 The context representation must allow accessing the parent rule definition, which must tell:
 
-  - which rules are allowed in its block value
+  - which rules are accepted in its block value
   - which properties and descriptors can be declared in its block value
   - whether declarations cascade
   - whether declarations apply to elements
@@ -368,7 +368,7 @@ To parse a rule, its definition is first resolved from the definitions of rules 
 
 After consuming and validating its prelude, its CSSOM representation is created, then its constructor parses its block value, then `matchStyleSheet()` validates the order of the rule and registers `@namespace` in `context.globals`.
 
-To parse a declaration, its definition is first resolved from the dictionaries of properties and descriptors accepted in the [context](#Context), with the `<ident-token>` at the front of the input. Then its value is validated. When they are allowed in the context, the parser first tries to parse the input against CSS-wide keywords, which must be interpreted in a custom property value like in standard properties. Then it looks for an arbitrary substitution, and returns a parse error if it finds a positioned {} block, which would mean that there might be a qualified rule at the front of the input. Then it tries to parse the input against the grammar of the property or descriptor and finally, then against the grammar of whole value substitutions. Finally, it validates a priority, if any.
+To parse a declaration, its definition is first resolved from the dictionaries of properties and descriptors accepted in the [context](#Context), with the `<ident-token>` at the front of the input. Then its value is validated. When they are accepted in the context, the parser first tries to parse the input against CSS-wide keywords, which must be interpreted in a custom property value like in standard properties. Then it looks for an arbitrary substitution, and returns a parse error if it finds a positioned {} block, which would mean that there might be a qualified rule at the front of the input. Then it tries to parse the input against the grammar of the property or descriptor and finally, then against the grammar of whole value substitutions. Finally, it validates a priority, if any.
 
 **Note:** when looking for an arbitrary substitution, it does not *immediately* return `null` if it finds `<bad-*-token>`, `)`, `]`, `}`, `;`, `!` (when they do not close a parent structure in the input), which are all invalid tokens in `<declaration-value>`, to allow returning a parse error if it later finds a positioned {} block.
 

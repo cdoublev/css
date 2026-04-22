@@ -3,8 +3,8 @@ import { CSSStyleSheet, install } from '@cdoublev/css'
 import { MAX_INTEGER, MIN_INTEGER } from '../lib/values/integers.js'
 import {
     angle,
-    customIdent,
-    dashedIdent,
+    customIdentifier,
+    dashedIdentifier,
     decibel,
     delimiter,
     dimension,
@@ -12,8 +12,8 @@ import {
     flex,
     frequency,
     hash,
-    ident,
-    identToken,
+    identifier,
+    identifierToken,
     integer,
     keyword,
     length,
@@ -576,10 +576,10 @@ describe('backtracking', () => {
 
         // <media-type> and <namespace-prefix> represent <ident>
         const definition = 'a || <media-type> || <namespace-prefix>'
-        const screenMediaType = ident('screen', ['<media-type>'])
-        const screenPrefix = ident('screen', ['<namespace-prefix>'])
-        const colorMediaType = ident('color', ['<media-type>'])
-        const colorPrefix = ident('color', ['<namespace-prefix>'])
+        const screenMediaType = identifier('screen', ['<media-type>'])
+        const screenPrefix = identifier('screen', ['<namespace-prefix>'])
+        const colorMediaType = identifier('color', ['<media-type>'])
+        const colorPrefix = identifier('color', ['<namespace-prefix>'])
 
         assert.representation(definition, 'a screen color', list([a, screenMediaType, colorPrefix]))
         assert.representation(definition, 'a color screen', list([a, colorMediaType, screenPrefix]))
@@ -854,7 +854,7 @@ describe('<any-value>', () => {
         assert.invalid('<any-value>', '(})')
     })
     test('representation', () => {
-        const tokens = [identToken('any'), delimiter(' '), identToken('value')]
+        const tokens = [identifierToken('any'), delimiter(' '), identifierToken('value')]
         const value = list(tokens, '', ['<any-value>'])
         assert.representation('<any-value>', 'any value', value)
     })
@@ -877,7 +877,7 @@ describe('<declaration-value>', () => {
         assert.invalid('<declaration-value>', '!')
     })
     test('representation', () => {
-        const tokens = [identToken('declaration'), delimiter(' '), identToken('value')]
+        const tokens = [identifierToken('declaration'), delimiter(' '), identifierToken('value')]
         const value = list(tokens, '', ['<declaration-value>'])
         assert.representation('<declaration-value>', 'declaration value', value)
     })
@@ -937,7 +937,7 @@ describe('<ident>', () => {
         assert.invalid('<ident>', '-\\\n')
     })
     test('representation', () => {
-        assert.representation('<ident>', 'identifier', ident('identifier'))
+        assert.representation('<ident>', 'identifier', identifier('identifier'))
     })
     test('valid', () => {
         // Starts with identifier start code point(s)
@@ -990,7 +990,7 @@ describe('<custom-ident>', () => {
         cssWideKeywords.forEach(input => assert.invalid('<custom-ident>', input))
     })
     test('representation', () => {
-        assert.representation('<custom-ident>', 'IDENTIFIER', customIdent('IDENTIFIER'))
+        assert.representation('<custom-ident>', 'IDENTIFIER', customIdentifier('IDENTIFIER'))
     })
 })
 describe('<dashed-ident>', () => {
@@ -998,7 +998,7 @@ describe('<dashed-ident>', () => {
         assert.invalid('<dashed-ident>', '-custom-identifier')
     })
     test('representation', () => {
-        assert.representation('<dashed-ident>', '--custom-identifier', dashedIdent('--custom-identifier'))
+        assert.representation('<dashed-ident>', '--custom-identifier', dashedIdentifier('--custom-identifier'))
     })
 })
 describe('<custom-property-name>', () => {
@@ -1009,7 +1009,7 @@ describe('<custom-property-name>', () => {
         assert.representation(
             '<custom-property-name>',
             '--dashed-identifier',
-            dashedIdent('--dashed-identifier', ['<custom-property-name>']))
+            dashedIdentifier('--dashed-identifier', ['<custom-property-name>']))
     })
 })
 describe('<ndashdigit-ident>', () => {
@@ -1019,7 +1019,7 @@ describe('<ndashdigit-ident>', () => {
         assert.invalid('<ndashdigit-ident>', 'n-1-')
     })
     test('representation', () => {
-        assert.representation('<ndashdigit-ident>', 'n-11', identToken('n-11', ['<ndashdigit-ident>']))
+        assert.representation('<ndashdigit-ident>', 'n-11', identifierToken('n-11', ['<ndashdigit-ident>']))
     })
 })
 describe('<dashndashdigit-ident>', () => {
@@ -1029,7 +1029,7 @@ describe('<dashndashdigit-ident>', () => {
         assert.invalid('<dashndashdigit-ident>', '-n-1-')
     })
     test('representation', () => {
-        assert.representation('<dashndashdigit-ident>', '-n-11', identToken('-n-11', ['<dashndashdigit-ident>']))
+        assert.representation('<dashndashdigit-ident>', '-n-11', identifierToken('-n-11', ['<dashndashdigit-ident>']))
     })
 })
 describe('<string>', () => {
@@ -2369,7 +2369,7 @@ describe('<anchored-feature>', () => {
         assert.invalid('<anchored-feature>', 'scrollable', containerRule)
     })
     test('representation', () => {
-        const feature = ident('fallback', ['<mf-name>', '<mf-boolean>', '<media-feature>', '<anchored-feature>'])
+        const feature = identifier('fallback', ['<mf-name>', '<mf-boolean>', '<media-feature>', '<anchored-feature>'])
         assert.representation('<anchored-feature>', 'fallback', feature, containerRule)
     })
 })
@@ -2405,7 +2405,7 @@ describe('<arc-command>', () => {
 })
 describe('<attr()>', () => {
     test('representation', () => {
-        const name = list([omitted, identToken('name')], '', ['<attr-name>'])
+        const name = list([omitted, identifierToken('name')], '', ['<attr-name>'])
         const attribute = {
             name: 'attr',
             types: ['<function>', '<attr()>'],
@@ -2436,7 +2436,7 @@ describe('<attr-name>', () => {
         assert.invalid('<attr-name>', 'prefix| name')
     })
     test('representation', () => {
-        assert.representation('<attr-name>', 'name', list([omitted, identToken('name')], '', ['<attr-name>']))
+        assert.representation('<attr-name>', 'name', list([omitted, identifierToken('name')], '', ['<attr-name>']))
     })
 })
 describe('<baseline-position>', () => {
@@ -3013,7 +3013,7 @@ describe('<container-name>', () => {
         assert.invalid('<container-name>', 'or')
     })
     test('representation', () => {
-        assert.representation('<container-name>', 'name', customIdent('name', ['<container-name>']))
+        assert.representation('<container-name>', 'name', customIdentifier('name', ['<container-name>']))
     })
 })
 describe('<content()>', () => {
@@ -3042,7 +3042,7 @@ describe('<control-value()>', () => {
 })
 describe('<counter>', () => {
     test('representation', () => {
-        const name = customIdent('chapters', ['<counter-name>'])
+        const name = customIdentifier('chapters', ['<counter-name>'])
         assert.representation('<counter>', 'counter(chapters)', {
             name: 'counter',
             types: ['<function>', '<counter()>', '<counter>'],
@@ -3066,7 +3066,7 @@ describe('<counter-name>', () => {
         assert.invalid('<counter-name>', 'NONE')
     })
     test('representation', () => {
-        assert.representation('<counter-name>', 'chapters', customIdent('chapters', ['<counter-name>']))
+        assert.representation('<counter-name>', 'chapters', customIdentifier('chapters', ['<counter-name>']))
     })
 })
 describe('<counter-style-name>', () => {
@@ -3075,7 +3075,7 @@ describe('<counter-style-name>', () => {
         assert.invalid('<counter-style-name>', 'DECIMAL')
     })
     test('representation', () => {
-        assert.representation('<counter-style-name>', 'custom', customIdent('custom', ['<counter-style-name>']))
+        assert.representation('<counter-style-name>', 'custom', customIdentifier('custom', ['<counter-style-name>']))
     })
     test('valid', () => {
         let context = createContext(styleRule)
@@ -3131,8 +3131,14 @@ describe('<family-name>', () => {
             }))
     })
     test('representation', () => {
-        assert.representation('<family-name>', '"serif"', string('serif', ['<family-name>']))
-        assert.representation('<family-name>', 'the serif', list([customIdent('the'), customIdent('serif')], ' ', ['<family-name>']))
+        assert.representation(
+            '<family-name>',
+            '"serif"',
+            string('serif', ['<family-name>']))
+        assert.representation(
+            '<family-name>',
+            'the serif',
+            list([customIdentifier('the'), customIdentifier('serif')], ' ', ['<family-name>']))
     })
 })
 describe('<feature-tag-value>', () => {
@@ -3168,7 +3174,7 @@ describe('<function-parameter>', () => {
         assert.invalid('<function-parameter>', '--name <integer>: 1.5')
     })
     test('representation', () => {
-        const name = dashedIdent('--name', ['<custom-property-name>'])
+        const name = dashedIdentifier('--name', ['<custom-property-name>'])
         const declaration = list([name, omitted, omitted], ' ', ['<function-parameter>'])
         assert.representation('<function-parameter>', '--name', declaration)
     })
@@ -3385,7 +3391,7 @@ describe('<keyframes-name>', () => {
         assert.invalid('<keyframes-name>', 'NONE')
     })
     test('representation', () => {
-        assert.representation('<keyframes-name>', 'animation', customIdent('animation', ['<keyframes-name>']))
+        assert.representation('<keyframes-name>', 'animation', customIdentifier('animation', ['<keyframes-name>']))
     })
 })
 describe('<layer-name>', () => {
@@ -3397,7 +3403,7 @@ describe('<layer-name>', () => {
         cssWideKeywords.forEach(input => assert.invalid('<layer-name>', input))
     })
     test('representation', () => {
-        assert.representation('<layer-name>', 'reset', list([ident('reset'), list([], '')], '', ['<layer-name>']))
+        assert.representation('<layer-name>', 'reset', list([identifier('reset'), list([], '')], '', ['<layer-name>']))
     })
 })
 describe('<line-names>', () => {
@@ -3409,7 +3415,7 @@ describe('<line-names>', () => {
         assert.representation('<line-names>', '[name]', {
             associatedToken: '[',
             types: ['<block>', '<line-names>'],
-            value: list([customIdent('name')]),
+            value: list([customIdentifier('name')]),
         })
     })
 })
@@ -3431,7 +3437,7 @@ describe('<media-feature>', () => {
         assert.invalid('<media-feature>', 'scrollable', mediaRule)
     })
     test('representation', () => {
-        const feature = ident('color', ['<mf-name>', '<mf-boolean>', '<media-feature>'])
+        const feature = identifier('color', ['<mf-name>', '<mf-boolean>', '<media-feature>'])
         assert.representation('<media-feature>', 'color', feature, mediaRule)
     })
     test('valid', () => {
@@ -3450,7 +3456,7 @@ describe('<media-type>', () => {
         assert.invalid('<media-type>', 'layer')
     })
     test('representation', () => {
-        assert.representation('<media-type>', 'ALL', ident('all', ['<media-type>']))
+        assert.representation('<media-type>', 'ALL', identifier('all', ['<media-type>']))
     })
 })
 describe('<mf-comparison>', () => {
@@ -3468,7 +3474,7 @@ describe('<mf-boolean>', () => {
         assert.invalid('<mf-boolean>', 'min-orientation', mediaRule)
     })
     test('representation', () => {
-        assert.representation('<mf-boolean>', 'color', ident('color', ['<mf-name>', '<mf-boolean>']), mediaRule)
+        assert.representation('<mf-boolean>', 'color', identifier('color', ['<mf-name>', '<mf-boolean>']), mediaRule)
     })
     test('valid', () => {
         assert.valid('<mf-boolean>', 'orientation', 'orientation', mediaRule)
@@ -3480,7 +3486,7 @@ describe('<mf-plain>', () => {
         assert.invalid('<mf-plain>', 'color: red', mediaRule)
     })
     test('representation', () => {
-        const name = ident('color', ['<mf-name>'])
+        const name = identifier('color', ['<mf-name>'])
         const value = integer(1, ['<mf-value>'])
         const feature = list([name, delimiter(':'), value], ' ', ['<mf-plain>'])
         assert.representation('<mf-plain>', 'color: 1', feature, mediaRule)
@@ -3507,7 +3513,7 @@ describe('<mf-range>', () => {
         assert.invalid('<mf-range>', '1px < color < 1', mediaRule)
     })
     test('representation', () => {
-        const name = ident('color', ['<mf-name>'])
+        const name = identifier('color', ['<mf-name>'])
         const comparator = delimiter('=', ['<mf-eq>', '<mf-comparison>'])
         const value = integer(1, ['<mf-value>'])
         const range = list([name, comparator, value], ' ', ['<mf-range>'])
@@ -3560,7 +3566,7 @@ describe('<page-selector-list>', () => {
     })
     test('representation', () => {
 
-        const toc = identToken('toc')
+        const toc = identifierToken('toc')
         const pseudoSelector = list([colon, keyword('right')], '', ['<pseudo-page>'])
         const pseudoChain = list([pseudoSelector], '')
         const selector = list([toc, pseudoChain], '', ['<page-selector>'])
@@ -3655,7 +3661,7 @@ describe('<pt-name-and-class-selector>', () => {
         assert.invalid('<pt-name-and-class-selector>', '.class .class')
     })
     test('representation', () => {
-        const name = customIdent('name', ['<pt-name-selector>'])
+        const name = customIdentifier('name', ['<pt-name-selector>'])
         const selector = list([name, omitted], '', ['<pt-name-and-class-selector>'])
         assert.representation('<pt-name-and-class-selector>', 'name', selector)
     })
@@ -3738,7 +3744,7 @@ describe('<scroll-state-feature>', () => {
         assert.invalid('<scroll-state-feature>', 'inline-size', containerRule)
     })
     test('representation', () => {
-        const feature = ident('scrollable', ['<mf-name>', '<mf-boolean>', '<media-feature>', '<scroll-state-feature>'])
+        const feature = identifier('scrollable', ['<mf-name>', '<mf-boolean>', '<media-feature>', '<scroll-state-feature>'])
         assert.representation('<scroll-state-feature>', 'scrollable', feature, containerRule)
     })
 })
@@ -3790,7 +3796,7 @@ describe('<size-feature>', () => {
         assert.invalid('<size-feature>', 'scrollable', containerRule)
     })
     test('representation', () => {
-        const feature = ident('inline-size', ['<mf-name>', '<mf-boolean>', '<media-feature>', '<size-feature>'])
+        const feature = identifier('inline-size', ['<mf-name>', '<mf-boolean>', '<media-feature>', '<size-feature>'])
         assert.representation('<size-feature>', 'inline-size', feature, containerRule)
     })
 })
@@ -3843,7 +3849,7 @@ describe('<string()>', () => {
         assert.representation('<string()>', 'string(name)', {
             name: 'string',
             types: ['<function>', '<string()>'],
-            value: list([ident('name', ['<custom-ident>']), omitted, omitted]),
+            value: list([identifier('name', ['<custom-ident>']), omitted, omitted]),
         })
     })
     test('valid', () => {
@@ -3945,7 +3951,7 @@ describe('<supports-env-fn>', () => {
         assert.representation('<supports-env-fn>', 'env(PREFERRED-TEXT-SCALE)', {
             name: 'env',
             types: ['<supports-env-fn>'],
-            value: ident('preferred-text-scale'),
+            value: identifier('preferred-text-scale'),
         })
     })
 })
@@ -3977,7 +3983,7 @@ describe('<supports-font-format-fn>', () => {
         assert.representation('<supports-font-format-fn>', 'font-format(collection)', {
             name: 'font-format',
             types: ['<supports-font-format-fn>'],
-            value: ident('collection'),
+            value: identifier('collection'),
         })
     })
 })
@@ -3990,7 +3996,7 @@ describe('<syntax-component>', () => {
         assert.invalid('<syntax-component>', '<transform-list >')
     })
     test('representation', () => {
-        const componentUnit = ident('a', ['<syntax-single-component>'])
+        const componentUnit = identifier('a', ['<syntax-single-component>'])
         const component = list([componentUnit, omitted], '', ['<syntax-component>'])
         assert.representation('<syntax-component>', 'A', component)
     })
@@ -4117,7 +4123,7 @@ describe('<var()>', () => {
         assert.invalid('<var()>', 'var(--custom, {} a)')
     })
     test('representation', () => {
-        const property = dashedIdent('--custom', ['<custom-property-name>'])
+        const property = dashedIdentifier('--custom', ['<custom-property-name>'])
         const variable = {
             name: 'var',
             types: ['<function>', '<var()>'],
@@ -4155,8 +4161,14 @@ describe('<voice-family-name>', () => {
         assert.invalid('<voice-family-name>', 'preserve')
     })
     test('representation', () => {
-        assert.representation('<voice-family-name>', '"comedian"', string('comedian', ['<voice-family-name>']))
-        assert.representation('<voice-family-name>', 'the comedian', list([customIdent('the'), customIdent('comedian')], ' ', ['<voice-family-name>']))
+        assert.representation(
+            '<voice-family-name>',
+            '"comedian"',
+            string('comedian', ['<voice-family-name>']))
+        assert.representation(
+            '<voice-family-name>',
+            'the comedian',
+            list([customIdentifier('the'), customIdentifier('comedian')], ' ', ['<voice-family-name>']))
     })
 })
 describe('<wq-name>', () => {
@@ -4165,7 +4177,7 @@ describe('<wq-name>', () => {
         assert.invalid('<wq-name>', 'prefix| name')
     })
     test('representation', () => {
-        assert.representation('<wq-name>', 'name', list([omitted, identToken('name')], '', ['<wq-name>']))
+        assert.representation('<wq-name>', 'name', list([omitted, identifierToken('name')], '', ['<wq-name>']))
     })
 })
 
@@ -4254,7 +4266,7 @@ describe('<selector-list>', () => {
     })
     test('representation', () => {
 
-        const subclass = list([delimiter('.'), identToken('class')], '', ['<class-selector>', '<subclass-selector>'])
+        const subclass = list([delimiter('.'), identifierToken('class')], '', ['<class-selector>', '<subclass-selector>'])
         const subclasses = list([subclass], '')
         const compound = list([omitted, subclasses], '', ['<compound-selector>'])
         const complexUnit = list([compound, list([], '')], '', ['<complex-selector-unit>'])
@@ -4323,7 +4335,7 @@ describe('<selector-list>', () => {
 describe('<media-query-list>', () => {
     test('representation', () => {
 
-        const mediaType = ident('all', ['<media-type>'])
+        const mediaType = identifier('all', ['<media-type>'])
         const mediaQuery = list([omitted, mediaType, omitted], ' ', ['<media-query>'])
         const mediaQueryList = list([mediaQuery], ',', ['<media-query-list>'])
 

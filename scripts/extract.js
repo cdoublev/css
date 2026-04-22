@@ -719,8 +719,10 @@ function reportError(spec, name, message) {
  * @param {string} key
  */
 function reportMissingPseudoSelectors(selectors, key) {
+
     const { classes, elements } = pseudos
     const { selectors: { '*': skipFromAllSpecs = [], [key]: skip = [] } } = excluded
+
     selectors.forEach(({ name, values }) => {
         if (skip.includes(name) || skipFromAllSpecs.includes(name)) {
             return
@@ -880,9 +882,12 @@ function sortByName([a], [b]) {
  * @param {string} key
  */
 function addTypes(definitions = [], key) {
+
     const { types: { '*': skipFromAllSpecs = [], [key]: skip = [] } } = excluded
     const excludedFunctions = excluded.functions[key] ?? []
+
     definitions.forEach(({ name, type, value, values }) => {
+
         if (type === 'value') {
             if (!/^<.+>$/.test(name)) {
                 return
@@ -899,26 +904,29 @@ function addTypes(definitions = [], key) {
             name = `<${name}>`
             type = 'type'
         }
+
         if (type === 'type') {
+
             if (replaced.types[name] || skip.includes(name) || skipFromAllSpecs.includes(name)) {
                 addTypes(values, key)
                 return
             }
             if (initial.types[name] || contextSensitiveTypes[name]) {
-                if (value && environment.development) {
+                if (value) {
                     reportError(key, name, `${name} is now assigned a value definition`)
                 }
                 return
             }
             if (!value) {
-                if (environment.development && !replaced[name]) {
+                if (!replaced[name]) {
                     reportError(key, name, `${name} is defined in prose and must be replaced with a value definiton`)
                 }
                 return
             }
+
             const entry = types.find(([type]) => type === name)
             if (entry) {
-                const [base1, v1 = 1] = entry[2].split(/-(\d)$/)
+                const [base1, v1 = 1] = entry.at(-1).split(/-(\d)$/)
                 const [base2, v2 = 1] = key.split(/-(\d)$/)
                 if (base1 !== base2) {
                     throw Error(`Unhandled duplicate definitions of ${name}`)
@@ -930,6 +938,7 @@ function addTypes(definitions = [], key) {
                 types.push([name, value, key])
             }
         }
+
         addTypes(values, key)
     })
 }
@@ -939,18 +948,20 @@ function addTypes(definitions = [], key) {
  * @param {string} key
  */
 function addProperties(definitions = [], key) {
+
     const { properties: { aliases, mappings } } = compatibility
     const { properties: { '*': skipFromAllSpecs = [], [key]: skip = [] } } = excluded
+
     definitions.forEach(({ name, values, ...definition }) => {
+
         if (aliases.has(name) || mappings.has(name) || skip.includes(name) || skipFromAllSpecs.includes(name)) {
             return
         }
         if (initial.properties[name]) {
-            if (environment.development) {
-                reportError(key, name, `${name} (property) is now extracted`)
-            }
+            reportError(key, name, `${name} (property) is now extracted`)
             return
         }
+
         const replacement = replaced.properties[name]
         if (replacement) {
             definition = { ...definition, ...replacement }
@@ -976,6 +987,7 @@ function addProperties(definitions = [], key) {
         } else {
             properties.push([name, definition, key])
         }
+
         addTypes(values, key)
     })
 }
@@ -986,10 +998,13 @@ function addProperties(definitions = [], key) {
  * @param {string} key
  */
 function addDescriptors(definitions = [], rule, key) {
+
     const { descriptors: { [rule]: { aliases, mappings } = {} } } = compatibility
     const { descriptors: { [rule]: initialDescriptors } } = initial
     const { descriptors: { '*': skipFromAllSpecs = [], [key]: skip = [] } } = excluded
+
     definitions.forEach(({ initial = '', name, type, value, values }) => {
+
         // https://github.com/w3c/reffy/issues/1390
         if (type === 'at-rule') {
             addRules([{ descriptors: [], name, value }], key)
@@ -999,11 +1014,10 @@ function addDescriptors(definitions = [], rule, key) {
             return
         }
         if (initialDescriptors?.[name]) {
-            if (environment.development) {
-                reportError(key, name, `${name} (descriptor for ${rule}) is now extracted`)
-            }
+            reportError(key, name, `${name} (descriptor for ${rule}) is now extracted`)
             return
         }
+
         const replacement = replaced.descriptors[rule]?.[name]
         if (replacement) {
             ({ initial = initial, type, value = value, values } = replacement)
@@ -1011,9 +1025,8 @@ function addDescriptors(definitions = [], rule, key) {
         const context = descriptors.find(([key]) => key === rule)
         if (context) {
             const entries = context[1]
-            const index = entries.findIndex(([key]) => key === name)
-            if (-1 < index) {
-                const entry = entries[index]
+            const entry = entries.find(([key]) => key === name)
+            if (entry) {
                 const [, prevDefinition, prevKey] = entry
                 const [base1, v1 = 1] = prevKey.split(/-(\d)$/)
                 const [base2, v2 = 1] = key.split(/-(\d)$/)
@@ -1021,19 +1034,9 @@ function addDescriptors(definitions = [], rule, key) {
                     throw Error(`Unhandled duplicate definitions of the descriptor "${name}"`)
                 }
                 if (v1 < v2) {
-                    const definition = {
-                        initial: initial ?? prevDefinition.initial,
-                        type: type ?? prevDefinition.type,
-                        value: value ?? prevDefinition.value,
-                    }
-                    entry.splice(1, 2, definition, key)
+                    entry.splice(1, 2, { ...prevDefinition, initial, type, value }, key)
                 } else {
-                    const definition = {
-                        initial: prevDefinition.initial ?? initial,
-                        type: prevDefinition.type ?? type,
-                        value: prevDefinition.value ?? value,
-                    }
-                    entry.splice(1, 1, definition)
+                    entry.splice(1, 1, { initial, type, value, ...prevDefinition })
                 }
             } else {
                 entries.push([name, { initial, type, value }, key])
@@ -1041,6 +1044,7 @@ function addDescriptors(definitions = [], rule, key) {
         } else {
             descriptors.push([rule, [[name, { initial, type, value }, key]]])
         }
+
         addTypes(values, key)
     })
 }
@@ -1050,21 +1054,25 @@ function addDescriptors(definitions = [], rule, key) {
  * @param {string} key
  */
 function addRules(definitions = [], key) {
+
     const { rules: { aliases, mappings } } = compatibility
+
     definitions.forEach(({ descriptors: definitions, name, value, values }) => {
+
         if (aliases.has(name) || mappings.has(name)) {
             return
         }
+
         const rule = findRule(name)
         if (rule) {
-            if (environment.development && value && isUpdatedRule(name, value, rule)) {
+            if (value && isUpdatedRule(name, value, rule)) {
                 reportError(key, name, `${name} has a new definition`)
             }
             addDescriptors(definitions, name, key)
-        } else if (environment.development) {
+            addTypes(values, key)
+        } else {
             reportError(key, name, `${name} is a new rule`)
         }
-        addTypes(values, key)
     })
 }
 
