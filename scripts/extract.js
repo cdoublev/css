@@ -647,6 +647,7 @@ const excluded = {
 
 const descriptors = Object.keys(initial.descriptors).map(rule => [rule, Object.entries(initial.descriptors[rule])])
 const properties = Object.entries(initial.properties)
+const rules = []
 const types = [...Object.entries(initial.types), ...Object.entries(replaced.types)]
 
 // TODO: periodically review this list to remove errors that no longer occur
@@ -752,21 +753,22 @@ function reportMissingPseudoSelectors(selectors, key) {
 }
 
 /**
- * @param {string} name
- * @param {string} value
- * @param {object} rule
- * @returns {boolean}
+ * @param {*[][]} rules
  */
-function isUpdatedRule(name, value, { prelude, value: block }) {
-    let definition = name
-    if (prelude) {
-        definition += ` ${prelude}`
-    }
-    definition += block ? ` { ${block.name} }` : ' ;'
-    value = value
-        .replace(/[([] | [)\],]/g, match => match.trim())
-        .replace('};', '}')
-    return value !== definition
+function reportRuleUpdates(rules) {
+    rules.forEach(([name, value, { prelude, value: block }, key]) => {
+        let definition = name
+        if (prelude) {
+            definition += ` ${prelude}`
+        }
+        definition += block ? ` { ${block.name} }` : ' ;'
+        value = value
+            .replace(/[([] | [)\],]/g, match => match.trim())
+            .replace('};', '}')
+        if (value !== definition) {
+            reportError(key, name, `${name} has a new definition`)
+        }
+    })
 }
 
 /**
@@ -1065,8 +1067,20 @@ function addRules(definitions = [], key) {
 
         const rule = findRule(name)
         if (rule) {
-            if (value && isUpdatedRule(name, value, rule)) {
-                reportError(key, name, `${name} has a new definition`)
+            if (value) {
+                const entry = rules.find(([rule]) => rule === name)
+                if (entry) {
+                    const prevKey = entry.at(-1)
+                    const [base1, v1 = 1] = prevKey.split(/-(\d)$/)
+                    const [base2, v2 = 1] = key.split(/-(\d)$/)
+                    if (base1 !== base2) {
+                        throw Error(`Unhandled duplicate definitions of the rule "${name}"`)
+                    } else if (v1 < v2) {
+                        entry.splice(1, 2, value, key)
+                    }
+                } else {
+                    rules.push([name, value, rule, key])
+                }
             }
             addDescriptors(definitions, name, key)
             addTypes(values, key)
@@ -1091,6 +1105,8 @@ function build(specifications) {
         addRules(atrules, key)
         reportMissingPseudoSelectors(selectors, key)
     })
+
+    reportRuleUpdates(rules)
 
     return Promise.all([
         fs.writeFile(
