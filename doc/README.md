@@ -258,10 +258,12 @@ A **node** is implemented as a plain object with the following properties:
 | `input`      | `Stream`    | The list of [tokens](#Token-and-component-value)                     |
 | `location`   | `Number`    | The location (`input.index`) where `value` can be found              |
 | `parent`     | `Node`      | The parent node                                                      |
-| `state`      | `String`    | The current processing [state](#State-machine)                       |
+| `state`      | `Object`    | The `status` and `extended` data of state                            |
 | `value`      | See below   | The result of successfully parsing `input` against `definition`      |
 
 `node.definition.name` is used to resolve specific [state transition actions](#State-machine) for this production, is pushed into `node.value.types` after parsing, and is used to serialize `node.value` according to the specific rules defined for this type.
+
+`node.state.status` represents the finite [state](#State-machine) of the node. `node.state.extended` is a `Map` that is primarily intended to be updated by descendant nodes to signal a pending substitution, increment a countor of calculation values and random functions, etc.
 
 `node.value` is initially `undefined`. A node representing a rule is assigned its CSSOM representation *before* parsing its block value. All other nodes are assigned the successful parse result, which can be:
 
@@ -284,14 +286,12 @@ A **context** is a [node](#Node) that does not have children, but is the *origin
 
 It is extended with the following properties:
 
-| Property    | Type      | Description                                                               |
-| ----------- | --------- | ------------------------------------------------------------------------- |
-| `globals`   | `Map`     | The global registered resources and execution state                       |
-| `separator` | `String`  | Defines whether a whitespace can appear or must be omitted between tokens |
-| `strict`    | `Boolean` | Defines whether forgiving grammars must be parsed unforgivingly           |
-| `trees`     | `[Node]`  | The list of root nodes                                                    |
-
-Examples of `context.globals` entries are `namespaces` from `@namespace` rules, and the number of `calc-terms` nested in a top-level math function.
+| Property     | Type      | Description                                                               |
+| ------------ | --------- | ------------------------------------------------------------------------- |
+| `namespaces` | `Map`     | The namespace prefixes and URIs registered with `@namespace` rules        |
+| `separator`  | `String`  | Defines whether a whitespace can appear or must be omitted between tokens |
+| `strict`     | `Boolean` | Defines whether forgiving grammars must be parsed unforgivingly           |
+| `trees`      | `[Node]`  | The list of root nodes                                                    |
 
 `context.separator` is reset before parsing *originated* nodes, to allow a whitespace between tokens.
 

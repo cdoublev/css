@@ -387,7 +387,7 @@ describe('selector', () => {
         match(selector, elements = [], tree, { includeSubtrees = true, namespaces: ns = {}, ...context } = {}) {
 
             const ctx = createContext()
-            const namespaces = ctx.globals.get('namespaces')
+            const { namespaces } = ctx
 
             Object.entries(ns).forEach(([key, value]) => namespaces.set(key, value))
 
