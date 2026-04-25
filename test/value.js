@@ -1637,7 +1637,7 @@ describe('<calc()>', () => {
         assert.valid('<length> | <percentage>', 'calc(1px)')
         assert.valid('a | <percentage> | b | <length> | c', 'calc(1%)')
         assert.valid('a | <percentage> | b | <length> | c', 'calc(1px)')
-        // Nested calculation or math function
+        // Nested calculation
         assert.valid('<length>', 'calc((1em))', 'calc(1em)')
         assert.valid('<length>', 'calc(calc(1em))', 'calc(1em)')
         assert.valid('<length>', 'calc(min(1em))', 'calc(1em)')
@@ -1663,7 +1663,7 @@ describe('<calc()>', () => {
         // -0
         assert.valid('<number>', 'calc(1 / -0)', 'calc(infinity)')
         assert.valid('<number>', 'calc(1 / (0 * -1))', 'calc(-infinity)')
-        // Nested calculation or math function
+        // Nested calculation
         assert.valid('<number>', 'calc(1 + 2 * (3 + 4))', 'calc(15)')
         assert.valid('<number>', 'calc((1 + 2) * 3 / (4 + 5))', 'calc(1)')
         assert.valid('<number>', 'calc(calc(1 + 2) * 3 / calc(4 + 5))', 'calc(1)')
@@ -1702,7 +1702,7 @@ describe('<calc()>', () => {
         assert.valid('<length>', 'calc(1px - 1em - 1px - 1em)', 'calc(-2em + 0px)')
         assert.valid('<length>', 'calc(1em * 1px / 1px)')
         assert.valid('<length>', 'calc(1px / 1px * 1em)', 'calc(1em * 1px / 1px)')
-        // Nested math function
+        // Nested calculation
         assert.valid('<length>', 'calc(min(1px, 2em))', 'min(1px, 2em)')
         assert.valid('<length>', 'calc(min(1px, 2em) + 1px)', 'calc(1px + min(1px, 2em))')
         assert.valid('<length>', 'calc(min(1px, 2em) - 1px)', 'calc(-1px + min(1px, 2em))')
@@ -1750,7 +1750,7 @@ describe('<calc()>', () => {
         assert.valid('<length>', 'calc(2 * (1em * (1px / 1em)))', 'calc(2em * 1px / 1em)')
         assert.valid('<number>', 'calc(1px / 1em * 2)', 'calc(2px / 1em)')
         assert.valid('<number>', 'calc((1px + 1em) / 1em * 2)', 'calc((2em + 2px) / 1em)')
-        // Nested math function
+        // Nested calculation
         assert.valid('<length>', 'calc(min(1px, 2px) * sign(1px))', 'calc(1px)')
         assert.valid('<length>', 'calc(min(1px, 2px) / sign(1px))', 'calc(1px)')
         assert.valid('<length>', 'calc(min(1px, 2em) * sign(1px))', 'min(1px, 2em)')
@@ -2741,7 +2741,7 @@ describe('<color>', () => {
         assert.valid('<color>', 'hwb(0 0% 0% / 49.8%)', 'rgba(255, 0, 0, 0.498)')
         assert.valid('<color>', 'hwb(0 0% 0% / 49.9%)', 'rgba(255, 0, 0, 0.498)')
         assert.valid('<color>', 'hwb(0 0% 0% / 50.1%)', 'rgba(255, 0, 0, 0.5)')
-        // Numeric substitution functions
+        // Numeric substitution function
         assert.valid('<color>', 'hwb(calc(-1.5turn) calc(-1%) calc(50%) / calc(-1%))', 'rgba(0, 128, 128, 0)')
         assert.valid('<color>', 'hwb(calc(-infinity) 0 0)', 'rgb(255, 0, 0)')
         assert.valid('<color>', 'hwb(calc(infinity) 0 0)', 'rgb(255, 0, 0)')

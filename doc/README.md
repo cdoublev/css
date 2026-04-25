@@ -190,7 +190,7 @@ In contexts where declarations cascade or apply to elements, the grammar is impl
 
 Validating a value in the context, before or after matching its definition, often requires traversing the parse tree to access a sibling or parent node. For example, there must be a whitespace preceding `+` and `-` in `<calc-sum>`. So if it is omitted, the validation action associated to the node representing `+` or `-` must return an error if its parent node represents `<calc-sum>`.
 
-Other grammar rules require modifying the value definition. For example, math functions must support at least 32 arguments, which means the default value (20) of the `#` multiplier of `<calc-sum>` must be overridden. Similarly, `#` must be ignored at the top-level of a production rule for a property value range.
+Other grammar rules require modifying the value definition. For example, calculation functions must support at least 32 arguments, which means the default value (20) of the `#` multiplier of `<calc-sum>` must be overridden. Similarly, `#` must be ignored at the top-level of a production rule for a property value range.
 
 Finally, the context representation must allow determining the input token marking the end of the parsed node value. It must be hierarchical, to determine which of a function or block is the closest context, like in `fn([a])` and `[fn(a)]`.
 
@@ -366,7 +366,7 @@ While the parser algorithms require validating a declaration and a rule immediat
 
 To parse a rule, its definition is first resolved from the definitions of rules accepted in the [context](#Context). If there is an `<at-keyword-token>` at the front of the input, it is the first definition whose `name` matches the value of this token or whose `names` include it. Otherwise, it resolves to the definition of the `qualified` rules in this context, if any, which assumes that a context only accepts a single type of `qualified` rules.
 
-After consuming and validating its prelude, its CSSOM representation is created, then its constructor parses its block value, then `matchStyleSheet()` validates the order of the rule and registers `@namespace` in `context.globals`.
+After consuming and validating its prelude, its CSSOM representation is created, then its constructor parses its block value, then `matchStyleSheet()` validates the order of the rule and registers `@namespace` in `context.namespaces`.
 
 To parse a declaration, its definition is first resolved from the dictionaries of properties and descriptors accepted in the [context](#Context), with the `<ident-token>` at the front of the input. Then its value is validated. When they are accepted in the context, the parser first tries to parse the input against CSS-wide keywords, which must be interpreted in a custom property value like in standard properties. Then it looks for an arbitrary substitution, and returns a parse error if it finds a positioned {} block, which would mean that there might be a qualified rule at the front of the input. Then it tries to parse the input against the grammar of the property or descriptor and finally, then against the grammar of whole value substitutions. Finally, it validates a priority, if any.
 
