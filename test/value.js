@@ -2246,6 +2246,9 @@ describe('<calc-mix()>', () => {
 })
 describe('<calc-interpolate()>', () => {
     test('invalid', () => {
+        // Invalid <progress-source> value
+        assert.invalid('<number> | <length>', 'calc-interpolate(auto, 0: 1)')
+        assert.invalid('<number> | <length>', 'calc-interpolate(none, 0: 1)')
         // Invalid <progress-source> type
         assert.invalid('<number> | <length>', 'calc-interpolate(1px, 0: 1)')
         assert.invalid('<length-percentage>', 'calc-interpolate(calc(1% / 1px), 0: 1px)')
@@ -2275,11 +2278,11 @@ describe('<calc-interpolate()>', () => {
             ['<number>', 'calc-interpolate(0%, 0px: 1, 1: 1)'],
             ['<number>', 'calc-interpolate(0px, 0px: 1, 1: 1)'],
             // Type checking <percentage> in nested <progress-source> or <input-position> contexts
-            ['<number>', 'calc-interpolate(progress(0%, 0%, 1%), progress(0%, 0%, 1%): 1)'],
+            ['<number>', 'calc-interpolate(progress(0%, 0%, 1%), progress(0%, 0%, 1%): 1)', 'calc-interpolate(0, 0: 1)'],
             ['<length-percentage>', 'calc-interpolate(progress(0%, 0%, 1%), progress(0%, 0%, 1%): 1px)'],
             ['<length-percentage>', 'calc-interpolate(0%, 0%: 1px)'],
             // Type checking and simplification of <calc-sum> and <calc-interpolate()>
-            ['<length-percentage>', 'calc-interpolate(0%, 0: 1px * 1, 1: 1% + 1px)', 'calc-interpolate(0%, 0: 1px, 1: 1% + 1px)'],
+            ['<length-percentage>', 'calc-interpolate(calc(0%), calc(0): calc(1px * 1), 1: 1% + 1px)', 'calc-interpolate(0%, 0: 1px, 1: 1% + 1px)'],
             ['<length-percentage>', 'calc(1px * calc-interpolate(0%, 0: 1% / 1px, 1: (1% + 1px) / 1px))'],
             // Omitted component values
             ['<number>', 'calc-interpolate(0 by linear linear, 0: 1, linear, 1: 1)', 'calc-interpolate(0, 0: 1, 1: 1)'],
@@ -3357,19 +3360,6 @@ describe('<image-set()>', () => {
         assert.valid('<image-set()>', '-webkit-image-set("image.jpg")', 'image-set("image.jpg")')
     })
 })
-describe('<input-position>', () => {
-    test('invalid', () => {
-        assert.invalid('<input-position>', 'calc((1% + 1px) / 1px)')
-        assert.invalid('<input-position>', 'progress(1%, 1px, 1px)')
-    })
-    test('representation', () => {
-        assert.representation('<input-position>', '50%', percentage(50, ['<input-position>']))
-    })
-    test('valid', () => {
-        assert.valid('<input-position>', 'calc(100% / 2)', 'calc(50%)')
-        assert.valid('<input-position>', 'progress(0%, 0%, 1%)')
-    })
-})
 describe('<keyframe-selector>', () => {
     test('representation', () => {
         assert.representation('<keyframe-selector>', '0%', percentage(0, ['<keyframe-selector>']), keyframeRule)
@@ -3637,22 +3627,6 @@ describe('<position-area-query>', () => {
         assert.valid('<position-area-query>', 'inline-start', 'any start')
         assert.valid('<position-area-query>', 'span-self-block-start', 'span-self-start any')
         assert.valid('<position-area-query>', 'span-self-inline-end', 'any span-self-end')
-    })
-})
-describe('<progress-source>', () => {
-    test('invalid', () => {
-        // Invalid <calc-sum>
-        assert.invalid('<progress-source>', 'calc((1% + 1px) / 1px)')
-        assert.invalid('<progress-source>', 'progress(1%, 1px, 1px)')
-        assert.invalid('<progress-source>', 'auto')
-        assert.invalid('<progress-source>', 'none')
-    })
-    test('representation', () => {
-        assert.representation('<progress-source>', '50%', percentage(50, ['<progress-source>']))
-    })
-    test('valid', () => {
-        assert.valid('<progress-source>', 'calc(100% / 2)', 'calc(50%)')
-        assert.valid('<progress-source>', 'progress(0%, 0%, 1%)')
     })
 })
 describe('<pt-name-and-class-selector>', () => {
