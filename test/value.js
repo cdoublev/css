@@ -37,6 +37,24 @@ import properties from '../lib/properties/definitions.js'
 import { serializeComponentValue } from '../lib/serialize.js'
 
 /**
+ * @param {object} context
+ * @param {string} [name]
+ * @returns {object}
+ */
+function createDeclarationContext(context, name = 'any-property') {
+    context = createContext(context)
+    return {
+        ...context,
+        context,
+        definition: {
+            name,
+            type: 'declaration',
+        },
+        state: { extended: new Map },
+    }
+}
+
+/**
  * @param {string} definition
  * @param {string} value
  * @param {boolean} [serialize]
@@ -2306,12 +2324,16 @@ describe('<random()>', () => {
             ['<number> | <percentage>', 'random(1, (1% + 1px) / 1px, 1)'],
             ['<length>', 'random(1px, 1%, 1px)'],
         ]
-        invalid.forEach(([definition, input]) => assert.invalid(definition, input, styleRule))
+        invalid.forEach(([definition, input]) => assert.invalid(definition, input, createDeclarationContext(styleRule)))
     })
     test('valid', () => {
-        assert.valid('<number>', 'RANDOM(auto, 1 / 1, 1em / 1px)', 'random(1, 1em / 1px)', styleRule)
-        assert.valid('<length-percentage>', 'random(--key, 1px, 1%)', 'random(--key, 1px, 1%)', styleRule)
-        assert.valid('<length-percentage>', 'calc(1px * random(1% / 1px, 1))', 'calc(1px * random(1% / 1px, 1))', styleRule)
+        const valid = [
+            ['<number>', 'RANDOM(auto, 1 / 1, 1em / 1px)', 'random(1, 1em / 1px)'],
+            ['<length-percentage>', 'random(--key, 1px, 1%)'],
+            ['<length-percentage>', 'calc(1px * random(1% / 1px, 1))'],
+        ]
+        valid.forEach(([definition, input, expected]) =>
+            assert.valid(definition, input, expected, createDeclarationContext(styleRule)))
     })
 })
 describe('<sibling-count()>, <sibling-index()>', () => {
@@ -3064,8 +3086,7 @@ describe('<counter>', () => {
         })
     })
     test('valid', () => {
-        let context = createContext(styleRule)
-        context = { ...context, context, definition: { name: 'any-property', type: 'declaration' } }
+        const context = createDeclarationContext(styleRule)
         assert.valid('<counter>', 'counter(chapters, decimal)', 'counter(chapters)', context)
         assert.valid('<counter>', 'counters(chapters, "-", decimal)', 'counters(chapters, "-")', context)
     })
@@ -3087,8 +3108,7 @@ describe('<counter-style-name>', () => {
         assert.representation('<counter-style-name>', 'custom', customIdentifier('custom', ['<counter-style-name>']))
     })
     test('valid', () => {
-        let context = createContext(styleRule)
-        context = { ...context, context, definition: { name: 'any-property', type: 'declaration' } }
+        const context = createDeclarationContext(styleRule)
         assert.valid('<counter-style-name>', 'DECIMAL', 'decimal', context)
         assert.valid('<counter-style-name>', 'NAME')
     })
@@ -3127,17 +3147,13 @@ describe('<family-name>', () => {
         // <generic-family>, <system-family-name>
         const invalid = ['SERIF', 'caption']
         const contexts = [
-            [createContext(styleRule), 'font-family'],
-            [createContext('@font-face'), 'src'],
-            [createContext('@font-feature-values')],
+            createDeclarationContext(styleRule, 'font-family'),
+            createDeclarationContext('@font-face', 'src'),
+            createContext('@font-feature-values'),
         ]
         invalid.forEach(input =>
-            contexts.forEach(([context, name]) => {
-                if (name) {
-                    context = { ...context, context, definition: { name, type: 'declaration' } }
-                }
-                assert.invalid('<family-name>', input, context)
-            }))
+            contexts.forEach(context =>
+                assert.invalid('<family-name>', input, context)))
     })
     test('representation', () => {
         assert.representation(
