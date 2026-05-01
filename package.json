@@ -1,6 +1,6 @@
 {
   "name": "@cdoublev/css",
-  "description": "CSS Object Model implementation in JavaScript",
+  "description": "CSS Object Model and parser implementation in JavaScript",
   "author": "Guillaume Lebas",
   "license": "MIT",
   "keywords": [
