@@ -888,23 +888,23 @@ describe('<declaration-value>', () => {
 describe('<declaration>', () => {
     test('invalid', () => {
         // Top-level or nested <bad-*-token>, ), ], }
-        assert.invalid('<declaration>', 'color: var(--custom) fn("\n)')
-        assert.invalid('<declaration>', 'color: var(--custom) (url(bad .url))')
-        assert.invalid('<declaration>', 'color: var(--custom) [)]')
-        assert.invalid('<declaration>', 'color: var(--custom) (])')
-        assert.invalid('<declaration>', 'color: var(--custom) (})')
-        assert.invalid('<declaration>', '--custom: fn("\n)')
-        assert.invalid('<declaration>', '--custom: (url(bad .url))')
-        assert.invalid('<declaration>', '--custom: [)]')
-        assert.invalid('<declaration>', '--custom: (])')
-        assert.invalid('<declaration>', '--custom: (})')
+        assert.invalid('<declaration>', 'color: var(--custom) fn("\n)', styleRule)
+        assert.invalid('<declaration>', 'color: var(--custom) (url(bad .url))', styleRule)
+        assert.invalid('<declaration>', 'color: var(--custom) [)]', styleRule)
+        assert.invalid('<declaration>', 'color: var(--custom) (])', styleRule)
+        assert.invalid('<declaration>', 'color: var(--custom) (})', styleRule)
+        assert.invalid('<declaration>', '--custom: fn("\n)', styleRule)
+        assert.invalid('<declaration>', '--custom: (url(bad .url))', styleRule)
+        assert.invalid('<declaration>', '--custom: [)]', styleRule)
+        assert.invalid('<declaration>', '--custom: (])', styleRule)
+        assert.invalid('<declaration>', '--custom: (})', styleRule)
         // Top-level ; and !
-        assert.invalid('<declaration>', 'color: var(--custom) ;')
-        assert.invalid('<declaration>', 'color: var(--custom) !')
-        assert.invalid('<declaration>', '--custom: ;')
+        assert.invalid('<declaration>', 'color: var(--custom) ;', styleRule)
+        assert.invalid('<declaration>', 'color: var(--custom) !', styleRule)
+        assert.invalid('<declaration>', '--custom: ;', styleRule)
         // Positioned {} block
-        assert.invalid('<declaration>', 'color: var(--custom) {}')
-        assert.invalid('<declaration>', 'color: {} var(--custom)')
+        assert.invalid('<declaration>', 'color: var(--custom) {}', styleRule)
+        assert.invalid('<declaration>', 'color: {} var(--custom)', styleRule)
     })
     test('representation', () => {
         const declaration = {
@@ -2246,29 +2246,32 @@ describe('<calc-mix()>', () => {
 })
 describe('<calc-interpolate()>', () => {
     test('invalid', () => {
-        // Invalid <progress-source> value
-        assert.invalid('<number> | <length>', 'calc-interpolate(auto, 0: 1)')
-        assert.invalid('<number> | <length>', 'calc-interpolate(none, 0: 1)')
-        // Invalid <progress-source> type
-        assert.invalid('<number> | <length>', 'calc-interpolate(1px, 0: 1)')
-        assert.invalid('<length-percentage>', 'calc-interpolate(calc(1% / 1px), 0: 1px)')
-        assert.invalid('<length-percentage>', 'calc-interpolate(calc((1% + 1px) / 1px), 0: 1px)')
-        assert.invalid('<length-percentage>', 'calc-interpolate(progress(1%, 1px, 1px), 0: 1px)')
-        // Invalid <input-position> type
-        assert.invalid('<length-percentage>', 'calc-interpolate(0, calc(1% / 1px): 0px)')
-        assert.invalid('<length-percentage>', 'calc-interpolate(0, calc((1% + 1px) / 1px): 0px)')
-        assert.invalid('<length-percentage>', 'calc-interpolate(0, progress(1%, 1px, 1px): 0px)')
-        // Missing absolute <input-position> type
-        assert.invalid('<length>', 'calc-interpolate(1px, 0: 1px)')
-        // Inconsistent absolute <progress-source> and <input-position> types
-        assert.invalid('<length>', 'calc-interpolate(0deg, 0px: 1px, 1px: 1px)')
-        assert.invalid('<length>', 'calc-interpolate(0px, 0deg: 1px, 1px: 1px)')
-        // Inconsistent calculation types
-        assert.invalid('<number> | <length>', 'calc-interpolate(0, 0: 1, 1: 1px)')
-        assert.invalid('<number> | <percentage>', 'calc-interpolate(0, 0: 1, 1: 1%)')
-        // Result type mismatch
-        assert.invalid('<number> | <percentage>', 'calc-interpolate(0, 0: (1% + 1px) / 1px)')
-        assert.invalid('<length>', 'calc-interpolate(0, 0: 1% + 1px)')
+        const invalid = [
+            // Invalid <progress-source> value
+            ['<number> | <length>', 'calc-interpolate(auto, 0: 1)'],
+            ['<number> | <length>', 'calc-interpolate(none, 0: 1)'],
+            // Invalid <progress-source> type
+            ['<number> | <length>', 'calc-interpolate(1px, 0: 1)'],
+            ['<length-percentage>', 'calc-interpolate(calc(1% / 1px), 0: 1px)'],
+            ['<length-percentage>', 'calc-interpolate(calc((1% + 1px) / 1px), 0: 1px)'],
+            ['<length-percentage>', 'calc-interpolate(progress(1%, 1px, 1px), 0: 1px)'],
+            // Invalid <input-position> type
+            ['<length-percentage>', 'calc-interpolate(0, calc(1% / 1px): 0px)'],
+            ['<length-percentage>', 'calc-interpolate(0, calc((1% + 1px) / 1px): 0px)'],
+            ['<length-percentage>', 'calc-interpolate(0, progress(1%, 1px, 1px): 0px)'],
+            // Missing absolute <input-position> type
+            ['<length>', 'calc-interpolate(1px, 0: 1px)'],
+            // Inconsistent absolute <progress-source> and <input-position> types
+            ['<length>', 'calc-interpolate(0deg, 0px: 1px, 1px: 1px)'],
+            ['<length>', 'calc-interpolate(0px, 0deg: 1px, 1px: 1px)'],
+            // Inconsistent calculation types
+            ['<number> | <length>', 'calc-interpolate(0, 0: 1, 1: 1px)'],
+            ['<number> | <percentage>', 'calc-interpolate(0, 0: 1, 1: 1%)'],
+            // Result type mismatch
+            ['<number> | <percentage>', 'calc-interpolate(0, 0: (1% + 1px) / 1px)'],
+            ['<length>', 'calc-interpolate(0, 0: 1% + 1px)'],
+        ]
+        invalid.forEach(([definition, input]) => assert.invalid(definition, input, styleRule))
     })
     test('valid', () => {
         const valid = [
@@ -2295,12 +2298,15 @@ describe('<calc-interpolate()>', () => {
 })
 describe('<random()>', () => {
     test('invalid', () => {
-        // Inconsistent calculation types
-        assert.invalid('<number> | <length>', 'random(1, 1px, 1)')
-        assert.invalid('<number> | <percentage>', 'random(1, 1%, 1)')
-        // Result type mismatch
-        assert.invalid('<number> | <percentage>', 'random(1, (1% + 1px) / 1px, 1)')
-        assert.invalid('<length>', 'random(1px, 1%, 1px)')
+        const invalid = [
+            // Inconsistent calculation types
+            ['<number> | <length>', 'random(1, 1px, 1)'],
+            ['<number> | <percentage>', 'random(1, 1%, 1)'],
+            // Result type mismatch
+            ['<number> | <percentage>', 'random(1, (1% + 1px) / 1px, 1)'],
+            ['<length>', 'random(1px, 1%, 1px)'],
+        ]
+        invalid.forEach(([definition, input]) => assert.invalid(definition, input, styleRule))
     })
     test('valid', () => {
         assert.valid('<number>', 'RANDOM(auto, 1 / 1, 1em / 1px)', 'random(1, 1em / 1px)', styleRule)
