@@ -94,14 +94,13 @@ const replaced = {
         'copy-into': { value: 'none | [<custom-ident> <content-level>]#' },
         // https://github.com/w3c/svgwg/issues/320
         'd': { value: 'none | path(<string>)' },
-        // TODO: fix `value` of `fill-opacity`, `stroke-opacity`
-        'fill-opacity': { value: "<'opacity'>" },
-        'stroke-opacity': { value: "<'opacity'>" },
         // Implementation dependent
         'font-family': { initial: 'monospace' },
         'voice-family': { initial: 'female' },
         // https://github.com/w3c/csswg-drafts/issues/8032
         'glyph-orientation-vertical': { value: 'auto | <angle> | <number>' },
+        // https://github.com/w3c/svgwg/issues/1101
+        'path-length': { value: 'none | <number [0,∞]>' },
         // https://github.com/w3c/svgwg/issues/888
         'stop-color': { inherited: 'no', initial: 'black', value: "<'color'>" },
         'stop-opacity': { inherited: 'no', initial: '1', value: "<'opacity'>" },
@@ -125,7 +124,6 @@ const replaced = {
         '<age>': 'child | young | old',
         '<angle>': '<dimension>',
         '<animation-action>': 'none | play | play-once | play-forwards | play-backwards | pause | reset | replay',
-        '<attr-unit>': `"%" | ${[...dimensions.values()].flatMap(dimension => dimension.units).join(' | ')}`,
         '<basic-shape>': '<basic-shape-rect> | <circle()> | <ellipse()> | <polygon()> | <path()> | <shape()>',
         '<counter-name>': '<custom-ident>',
         '<counter-style-name>': '<custom-ident>',
@@ -197,12 +195,10 @@ const replaced = {
         '<radial-size>': 'closest-corner | farthest-corner | <radial-radius>{1,2}',
         // https://github.com/w3c/csswg-drafts/issues/11842
         '<control-value()>': 'control-value(<syntax-type-name>?)',
-        // https://github.com/w3c/csswg-drafts/pull/13324
-        '<feature-index>': '<integer>',
         // https://github.com/w3c/csswg-drafts/issues/13010
-        '<event-trigger-event>': 'activate | click | touch | dblclick | keypress(<string>)',
+        '<event-trigger-event>': 'activate | click | interest | touch | dblclick | keypress(<string>)',
         // https://github.com/w3c/csswg-drafts/issues/10797
-        '<input-source>': "<calc-sum>",
+        '<input-position>': "<calc-sum>",
         '<progress-source>': "<calc-sum> | <'animation-timeline'>",
         // https://github.com/w3c/fxtf-drafts/issues/532
         '<mask-reference>': 'none | <image>',
@@ -372,9 +368,6 @@ const excluded = {
             'image-rendering',
             // Prefer CSS Sizing
             'inline-size',
-            // Prefer CSS Shapes
-            'shape-inside',
-            'shape-margin',
         ],
         'css-backgrounds': [
             // Superseded by CSS Borders
@@ -481,10 +474,6 @@ const excluded = {
         'css-round-display': [
             // https://github.com/w3c/csswg-drafts/issues/6433
             'shape-inside',
-        ],
-        'css-ruby': [
-            // https://github.com/w3c/csswg-drafts/pull/13341
-            'display',
         ],
         'css-ui': [
             // Prefer SVG
@@ -620,8 +609,6 @@ const excluded = {
         'css-images': [
             // Dangling
             '<color-stop>',
-            // TODO: fix parsing/serializing `<radial-gradient-syntax>`, `<radial-size>`
-            '<radial-extent>',
         ],
         'css-masking': [
             // https://github.com/w3c/fxtf-drafts/pull/468

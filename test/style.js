@@ -43,6 +43,7 @@ function initial(property) {
 }
 
 install()
+
 globalThis.document = {}
 
 const styleSheet = CSSStyleSheet.createImpl(globalThis, [{ media: '' }])
@@ -994,6 +995,13 @@ describe('break-inside, page-break-inside', () => {
         assert.equal(style.breakInside, 'var(--custom)')
         assert.equal(style.pageBreakInside, 'var(--custom)')
         assert.equal(style.cssText, 'break-inside: var(--custom);')
+    })
+})
+describe('caret-color', () => {
+    test('valid', () => {
+        const style = createStyle()
+        style.caretColor = 'green auto'
+        assert.equal(style.caretColor, 'green')
     })
 })
 describe('clip-path', () => {
@@ -2284,28 +2292,6 @@ describe('column-rule, row-rule', () => {
         assert.equal(style.cssText, 'column-rule-width: repeat(2, medium); column-rule-style: repeat(1, none); column-rule-color: repeat(1, currentcolor);')
     })
 })
-describe('column-rule-edge-inset, column-rule-interior-inset, row-rule-edge-inset, row-rule-interior-inset', () => {
-    test('expansion and reification', () => {
-
-        const style = createStyle()
-        const longhands = shorthands.get('column-rule-edge-inset')[0]
-
-        // Initial longhand values
-        style.columnRuleEdgeInset = '0px 0px'
-        assert.equal(style.length, longhands.length)
-        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
-        assert.equal(style.columnRuleEdgeInset, '0px')
-
-        // Omitted values
-        style.columnRuleEdgeInset = '1px'
-        longhands.forEach(longhand => assert.equal(style[longhand], '1px'))
-        assert.equal(style.columnRuleEdgeInset, '1px')
-        style.columnRuleEdgeInset = '0px 1px'
-        assert.equal(style.columnRuleEdgeInsetStart, initial('column-rule-edge-inset-end'))
-        assert.equal(style.columnRuleEdgeInsetEnd, '1px')
-        assert.equal(style.columnRuleEdgeInset, '0px 1px')
-    })
-})
 describe('column-rule-inset, row-rule-inset', () => {
     test('expansion and reification', () => {
 
@@ -2321,21 +2307,21 @@ describe('column-rule-inset, row-rule-inset', () => {
         // Omitted values
         const values = [
             ['1px', {
-                'column-rule-edge-inset-end': '1px',
-                'column-rule-edge-inset-start': '1px',
-                'column-rule-interior-inset-end': '1px',
-                'column-rule-interior-inset-start': '1px',
+                'column-rule-inset-cap-end': '1px',
+                'column-rule-inset-cap-start': '1px',
+                'column-rule-inset-junction-end': '1px',
+                'column-rule-inset-junction-start': '1px',
             }],
             ['0px 1px', {
-                'column-rule-edge-inset-end': '1px',
-                'column-rule-interior-inset-end': '1px',
+                'column-rule-inset-cap-end': '1px',
+                'column-rule-inset-junction-end': '1px',
             }],
             ['0px / 1px', {
-                'column-rule-interior-inset-end': '1px',
-                'column-rule-interior-inset-start': '1px',
+                'column-rule-inset-junction-end': '1px',
+                'column-rule-inset-junction-start': '1px',
             }],
             ['0px / 0px 1px', {
-                'column-rule-interior-inset-end': '1px',
+                'column-rule-inset-junction-end': '1px',
             }],
         ]
         values.forEach(([input, declared]) => {
@@ -2344,6 +2330,28 @@ describe('column-rule-inset, row-rule-inset', () => {
                 assert.equal(style[longhand], declared[longhand] ?? initial(longhand)))
             assert.equal(style.columnRuleInset, input)
         })
+    })
+})
+describe('column-rule-inset-cap, column-rule-inset-junction, row-rule-inset-cap, row-rule-inset-junction', () => {
+    test('expansion and reification', () => {
+
+        const style = createStyle()
+        const longhands = shorthands.get('column-rule-inset-cap')[0]
+
+        // Initial longhand values
+        style.columnRuleInsetCap = '0px 0px'
+        assert.equal(style.length, longhands.length)
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.columnRuleInsetCap, '0px')
+
+        // Omitted values
+        style.columnRuleInsetCap = '1px'
+        longhands.forEach(longhand => assert.equal(style[longhand], '1px'))
+        assert.equal(style.columnRuleInsetCap, '1px')
+        style.columnRuleInsetCap = '0px 1px'
+        assert.equal(style.columnRuleInsetCapStart, initial('column-rule-inset-cap-end'))
+        assert.equal(style.columnRuleInsetCapEnd, '1px')
+        assert.equal(style.columnRuleInsetCap, '0px 1px')
     })
 })
 describe('column-rule-inset-end, column-rule-inset-start, row-rule-inset-end, row-rule-inset-start, rule-inset-end, rule-inset-start', () => {
@@ -2359,9 +2367,9 @@ describe('column-rule-inset-end, column-rule-inset-start, row-rule-inset-end, ro
         assert.equal(style.columnRuleInsetEnd, '0px')
 
         // All longhands cannot be represented
-        style.columnRuleEdgeInsetEnd = '1px'
+        style.columnRuleInsetCapEnd = '1px'
         assert.equal(style.columnRuleInsetEnd, '')
-        assert.equal(style.cssText, 'column-rule-edge-inset-end: 1px; column-rule-interior-inset-end: 0px;')
+        assert.equal(style.cssText, 'column-rule-inset-cap-end: 1px; column-rule-inset-junction-end: 0px;')
     })
 })
 describe('columns', () => {
@@ -3699,37 +3707,6 @@ describe('rule-color', () => {
         assert.equal(style.cssText, 'row-rule-color: green; column-rule-color: currentcolor;')
     })
 })
-describe('rule-edge-inset, rule-interior-inset', () => {
-    test('expansion and reification', () => {
-
-        const style = createStyle()
-        const longhands = shorthands.get('rule-edge-inset')[0]
-
-        // Initial longhand values
-        style.ruleEdgeInset = '0px 0px'
-        assert.equal(style.length, longhands.length)
-        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
-        assert.equal(style.ruleEdgeInset, '0px')
-
-        // Omitted values
-        style.ruleEdgeInset = '1px'
-        longhands.forEach(longhand => assert.equal(style[longhand], '1px'))
-        assert.equal(style.ruleEdgeInset, '1px')
-        style.ruleEdgeInset = '0px 1px'
-        longhands.forEach(longhand =>
-            assert.equal(style[longhand], longhand.endsWith('start') ? initial(longhand) : '1px'))
-        assert.equal(style.ruleEdgeInset, '0px 1px')
-
-        // All longhands cannot be represented
-        style.rowRuleEdgeInsetStart = '1px'
-        assert.equal(style.ruleEdgeInset, '')
-        assert.equal(style.cssText, 'row-rule-edge-inset: 1px; column-rule-edge-inset: 0px 1px;')
-        style.rowRuleEdgeInsetStart = '0px'
-        style.rowRuleEdgeInsetEnd = '0px'
-        assert.equal(style.ruleEdgeInset, '')
-        assert.equal(style.cssText, 'row-rule-edge-inset: 0px; column-rule-edge-inset: 0px 1px;')
-    })
-})
 describe('rule-inset', () => {
     test('expansion and reification', () => {
 
@@ -3745,30 +3722,30 @@ describe('rule-inset', () => {
         // Omitted values
         const values = [
             ['1px', {
-                'column-rule-edge-inset-end': '1px',
-                'column-rule-edge-inset-start': '1px',
-                'column-rule-interior-inset-end': '1px',
-                'column-rule-interior-inset-start': '1px',
-                'row-rule-edge-inset-end': '1px',
-                'row-rule-edge-inset-start': '1px',
-                'row-rule-interior-inset-end': '1px',
-                'row-rule-interior-inset-start': '1px',
+                'column-rule-inset-cap-end': '1px',
+                'column-rule-inset-cap-start': '1px',
+                'column-rule-inset-junction-end': '1px',
+                'column-rule-inset-junction-start': '1px',
+                'row-rule-inset-cap-end': '1px',
+                'row-rule-inset-cap-start': '1px',
+                'row-rule-inset-junction-end': '1px',
+                'row-rule-inset-junction-start': '1px',
             }],
             ['0px 1px', {
-                'column-rule-edge-inset-end': '1px',
-                'column-rule-interior-inset-end': '1px',
-                'row-rule-edge-inset-end': '1px',
-                'row-rule-interior-inset-end': '1px',
+                'column-rule-inset-cap-end': '1px',
+                'column-rule-inset-junction-end': '1px',
+                'row-rule-inset-cap-end': '1px',
+                'row-rule-inset-junction-end': '1px',
             }],
             ['0px / 1px', {
-                'column-rule-interior-inset-end': '1px',
-                'column-rule-interior-inset-start': '1px',
-                'row-rule-interior-inset-end': '1px',
-                'row-rule-interior-inset-start': '1px',
+                'column-rule-inset-junction-end': '1px',
+                'column-rule-inset-junction-start': '1px',
+                'row-rule-inset-junction-end': '1px',
+                'row-rule-inset-junction-start': '1px',
             }],
             ['0px / 0px 1px', {
-                'column-rule-interior-inset-end': '1px',
-                'row-rule-interior-inset-end': '1px',
+                'column-rule-inset-junction-end': '1px',
+                'row-rule-inset-junction-end': '1px',
             }],
         ]
         values.forEach(([input, declared]) => {
@@ -3779,21 +3756,52 @@ describe('rule-inset', () => {
         })
 
         // All longhands cannot be represented
-        style.rowRuleEdgeInsetStart = '1px'
+        style.rowRuleInsetCapStart = '1px'
         assert.equal(style.ruleInset, '')
         assert.equal(style.cssText, 'row-rule-inset: 1px 0px / 0px 1px; column-rule-inset: 0px / 0px 1px;')
-        style.rowRuleEdgeInsetStart = '0px'
-        style.rowRuleEdgeInsetEnd = '1px'
+        style.rowRuleInsetCapStart = '0px'
+        style.rowRuleInsetCapEnd = '1px'
         assert.equal(style.ruleInset, '')
         assert.equal(style.cssText, 'row-rule-inset: 0px 1px; column-rule-inset: 0px / 0px 1px;')
-        style.rowRuleEdgeInsetEnd = '0px'
-        style.rowRuleInteriorInsetStart = '1px'
+        style.rowRuleInsetCapEnd = '0px'
+        style.rowRuleInsetJunctionStart = '1px'
         assert.equal(style.ruleInset, '')
         assert.equal(style.cssText, 'row-rule-inset: 0px / 1px; column-rule-inset: 0px / 0px 1px;')
-        style.rowRuleInteriorInsetStart = '0px'
-        style.rowRuleInteriorInsetEnd = '0px'
+        style.rowRuleInsetJunctionStart = '0px'
+        style.rowRuleInsetJunctionEnd = '0px'
         assert.equal(style.ruleInset, '')
         assert.equal(style.cssText, 'row-rule-inset: 0px; column-rule-inset: 0px / 0px 1px;')
+    })
+})
+describe('rule-inset-cap, rule-inset-junction', () => {
+    test('expansion and reification', () => {
+
+        const style = createStyle()
+        const longhands = shorthands.get('rule-inset-cap')[0]
+
+        // Initial longhand values
+        style.ruleInsetCap = '0px 0px'
+        assert.equal(style.length, longhands.length)
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.ruleInsetCap, '0px')
+
+        // Omitted values
+        style.ruleInsetCap = '1px'
+        longhands.forEach(longhand => assert.equal(style[longhand], '1px'))
+        assert.equal(style.ruleInsetCap, '1px')
+        style.ruleInsetCap = '0px 1px'
+        longhands.forEach(longhand =>
+            assert.equal(style[longhand], longhand.endsWith('start') ? initial(longhand) : '1px'))
+        assert.equal(style.ruleInsetCap, '0px 1px')
+
+        // All longhands cannot be represented
+        style.rowRuleInsetCapStart = '1px'
+        assert.equal(style.ruleInsetCap, '')
+        assert.equal(style.cssText, 'row-rule-inset-cap: 1px; column-rule-inset-cap: 0px 1px;')
+        style.rowRuleInsetCapStart = '0px'
+        style.rowRuleInsetCapEnd = '0px'
+        assert.equal(style.ruleInsetCap, '')
+        assert.equal(style.cssText, 'row-rule-inset-cap: 0px; column-rule-inset-cap: 0px 1px;')
     })
 })
 describe('rule-style', () => {
@@ -3821,15 +3829,15 @@ describe('rule-visibility-items', () => {
         const longhands = shorthands.get('rule-visibility-items')[0]
 
         // All equal longhand values
-        style.ruleVisibilityItems = 'all'
+        style.ruleVisibilityItems = 'normal'
         assert.equal(style.length, longhands.length)
         longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
-        assert.equal(style.ruleVisibilityItems, 'all')
+        assert.equal(style.ruleVisibilityItems, 'normal')
 
         // All longhands cannot be represented
         style.rowRuleVisibilityItems = 'around'
         assert.equal(style.ruleVisibilityItems, '')
-        assert.equal(style.cssText, 'row-rule-visibility-items: around; column-rule-visibility-items: all;')
+        assert.equal(style.cssText, 'row-rule-visibility-items: around; column-rule-visibility-items: normal;')
     })
 })
 describe('rule-width', () => {
@@ -4471,7 +4479,7 @@ describe('CSSFontFaceDescriptors', () => {
             ['interpolate(0, 0: 1)', 'interpolate(0, 0: 1%)'],
             ['toggle(1)', 'toggle(1%)'],
             ['calc-interpolate(0, 0: 1)', 'calc-interpolate(0, 0: 1%)'],
-            ['random(1, 1)', 'random(1%, 1%)'],
+            ['random(element-scoped, 1, 1)', 'random(element-scoped, 1%, 1%)'],
             ['sibling-count()', 'calc(1% * sibling-count())'],
         ]
         invalid.forEach(([fontWeight, sizeAdjust = fontWeight]) => {
@@ -4600,7 +4608,7 @@ describe('CSSKeyframeProperties', () => {
         style.fontWeight = 'calc-interpolate(0, 0: 1)'
         assert.equal(style.fontWeight, 'calc-interpolate(0, 0: 1)')
         style.fontWeight = 'random(1, 1)'
-        assert.equal(style.fontWeight, 'random(1, 1)')
+        assert.equal(style.fontWeight, 'random(element-scoped ua-font-weight-1, 1, 1)')
         style.fontWeight = 'sibling-count()'
         assert.equal(style.fontWeight, 'sibling-count()')
         style.color = 'color-interpolate(0, 0: green)'
@@ -4659,7 +4667,7 @@ describe('CSSMarginDescriptors', () => {
         style.fontWeight = 'calc-interpolate(0, 0: 1)'
         assert.equal(style.fontWeight, 'calc-interpolate(0, 0: 1)')
         style.fontWeight = 'random(1, 1)'
-        assert.equal(style.fontWeight, 'random(1, 1)')
+        assert.equal(style.fontWeight, 'random(element-scoped ua-font-weight-1, 1, 1)')
         style.fontWeight = 'sibling-count()'
         assert.equal(style.fontWeight, 'sibling-count()')
         style.color = 'color-interpolate(0, 0: red)'
@@ -4745,8 +4753,8 @@ describe('CSSPageDescriptors', () => {
         assert.equal(style.size, 'calc-interpolate(0, 0: 1px)')
         style.fontWeight = 'random(1, 1)'
         style.size = 'random(1px, 1px)'
-        assert.equal(style.fontWeight, 'random(1, 1)')
-        assert.equal(style.size, 'random(1px, 1px)')
+        assert.equal(style.fontWeight, 'random(element-scoped ua-font-weight-1, 1, 1)')
+        assert.equal(style.size, 'random(element-scoped ua-size-1, 1px, 1px)')
         style.fontWeight = 'sibling-count()'
         style.size = 'calc(1px * sibling-count())'
         assert.equal(style.fontWeight, 'sibling-count()')
@@ -4809,7 +4817,7 @@ describe('CSSPositionTryDescriptors', () => {
         style.top = 'calc-interpolate(0, 0: 1px)'
         assert.equal(style.top, 'calc-interpolate(0, 0: 1px)')
         style.top = 'random(1px, 1px)'
-        assert.equal(style.top, 'random(1px, 1px)')
+        assert.equal(style.top, 'random(element-scoped ua-top-1, 1px, 1px)')
         style.top = 'calc(1px * sibling-count())'
         assert.equal(style.top, 'calc(1px * sibling-count())')
     })

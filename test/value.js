@@ -31,6 +31,7 @@ import { createContext, parseGrammar } from '../lib/parse/parser.js'
 import { describe, test } from 'node:test'
 import { toDegrees, toRadians } from '../lib/utils/math.js'
 import { Assert } from 'node:assert/strict'
+import CSS from '../lib/cssom/CSS-impl.js'
 import { keywords as cssWideKeywords } from '../lib/values/substitutions.js'
 import { isFailure } from '../lib/utils/value.js'
 import properties from '../lib/properties/definitions.js'
@@ -110,6 +111,7 @@ class CSSAssert extends Assert {
 }
 
 install()
+
 globalThis.document = {}
 
 const styleSheet = CSSStyleSheet.createImpl(globalThis, [{ media: '' }])
@@ -2327,13 +2329,37 @@ describe('<random()>', () => {
         invalid.forEach(([definition, input]) => assert.invalid(definition, input, createDeclarationContext(styleRule)))
     })
     test('valid', () => {
-        const valid = [
-            ['<number>', 'RANDOM(auto, 1 / 1, 1em / 1px)', 'random(1, 1em / 1px)'],
-            ['<length-percentage>', 'random(--key, 1px, 1%)'],
-            ['<length-percentage>', 'calc(1px * random(1% / 1px, 1))'],
-        ]
-        valid.forEach(([definition, input, expected]) =>
-            assert.valid(definition, input, expected, createDeclarationContext(styleRule)))
+
+        CSS.randomCacheNames.push(
+            { base: 0.5, element: null, identifier: null, scope: 'ua-any-property' },
+            { base: 0, element: null, identifier: null, scope: 'ua-any-property-1' },
+            { base: 1, element: null, identifier: null, scope: 'ua-any-property-2' },
+        )
+
+        // Explicit <random-key>
+        assert.valid('<number>', 'RANDOM(1, 1)', 'random(element-scoped ua-any-property-1, 1, 1)', createDeclarationContext(styleRule))
+        assert.valid('<number>', 'random(auto, 1, 1)', 'random(element-scoped ua-any-property-1, 1, 1)', createDeclarationContext(styleRule))
+        // Identical units
+        assert.valid('<number>', 'random(fixed 0, 0, 1)', 'calc(0)', styleRule)
+        assert.valid('<number>', 'random(fixed 1, 0, 1)', 'calc(1)', styleRule)
+        assert.valid('<number>', 'random(--name, 0, 1px / 1em)', 'random(--name, 0, 1px / 1em)', styleRule)
+        assert.valid('<number>', 'random(--name, 0, 1, 1)', `calc(${CSS.randomCacheNames.at(-1).base < 0.5 ? 0 : 1})`, styleRule)
+        assert.valid('<number>', 'random(property-scoped, 0, 1)', 'calc(0.5)', createDeclarationContext(styleRule))
+        assert.valid('<number>{2}', 'random(property-index-scoped, 0, 1) random(property-index-scoped, 0, 1)', 'calc(0) calc(1)', createDeclarationContext(styleRule))
+        assert.valid('<number>{2}', 'random(ua-any-property-2, 0, 1) random(ua-any-property-1, 0, 1)', 'calc(1) calc(0)', createDeclarationContext(styleRule))
+        assert.valid('<length>', 'random(fixed 1, 0em, 1em)', 'random(fixed 1, 0em, 1em)', styleRule)
+        assert.valid('<length-percentage>', 'random(fixed 1, 0%, 1%)', 'random(fixed 1, 0%, 1%)', styleRule)
+        assert.valid('<percentage>', 'random(fixed 1, 0%, 1%)', 'calc(1%)', styleRule)
+        // Different units
+        assert.valid('<length>', 'random(fixed 1, 1px, 1in)', 'calc(96px)', styleRule)
+        assert.valid('<length>', 'random(fixed 1, 1px, 1em)', 'random(fixed 1, 1px, 1em)', styleRule)
+        assert.valid('<length-percentage>', 'random(fixed 1, 1px, 1%)', 'random(fixed 1, 1px, 1%)', styleRule)
+        // Infinite minimum or step results to the minimum
+        assert.valid('<number>', 'random(fixed 1, 0, 1, infinity)', 'calc(0)', styleRule)
+        assert.valid('<number>', 'random(fixed 1, infinity, 1)', 'calc(infinity)', styleRule)
+        assert.valid('<number>', 'random(fixed 1, -infinity, 1)', 'calc(-infinity)', styleRule)
+        // Discarded step when its multiplier is infinite
+        assert.valid('<number>', 'random(fixed 0.1, 0, 1, 0)', `calc(0.1)`, styleRule)
     })
 })
 describe('<sibling-count()>, <sibling-index()>', () => {
@@ -2468,6 +2494,25 @@ describe('<attr-name>', () => {
     })
     test('representation', () => {
         assert.representation('<attr-name>', 'name', list([omitted, identifierToken('name')], '', ['<attr-name>']))
+    })
+})
+describe('<attr-type>', () => {
+    test('invalid', () => {
+        assert.invalid('<attr-type>', 'type(<url>)')
+        assert.invalid('<attr-type>', 'type(keyword | <url>)')
+        assert.invalid('<attr-type>', 'type("<url>")')
+    })
+    test('representation', () => {
+        assert.representation('<attr-type>', 'number', keyword('number'))
+    })
+})
+describe('<attr-unit>', () => {
+    test('representation', () => {
+        assert.representation('<attr-unit>', 'px', customIdentifier('px', ['<attr-unit>']))
+    })
+    test('valid', () => {
+        assert.valid('<attr-unit>', 'PX', 'px')
+        assert.valid('<attr-unit>', 'UNKNOWN')
     })
 })
 describe('<baseline-position>', () => {
@@ -3142,9 +3187,18 @@ describe('<drop-shadow()>', () => {
         assert.valid('<drop-shadow()>', 'drop-shadow(currentcolor 1px 1px 0px)', 'drop-shadow(1px 1px)')
     })
 })
-describe('<family-name>', () => {
+describe('<feature-tag-value>', () => {
+    test('representation', () => {
+        const tag = list([string('aaaa', ['<opentype-tag>']), omitted], ' ', ['<feature-tag-value>'])
+        assert.representation('<feature-tag-value>', '"aaaa"', tag)
+    })
+    test('valid', () => {
+        assert.valid('<feature-tag-value>', '"aaaa" 1', '"aaaa"')
+    })
+})
+describe('<font-family-name>', () => {
     test('invalid', () => {
-        // <generic-family>, <system-family-name>
+        // <generic-font-family>, <system-font-family-name>
         const invalid = ['SERIF', 'caption']
         const contexts = [
             createDeclarationContext(styleRule, 'font-family'),
@@ -3153,26 +3207,17 @@ describe('<family-name>', () => {
         ]
         invalid.forEach(input =>
             contexts.forEach(context =>
-                assert.invalid('<family-name>', input, context)))
+                assert.invalid('<font-family-name>', input, context)))
     })
     test('representation', () => {
         assert.representation(
-            '<family-name>',
+            '<font-family-name>',
             '"serif"',
-            string('serif', ['<family-name>']))
+            string('serif', ['<font-family-name>']))
         assert.representation(
-            '<family-name>',
+            '<font-family-name>',
             'the serif',
-            list([customIdentifier('the'), customIdentifier('serif')], ' ', ['<family-name>']))
-    })
-})
-describe('<feature-tag-value>', () => {
-    test('representation', () => {
-        const tag = list([string('aaaa', ['<opentype-tag>']), omitted], ' ', ['<feature-tag-value>'])
-        assert.representation('<feature-tag-value>', '"aaaa"', tag)
-    })
-    test('valid', () => {
-        assert.valid('<feature-tag-value>', '"aaaa" 1', '"aaaa"')
+            list([customIdentifier('the'), customIdentifier('serif')], ' ', ['<font-family-name>']))
     })
 })
 describe('<font-format>', () => {
@@ -3933,7 +3978,7 @@ describe('<supports-decl>', () => {
             ['(width: initial)'],
             ['(width: attr(name))'],
             ['(width: interpolate(0, 0: 1px))'],
-            ['(width: calc-interpolate(0, 0: random(1px, 1px), 1: 1px * sibling-count()))'],
+            ['(width: calc-interpolate(0, 0: random(element-scoped, 1px, 1px), 1: 1px * sibling-count()))'],
         ]
         valid.forEach(([input, expected]) =>
             assert.valid('<supports-decl>', input, expected, styleRule))

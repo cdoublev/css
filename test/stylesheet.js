@@ -2157,7 +2157,7 @@ describe('CSS grammar - semantic', () => {
             ['1%', '<length-percentage>'],
             ['calc(1% + 1px)', '<length-percentage>'],
             ['calc-interpolate(0, 0: 1px)', '<length>'],
-            ['random(1px, 1px)', '<length>'],
+            ['random(element-scoped, 1px, 1px)', '<length>'],
             ['calc(1px * sibling-count())', '<length>'],
             ['translate(1px)', '<transform-function>'],
             // Substitutions
