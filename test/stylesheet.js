@@ -1982,11 +1982,11 @@ describe('CSS grammar - semantic', () => {
             '@page { }',
             '@position-try --name { }',
             '@property --name { syntax: "*"; inherits: false; }',
-            '@scope {}',
-            '@starting-style {}',
-            '@supports (color: green) {}',
-            '@view-transition {}',
-            'style:hover {}',
+            '@scope { }',
+            '@starting-style { }',
+            '@supports (color: green) { }',
+            '@view-transition { }',
+            'style:hover { }',
         ]
         const input = `@MEDIA { ${rules.join(' ')} }`
         const styleSheet = createStyleSheet(input)
@@ -2214,11 +2214,11 @@ describe('CSS grammar - semantic', () => {
             '@page { }',
             '@position-try --name { }',
             '@property --name { syntax: "*"; inherits: false; }',
-            '@scope {}',
-            '@starting-style {}',
-            '@supports (color: green) {}',
-            '@view-transition {}',
-            'style:hover {}',
+            '@scope { }',
+            '@starting-style { }',
+            '@supports (color: green) { }',
+            '@view-transition { }',
+            'style:hover { }',
         ]
         const input = `@SCOPE { ${rules.join(' ')} }`
         const styleSheet = createStyleSheet(input)
@@ -2279,11 +2279,11 @@ describe('CSS grammar - semantic', () => {
             '@page { }',
             '@position-try --name { }',
             '@property --name { syntax: "*"; inherits: false; }',
-            '@scope {}',
-            '@starting-style {}',
-            '@supports (color: green) {}',
-            '@view-transition {}',
-            'style:hover {}',
+            '@scope { }',
+            '@starting-style { }',
+            '@supports (color: green) { }',
+            '@view-transition { }',
+            'style:hover { }',
         ]
         const input = `@STARTING-STYLE { ${rules.join(' ')} }`
         const styleSheet = createStyleSheet(input)
@@ -2324,11 +2324,11 @@ describe('CSS grammar - semantic', () => {
             '@page { }',
             '@position-try --name { }',
             '@property --name { syntax: "*"; inherits: false; }',
-            '@scope {}',
-            '@starting-style {}',
-            '@supports (color: green) {}',
-            '@view-transition {}',
-            'style:hover {}',
+            '@scope { }',
+            '@starting-style { }',
+            '@supports (color: green) { }',
+            '@view-transition { }',
+            'style:hover { }',
         ]
         const input = `@SUPPORTS (color: green) { ${rules.join(' ')} }`
         const styleSheet = createStyleSheet(input)
@@ -2749,13 +2749,13 @@ describe('CSS grammar - semantic', () => {
     test('style rule - valid block contents', () => {
 
         const rules = [
-            '@CONTAINER name {}',
-            '@layer {}',
-            '@media {}',
-            '@scope {}',
-            '@starting-style {}',
-            '@supports (color: green) {}',
-            '& style {}',
+            '@CONTAINER name { }',
+            '@layer { }',
+            '@media { }',
+            '@scope { }',
+            '@starting-style { }',
+            '@supports (color: green) { }',
+            '& style { }',
         ]
         const input = `style { ${rules.join(' ')} }`
         const styleSheet = createStyleSheet(input)
