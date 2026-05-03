@@ -72,6 +72,12 @@ Below are their accepted `privateProperties`:
   - `value`: `String`
   - `important`: `Boolean` (optional, default: `false`)
 
+`parseGrammar()` and `parseListGrammar()` are implementations of [*parse something according to a CSS grammar*](https://drafts.csswg.org/css-syntax-3/#css-parse-something-according-to-a-css-grammar) and [*parse a comma-separated list according to a CSS grammar*](https://drafts.csswg.org/css-syntax-3/#css-parse-a-comma-separated-list-according-to-a-css-grammar), which take 3 arguments:
+
+  - `input`: `String`
+  - `definition`: `String` (a [CSS value definition](doc/value-definition.md))
+  - `context`: `Element` (optional)
+
 `matchElementAgainstSelectors()` and `matchTreesAgainstSelectors()` are intended to implement:
 
   - [`element.closest()`](https://dom.spec.whatwg.org/#dom-element-closest) with `matchElementAgainstSelectors(ancestor, selectors, { scopes: { inclusive: true, roots: [element] } })`
