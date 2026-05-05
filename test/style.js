@@ -1822,6 +1822,16 @@ describe('background-repeat', () => {
             assert.equal(style.backgroundRepeatY, y)
             assert.equal(style.backgroundRepeat, input)
         })
+
+        // All longhands cannot be represented
+        style.backgroundRepeatX = 'repeat, repeat'
+        assert.equal(style.backgroundRepeat, '')
+        assert.equal(style.cssText, 'background-repeat-x: repeat, repeat; background-repeat-y: repeat;')
+
+        // Coordinated value list
+        style.backgroundRepeat = 'repeat, repeat'
+        longhands.forEach(longhand => assert.equal(style[longhand], `${initial(longhand)}, ${initial(longhand)}`))
+        assert.equal(style.backgroundRepeat, 'repeat, repeat')
     })
 })
 describe('block-step', () => {
