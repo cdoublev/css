@@ -3987,7 +3987,7 @@ describe('selector', () => {
         const children = [section, ...divs, noNamespace]
 
         const selections = [
-            [':empty', [section, ...divs.slice(1), noNamespace]],
+            [':empty', [section, ...divs, noNamespace]],
             [':first-child', [html, body, section]],
             [':first-of-type', [html, body, section, divs[0], noNamespace]],
             [':last-child', [html, body, noNamespace]],
