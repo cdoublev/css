@@ -3446,6 +3446,7 @@ describe('<keyframe-selector>', () => {
 describe('<keyframes-name>', () => {
     test('invalid', () => {
         assert.invalid('<keyframes-name>', 'NONE')
+        assert.invalid('<keyframes-name>', '""')
     })
     test('representation', () => {
         assert.representation('<keyframes-name>', 'animation', customIdentifier('animation', ['<keyframes-name>']))
