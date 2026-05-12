@@ -1,6 +1,7 @@
 
 import {
     Comment,
+    DocumentFragment,
     Element,
     HTMLAnchorElement,
     HTMLAreaElement,
@@ -3909,9 +3910,13 @@ describe('selector', () => {
         const shadowElement = new HTMLSectionElement({ ownerDocument: document, parentNode: shadowRoot })
         const div = new HTMLDivElement({ ownerDocument: document, parentNode: body })
 
+        const fragment = new DocumentFragment
+        new HTMLDivElement({ ownerDocument: document, parentNode: fragment })
+
         const selections = [
             [':root', [html]],
             [':root', [], shadowRoot],
+            [':root > *', [], fragment],
             [':host', []],
             [':host', [host], shadowRoot],
             [':host > *', [shadowElement], shadowRoot],
@@ -3928,6 +3933,7 @@ describe('selector', () => {
             [':scope', [html], document, { scopes: { inclusive: true, roots: [html] } }],
             [':scope > *', [host, div], document, { scopes: { roots: [body] } }],
             [':scope > *', [], shadowRoot, { scopes: { roots: [shadowRoot] } }],
+            [':scope > *', [], fragment, { scopes: { roots: [fragment] } }],
             [':scope > *', [body], document, { scopes: { roots: [html] } }],
             [':scope + *', [], document, { scopes: { roots: [host] } }],
             [':scope + *', [], document, { scopes: { inclusive: true, roots: [host] } }],
