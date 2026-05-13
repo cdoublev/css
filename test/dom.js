@@ -75,10 +75,10 @@ export class DOMTokenList {
 export class HTMLCollection {
 
     /**
-     * @param {NodeList} list
+     * @param {NodeList} [list]
      */
-    constructor(list) {
-        this._list = list._list
+    constructor(list = []) {
+        this._list = list
     }
 
     /**
@@ -94,6 +94,31 @@ export class HTMLCollection {
      */
     get length() {
         return this._list.reduce((sum, node) => sum += node instanceof Element ? 1 : 0, 0)
+    }
+}
+
+export class NamedNodeMap {
+
+    /**
+     * @param {NodeList} [list]
+     */
+    constructor(list = []) {
+        this._list = list
+    }
+
+    /**
+     * @param {number} index
+     * @returns {Element|null}
+     */
+    item(index) {
+        return this._list[index]
+    }
+
+    /**
+     * @returns {number}
+     */
+    get length() {
+        return this._list.length
     }
 }
 
@@ -248,7 +273,7 @@ export class Document extends Node {
         globalThis.document = this
 
         this.activeViewTransition = activeViewTransition
-        this.children = new HTMLCollection(this.childNodes)
+        this.children = new HTMLCollection(this.childNodes._list)
         this.location = new URL(url)
         this.URL = url
 
@@ -290,7 +315,7 @@ export class DocumentFragment extends Node {
      */
     constructor(properties) {
         super(properties)
-        this.children = new HTMLCollection(this.childNodes)
+        this.children = new HTMLCollection(this.childNodes._list)
     }
 
     /**
@@ -350,17 +375,17 @@ export class Element extends Node {
             selectors = [],
         } = properties
 
-        this.attributes = attributes.map(({ localName, namespaceURI = null, value = '' }) =>
-            ({ localName, namespaceURI, ownerElement: this, value }))
-        this.children = new HTMLCollection(this.childNodes)
+        this.attributes = new NamedNodeMap(attributes.map(({ localName, namespaceURI = null, value = '' }) =>
+            ({ localName, namespaceURI, ownerElement: this, value })))
+        this.children = new HTMLCollection(this.childNodes._list)
         this.classList = new DOMTokenList(this.getAttribute('class')?.split(' '))
         this.indeterminate = indeterminate
         this.isContentEditable = isContentEditable
         this.localName = localName
 
         this.form = form
-        form?.elements.push(this)
-        fieldSet?.elements.push(this)
+        form?.elements._list.push(this)
+        fieldSet?.elements._list.push(this)
         this.name = this.getAttribute('name') ?? ''
         this.required = !!this.getAttributeNode('required')
         this.slot = this.getAttribute('slot') ?? ''
@@ -418,7 +443,7 @@ export class Element extends Node {
      * @returns {object|null}
      */
     getAttributeNodeNS(namespace, name) {
-        return this.attributes.find(attribute => attribute.localName === name && attribute.namespaceURI === namespace) ?? null
+        return this.attributes._list.find(attribute => attribute.localName === name && attribute.namespaceURI === namespace) ?? null
     }
 
     /**
@@ -460,7 +485,7 @@ export class Element extends Node {
         if (node) {
             node.value = value
         } else {
-            this.attributes.push({ localName: name, namespaceURI: null, ownerElement: this, value })
+            this.attributes._list.push({ localName: name, namespaceURI: null, ownerElement: this, value })
         }
     }
 
@@ -579,13 +604,13 @@ export class HTMLDialogElement extends HTMLElement { localName = 'dialog' }
 export class HTMLDivElement extends HTMLElement { localName = 'div' }
 
 export class HTMLFieldSetElement extends HTMLElement {
-    elements = []
+    elements = new HTMLCollection
     localName = 'fieldset'
     type = 'fieldset'
 }
 
 export class HTMLFormElement extends HTMLElement {
-    elements = []
+    elements = new HTMLCollection
     localName = 'form'
 }
 

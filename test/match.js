@@ -370,10 +370,13 @@ describe('selector', () => {
      * @returns {string}
      */
     function serializeElement({ attributes, localName }) {
-        return `${attributes.reduce(
-            (string, { localName, value }) =>
-                string += ` ${value ? `${localName}="${value}"` : localName}`,
-            `<${localName.toLowerCase()}`)}>`
+        let string = `<${localName.toLowerCase()}`
+        for (let index = 0; index < attributes.length; index++) {
+            const { localName, value } = attributes.item(index)
+            string += ` ${value ? `${localName}="${value}"` : localName}`
+        }
+        string += '>'
+        return string
     }
 
     class CSSAssert extends Assert {
