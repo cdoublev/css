@@ -473,6 +473,7 @@ describe('selector', () => {
          *     <section id="section"></section>
          *     <section id="section"></section>
          *     <section id="section"></section>
+         *     <section id="1"></section>
          *   </body>
          * </html>
          */
@@ -495,10 +496,16 @@ describe('selector', () => {
             ownerDocument: document,
             parentNode: body,
         })
+        const one = new HTMLSectionElement({
+            attributes: [{ localName: 'id', value: '1' }],
+            ownerDocument: document,
+            parentNode: body,
+        })
 
         assert.match('#section', [section, noNamespace], document)
         assert.match('#section', [section, noNamespace], document, { namespaces: { '': HTML_NAMESPACE } })
         assert.match('#SECTION', [], document)
+        assert.match('#\\31', [one], document)
     })
     test('class', () => {
 
@@ -508,6 +515,7 @@ describe('selector', () => {
          *     <section class="class-1 class-2"></section>
          *     <section class="class-1"></section>
          *     <section class="class-1"></section>
+         *     <section class="1"></section>
          *   </body>
          * </html>
          */
@@ -530,12 +538,18 @@ describe('selector', () => {
             ownerDocument: document,
             parentNode: body,
         })
+        const one = new HTMLSectionElement({
+            attributes: [{ localName: 'class', value: '1' }],
+            ownerDocument: document,
+            parentNode: body,
+        })
 
         const selections = [
             ['.class-1', [section, noNamespace]],
             ['.class-1', [section, noNamespace], { '': HTML_NAMESPACE }],
             ['.CLASS-1', []],
             ['.class-1.class-2', [section]],
+            ['.\\31', [one]],
         ]
         selections.forEach(([selector, expected, namespaces]) =>
             assert.match(selector, expected, document, { namespaces }))
@@ -550,6 +564,7 @@ describe('selector', () => {
          *     <svg viewBox="0 0 1 1">
          *       <use xlink:href />
          *     </svg>
+         *     <section 1="1"></section>
          *   </body>
          * </html>
          */
@@ -585,6 +600,11 @@ describe('selector', () => {
             ownerDocument: document,
             parentNode: svg,
         })
+        const one = new HTMLSectionElement({
+            attributes: [{ localName: '1', value: '1' }],
+            ownerDocument: document,
+            parentNode: body,
+        })
 
         const selections = [
             ['[id]', [section, noNamespace]],
@@ -603,6 +623,7 @@ describe('selector', () => {
             ['[ID=section]', [section]],
             ['[id=SECTION]', []],
             ['[id=SECTION i]', [section]],
+            ['[\\31=\\31]', [one]],
             ['[color="#FFF"]', [section]],
             ['[color="#FFF" s]', []],
             ['[class~=class-1]', [section]],
