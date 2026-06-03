@@ -29,14 +29,12 @@ import {
     HTMLSlotElement,
     HTMLTextAreaElement,
     HTMLVideoElement,
-    HTML_NAMESPACE,
     SVGSVGElement,
     SVGUseElement,
-    SVG_NAMESPACE,
     ShadowRoot,
     Text,
-    XLINK_NAMESPACE,
 } from './dom.js'
+import { HTML_NAMESPACE, SVG_NAMESPACE, XLINK_NAMESPACE } from '../lib/utils/dom/constants.js'
 import assert, { Assert, AssertionError } from 'node:assert/strict'
 import { createContext, parseGrammar } from '../lib/parse/parser.js'
 import { describe, test } from 'node:test'

@@ -1,24 +1,24 @@
 
+import {
+    ATTRIBUTE_NODE_TYPE,
+    CDATA_SECTION_NODE_TYPE,
+    COMMENT_NODE_TYPE,
+    DOCUMENT_FRAGMENT_NODE_TYPE,
+    DOCUMENT_NODE_TYPE,
+    DOCUMENT_TYPE_NODE_TYPE,
+    ELEMENT_NODE_TYPE,
+    ENTITY_NODE_TYPE,
+    ENTITY_REFERENCE_NODE_TYPE,
+    HTML_NAMESPACE,
+    MATHML_NAMESPACE,
+    NOTATION_NODE_TYPE,
+    PROCESSING_INSTRUCTION_NODE_TYPE,
+    SVG_NAMESPACE,
+    TEXT_NODE_TYPE,
+} from '../lib/utils/dom/constants.js'
 import { CSSStyleProperties, CSSStyleSheet, StyleSheetList } from '../lib/cssom/index.js'
-import { findAncestor } from '../lib/utils/dom.js'
+import { findAncestor } from '../lib/utils/dom/element.js'
 import { implForWrapper } from '../lib/cssom/utils.js'
-
-const ELEMENT_NODE_TYPE = 1
-const ATTRIBUTE_NODE_TYPE = 2
-const TEXT_NODE_TYPE = 3
-const CDATA_SECTION_NODE_TYPE = 4
-const ENTITY_REFERENCE_NODE_TYPE = 5
-const ENTITY_NODE_TYPE = 6
-const PROCESSING_INSTRUCTION_NODE_TYPE = 7
-const COMMENT_NODE_TYPE = 8
-const DOCUMENT_NODE_TYPE = 9
-const DOCUMENT_TYPE_NODE_TYPE = 10
-const DOCUMENT_FRAGMENT_NODE_TYPE = 11
-const NOTATION_NODE_TYPE = 12
-
-export const HTML_NAMESPACE = 'http://www.w3.org/1999/xhtml'
-export const SVG_NAMESPACE = 'http://www.w3.org/2000/svg'
-export const XLINK_NAMESPACE = 'http://www.w3.org/1999/xlink'
 
 /**
  * @param {Element} element
