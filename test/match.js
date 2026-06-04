@@ -2527,32 +2527,31 @@ describe('selector', () => {
          * <html>
          *   <body>
          *
-         *     <form id="form-1">
+         *     <!-- :indeterminate -->
+         *     <input type="checkbox">                      <!-- the user set `indeterminate` to `true` -->
+         *     <input type="checkbox" disabled readonly>    <!-- the user set `indeterminate` to `true` -->
+         *     <input type="radio" name=" ">
+         *     <input type="radio" name="group">
+         *     <section>
+         *       #shadow-root
+         *         <input type="radio" name="shadow">
+         *     </section>
+         *     <progress></progress>
          *
-         *       <!-- not :indeterminate -->
-         *       <div type="checkbox"></div>  <!-- the user set `indeterminate` to `true` -->
+         *     <!-- not :indeterminate -->
+         *     <input type="radio" name="shadow">
+         *     <input type="radio" name="shadow" checked>
+         *     <form id="form">
          *       <input type="checkbox">
-         *       <input type="radio">  <!-- the user set `indeterminate` to `true` -->
-         *       <input type="radio" name="group-1" checked>  <!-- the user set `indeterminate` to `true` -->
-         *       <progress value=""></progress>  <!-- the user set `indeterminate` to `true` -->
-         *
-         *       <!-- :indeterminate -->
-         *       <input type="radio" name="group-2">
-         *
+         *       <div type="checkbox"></div>                <!-- the user set `indeterminate` to `true` -->
+         *       <input type="radio" name="">               <!-- the user set `indeterminate` to `true` -->
+         *       <input type="radio" name="group" checked>  <!-- the user set `indeterminate` to `true` -->
+         *       <progress value=""></progress>             <!-- the user set `indeterminate` to `true` -->
+         *     </form>
+         *     <form>
+         *       <input type="radio" form="form" name="group">
          *     </form>
          *
-         *     <form id="form-2">
-         *
-         *       <!-- not :indeterminate -->
-         *       <input type="radio" form="form-1" name="group-1">
-         *
-         *       <!-- :indeterminate -->
-         *       <input type="checkbox" disabled readonly>  <!-- the user set `indeterminate` to `true` -->
-         *       <input type="checkbox">  <!-- the user set `indeterminate` to `true` -->
-         *       <input type="radio" form="form-1" name="group-2">
-         *       <progress></progress>
-         *
-         *     </form>
          *   </body>
          * </html>
          */
@@ -2560,113 +2559,142 @@ describe('selector', () => {
         const html = new HTMLHtmlElement({ ownerDocument: document, parentNode: document })
         const body = new HTMLBodyElement({ ownerDocument: document, parentNode: html })
 
-        const form1 = new HTMLFormElement({
-            attributes: [{ localName: 'id', value: 'form-1' }],
-            ownerDocument: document,
-            parentNode: body,
-        })
-        // Not :indeterminate
-        new HTMLDivElement({
-            attributes: [{ localName: 'type', value: 'checkbox' }],
-            form: form1,
-            indeterminate: 'true',
-            ownerDocument: document,
-            parentNode: form1,
-        })
-        new HTMLInputElement({
-            attributes: [{ localName: 'type', value: 'checkbox' }],
-            form: form1,
-            ownerDocument: document,
-            parentNode: form1,
-        })
-        new HTMLInputElement({
-            attributes: [{ localName: 'type', value: 'radio' }],
-            form: form1,
-            indeterminate: 'true',
-            ownerDocument: document,
-            parentNode: form1,
-        })
-        new HTMLInputElement({
-            attributes: [
-                { localName: 'type', value: 'radio' },
-                { localName: 'name', value: 'group-1' },
-                { localName: 'checked' },
-            ],
-            form: form1,
-            indeterminate: 'true',
-            ownerDocument: document,
-            parentNode: form1,
-        })
-        new HTMLProgressElement({
-            attributes: [{ localName: 'value' }],
-            indeterminate: 'true',
-            ownerDocument: document,
-            parentNode: form1,
-        })
         // :indeterminate
         new HTMLInputElement({
-            attributes: [
-                { localName: 'type', value: 'radio' },
-                { localName: 'name', value: 'group-2' },
-            ],
-            form: form1,
+            attributes: [{ localName: 'type', value: 'checkbox' }],
+            indeterminate: true,
             ownerDocument: document,
-            parentNode: form1,
+            parentNode: body,
             selectors: [':indeterminate'],
         })
-
-        const form2 = new HTMLFormElement({
-            attributes: [{ localName: 'id', value: 'form-2' }],
-            ownerDocument: document,
-            parentNode: body,
-        })
-        // Not :indeterminate
-        new HTMLInputElement({
-            attributes: [
-                { localName: 'type', value: 'radio' },
-                { localName: 'form', value: 'form-1' },
-                { localName: 'name', value: 'group-1' },
-            ],
-            form: form2,
-            ownerDocument: document,
-            parentNode: form2,
-        })
-        // :indeterminate
         new HTMLInputElement({
             attributes: [
                 { localName: 'type', value: 'checkbox' },
                 { localName: 'disabled' },
                 { localName: 'readonly' },
             ],
-            form: form2,
-            indeterminate: 'true',
+            indeterminate: true,
             ownerDocument: document,
-            parentNode: form2,
-            selectors: [':indeterminate'],
-        })
-        new HTMLInputElement({
-            attributes: [{ localName: 'type', value: 'checkbox' }],
-            form: form2,
-            indeterminate: 'true',
-            ownerDocument: document,
-            parentNode: form2,
+            parentNode: body,
             selectors: [':indeterminate'],
         })
         new HTMLInputElement({
             attributes: [
                 { localName: 'type', value: 'radio' },
-                { localName: 'form', value: 'form-1' },
-                { localName: 'name', value: 'group-2' },
+                { localName: 'name', value: ' ' },
             ],
-            form: form1,
             ownerDocument: document,
-            parentNode: form2,
+            parentNode: body,
+            selectors: [':indeterminate'],
+        })
+        new HTMLInputElement({
+            attributes: [
+                { localName: 'type', value: 'radio' },
+                { localName: 'name', value: 'group' },
+            ],
+            ownerDocument: document,
+            parentNode: body,
+            selectors: [':indeterminate'],
+        })
+        new HTMLSectionElement({
+            ownerDocument: document,
+            parentNode: body,
+        })
+        const shadowRoot = new ShadowRoot({
+            host: body.childNodes._list.at(-1),
+            ownerDocument: document,
+        })
+        new HTMLInputElement({
+            attributes: [
+                { localName: 'type', value: 'radio' },
+                { localName: 'name', value: 'shadow' },
+            ],
+            ownerDocument: document,
+            parentNode: shadowRoot,
             selectors: [':indeterminate'],
         })
         new HTMLProgressElement({
             ownerDocument: document,
-            parentNode: form2,
+            parentNode: body,
             selectors: [':indeterminate'],
+        })
+
+        // Not :indeterminate
+        new HTMLInputElement({
+            attributes: [
+                { localName: 'type', value: 'radio' },
+                { localName: 'name', value: 'shadow' },
+            ],
+            ownerDocument: document,
+            parentNode: body,
+        })
+        new HTMLInputElement({
+            attributes: [
+                { localName: 'type', value: 'radio' },
+                { localName: 'name', value: 'shadow' },
+                { localName: 'checked' },
+            ],
+            ownerDocument: document,
+            parentNode: body,
+        })
+        const form = new HTMLFormElement({
+            attributes: [{ localName: 'id', value: 'form' }],
+            ownerDocument: document,
+            parentNode: body,
+        })
+        new HTMLInputElement({
+            attributes: [{ localName: 'type', value: 'checkbox' }],
+            form,
+            ownerDocument: document,
+            parentNode: form,
+        })
+        new HTMLDivElement({
+            attributes: [{ localName: 'type', value: 'checkbox' }],
+            form,
+            indeterminate: true,
+            ownerDocument: document,
+            parentNode: form,
+        })
+        new HTMLInputElement({
+            attributes: [
+                { localName: 'type', value: 'radio' },
+                { localName: 'name' },
+            ],
+            form,
+            indeterminate: true,
+            ownerDocument: document,
+            parentNode: form,
+        })
+        new HTMLInputElement({
+            attributes: [
+                { localName: 'type', value: 'radio' },
+                { localName: 'name', value: 'group' },
+                { localName: 'checked' },
+            ],
+            form,
+            indeterminate: true,
+            ownerDocument: document,
+            parentNode: form,
+        })
+        new HTMLProgressElement({
+            attributes: [{ localName: 'value' }],
+            indeterminate: true,
+            ownerDocument: document,
+            parentNode: form,
+        })
+        new HTMLFormElement({
+            ownerDocument: document,
+            parentNode: body,
+        })
+        new HTMLInputElement({
+            attributes: [
+                { localName: 'type', value: 'radio' },
+                { localName: 'form', value: 'form' },
+                { localName: 'name', value: 'group' },
+            ],
+            form,
+            ownerDocument: document,
+            parentNode: body.childNodes._list.at(-1),
         })
 
         assert.match(':indeterminate', document._selected.get(':indeterminate'), document)
