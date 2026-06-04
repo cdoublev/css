@@ -692,6 +692,19 @@ export class HTMLInputElement extends HTMLElement {
 
 export class HTMLLegendElement extends HTMLElement { localName = 'legend' }
 
+export class HTMLMetaElement extends HTMLElement {
+
+    localName = 'meta'
+
+    /**
+     * @param {object} properties
+     */
+    constructor(properties) {
+        super(properties)
+        this.content = this.getAttribute('content') ?? '0'
+    }
+}
+
 export class HTMLMeterElement extends HTMLElement {
 
     localName = 'meter'
@@ -897,6 +910,12 @@ export class HTMLMediaElement extends HTMLElement {
 }
 
 export class HTMLVideoElement extends HTMLMediaElement { localName = 'video' }
+
+export class MathMLElement extends Element {
+
+    localName = 'math'
+    namespaceURI = MATHML_NAMESPACE
+}
 
 export class SVGElement extends Element {
 

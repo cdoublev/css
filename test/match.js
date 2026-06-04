@@ -20,6 +20,7 @@ import {
     HTMLInputElement,
     HTMLLegendElement,
     HTMLMediaElement,
+    HTMLMetaElement,
     HTMLMeterElement,
     HTMLOptGroupElement,
     HTMLOptionElement,
@@ -29,12 +30,13 @@ import {
     HTMLSlotElement,
     HTMLTextAreaElement,
     HTMLVideoElement,
+    MathMLElement,
     SVGSVGElement,
     SVGUseElement,
     ShadowRoot,
     Text,
 } from './dom.js'
-import { HTML_NAMESPACE, SVG_NAMESPACE, XLINK_NAMESPACE } from '../lib/utils/dom/constants.js'
+import { HTML_NAMESPACE, SVG_NAMESPACE, XLINK_NAMESPACE, XML_NAMESPACE } from '../lib/utils/dom/constants.js'
 import assert, { Assert, AssertionError } from 'node:assert/strict'
 import { createContext, parseGrammar } from '../lib/parse/parser.js'
 import { describe, test } from 'node:test'
@@ -3907,6 +3909,298 @@ describe('selector', () => {
             ':seeking',
             ':stalled',
             ':volume-locked',
+        ]
+        selectors.forEach(selector => assert.match(selector, document._selected.get(selector), document))
+    })
+    // Text
+    test(':lang()', () => {
+
+        /**
+         * <html>
+         *   <body lang="de">
+         *
+         *     <meta http-equiv="content-language" content="en">
+         *     <meta http-equiv="content-language" content="FR">
+         *
+         *     <!-- multiple language tag candidates -->
+         *     <section>
+         *       #shadow-root
+         *         <section></section>
+         *     </section>
+         *     <section lang="en" lang="es"></section>  <!-- the user declared `lang="es"` in the XML namespace -->
+         *     <math lang="en"></math>
+         *     <math></math>  <!-- the user declared `lang="es"` in the XML namespace -->
+         *     <svg lang="en"></svg>
+         *
+         *     <!-- ill-formed language tags -->
+         *     <section lang=""></section>
+         *     <section lang="*"></section>
+         *     <section lang=" aa"></section>
+         *     <section lang="aa "></section>
+         *     <section lang="a"></section>
+         *     <section lang="a1"></section>
+         *     <section lang="abcdefghi"></section>
+         *     <section lang="aa-"></section>
+         *     <section lang="-eee"></section>
+         *     <section lang="aa--eee"></section>
+         *
+         *     <!-- normalization to extended form -->
+         *     <section lang="AA-f-e2-e-e1"></section>
+         *     <section lang="aa-e-e2-e-e1"></section>
+         *     <section lang="sgn-br"></section>
+         *     <section lang="zh-cmn-hans"></section>
+         *     <section lang="art-lojban"></section>
+         *     <section lang="in-eee"></section>
+         *     <section lang="aa-bu-v1v1v"></section>
+         *     <section lang="aa-heploc-v1v1v"></section>
+         *     <section lang="ar-aao-eee"></section>
+         *
+         *     <!-- matching with explicit and implicit wildcards -->
+         *     <section lang="aa-eee-eee-ssss-rr-v1v1v-e-e1-e1-e-e2-e2-x-y"></section>
+         *     <section lang="aaaa-111-2v2v"></section>
+         *   </body>
+         * </html>
+         */
+        const document = new HTMLDocument({ selected: new Map })
+        const html = new HTMLHtmlElement({
+            ownerDocument: document,
+            parentNode: document,
+            selectors: [':lang(fr)', ':lang("*")'],
+        })
+        const body = new HTMLBodyElement({
+            attributes: [{ localName: 'lang', value: 'de' }],
+            ownerDocument: document,
+            parentNode: html,
+            selectors: [':lang(de)', ':lang("*")'],
+        })
+
+        new HTMLMetaElement({
+            attributes: [
+                { localName: 'http-equiv', value: 'content-language' },
+                { localName: 'content', value: '1' },
+            ],
+            ownerDocument: document,
+            parentNode: body,
+            selectors: [':lang(de)', ':lang("*")'],
+        })
+        new HTMLMetaElement({
+            attributes: [
+                { localName: 'http-equiv', value: 'content-language' },
+                { localName: 'content', value: 'fr' },
+            ],
+            ownerDocument: document,
+            parentNode: body,
+            selectors: [':lang(de)', ':lang("*")'],
+        })
+
+        // Multiple language tag candidates
+        new HTMLSectionElement({
+            ownerDocument: document,
+            parentNode: body,
+            selectors: [':lang(de)', ':lang("*")'],
+        })
+        const shadowRoot = new ShadowRoot({
+            host: body.childNodes._list.at(-1),
+            ownerDocument: document,
+        })
+        new HTMLSectionElement({
+            ownerDocument: document,
+            parentNode: shadowRoot,
+            selectors: [':lang(de)', ':lang("*")'],
+        })
+        new HTMLSectionElement({
+            attributes: [
+                { localName: 'lang', value: 'en' },
+                { localName: 'lang', namespaceURI: XML_NAMESPACE, value: 'es' },
+            ],
+            ownerDocument: document,
+            parentNode: body,
+            selectors: [':lang(es)', ':lang("*")'],
+        })
+        new MathMLElement({
+            attributes: [{ localName: 'lang', value: 'en' }],
+            ownerDocument: document,
+            parentNode: body,
+            selectors: [':lang(de)', ':lang("*")'],
+        })
+        new MathMLElement({
+            attributes: [{ localName: 'lang', namespaceURI: XML_NAMESPACE, value: 'en' }],
+            ownerDocument: document,
+            parentNode: body,
+            selectors: [':lang(en)', ':lang("*")'],
+        })
+
+        // Ill-formed language tags
+        new HTMLSectionElement({
+            attributes: [{ localName: 'lang' }],
+            ownerDocument: document,
+            parentNode: body,
+            selectors: [':lang("")'],
+        })
+        new HTMLSectionElement({
+            attributes: [{ localName: 'lang', value: '*' }],
+            ownerDocument: document,
+            parentNode: body,
+        })
+        new HTMLSectionElement({
+            attributes: [{ localName: 'lang', value: ' aa' }],
+            ownerDocument: document,
+            parentNode: body,
+        })
+        new HTMLSectionElement({
+            attributes: [{ localName: 'lang', value: 'aa ' }],
+            ownerDocument: document,
+            parentNode: body,
+        })
+        new HTMLSectionElement({
+            attributes: [{ localName: 'lang', value: 'a' }],
+            ownerDocument: document,
+            parentNode: body,
+        })
+        new HTMLSectionElement({
+            attributes: [{ localName: 'lang', value: 'a1' }],
+            ownerDocument: document,
+            parentNode: body,
+        })
+        new HTMLSectionElement({
+            attributes: [{ localName: 'lang', value: 'abcdefghi' }],
+            ownerDocument: document,
+            parentNode: body,
+        })
+        new HTMLSectionElement({
+            attributes: [{ localName: 'lang', value: 'aa-' }],
+            ownerDocument: document,
+            parentNode: body,
+        })
+        new HTMLSectionElement({
+            attributes: [{ localName: 'lang', value: '-eee' }],
+            ownerDocument: document,
+            parentNode: body,
+        })
+        new HTMLSectionElement({
+            attributes: [{ localName: 'lang', value: 'aa--eee' }],
+            ownerDocument: document,
+            parentNode: body,
+        })
+
+        // Normalization to extended form
+        new HTMLSectionElement({
+            attributes: [{ localName: 'lang', value: 'AA-f-e2-e-e1' }],
+            ownerDocument: document,
+            parentNode: body,
+            selectors: [':lang(AA-e-e1-f-e2)', ':lang(aa-f-e2-e-e1)', ':lang("*")'],
+        })
+        new HTMLSectionElement({
+            attributes: [{ localName: 'lang', value: 'aa-e-e2-e-e1' }],
+            ownerDocument: document,
+            parentNode: body,
+            selectors: [':lang("*")'],
+        })
+        new HTMLSectionElement({
+            attributes: [{ localName: 'lang', value: 'sgn-br' }],
+            ownerDocument: document,
+            parentNode: body,
+            selectors: [':lang(bzs)', ':lang(sgn-br)', ':lang("*")'],
+        })
+        new HTMLSectionElement({
+            attributes: [{ localName: 'lang', value: 'zh-cmn-hans' }],
+            ownerDocument: document,
+            parentNode: body,
+            selectors: [':lang(cmn-hans)', ':lang(zh-cmn-hans)', ':lang("*")'],
+        })
+        new HTMLSectionElement({
+            attributes: [{ localName: 'lang', value: 'art-lojban' }],
+            ownerDocument: document,
+            parentNode: body,
+            selectors: [':lang(jbo)', ':lang(art-lojban)', ':lang("*")'],
+        })
+        new HTMLSectionElement({
+            attributes: [{ localName: 'lang', value: 'in-eee' }],
+            ownerDocument: document,
+            parentNode: body,
+            selectors: [':lang(id-eee)', ':lang(in)', ':lang("*")'],
+        })
+        new HTMLSectionElement({
+            attributes: [{ localName: 'lang', value: 'aa-bu-v1v1v' }],
+            ownerDocument: document,
+            parentNode: body,
+            selectors: [':lang(aa-mm-v1v1v)', ':lang(aa-bu)', ':lang("*")', ':lang("aa-*")'],
+        })
+        new HTMLSectionElement({
+            attributes: [{ localName: 'lang', value: 'aa-heploc-v1v1v' }],
+            ownerDocument: document,
+            parentNode: body,
+            selectors: [':lang(aa-alalc97-v1v1v)', ':lang(aa-heploc)', ':lang("*")', ':lang("aa-*")'],
+        })
+        new HTMLSectionElement({
+            attributes: [{ localName: 'lang', value: 'ar-aao-eee' }],
+            ownerDocument: document,
+            parentNode: body,
+            selectors: [':lang(aao-eee)', ':lang(ar-aao)', ':lang("*")'],
+        })
+
+        // Matching with explicit and implicit wildcards
+        new HTMLSectionElement({
+            attributes: [{ localName: 'lang', value: 'aa-eee-eee-ssss-rr-v1v1v-e-e1-e1-e-e2-e2-x-y' }],
+            ownerDocument: document,
+            parentNode: body,
+            selectors: [':lang(aa-e-e1-e-e2)', ':lang(aa-e-e-x-y)', ':lang("*")', ':lang("aa-*")', ':lang("aa-*-ssss")'],
+        })
+        new HTMLSectionElement({
+            attributes: [{ localName: 'lang', value: 'aaaa-111-2v2v' }],
+            ownerDocument: document,
+            parentNode: body,
+            selectors: [':lang("*")'],
+        })
+
+        const selectors = [
+            // Ill-formed language range
+            ':lang(" aa")',
+            ':lang("aa ")',
+            ':lang("1")',
+            ':lang("a*")',
+            ':lang("*a")',
+            ':lang("**")',
+            ':lang("*-")',
+            ':lang("-*")',
+            // Multiple language tag candidates
+            ':lang(de)',
+            ':lang(en)',
+            ':lang(es)',
+            ':lang(fr)',
+            // Normalization to extended form
+            ':lang(AA-e-e1-f-e2)',
+            ':lang(aa-f-e2-e-e1)',
+            ':lang(aa-e-e1-e-e2)',
+            ':lang(bzs)',
+            ':lang(sgn-br)',
+            ':lang(sgn-eee-br)',
+            ':lang(sgn-br-v1v1v)',
+            ':lang(cmn-hans)',
+            ':lang(zh-cmn-hans)',
+            ':lang(zh-eee-cmn-hans)',
+            ':lang(zh-cmn-eee-hans)',
+            ':lang(zh-cmn-hans-rr)',
+            ':lang(jbo)',
+            ':lang(art-lojban)',
+            ':lang(id-eee)',
+            ':lang(in)',
+            ':lang(aa-mm-v1v1v)',
+            ':lang(aa-bu)',
+            ':lang(aa-alalc97-v1v1v)',
+            ':lang(aa-heploc)',
+            ':lang(ar-aao)',
+            ':lang(aao-eee)',
+            // No language
+            ':lang("")',
+            // Match with explicit and implicit wildcards
+            ':lang("*")',
+            ':lang(aaa)',
+            ':lang(eee)',
+            ':lang(aa-x)',
+            ':lang(aaaa-e)',
+            ':lang(aa-e-e-x-y)',
+            ':lang("aa-*-ssss")',
         ]
         selectors.forEach(selector => assert.match(selector, document._selected.get(selector), document))
     })
