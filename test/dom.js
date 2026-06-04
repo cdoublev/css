@@ -250,6 +250,7 @@ export class Text extends CharacterData { nodeType = TEXT_NODE_TYPE }
 export class Document extends Node {
 
     adoptedStyleSheets = []
+    defaultView = globalThis
     fullscreenElement = null
     nodeType = DOCUMENT_NODE_TYPE
     pictureInPictureElement = null

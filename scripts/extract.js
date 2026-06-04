@@ -20,7 +20,6 @@ import * as webref from './webref.js'
 import { quote, tab } from '../lib/utils/string.js'
 import arbitrary from '../lib/parse/arbitrary.js'
 import contextSensitiveTypes from '../lib/values/context-sensitive.js'
-import { definitions as dimensions } from '../lib/values/dimensions.js'
 import { findRule } from '../lib/utils/definition.js'
 import forgiving from '../lib/values/forgiving.js'
 import fs from 'node:fs/promises'
@@ -198,7 +197,7 @@ const replaced = {
         // https://github.com/w3c/csswg-drafts/issues/13010
         '<event-trigger-event>': 'activate | click | interest | touch | dblclick | keypress(<string>)',
         // https://github.com/w3c/csswg-drafts/issues/10797
-        '<input-position>': "<calc-sum>",
+        '<input-position>': '<calc-sum>',
         '<progress-source>': "<calc-sum> | <'animation-timeline'>",
         // https://github.com/w3c/fxtf-drafts/issues/532
         '<mask-reference>': 'none | <image>',

@@ -1276,7 +1276,6 @@ describe('<signed-integer>', () => {
         assert.valid('<signed-integer>', `+${MAX_INTEGER + 1}`, `+${MAX_INTEGER}`)
     })
 })
-// TODO: add support for variable units
 describe('<dimension>', () => {
     test('invalid', () => {
         // Invalid identifier (start) code point
@@ -2359,7 +2358,7 @@ describe('<random()>', () => {
         assert.valid('<number>', 'random(fixed 1, infinity, 1)', 'calc(infinity)', styleRule)
         assert.valid('<number>', 'random(fixed 1, -infinity, 1)', 'calc(-infinity)', styleRule)
         // Discarded step when its multiplier is infinite
-        assert.valid('<number>', 'random(fixed 0.1, 0, 1, 0)', `calc(0.1)`, styleRule)
+        assert.valid('<number>', 'random(fixed 0.1, 0, 1, 0)', 'calc(0.1)', styleRule)
     })
 })
 describe('<sibling-count()>, <sibling-index()>', () => {

@@ -224,7 +224,6 @@ describe('CSSStyleDeclaration.cssText', () => {
         assert.equal(style.cssText, 'color: green; font-size: 12px;')
     })
 })
-// TODO: add test for filtering declared values in @import style sheet
 describe('CSSStyleDeclaration.setProperty(), CSSStyleDeclaration.getPropertyValue(), CSSStyleDeclaration.removeProperty()', () => {
     it('throws an error when trying to set or remove a declaration while the readonly flag is set', () => {
         const style = createStyle({ readOnly: true })

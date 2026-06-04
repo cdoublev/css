@@ -757,7 +757,7 @@ describe('selector', () => {
          *       <input type="color">
          *       <input type="color" value>
          *       <input type="image">
-         *       <input type="number">  <!-- value set to "1" by the user -->
+         *       <input type="number">  <!-- the user set `value` to "1" -->
          *       <input type="radio" checked>
          *       <input type="reset">
          *       <input type="submit">
@@ -772,7 +772,7 @@ describe('selector', () => {
          *       <!-- :blank -->
          *       <input type="checkbox" disabled readonly>
          *       <input type="checkbox" value="value">
-         *       <input type="number" value="1">  <!-- value set to "" by the user -->
+         *       <input type="number" value="1">  <!-- the user set `value` to "" -->
          *       <input type="radio">
          *       <select value="value"></select>
          *       <select multiple>
@@ -981,17 +981,17 @@ describe('selector', () => {
          *       <div type="checkbox" checked="true"></div>
          *
          *       <!-- :unchecked -->
-         *       <input type="checkbox" checked="true">  <!-- unchecked by the user -->
-         *       <input type="radio" checked="true">  <!-- unchecked by the user -->
+         *       <input type="checkbox" checked="true">  <!-- the user unchecked the input -->
+         *       <input type="radio" checked="true">     <!-- the user unchecked the input -->
          *       <select multiple>
-         *         <option selected></option>  <!-- unselected by the user -->
+         *         <option selected></option>            <!-- the user unselected the option -->
          *         <option></option>
          *       </select>
          *
          *       <!-- :checked -->
          *       <input type="checkbox" checked disabled readonly>
-         *       <input type="checkbox">  <!-- checked by the user -->
-         *       <input type="radio">  <!-- checked by the user -->
+         *       <input type="checkbox">                 <!-- the user checked the input -->
+         *       <input type="radio">                    <!-- the user checked the input -->
          *       <select>
          *         <option></option>
          *       </select>
@@ -1860,8 +1860,8 @@ describe('selector', () => {
          *       <input type="week" value="2000-W02" max="2000-W01">
          *
          *       <!-- :in-range -->
-         *       <input type="date" min="2000-01-01" value="1999-12-31" max="2000-01-02">  <!-- value set to empty string by the user -->
-         *       <input type="date" min="1999-12-31" max="2000-01-02">  <!-- value set to "2000-01-01" by the user -->
+         *       <input type="date" min="2000-01-01" value="1999-12-31" max="2000-01-02">  <!-- the user set `value` to empty string -->
+         *       <input type="date" min="1999-12-31" max="2000-01-02">                     <!-- the user set `value` to "2000-01-01" -->
          *       <input type="date" min="2000-01-01" value="2000-01-01" max="2000-01-01">
          *       <input type="datetime-local" min="1999-12-31T00:00" value="2000-01-01T00:00" max="2000-01-01T00:01">
          *       <input type="month" min="1999-12" value="2000-01" max="2000-02">
@@ -3895,12 +3895,13 @@ describe('selector', () => {
         selectors.forEach(selector => assert.match(selector, document._selected.get(selector), document))
     })
     // Resource
+    test.todo(':animated-image')
     test(':buffering, :muted, :paused, :playing, :seeking, :stalled, :volume-locked', () => {
 
         /**
          * <html>
          *   <body>
-         *     <video muted="true"></video>  <!-- unmuted by the user -->
+         *     <video muted="true"></video>  <!-- the user unmuted the video -->
          *     <video muted></video>
          *     <div></div>
          *   </body>
