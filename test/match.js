@@ -2798,6 +2798,11 @@ describe('selector', () => {
             parentNode: form,
         })
         new HTMLInputElement({
+            attributes: [{ localName: 'type', value: 'image' }],
+            ownerDocument: document,
+            parentNode: form,
+        })
+        new HTMLInputElement({
             attributes: [{ localName: 'type', value: 'range' }],
             form,
             ownerDocument: document,
@@ -2849,6 +2854,14 @@ describe('selector', () => {
                 { localName: 'required' },
             ],
             form,
+            ownerDocument: document,
+            parentNode: form,
+        })
+        new HTMLInputElement({
+            attributes: [
+                { localName: 'type', value: 'image' },
+                { localName: 'required' },
+            ],
             ownerDocument: document,
             parentNode: form,
         })

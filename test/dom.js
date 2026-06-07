@@ -385,8 +385,10 @@ export class Element extends Node {
         this.localName = localName
 
         this.form = form
-        form?.elements._list.push(this)
-        fieldSet?.elements._list.push(this)
+        if (this.getAttribute('type') !== 'image') {
+            form?.elements._list.push(this)
+            fieldSet?.elements._list.push(this)
+        }
         this.name = this.getAttribute('name') ?? ''
         this.required = !!this.getAttributeNode('required')
         this.slot = this.getAttribute('slot') ?? ''
