@@ -430,11 +430,11 @@ describe('selector', () => {
         /**
          * <html>
          *   <body>
-         *     <section>
+         *     <div>
          *       #shadow-root
-         *         <section></section>
-         *     </section>
-         *     <SECTION></SECTION>
+         *         <div></div>
+         *     </div>
+         *     <DIV></DIV>
          *     <svg></svg>
          *   </body>
          * </html>
@@ -442,23 +442,23 @@ describe('selector', () => {
         const document = new HTMLDocument
         const html = new HTMLHtmlElement({ ownerDocument: document, parentNode: document })
         const body = new HTMLBodyElement({ ownerDocument: document, parentNode: html })
-        const host = new HTMLSectionElement({ ownerDocument: document, parentNode: body })
+        const host = new HTMLDivElement({ ownerDocument: document, parentNode: body })
         const shadowRoot = new ShadowRoot({ host, ownerDocument: document })
-        const shadowSection = new HTMLSectionElement({ ownerDocument: document, parentNode: shadowRoot })
-        const noNamespace = new Element({ localName: 'SECTION', ownerDocument: document, parentNode: body })
+        const shadowDiv = new HTMLDivElement({ ownerDocument: document, parentNode: shadowRoot })
+        const noNamespace = new Element({ localName: 'DIV', ownerDocument: document, parentNode: body })
         const svg = new SVGSVGElement({ ownerDocument: document, parentNode: body })
 
         const selections = [
-            ['*', [html, body, host, shadowSection, noNamespace, svg]],
-            ['*', [html, body, host, shadowSection], { '': HTML_NAMESPACE }],
-            ['*', [shadowSection], {}, shadowRoot],
+            ['*', [html, body, host, shadowDiv, noNamespace, svg]],
+            ['*', [html, body, host, shadowDiv], { '': HTML_NAMESPACE }],
+            ['*', [shadowDiv], {}, shadowRoot],
             ['|*', [noNamespace]],
-            ['*|*', [html, body, host, shadowSection, noNamespace, svg]],
-            ['prefix|*', [html, body, host, shadowSection], { prefix: HTML_NAMESPACE }],
+            ['*|*', [html, body, host, shadowDiv, noNamespace, svg]],
+            ['prefix|*', [html, body, host, shadowDiv], { prefix: HTML_NAMESPACE }],
             ['html|*', [svg], { html: SVG_NAMESPACE }],
-            ['section', [host, shadowSection]],
-            ['section', [host, shadowSection], { '': HTML_NAMESPACE }],
-            ['SECTION', [host, shadowSection, noNamespace]],
+            ['div', [host, shadowDiv]],
+            ['div', [host, shadowDiv], { '': HTML_NAMESPACE }],
+            ['DIV', [host, shadowDiv, noNamespace]],
             ['svg', [svg]],
             ['SVG', []],
         ]
@@ -470,41 +470,41 @@ describe('selector', () => {
         /**
          * <html>
          *   <body>
-         *     <section id="section"></section>
-         *     <section id="section"></section>
-         *     <section id="section"></section>
-         *     <section id="1"></section>
+         *     <div id="div"></div>
+         *     <div id="div"></div>
+         *     <div id="div"></div>
+         *     <div id="1"></div>
          *   </body>
          * </html>
          */
         const document = new HTMLDocument
         const html = new HTMLHtmlElement({ ownerDocument: document, parentNode: document })
         const body = new HTMLBodyElement({ ownerDocument: document, parentNode: html })
-        const section = new HTMLSectionElement({
-            attributes: [{ localName: 'id', value: 'section' }],
+        const div = new HTMLDivElement({
+            attributes: [{ localName: 'id', value: 'div' }],
             ownerDocument: document,
             parentNode: body,
         })
         const noNamespace = new Element({
-            attributes: [{ localName: 'id', value: 'section' }],
-            localName: 'section',
+            attributes: [{ localName: 'id', value: 'div' }],
+            localName: 'div',
             ownerDocument: document,
             parentNode: body,
         })
-        new HTMLSectionElement({
-            attributes: [{ localName: 'id', namespaceURI: SVG_NAMESPACE, value: 'section' }],
+        new HTMLDivElement({
+            attributes: [{ localName: 'id', namespaceURI: SVG_NAMESPACE, value: 'div' }],
             ownerDocument: document,
             parentNode: body,
         })
-        const one = new HTMLSectionElement({
+        const one = new HTMLDivElement({
             attributes: [{ localName: 'id', value: '1' }],
             ownerDocument: document,
             parentNode: body,
         })
 
-        assert.match('#section', [section, noNamespace], document)
-        assert.match('#section', [section, noNamespace], document, { namespaces: { '': HTML_NAMESPACE } })
-        assert.match('#SECTION', [], document)
+        assert.match('#div', [div, noNamespace], document)
+        assert.match('#div', [div, noNamespace], document, { namespaces: { '': HTML_NAMESPACE } })
+        assert.match('#DIV', [], document)
         assert.match('#\\31', [one], document)
     })
     test('class', () => {
@@ -512,43 +512,43 @@ describe('selector', () => {
         /**
          * <html>
          *   <body>
-         *     <section class="class-1 class-2"></section>
-         *     <section class="class-1"></section>
-         *     <section class="class-1"></section>
-         *     <section class="1"></section>
+         *     <div class="class-1 class-2"></div>
+         *     <div class="class-1"></div>
+         *     <div class="class-1"></div>
+         *     <div class="1"></div>
          *   </body>
          * </html>
          */
         const document = new HTMLDocument
         const html = new HTMLHtmlElement({ ownerDocument: document, parentNode: document })
         const body = new HTMLBodyElement({ ownerDocument: document, parentNode: html })
-        const section = new HTMLSectionElement({
+        const div = new HTMLDivElement({
             attributes: [{ localName: 'class', value: 'class-1 class-2' }],
             ownerDocument: document,
             parentNode: body,
         })
         const noNamespace = new Element({
             attributes: [{ localName: 'class', value: 'class-1' }],
-            localName: 'section',
+            localName: 'div',
             ownerDocument: document,
             parentNode: body,
         })
-        new HTMLSectionElement({
+        new HTMLDivElement({
             attributes: [{ localName: 'class', namespaceURI: SVG_NAMESPACE, value: 'class-1' }],
             ownerDocument: document,
             parentNode: body,
         })
-        const one = new HTMLSectionElement({
+        const one = new HTMLDivElement({
             attributes: [{ localName: 'class', value: '1' }],
             ownerDocument: document,
             parentNode: body,
         })
 
         const selections = [
-            ['.class-1', [section, noNamespace]],
-            ['.class-1', [section, noNamespace], { '': HTML_NAMESPACE }],
+            ['.class-1', [div, noNamespace]],
+            ['.class-1', [div, noNamespace], { '': HTML_NAMESPACE }],
             ['.CLASS-1', []],
-            ['.class-1.class-2', [section]],
+            ['.class-1.class-2', [div]],
             ['.\\31', [one]],
         ]
         selections.forEach(([selector, expected, namespaces]) =>
@@ -559,21 +559,21 @@ describe('selector', () => {
         /**
          * <html>
          *   <body>
-         *     <section id="section" class="class-1 class-2" empty=""></section>
-         *     <section id="no-namespace"></section>
+         *     <div id="div" class="class-1 class-2" empty=""></div>
+         *     <div id="no-namespace"></div>
          *     <svg viewBox="0 0 1 1">
          *       <use xlink:href />
          *     </svg>
-         *     <section 1="1"></section>
+         *     <div 1="1"></div>
          *   </body>
          * </html>
          */
         const document = new HTMLDocument
         const html = new HTMLHtmlElement({ ownerDocument: document, parentNode: document })
         const body = new HTMLBodyElement({ ownerDocument: document, parentNode: html })
-        const section = new HTMLSectionElement({
+        const div = new HTMLDivElement({
             attributes: [
-                { localName: 'id', value: 'section' },
+                { localName: 'id', value: 'div' },
                 { localName: 'class', value: 'class-1 class-2' },
                 { localName: 'color', value: '#fff' },
                 { localName: 'empty' },
@@ -583,7 +583,7 @@ describe('selector', () => {
         })
         const noNamespace = new Element({
             attributes: [{ localName: 'id', value: 'no-namespace' }],
-            localName: 'section',
+            localName: 'div',
             ownerDocument: document,
             parentNode: body,
         })
@@ -600,41 +600,41 @@ describe('selector', () => {
             ownerDocument: document,
             parentNode: svg,
         })
-        const one = new HTMLSectionElement({
+        const one = new HTMLDivElement({
             attributes: [{ localName: '1', value: '1' }],
             ownerDocument: document,
             parentNode: body,
         })
 
         const selections = [
-            ['[id]', [section, noNamespace]],
-            ['[ID]', [section]],
-            ['[id]', [section, noNamespace], { '': HTML_NAMESPACE }],
+            ['[id]', [div, noNamespace]],
+            ['[ID]', [div]],
+            ['[id]', [div, noNamespace], { '': HTML_NAMESPACE }],
             ['[viewBox]', [svg]],
             ['[VIEWBOX]', []],
             ['[href]'],
-            ['[|id]', [section, noNamespace]],
+            ['[|id]', [div, noNamespace]],
             ['[|href]'],
-            ['[*|id]', [section, noNamespace, svg]],
+            ['[*|id]', [div, noNamespace, svg]],
             ['[*|href]', [use]],
             ['[another-prefix|href]', [use], { 'another-prefix': XLINK_NAMESPACE }],
             ['[xlink|href]', [], { xlink: 'http://www.w3.org/1999/another-xlink' }],
-            ['[id=section]', [section]],
-            ['[ID=section]', [section]],
-            ['[id=SECTION]', []],
-            ['[id=SECTION i]', [section]],
+            ['[id=div]', [div]],
+            ['[ID=div]', [div]],
+            ['[id=DIV]', []],
+            ['[id=DIV i]', [div]],
             ['[\\31=\\31]', [one]],
-            ['[color="#FFF"]', [section]],
+            ['[color="#FFF"]', [div]],
             ['[color="#FFF" s]', []],
-            ['[class~=class-1]', [section]],
-            ['[class~="class-1"]', [section]],
-            ['[class|=class]', [section]],
-            ['[class^=class-1]', [section]],
-            ['[class$=class-2]', [section]],
-            ['[class*=class]', [section]],
-            ['[empty=""]', [section]],
+            ['[class~=class-1]', [div]],
+            ['[class~="class-1"]', [div]],
+            ['[class|=class]', [div]],
+            ['[class^=class-1]', [div]],
+            ['[class$=class-2]', [div]],
+            ['[class*=class]', [div]],
+            ['[empty=""]', [div]],
             ['[empty~=""]'],
-            ['[empty|=""]', [section]],
+            ['[empty|=""]', [div]],
             ['[empty^=""]'],
             ['[empty$=""]'],
             ['[empty*=""]'],
@@ -2532,10 +2532,10 @@ describe('selector', () => {
          *     <input type="checkbox" disabled readonly>    <!-- the user set `indeterminate` to `true` -->
          *     <input type="radio" name=" ">
          *     <input type="radio" name="group">
-         *     <section>
+         *     <div>
          *       #shadow-root
          *         <input type="radio" name="shadow">
-         *     </section>
+         *     </div>
          *     <progress></progress>
          *
          *     <!-- not :indeterminate -->
@@ -2596,7 +2596,7 @@ describe('selector', () => {
             parentNode: body,
             selectors: [':indeterminate'],
         })
-        new HTMLSectionElement({
+        new HTMLDivElement({
             ownerDocument: document,
             parentNode: body,
         })
@@ -3277,7 +3277,7 @@ describe('selector', () => {
          *     <form>
          *
          *       <!-- neither :read-only or :read-write -->
-         *       <section></section>
+         *       <div></div>
          *       <svg></svg>
          *
          *       <!-- :read-only -->
@@ -3339,7 +3339,7 @@ describe('selector', () => {
         const form = new HTMLFormElement({ ownerDocument: document, parentNode: body, selectors: [':read-only'] })
 
         // Neither :read-only or :read-write
-        new Element({ localName: 'section', ownerDocument: document, parentNode: body })
+        new Element({ localName: 'div', ownerDocument: document, parentNode: body })
         new SVGSVGElement({ ownerDocument: document, parentNode: body })
 
         // :read-only
@@ -3724,22 +3724,22 @@ describe('selector', () => {
         /**
          * <html>
          *   <body>
-         *     <section></section>
+         *     <div></div>
          *   </body>
          * </html>
          */
         const document = new HTMLDocument
         const html = new HTMLHtmlElement({ ownerDocument: document, parentNode: document })
         const body = new HTMLBodyElement({ ownerDocument: document, parentNode: html })
-        const section = new HTMLSectionElement({ ownerDocument: document, parentNode: body })
+        const div = new HTMLDivElement({ ownerDocument: document, parentNode: body })
 
         const selections = [
             // [':is()'], // <pseudo-class-selector> does not currently allow pseudo function taking no argument
             [':is(*::before)'],
             [':is(*::before, html)', [html]],
-            [':is(html *)', [body, section]],
-            [':not(html)', [body, section]],
-            [':not(html, body)', [section]],
+            [':is(html *)', [body, div]],
+            [':not(html)', [body, div]],
+            [':not(html, body)', [div]],
         ]
         selections.forEach(([selector, expected]) => assert.match(selector, expected, document))
     })
@@ -3965,41 +3965,41 @@ describe('selector', () => {
          *     <meta http-equiv="content-language" content="FR">
          *
          *     <!-- multiple language tag candidates -->
-         *     <section>
+         *     <div>
          *       #shadow-root
-         *         <section></section>
-         *     </section>
-         *     <section lang="en" lang="es"></section>  <!-- the user declared `lang="es"` in the XML namespace -->
+         *         <div></div>
+         *     </div>
+         *     <div lang="en" lang="es"></div>  <!-- the user declared `lang="es"` in the XML namespace -->
          *     <math lang="en"></math>
          *     <math></math>  <!-- the user declared `lang="es"` in the XML namespace -->
          *     <svg lang="en"></svg>
          *
          *     <!-- ill-formed language tags -->
-         *     <section lang=""></section>
-         *     <section lang="*"></section>
-         *     <section lang=" aa"></section>
-         *     <section lang="aa "></section>
-         *     <section lang="a"></section>
-         *     <section lang="a1"></section>
-         *     <section lang="abcdefghi"></section>
-         *     <section lang="aa-"></section>
-         *     <section lang="-eee"></section>
-         *     <section lang="aa--eee"></section>
+         *     <div lang=""></div>
+         *     <div lang="*"></div>
+         *     <div lang=" aa"></div>
+         *     <div lang="aa "></div>
+         *     <div lang="a"></div>
+         *     <div lang="a1"></div>
+         *     <div lang="abcdefghi"></div>
+         *     <div lang="aa-"></div>
+         *     <div lang="-eee"></div>
+         *     <div lang="aa--eee"></div>
          *
          *     <!-- normalization to extended form -->
-         *     <section lang="AA-f-e2-e-e1"></section>
-         *     <section lang="aa-e-e2-e-e1"></section>
-         *     <section lang="sgn-br"></section>
-         *     <section lang="zh-cmn-hans"></section>
-         *     <section lang="art-lojban"></section>
-         *     <section lang="in-eee"></section>
-         *     <section lang="aa-bu-v1v1v"></section>
-         *     <section lang="aa-heploc-v1v1v"></section>
-         *     <section lang="ar-aao-eee"></section>
+         *     <div lang="AA-f-e2-e-e1"></div>
+         *     <div lang="aa-e-e2-e-e1"></div>
+         *     <div lang="sgn-br"></div>
+         *     <div lang="zh-cmn-hans"></div>
+         *     <div lang="art-lojban"></div>
+         *     <div lang="in-eee"></div>
+         *     <div lang="aa-bu-v1v1v"></div>
+         *     <div lang="aa-heploc-v1v1v"></div>
+         *     <div lang="ar-aao-eee"></div>
          *
          *     <!-- matching with explicit and implicit wildcards -->
-         *     <section lang="aa-eee-eee-ssss-rr-v1v1v-e-e1-e1-e-e2-e2-x-y"></section>
-         *     <section lang="aaaa-111-2v2v"></section>
+         *     <div lang="aa-eee-eee-ssss-rr-v1v1v-e-e1-e1-e-e2-e2-x-y"></div>
+         *     <div lang="aaaa-111-2v2v"></div>
          *   </body>
          * </html>
          */
@@ -4036,7 +4036,7 @@ describe('selector', () => {
         })
 
         // Multiple language tag candidates
-        new HTMLSectionElement({
+        new HTMLDivElement({
             ownerDocument: document,
             parentNode: body,
             selectors: [':lang(de)', ':lang("*")'],
@@ -4045,12 +4045,12 @@ describe('selector', () => {
             host: body.childNodes._list.at(-1),
             ownerDocument: document,
         })
-        new HTMLSectionElement({
+        new HTMLDivElement({
             ownerDocument: document,
             parentNode: shadowRoot,
             selectors: [':lang(de)', ':lang("*")'],
         })
-        new HTMLSectionElement({
+        new HTMLDivElement({
             attributes: [
                 { localName: 'lang', value: 'en' },
                 { localName: 'lang', namespaceURI: XML_NAMESPACE, value: 'es' },
@@ -4073,108 +4073,108 @@ describe('selector', () => {
         })
 
         // Ill-formed language tags
-        new HTMLSectionElement({
+        new HTMLDivElement({
             attributes: [{ localName: 'lang' }],
             ownerDocument: document,
             parentNode: body,
             selectors: [':lang("")'],
         })
-        new HTMLSectionElement({
+        new HTMLDivElement({
             attributes: [{ localName: 'lang', value: '*' }],
             ownerDocument: document,
             parentNode: body,
         })
-        new HTMLSectionElement({
+        new HTMLDivElement({
             attributes: [{ localName: 'lang', value: ' aa' }],
             ownerDocument: document,
             parentNode: body,
         })
-        new HTMLSectionElement({
+        new HTMLDivElement({
             attributes: [{ localName: 'lang', value: 'aa ' }],
             ownerDocument: document,
             parentNode: body,
         })
-        new HTMLSectionElement({
+        new HTMLDivElement({
             attributes: [{ localName: 'lang', value: 'a' }],
             ownerDocument: document,
             parentNode: body,
         })
-        new HTMLSectionElement({
+        new HTMLDivElement({
             attributes: [{ localName: 'lang', value: 'a1' }],
             ownerDocument: document,
             parentNode: body,
         })
-        new HTMLSectionElement({
+        new HTMLDivElement({
             attributes: [{ localName: 'lang', value: 'abcdefghi' }],
             ownerDocument: document,
             parentNode: body,
         })
-        new HTMLSectionElement({
+        new HTMLDivElement({
             attributes: [{ localName: 'lang', value: 'aa-' }],
             ownerDocument: document,
             parentNode: body,
         })
-        new HTMLSectionElement({
+        new HTMLDivElement({
             attributes: [{ localName: 'lang', value: '-eee' }],
             ownerDocument: document,
             parentNode: body,
         })
-        new HTMLSectionElement({
+        new HTMLDivElement({
             attributes: [{ localName: 'lang', value: 'aa--eee' }],
             ownerDocument: document,
             parentNode: body,
         })
 
         // Normalization to extended form
-        new HTMLSectionElement({
+        new HTMLDivElement({
             attributes: [{ localName: 'lang', value: 'AA-f-e2-e-e1' }],
             ownerDocument: document,
             parentNode: body,
             selectors: [':lang(AA-e-e1-f-e2)', ':lang(aa-f-e2-e-e1)', ':lang("*")'],
         })
-        new HTMLSectionElement({
+        new HTMLDivElement({
             attributes: [{ localName: 'lang', value: 'aa-e-e2-e-e1' }],
             ownerDocument: document,
             parentNode: body,
             selectors: [':lang("*")'],
         })
-        new HTMLSectionElement({
+        new HTMLDivElement({
             attributes: [{ localName: 'lang', value: 'sgn-br' }],
             ownerDocument: document,
             parentNode: body,
             selectors: [':lang(bzs)', ':lang(sgn-br)', ':lang("*")'],
         })
-        new HTMLSectionElement({
+        new HTMLDivElement({
             attributes: [{ localName: 'lang', value: 'zh-cmn-hans' }],
             ownerDocument: document,
             parentNode: body,
             selectors: [':lang(cmn-hans)', ':lang(zh-cmn-hans)', ':lang("*")'],
         })
-        new HTMLSectionElement({
+        new HTMLDivElement({
             attributes: [{ localName: 'lang', value: 'art-lojban' }],
             ownerDocument: document,
             parentNode: body,
             selectors: [':lang(jbo)', ':lang(art-lojban)', ':lang("*")'],
         })
-        new HTMLSectionElement({
+        new HTMLDivElement({
             attributes: [{ localName: 'lang', value: 'in-eee' }],
             ownerDocument: document,
             parentNode: body,
             selectors: [':lang(id-eee)', ':lang(in)', ':lang("*")'],
         })
-        new HTMLSectionElement({
+        new HTMLDivElement({
             attributes: [{ localName: 'lang', value: 'aa-bu-v1v1v' }],
             ownerDocument: document,
             parentNode: body,
             selectors: [':lang(aa-mm-v1v1v)', ':lang(aa-bu)', ':lang("*")', ':lang("aa-*")'],
         })
-        new HTMLSectionElement({
+        new HTMLDivElement({
             attributes: [{ localName: 'lang', value: 'aa-heploc-v1v1v' }],
             ownerDocument: document,
             parentNode: body,
             selectors: [':lang(aa-alalc97-v1v1v)', ':lang(aa-heploc)', ':lang("*")', ':lang("aa-*")'],
         })
-        new HTMLSectionElement({
+        new HTMLDivElement({
             attributes: [{ localName: 'lang', value: 'ar-aao-eee' }],
             ownerDocument: document,
             parentNode: body,
@@ -4182,13 +4182,13 @@ describe('selector', () => {
         })
 
         // Matching with explicit and implicit wildcards
-        new HTMLSectionElement({
+        new HTMLDivElement({
             attributes: [{ localName: 'lang', value: 'aa-eee-eee-ssss-rr-v1v1v-e-e1-e1-e-e2-e2-x-y' }],
             ownerDocument: document,
             parentNode: body,
             selectors: [':lang(aa-e-e1-e-e2)', ':lang(aa-e-e-x-y)', ':lang("*")', ':lang("aa-*")', ':lang("aa-*-ssss")'],
         })
-        new HTMLSectionElement({
+        new HTMLDivElement({
             attributes: [{ localName: 'lang', value: 'aaaa-111-2v2v' }],
             ownerDocument: document,
             parentNode: body,
@@ -4455,7 +4455,7 @@ describe('selector', () => {
         /**
          * <html>
          *   <body>
-         *     <section>
+         *     <div>
          *       #shadow-root
          *         <slot></slot>
          *         <slot name="slot-2"></slot>
@@ -4463,14 +4463,14 @@ describe('selector', () => {
          *       <div></div>
          *       <div></div>
          *       <div slot="slot-1"></div>
-         *     </section>
+         *     </div>
          *   </body>
          * </html>
          */
         const document = new HTMLDocument
         const html = new HTMLHtmlElement({ ownerDocument: document, parentNode: document })
         const body = new HTMLBodyElement({ ownerDocument: document, parentNode: html })
-        const host = new HTMLSectionElement({ ownerDocument: document, parentNode: body })
+        const host = new HTMLDivElement({ ownerDocument: document, parentNode: body })
 
         const shadowRoot = new ShadowRoot({ host, ownerDocument: document })
         const slot1 = new HTMLSlotElement({ ownerDocument: document, parentNode: shadowRoot })
