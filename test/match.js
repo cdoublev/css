@@ -25,7 +25,6 @@ import {
     HTMLOptGroupElement,
     HTMLOptionElement,
     HTMLProgressElement,
-    HTMLSectionElement,
     HTMLSelectElement,
     HTMLSlotElement,
     HTMLTextAreaElement,
@@ -657,7 +656,7 @@ describe('selector', () => {
         const document = new HTMLDocument
         const html = new HTMLHtmlElement({ ownerDocument: document, parentNode: document })
         const body = new HTMLBodyElement({ ownerDocument: document, parentNode: html })
-        const section = new HTMLSectionElement({ ownerDocument: document, parentNode: body })
+        const section = new HTMLElement({ localName: 'section', ownerDocument: document, parentNode: body })
         const div1 = new HTMLDivElement({ ownerDocument: document, parentNode: body })
         const div2 = new HTMLDivElement({ ownerDocument: document, parentNode: body })
 
@@ -4263,9 +4262,9 @@ describe('selector', () => {
         const document = new HTMLDocument
         const html = new HTMLHtmlElement({ ownerDocument: document, parentNode: document })
         const body = new HTMLBodyElement({ ownerDocument: document, parentNode: html })
-        const host = new HTMLSectionElement({ ownerDocument: document, parentNode: body })
+        const host = new HTMLElement({ localName: 'section', ownerDocument: document, parentNode: body })
         const shadowRoot = new ShadowRoot({ host, ownerDocument: document })
-        const shadowElement = new HTMLSectionElement({ ownerDocument: document, parentNode: shadowRoot })
+        const shadowElement = new HTMLElement({ localName: 'section', ownerDocument: document, parentNode: shadowRoot })
         const div = new HTMLDivElement({ ownerDocument: document, parentNode: body })
 
         const fragment = new DocumentFragment
@@ -4335,7 +4334,7 @@ describe('selector', () => {
         const document = new HTMLDocument
         const html = new HTMLHtmlElement({ ownerDocument: document, parentNode: document })
         const body = new HTMLBodyElement({ ownerDocument: document, parentNode: html })
-        const section = new HTMLSectionElement({ ownerDocument: document, parentNode: body })
+        const section = new HTMLElement({ localName: 'section', ownerDocument: document, parentNode: body })
         const divs = ['<!-- comment -->', '', '', '', '', ''].map((data, index) => {
             const div = new HTMLDivElement({
                 attributes: [{ localName: 'id', value: `div-${index + 1}` }],
@@ -4437,7 +4436,7 @@ describe('selector', () => {
         const document = new HTMLDocument
         const html = new HTMLHtmlElement({ ownerDocument: document, parentNode: document })
         const body = new HTMLBodyElement({ ownerDocument: document, parentNode: html })
-        new HTMLSectionElement({ ownerDocument: document, parentNode: body })
+        new HTMLElement({ localName: 'section', ownerDocument: document, parentNode: body })
         new HTMLDivElement({ ownerDocument: document, parentNode: body })
 
         const selections = [

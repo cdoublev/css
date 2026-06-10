@@ -508,6 +508,14 @@ export class HTMLElement extends Element {
     namespaceURI = HTML_NAMESPACE
 
     /**
+     * @param {object} properties
+     */
+    constructor(properties) {
+        super(properties)
+        this.localName ??= properties.localName
+    }
+
+    /**
      * @returns {CSSStyleProperties}
      */
     get style() {
@@ -765,7 +773,6 @@ export class HTMLProgressElement extends HTMLElement {
     value = ''
 }
 
-export class HTMLSectionElement extends HTMLElement { localName = 'section' }
 
 export class HTMLSelectElement extends HTMLElement {
 
