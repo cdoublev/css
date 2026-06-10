@@ -52,7 +52,7 @@ describe('media', () => {
 
     const window = {
         devicePixelRatio: 1,
-        document: {},
+        document: new HTMLDocument,
         innerHeight: 100,
         innerWidth: 100,
         screen: {
