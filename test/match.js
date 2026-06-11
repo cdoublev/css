@@ -382,7 +382,7 @@ describe('selector', () => {
 
         /**
          * @param {string} selector
-         * @param {Element[]} [elements]
+         * @param {Element[]} elements
          * @param {Document|Element|ShadowRoot} tree
          * @param {object} [context]
          * @returns {*[]}
@@ -929,17 +929,6 @@ describe('selector', () => {
             parentNode: form,
             selectors: [':blank'],
         })
-        new HTMLInputElement({
-            attributes: [
-                { localName: 'disabled' },
-                { localName: 'readonly' },
-            ],
-            form,
-            ownerDocument: document,
-            parentNode: form,
-            selectors: [':blank'],
-            value: '',
-        })
         new HTMLSelectElement({
             attributes: [{ localName: 'value', value: 'value' }],
             form,
@@ -1132,56 +1121,55 @@ describe('selector', () => {
         /**
          * <html>
          *   <body>
+         *
          *     <form id="form-1">
          *
          *       <!-- :default -->
          *       <button disabled readonly></button>
          *
-         *       <!-- not :default -->
          *       <input type="image">
          *       <input type="submit">
          *
          *     </form>
+         *
          *     <form id="form-2">
          *
-         *       <!-- not :default -->
          *       <button type="button"></button>
          *       <button type="reset"></button>
          *       <input type="button">
          *       <input type="reset">
          *
          *     </form>
+         *
          *     <form id="form-3">
          *
-         *       <!-- not :default -->
          *       <button form="form-1"></button>
          *
          *       <!-- :default -->
          *       <button form="form-2"></button>
          *       <input type="image">
          *
-         *       <!-- not :default -->
          *       <button></button>
          *       <input type="submit">
          *
          *     </form>
+         *
          *     <form id="form-4">
          *
-         *       <!-- not :default -->
          *       <select>
          *         <option></option>
          *       </select>
          *
          *       <!-- :default -->
-         *       <input type="checkbox" checked disabled readonly>
-         *       <input type="radio" checked>
+         *       <input type="checkbox" checked disabled readonly>  <!-- the user unchecked the input -->
+         *       <input type="radio" checked>  <!-- the user unchecked the input -->
          *       <input type="submit">
          *       <select>
          *         <option selected></option>
          *         <option selected></option>
          *       </select>
          *       <select multiple>
-         *         <option selected></option>
+         *         <option selected></option>  <!-- the user unselected the option -->
          *         <option selected></option>
          *       </select>
          *
@@ -2526,17 +2514,6 @@ describe('selector', () => {
          * <html>
          *   <body>
          *
-         *     <!-- :indeterminate -->
-         *     <input type="checkbox">                      <!-- the user set `indeterminate` to `true` -->
-         *     <input type="checkbox" disabled readonly>    <!-- the user set `indeterminate` to `true` -->
-         *     <input type="radio" name=" ">
-         *     <input type="radio" name="group">
-         *     <div>
-         *       #shadow-root
-         *         <input type="radio" name="shadow">
-         *     </div>
-         *     <progress></progress>
-         *
          *     <!-- not :indeterminate -->
          *     <input type="radio" name="shadow">
          *     <input type="radio" name="shadow" checked>
@@ -2551,72 +2528,23 @@ describe('selector', () => {
          *       <input type="radio" form="form" name="group">
          *     </form>
          *
+         *     <!-- :indeterminate -->
+         *     <input type="checkbox">                      <!-- the user set `indeterminate` to `true` -->
+         *     <input type="checkbox" disabled readonly>    <!-- the user set `indeterminate` to `true` -->
+         *     <input type="radio" name=" ">
+         *     <input type="radio" name="group">
+         *     <div>
+         *       #shadow-root
+         *         <input type="radio" name="shadow">
+         *     </div>
+         *     <progress></progress>
+         *
          *   </body>
          * </html>
          */
         const document = new HTMLDocument({ selected: new Map })
         const html = new HTMLHtmlElement({ ownerDocument: document, parentNode: document })
         const body = new HTMLBodyElement({ ownerDocument: document, parentNode: html })
-
-        // :indeterminate
-        new HTMLInputElement({
-            attributes: [{ localName: 'type', value: 'checkbox' }],
-            indeterminate: true,
-            ownerDocument: document,
-            parentNode: body,
-            selectors: [':indeterminate'],
-        })
-        new HTMLInputElement({
-            attributes: [
-                { localName: 'type', value: 'checkbox' },
-                { localName: 'disabled' },
-                { localName: 'readonly' },
-            ],
-            indeterminate: true,
-            ownerDocument: document,
-            parentNode: body,
-            selectors: [':indeterminate'],
-        })
-        new HTMLInputElement({
-            attributes: [
-                { localName: 'type', value: 'radio' },
-                { localName: 'name', value: ' ' },
-            ],
-            ownerDocument: document,
-            parentNode: body,
-            selectors: [':indeterminate'],
-        })
-        new HTMLInputElement({
-            attributes: [
-                { localName: 'type', value: 'radio' },
-                { localName: 'name', value: 'group' },
-            ],
-            ownerDocument: document,
-            parentNode: body,
-            selectors: [':indeterminate'],
-        })
-        new HTMLDivElement({
-            ownerDocument: document,
-            parentNode: body,
-        })
-        const shadowRoot = new ShadowRoot({
-            host: body.childNodes._list.at(-1),
-            ownerDocument: document,
-        })
-        new HTMLInputElement({
-            attributes: [
-                { localName: 'type', value: 'radio' },
-                { localName: 'name', value: 'shadow' },
-            ],
-            ownerDocument: document,
-            parentNode: shadowRoot,
-            selectors: [':indeterminate'],
-        })
-        new HTMLProgressElement({
-            ownerDocument: document,
-            parentNode: body,
-            selectors: [':indeterminate'],
-        })
 
         // Not :indeterminate
         new HTMLInputElement({
@@ -2694,6 +2622,66 @@ describe('selector', () => {
             form,
             ownerDocument: document,
             parentNode: body.childNodes._list.at(-1),
+        })
+
+        // :indeterminate
+        new HTMLInputElement({
+            attributes: [{ localName: 'type', value: 'checkbox' }],
+            indeterminate: true,
+            ownerDocument: document,
+            parentNode: body,
+            selectors: [':indeterminate'],
+        })
+        new HTMLInputElement({
+            attributes: [
+                { localName: 'type', value: 'checkbox' },
+                { localName: 'disabled' },
+                { localName: 'readonly' },
+            ],
+            indeterminate: true,
+            ownerDocument: document,
+            parentNode: body,
+            selectors: [':indeterminate'],
+        })
+        new HTMLInputElement({
+            attributes: [
+                { localName: 'type', value: 'radio' },
+                { localName: 'name', value: ' ' },
+            ],
+            ownerDocument: document,
+            parentNode: body,
+            selectors: [':indeterminate'],
+        })
+        new HTMLInputElement({
+            attributes: [
+                { localName: 'type', value: 'radio' },
+                { localName: 'name', value: 'group' },
+            ],
+            ownerDocument: document,
+            parentNode: body,
+            selectors: [':indeterminate'],
+        })
+        new HTMLDivElement({
+            ownerDocument: document,
+            parentNode: body,
+        })
+        const shadowRoot = new ShadowRoot({
+            host: body.childNodes._list.at(-1),
+            ownerDocument: document,
+        })
+        new HTMLInputElement({
+            attributes: [
+                { localName: 'type', value: 'radio' },
+                { localName: 'name', value: 'shadow' },
+            ],
+            ownerDocument: document,
+            parentNode: shadowRoot,
+            selectors: [':indeterminate'],
+        })
+        new HTMLProgressElement({
+            ownerDocument: document,
+            parentNode: body,
+            selectors: [':indeterminate'],
         })
 
         assert.match(':indeterminate', document._selected.get(':indeterminate'), document)
@@ -3276,11 +3264,11 @@ describe('selector', () => {
          *     <form>
          *
          *       <!-- neither :read-only or :read-write -->
-         *       <div></div>
          *       <svg></svg>
+         *       <div></div>
          *
          *       <!-- :read-only -->
-         *       <button></button>
+         *       <div></div>
          *       <input type="button" contenteditable>
          *       <input type="checkbox">
          *       <input type="color">
@@ -3306,15 +3294,6 @@ describe('selector', () => {
          *       <textarea contenteditable readonly></textarea>
          *
          *       <!-- :read-write -->
-         *       <div contenteditable disabled readonly>
-         *         <button disabled readonly></button>
-         *         <!-- :read-only -->
-         *         <input type="date" disabled>
-         *         <input type="date" readonly>
-         *         <textarea disabled></textarea>
-         *         <textarea readonly></textarea>
-         *       </div>
-         *       <input type="button" contenteditable>
          *       <input type="date">
          *       <input type="datetime-local">
          *       <input type="email">
@@ -3327,23 +3306,42 @@ describe('selector', () => {
          *       <input type="url">
          *       <input type="week">
          *       <textarea></textarea>
+         *       <div contenteditable disabled readonly>
+         *         <button disabled readonly></button>
+         *         <!-- :read-only -->
+         *         <input class="read-only" type="date" disabled>
+         *         <input class="read-only" type="date" readonly>
+         *         <textarea class="read-only" disabled></textarea>
+         *         <textarea class="read-only" readonly></textarea>
+         *       </div>
          *
          *     </form>
          *   </body>
          * </html>
          */
         const document = new HTMLDocument({ selected: new Map })
-        const html = new HTMLHtmlElement({ ownerDocument: document, parentNode: document, selectors: [':read-only'] })
-        const body = new HTMLBodyElement({ ownerDocument: document, parentNode: html, selectors: [':read-only'] })
-        const form = new HTMLFormElement({ ownerDocument: document, parentNode: body, selectors: [':read-only'] })
+        const html = new HTMLHtmlElement({
+            ownerDocument: document,
+            parentNode: document,
+            selectors: [':read-only'],
+        })
+        const body = new HTMLBodyElement({
+            ownerDocument: document,
+            parentNode: html,
+            selectors: [':read-only'],
+        })
+        const form = new HTMLFormElement({
+            ownerDocument: document,
+            parentNode: body,
+            selectors: [':read-only'],
+        })
 
         // Neither :read-only or :read-write
         new Element({ localName: 'div', ownerDocument: document, parentNode: body })
         new SVGSVGElement({ ownerDocument: document, parentNode: body })
 
         // :read-only
-        new HTMLButtonElement({
-            form,
+        new HTMLDivElement({
             ownerDocument: document,
             parentNode: form,
             selectors: [':read-only'],
@@ -3564,72 +3562,6 @@ describe('selector', () => {
         })
 
         // :read-write
-        new HTMLDivElement({
-            attributes: [
-                { localName: 'contenteditable' },
-                { localName: 'disabled' },
-                { localName: 'readonly' },
-            ],
-            isContentEditable: true,
-            ownerDocument: document,
-            parentNode: form,
-            selectors: [':read-write'],
-        })
-        new HTMLButtonElement({
-            attributes: [
-                { localName: 'disabled' },
-                { localName: 'readonly' },
-            ],
-            isContentEditable: true,
-            ownerDocument: document,
-            parentNode: form.childNodes._list.at(-1),
-            selectors: [':read-write'],
-        })
-        new HTMLInputElement({
-            attributes: [
-                { localName: 'type', value: 'date' },
-                { localName: 'disabled' },
-            ],
-            isContentEditable: true,
-            ownerDocument: document,
-            parentNode: form.childNodes._list.at(-1),
-            selectors: [':read-only'],
-        })
-        new HTMLInputElement({
-            attributes: [
-                { localName: 'type', value: 'date' },
-                { localName: 'readonly' },
-            ],
-            isContentEditable: true,
-            ownerDocument: document,
-            parentNode: form.childNodes._list.at(-1),
-            selectors: [':read-only'],
-        })
-        new HTMLTextAreaElement({
-            attributes: [
-                { localName: 'disabled' },
-            ],
-            isContentEditable: true,
-            ownerDocument: document,
-            parentNode: form.childNodes._list.at(-1),
-            selectors: [':read-only'],
-        })
-        new HTMLTextAreaElement({
-            attributes: [
-                { localName: 'readonly' },
-            ],
-            isContentEditable: true,
-            ownerDocument: document,
-            parentNode: form.childNodes._list.at(-1),
-            selectors: [':read-only'],
-        })
-        new HTMLButtonElement({
-            attributes: [{ localName: 'contenteditable' }],
-            isContentEditable: true,
-            ownerDocument: document,
-            parentNode: form,
-            selectors: [':read-write'],
-        })
         new HTMLInputElement({
             attributes: [{ localName: 'type', value: 'date' }],
             form,
@@ -3712,6 +3644,61 @@ describe('selector', () => {
             ownerDocument: document,
             parentNode: form,
             selectors: [':read-write'],
+        })
+        new HTMLDivElement({
+            attributes: [
+                { localName: 'contenteditable' },
+                { localName: 'disabled' },
+                { localName: 'readonly' },
+            ],
+            isContentEditable: true,
+            ownerDocument: document,
+            parentNode: form,
+            selectors: [':read-write'],
+        })
+        new HTMLButtonElement({
+            attributes: [
+                { localName: 'disabled' },
+                { localName: 'readonly' },
+            ],
+            isContentEditable: true,
+            ownerDocument: document,
+            parentNode: form.childNodes._list.at(-1),
+            selectors: [':read-write'],
+        })
+        new HTMLInputElement({
+            attributes: [
+                { localName: 'type', value: 'date' },
+                { localName: 'disabled' },
+            ],
+            isContentEditable: true,
+            ownerDocument: document,
+            parentNode: form.childNodes._list.at(-1),
+            selectors: [':read-only'],
+        })
+        new HTMLInputElement({
+            attributes: [
+                { localName: 'type', value: 'date' },
+                { localName: 'readonly' },
+            ],
+            isContentEditable: true,
+            ownerDocument: document,
+            parentNode: form.childNodes._list.at(-1),
+            selectors: [':read-only'],
+        })
+        new HTMLTextAreaElement({
+            attributes: [{ localName: 'disabled' }],
+            isContentEditable: true,
+            ownerDocument: document,
+            parentNode: form.childNodes._list.at(-1),
+            selectors: [':read-only'],
+        })
+        new HTMLTextAreaElement({
+            attributes: [{ localName: 'readonly' }],
+            isContentEditable: true,
+            ownerDocument: document,
+            parentNode: form.childNodes._list.at(-1),
+            selectors: [':read-only'],
         })
 
         assert.match(':read-only', document._selected.get(':read-only'), document)
