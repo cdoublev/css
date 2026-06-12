@@ -25,8 +25,10 @@ import {
     HTMLOptGroupElement,
     HTMLOptionElement,
     HTMLProgressElement,
+    HTMLScriptElement,
     HTMLSelectElement,
     HTMLSlotElement,
+    HTMLStyleElement,
     HTMLTextAreaElement,
     HTMLVideoElement,
     MathMLElement,
@@ -387,7 +389,7 @@ describe('selector', () => {
          * @param {object} [context]
          * @returns {*[]}
          */
-        match(selector, elements = [], tree, { includeSubtrees = true, namespaces: ns = {}, ...context } = {}) {
+        match(selector, elements = [], tree, { namespaces: ns = {}, ...context } = {}) {
 
             const ctx = createContext()
             const { namespaces } = ctx
@@ -395,7 +397,8 @@ describe('selector', () => {
             Object.entries(ns).forEach(([key, value]) => namespaces.set(key, value))
 
             const selectorList = parseGrammar(selector, '<selector-list>', ctx)
-            const matched = matchTreesAgainstSelectors([tree], selectorList, { ...context, includeSubtrees, namespaces })
+            const options = { includeSubtrees: true }
+            const matched = matchTreesAgainstSelectors([tree], selectorList, { ...context, namespaces }, options)
             const length = Math.max(elements.length, matched.length)
 
             for (let index = 0; index < length; index++) {
@@ -3941,6 +3944,873 @@ describe('selector', () => {
         selectors.forEach(selector => assert.match(selector, document._selected.get(selector), document))
     })
     // Text
+    test(':dir()', () => {
+
+        /**
+         * <html>
+         *   <body>
+         *
+         *     <!-- auto-directionality form-associated element -->
+         *     <input type="button" dir="auto" value="">
+         *     <input type="button" dir="auto" value="1">
+         *     <input type="button" dir="auto" value="؈L">
+         *     <input type="button" dir="auto" value="־L">
+         *     <input type="button" dir="auto" value="L؈">
+         *     <input type="email" dir="auto" value="؈L">
+         *     <input type="email" dir="auto" value="־L">
+         *     <input type="email" dir="auto" value="L؈">
+         *     <input type="password" dir="auto" value="؈L">
+         *     <input type="password" dir="auto" value="־L">
+         *     <input type="password" dir="auto" value="L؈">
+         *     <input type="reset" dir="auto" value="؈L">
+         *     <input type="reset" dir="auto" value="־L">
+         *     <input type="reset" dir="auto" value="L؈">
+         *     <input type="search" dir="auto" value="؈L">
+         *     <input type="search" dir="auto" value="־L">
+         *     <input type="search" dir="auto" value="L؈">
+         *     <input type="submit" dir="auto" value="؈L">
+         *     <input type="submit" dir="auto" value="־L">
+         *     <input type="submit" dir="auto" value="L؈">
+         *     <input type="tel" dir="auto" value="؈L">
+         *     <input type="tel" dir="auto" value="־L">
+         *     <input type="tel" dir="auto" value="L؈">
+         *     <input type="text" dir="auto" value="؈L">
+         *     <input type="text" dir="auto" value="־L">
+         *     <input type="text" dir="auto" value="L؈">
+         *     <input type="url" dir="auto" value="؈L">
+         *     <input type="url" dir="auto" value="־L">
+         *     <input type="url" dir="auto" value="L؈">
+         *     <textarea dir="auto"></textarea>
+         *     <textarea dir="auto">1</textarea>
+         *     <textarea dir="auto">؈L</textarea>
+         *     <textarea dir="auto">־L</textarea>
+         *     <textarea dir="auto">L؈</textarea>
+         *
+         *     <!-- auto-directionallity slot -->
+         *     <slot dir="auto">؈</slot>
+         *     <div>
+         *       #shadow-root-1
+         *         <slot dir="auto"></slot>
+         *         <slot dir="auto"></slot>
+         *       ؈L
+         *     </div>
+         *     <div>
+         *       #shadow-root-2
+         *         <slot dir="auto"></slot>
+         *       ־L
+         *     </div>
+         *     <div>
+         *       #shadow-root-3
+         *         <slot dir="auto"></slot>
+         *       L؈
+         *     </div>
+         *     <div>
+         *       #shadow-root-4
+         *         <slot dir="auto"></slot>
+         *       1
+         *     </div>
+         *     <div>
+         *       #shadow-root-5
+         *         <slot name="slot-1" dir="auto"></slot>
+         *         <slot name="slot-2" dir="auto"></slot>
+         *         <slot name="slot-3" dir="auto"></slot>
+         *         <slot name="slot-4" dir="auto"></slot>
+         *         <slot name="slot-5" dir="auto"></slot>
+         *         <slot name="slot-6" dir="auto"></slot>
+         *         <slot name="slot-7" dir="auto"></slot>
+         *         <slot name="slot-8" dir="auto"></slot>
+         *         <slot name="slot-9" dir="auto"></slot>
+         *         <slot name="slot-10" dir="auto"></slot>
+         *         <slot name="slot-11" dir="auto"></slot>
+         *         <slot name="slot-12" dir="auto"></slot>
+         *         <slot name="slot-13" dir="auto"></slot>
+         *       <bdi slot="slot-1">؈</bdi>
+         *       <script slot="slot-2">؈</script>
+         *       <style slot="slot-3">؈</style>
+         *       <textarea slot="slot-4">؈</textarea>
+         *       <div slot="slot-5" dir="rtl"></div>
+         *       <div slot="slot-6"><bdi>؈</bdi></div>
+         *       <div slot="slot-7"><script>؈</script></div>
+         *       <div slot="slot-8"><style>؈</style></div>
+         *       <div slot="slot-9"><textarea>؈</textarea></div>
+         *       <div slot="slot-10"><slot>؈</slot></div>
+         *       <div slot="slot-11">؈L</div>
+         *       <div slot="slot-12">L؈</div>
+         *       <div slot="slot-13"></div>
+         *     </div>
+         *     <div dir="ltr">
+         *       #shadow-root-6
+         *         <div>
+         *           #shadow-root-7
+         *             <slot dir="auto"></slot>
+         *           <div><slot>؈</slot></div>
+         *         </div>
+         *     </div>
+         *     <div dir="rtl">
+         *       #shadow-root-8
+         *         <div>
+         *           #shadow-root-9
+         *             <slot dir="auto"></slot>
+         *           <div><slot>L</slot></div
+         *         </div>
+         *     </div>
+         *
+         *     <bdi dir="auto">؈</bdi>
+         *     <bdi>؈</bdi>
+         *
+         *     <div dir="rtl">
+         *       <input type="tel">
+         *     </div>
+         *
+         *   </body>
+         * </html>
+         */
+        const document = new HTMLDocument({ selected: new Map })
+        const html = new HTMLHtmlElement({
+            ownerDocument: document,
+            parentNode: document,
+            selectors: [':dir(ltr)'],
+        })
+        const body = new HTMLBodyElement({
+            ownerDocument: document,
+            parentNode: html,
+            selectors: [':dir(ltr)'],
+        })
+
+        // Auto-directionality form-associated element
+        new HTMLInputElement({
+            attributes: [
+                { localName: 'type', value: 'button' },
+                { localName: 'dir', value: 'auto' },
+                { localName: 'value' },
+            ],
+            ownerDocument: document,
+            parentNode: body,
+            selectors: [':dir(ltr)'],
+        })
+        new HTMLInputElement({
+            attributes: [
+                { localName: 'type', value: 'button' },
+                { localName: 'dir', value: 'auto' },
+                { localName: 'value', value: '1' },
+            ],
+            ownerDocument: document,
+            parentNode: body,
+            selectors: [':dir(ltr)'],
+        })
+        new HTMLInputElement({
+            attributes: [
+                { localName: 'type', value: 'button' },
+                { localName: 'dir', value: 'auto' },
+                { localName: 'value', value: '؈L' },
+            ],
+            ownerDocument: document,
+            parentNode: body,
+            selectors: [':dir(rtl)'],
+        })
+        new HTMLInputElement({
+            attributes: [
+                { localName: 'type', value: 'button' },
+                { localName: 'dir', value: 'auto' },
+                { localName: 'value', value: '־L' },
+            ],
+            ownerDocument: document,
+            parentNode: body,
+            selectors: [':dir(rtl)'],
+        })
+        new HTMLInputElement({
+            attributes: [
+                { localName: 'type', value: 'button' },
+                { localName: 'dir', value: 'auto' },
+                { localName: 'value', value: 'L؈' },
+            ],
+            ownerDocument: document,
+            parentNode: body,
+            selectors: [':dir(ltr)'],
+        })
+        new HTMLInputElement({
+            attributes: [
+                { localName: 'type', value: 'email' },
+                { localName: 'dir', value: 'auto' },
+                { localName: 'value', value: '؈L' },
+            ],
+            ownerDocument: document,
+            parentNode: body,
+            selectors: [':dir(rtl)'],
+        })
+        new HTMLInputElement({
+            attributes: [
+                { localName: 'type', value: 'email' },
+                { localName: 'dir', value: 'auto' },
+                { localName: 'value', value: '־L' },
+            ],
+            ownerDocument: document,
+            parentNode: body,
+            selectors: [':dir(rtl)'],
+        })
+        new HTMLInputElement({
+            attributes: [
+                { localName: 'type', value: 'email' },
+                { localName: 'dir', value: 'auto' },
+                { localName: 'value', value: 'L؈' },
+            ],
+            ownerDocument: document,
+            parentNode: body,
+            selectors: [':dir(ltr)'],
+        })
+        new HTMLInputElement({
+            attributes: [
+                { localName: 'type', value: 'password' },
+                { localName: 'dir', value: 'auto' },
+                { localName: 'value', value: '؈L' },
+            ],
+            ownerDocument: document,
+            parentNode: body,
+            selectors: [':dir(rtl)'],
+        })
+        new HTMLInputElement({
+            attributes: [
+                { localName: 'type', value: 'password' },
+                { localName: 'dir', value: 'auto' },
+                { localName: 'value', value: '־L' },
+            ],
+            ownerDocument: document,
+            parentNode: body,
+            selectors: [':dir(rtl)'],
+        })
+        new HTMLInputElement({
+            attributes: [
+                { localName: 'type', value: 'password' },
+                { localName: 'dir', value: 'auto' },
+                { localName: 'value', value: 'L؈' },
+            ],
+            ownerDocument: document,
+            parentNode: body,
+            selectors: [':dir(ltr)'],
+        })
+        new HTMLInputElement({
+            attributes: [
+                { localName: 'type', value: 'reset' },
+                { localName: 'dir', value: 'auto' },
+                { localName: 'value', value: '؈L' },
+            ],
+            ownerDocument: document,
+            parentNode: body,
+            selectors: [':dir(rtl)'],
+        })
+        new HTMLInputElement({
+            attributes: [
+                { localName: 'type', value: 'reset' },
+                { localName: 'dir', value: 'auto' },
+                { localName: 'value', value: '־L' },
+            ],
+            ownerDocument: document,
+            parentNode: body,
+            selectors: [':dir(rtl)'],
+        })
+        new HTMLInputElement({
+            attributes: [
+                { localName: 'type', value: 'reset' },
+                { localName: 'dir', value: 'auto' },
+                { localName: 'value', value: 'L؈' },
+            ],
+            ownerDocument: document,
+            parentNode: body,
+            selectors: [':dir(ltr)'],
+        })
+        new HTMLInputElement({
+            attributes: [
+                { localName: 'type', value: 'search' },
+                { localName: 'dir', value: 'auto' },
+                { localName: 'value', value: '؈L' },
+            ],
+            ownerDocument: document,
+            parentNode: body,
+            selectors: [':dir(rtl)'],
+        })
+        new HTMLInputElement({
+            attributes: [
+                { localName: 'type', value: 'search' },
+                { localName: 'dir', value: 'auto' },
+                { localName: 'value', value: '־L' },
+            ],
+            ownerDocument: document,
+            parentNode: body,
+            selectors: [':dir(rtl)'],
+        })
+        new HTMLInputElement({
+            attributes: [
+                { localName: 'type', value: 'search' },
+                { localName: 'dir', value: 'auto' },
+                { localName: 'value', value: 'L؈' },
+            ],
+            ownerDocument: document,
+            parentNode: body,
+            selectors: [':dir(ltr)'],
+        })
+        new HTMLInputElement({
+            attributes: [
+                { localName: 'type', value: 'submit' },
+                { localName: 'dir', value: 'auto' },
+                { localName: 'value', value: '؈L' },
+            ],
+            ownerDocument: document,
+            parentNode: body,
+            selectors: [':dir(rtl)'],
+        })
+        new HTMLInputElement({
+            attributes: [
+                { localName: 'type', value: 'submit' },
+                { localName: 'dir', value: 'auto' },
+                { localName: 'value', value: '־L' },
+            ],
+            ownerDocument: document,
+            parentNode: body,
+            selectors: [':dir(rtl)'],
+        })
+        new HTMLInputElement({
+            attributes: [
+                { localName: 'type', value: 'submit' },
+                { localName: 'dir', value: 'auto' },
+                { localName: 'value', value: 'L؈' },
+            ],
+            ownerDocument: document,
+            parentNode: body,
+            selectors: [':dir(ltr)'],
+        })
+        new HTMLInputElement({
+            attributes: [
+                { localName: 'type', value: 'tel' },
+                { localName: 'dir', value: 'auto' },
+                { localName: 'value', value: '؈L' },
+            ],
+            ownerDocument: document,
+            parentNode: body,
+            selectors: [':dir(rtl)'],
+        })
+        new HTMLInputElement({
+            attributes: [
+                { localName: 'type', value: 'tel' },
+                { localName: 'dir', value: 'auto' },
+                { localName: 'value', value: '־L' },
+            ],
+            ownerDocument: document,
+            parentNode: body,
+            selectors: [':dir(rtl)'],
+        })
+        new HTMLInputElement({
+            attributes: [
+                { localName: 'type', value: 'tel' },
+                { localName: 'dir', value: 'auto' },
+                { localName: 'value', value: 'L؈' },
+            ],
+            ownerDocument: document,
+            parentNode: body,
+            selectors: [':dir(ltr)'],
+        })
+        new HTMLInputElement({
+            attributes: [
+                { localName: 'type', value: 'text' },
+                { localName: 'dir', value: 'auto' },
+                { localName: 'value', value: '؈L' },
+            ],
+            ownerDocument: document,
+            parentNode: body,
+            selectors: [':dir(rtl)'],
+        })
+        new HTMLInputElement({
+            attributes: [
+                { localName: 'type', value: 'text' },
+                { localName: 'dir', value: 'auto' },
+                { localName: 'value', value: '־L' },
+            ],
+            ownerDocument: document,
+            parentNode: body,
+            selectors: [':dir(rtl)'],
+        })
+        new HTMLInputElement({
+            attributes: [
+                { localName: 'type', value: 'text' },
+                { localName: 'dir', value: 'auto' },
+                { localName: 'value', value: 'L؈' },
+            ],
+            ownerDocument: document,
+            parentNode: body,
+            selectors: [':dir(ltr)'],
+        })
+        new HTMLInputElement({
+            attributes: [
+                { localName: 'type', value: 'url' },
+                { localName: 'dir', value: 'auto' },
+                { localName: 'value', value: '؈L' },
+            ],
+            ownerDocument: document,
+            parentNode: body,
+            selectors: [':dir(rtl)'],
+        })
+        new HTMLInputElement({
+            attributes: [
+                { localName: 'type', value: 'url' },
+                { localName: 'dir', value: 'auto' },
+                { localName: 'value', value: '־L' },
+            ],
+            ownerDocument: document,
+            parentNode: body,
+            selectors: [':dir(rtl)'],
+        })
+        new HTMLInputElement({
+            attributes: [
+                { localName: 'type', value: 'url' },
+                { localName: 'dir', value: 'auto' },
+                { localName: 'value', value: 'L؈' },
+            ],
+            ownerDocument: document,
+            parentNode: body,
+            selectors: [':dir(ltr)'],
+        })
+        new HTMLTextAreaElement({
+            attributes: [{ localName: 'dir', value: 'auto' }],
+            ownerDocument: document,
+            parentNode: body,
+            selectors: [':dir(ltr)'],
+        })
+        new HTMLTextAreaElement({
+            attributes: [{ localName: 'dir', value: 'auto' }],
+            ownerDocument: document,
+            parentNode: body,
+            selectors: [':dir(ltr)'],
+            value: '1',
+        })
+        new HTMLTextAreaElement({
+            attributes: [{ localName: 'dir', value: 'auto' }],
+            ownerDocument: document,
+            parentNode: body,
+            selectors: [':dir(rtl)'],
+            value: '؈L',
+        })
+        new HTMLTextAreaElement({
+            attributes: [{ localName: 'dir', value: 'auto' }],
+            ownerDocument: document,
+            parentNode: body,
+            selectors: [':dir(rtl)'],
+            value: '־L',
+        })
+        new HTMLTextAreaElement({
+            attributes: [{ localName: 'dir', value: 'auto' }],
+            ownerDocument: document,
+            parentNode: body,
+            selectors: [':dir(ltr)'],
+            value: 'L؈',
+        })
+
+        // Auto-directionallity <slot>
+        new HTMLSlotElement({
+            attributes: [{ localName: 'dir', value: 'auto' }],
+            ownerDocument: document,
+            parentNode: body,
+            selectors: [':dir(rtl)'],
+        })
+        new Text({ data: '؈', parentNode: body.childNodes._list.at(-1) })
+        const host1 = new HTMLDivElement({
+            ownerDocument: document,
+            parentNode: body,
+            selectors: [':dir(ltr)'],
+        })
+        const shadowRoot1 = new ShadowRoot({ host: host1, ownerDocument: document })
+        new HTMLSlotElement({
+            attributes: [{ localName: 'dir', value: 'auto' }],
+            ownerDocument: document,
+            parentNode: shadowRoot1,
+            selectors: [':dir(rtl)'],
+        })
+        new HTMLSlotElement({
+            attributes: [{ localName: 'dir', value: 'auto' }],
+            ownerDocument: document,
+            parentNode: shadowRoot1,
+            selectors: [':dir(ltr)'],
+        })
+        new Text({ data: '؈L', parentNode: host1, slot: '' })
+        const host2 = new HTMLDivElement({
+            ownerDocument: document,
+            parentNode: body,
+            selectors: [':dir(ltr)'],
+        })
+        const shadowRoot2 = new ShadowRoot({ host: host2, ownerDocument: document })
+        new HTMLSlotElement({
+            attributes: [{ localName: 'dir', value: 'auto' }],
+            ownerDocument: document,
+            parentNode: shadowRoot2,
+            selectors: [':dir(rtl)'],
+        })
+        new Text({ data: '־L', parentNode: host2, slot: '' })
+        const host3 = new HTMLDivElement({
+            ownerDocument: document,
+            parentNode: body,
+            selectors: [':dir(ltr)'],
+        })
+        const shadowRoot3 = new ShadowRoot({ host: host3, ownerDocument: document })
+        new HTMLSlotElement({
+            attributes: [{ localName: 'dir', value: 'auto' }],
+            ownerDocument: document,
+            parentNode: shadowRoot3,
+            selectors: [':dir(ltr)'],
+        })
+        new Text({ data: 'L؈', parentNode: host3, slot: '' })
+        const host4 = new HTMLDivElement({
+            ownerDocument: document,
+            parentNode: body,
+            selectors: [':dir(ltr)'],
+        })
+        const shadowRoot4 = new ShadowRoot({ host: host4, ownerDocument: document })
+        new HTMLSlotElement({
+            attributes: [{ localName: 'dir', value: 'auto' }],
+            ownerDocument: document,
+            parentNode: shadowRoot4,
+            selectors: [':dir(ltr)'],
+        })
+        new Text({ data: '1', parentNode: host4, slot: '' })
+        const host5 = new HTMLDivElement({
+            ownerDocument: document,
+            parentNode: body,
+            selectors: [':dir(ltr)'],
+        })
+        const shadowRoot5 = new ShadowRoot({ host: host5, ownerDocument: document })
+        new HTMLSlotElement({
+            attributes: [
+                { localName: 'name', value: 'slot-1' },
+                { localName: 'dir', value: 'auto' },
+            ],
+            ownerDocument: document,
+            parentNode: shadowRoot5,
+            selectors: [':dir(ltr)'],
+        })
+        new HTMLSlotElement({
+            attributes: [
+                { localName: 'name', value: 'slot-2' },
+                { localName: 'dir', value: 'auto' },
+            ],
+            ownerDocument: document,
+            parentNode: shadowRoot5,
+            selectors: [':dir(ltr)'],
+        })
+        new HTMLSlotElement({
+            attributes: [
+                { localName: 'name', value: 'slot-3' },
+                { localName: 'dir', value: 'auto' },
+            ],
+            ownerDocument: document,
+            parentNode: shadowRoot5,
+            selectors: [':dir(ltr)'],
+        })
+        new HTMLSlotElement({
+            attributes: [
+                { localName: 'name', value: 'slot-4' },
+                { localName: 'dir', value: 'auto' },
+            ],
+            ownerDocument: document,
+            parentNode: shadowRoot5,
+            selectors: [':dir(ltr)'],
+        })
+        new HTMLSlotElement({
+            attributes: [
+                { localName: 'name', value: 'slot-5' },
+                { localName: 'dir', value: 'auto' },
+            ],
+            ownerDocument: document,
+            parentNode: shadowRoot5,
+            selectors: [':dir(ltr)'],
+        })
+        new HTMLSlotElement({
+            attributes: [
+                { localName: 'name', value: 'slot-6' },
+                { localName: 'dir', value: 'auto' },
+            ],
+            ownerDocument: document,
+            parentNode: shadowRoot5,
+            selectors: [':dir(ltr)'],
+        })
+        new HTMLSlotElement({
+            attributes: [
+                { localName: 'name', value: 'slot-7' },
+                { localName: 'dir', value: 'auto' },
+            ],
+            ownerDocument: document,
+            parentNode: shadowRoot5,
+            selectors: [':dir(ltr)'],
+        })
+        new HTMLSlotElement({
+            attributes: [
+                { localName: 'name', value: 'slot-8' },
+                { localName: 'dir', value: 'auto' },
+            ],
+            ownerDocument: document,
+            parentNode: shadowRoot5,
+            selectors: [':dir(ltr)'],
+        })
+        new HTMLSlotElement({
+            attributes: [
+                { localName: 'name', value: 'slot-9' },
+                { localName: 'dir', value: 'auto' },
+            ],
+            ownerDocument: document,
+            parentNode: shadowRoot5,
+            selectors: [':dir(ltr)'],
+        })
+        new HTMLSlotElement({
+            attributes: [
+                { localName: 'name', value: 'slot-10' },
+                { localName: 'dir', value: 'auto' },
+            ],
+            ownerDocument: document,
+            parentNode: shadowRoot5,
+            selectors: [':dir(rtl)'],
+        })
+        new HTMLSlotElement({
+            attributes: [
+                { localName: 'name', value: 'slot-11' },
+                { localName: 'dir', value: 'auto' },
+            ],
+            ownerDocument: document,
+            parentNode: shadowRoot5,
+            selectors: [':dir(rtl)'],
+        })
+        new HTMLSlotElement({
+            attributes: [
+                { localName: 'name', value: 'slot-12' },
+                { localName: 'dir', value: 'auto' },
+            ],
+            ownerDocument: document,
+            parentNode: shadowRoot5,
+            selectors: [':dir(ltr)'],
+        })
+        new HTMLSlotElement({
+            attributes: [
+                { localName: 'name', value: 'slot-13' },
+                { localName: 'dir', value: 'auto' },
+            ],
+            ownerDocument: document,
+            parentNode: shadowRoot5,
+            selectors: [':dir(ltr)'],
+        })
+        new HTMLElement({
+            attributes: [{ localName: 'slot', value: 'slot-1' }],
+            localName: 'bdi',
+            ownerDocument: document,
+            parentNode: host5,
+            selectors: [':dir(rtl)'],
+        })
+        new Text({ data: '؈', parentNode: host5.childNodes._list.at(-1) })
+        new HTMLScriptElement({
+            attributes: [{ localName: 'slot', value: 'slot-2' }],
+            ownerDocument: document,
+            parentNode: host5,
+            selectors: [':dir(ltr)'],
+        })
+        new Text({ data: '؈', parentNode: host5.childNodes._list.at(-1) })
+        new HTMLStyleElement({
+            attributes: [{ localName: 'slot', value: 'slot-3' }],
+            ownerDocument: document,
+            parentNode: host5,
+            selectors: [':dir(ltr)'],
+        })
+        new Text({ data: '؈', parentNode: host5.childNodes._list.at(-1) })
+        new HTMLTextAreaElement({
+            attributes: [{ localName: 'slot', value: 'slot-4' }],
+            ownerDocument: document,
+            parentNode: host5,
+            selectors: [':dir(ltr)'],
+            value: '؈',
+        })
+        new HTMLDivElement({
+            attributes: [
+                { localName: 'slot', value: 'slot-5' },
+                { localName: 'dir', value: 'rtl' },
+            ],
+            ownerDocument: document,
+            parentNode: host5,
+            selectors: [':dir(rtl)'],
+        })
+        new HTMLDivElement({
+            attributes: [{ localName: 'slot', value: 'slot-6' }],
+            ownerDocument: document,
+            parentNode: host5,
+            selectors: [':dir(ltr)'],
+        })
+        new HTMLElement({
+            localName: 'bdi',
+            ownerDocument: document,
+            parentNode: host5.childNodes._list.at(-1),
+            selectors: [':dir(rtl)'],
+        })
+        new Text({ data: '؈', parentNode: host5.childNodes._list.at(-1).childNodes._list.at(-1) })
+        new HTMLDivElement({
+            attributes: [{ localName: 'slot', value: 'slot-7' }],
+            ownerDocument: document,
+            parentNode: host5,
+            selectors: [':dir(ltr)'],
+        })
+        new HTMLScriptElement({
+            ownerDocument: document,
+            parentNode: host5.childNodes._list.at(-1),
+            selectors: [':dir(ltr)'],
+        })
+        new Text({ data: '؈', parentNode: host5.childNodes._list.at(-1).childNodes._list.at(-1) })
+        new HTMLDivElement({
+            attributes: [{ localName: 'slot', value: 'slot-8' }],
+            ownerDocument: document,
+            parentNode: host5,
+            selectors: [':dir(ltr)'],
+        })
+        new HTMLStyleElement({
+            ownerDocument: document,
+            parentNode: host5.childNodes._list.at(-1),
+            selectors: [':dir(ltr)'],
+        })
+        new Text({ data: '؈', parentNode: host5.childNodes._list.at(-1).childNodes._list.at(-1) })
+        new HTMLDivElement({
+            attributes: [{ localName: 'slot', value: 'slot-9' }],
+            ownerDocument: document,
+            parentNode: host5,
+            selectors: [':dir(ltr)'],
+        })
+        new HTMLTextAreaElement({
+            ownerDocument: document,
+            parentNode: host5.childNodes._list.at(-1),
+            selectors: [':dir(ltr)'],
+            value: '؈',
+        })
+        new HTMLDivElement({
+            attributes: [{ localName: 'slot', value: 'slot-10' }],
+            ownerDocument: document,
+            parentNode: host5,
+            selectors: [':dir(ltr)'],
+        })
+        new HTMLSlotElement({
+            ownerDocument: document,
+            parentNode: host5.childNodes._list.at(-1),
+            selectors: [':dir(ltr)'],
+        })
+        new Text({ data: '؈', parentNode: host5.childNodes._list.at(-1).childNodes._list.at(-1) })
+        new HTMLDivElement({
+            attributes: [{ localName: 'slot', value: 'slot-11' }],
+            ownerDocument: document,
+            parentNode: host5,
+            selectors: [':dir(ltr)'],
+        })
+        new Text({ data: '؈L', parentNode: host5.childNodes._list.at(-1) }),
+        new HTMLDivElement({
+            attributes: [{ localName: 'slot', value: 'slot-12' }],
+            ownerDocument: document,
+            parentNode: host5,
+            selectors: [':dir(ltr)'],
+        })
+        new Text({ data: 'L؈', parentNode: host5.childNodes._list.at(-1) }),
+        new HTMLDivElement({
+            attributes: [{ localName: 'slot', value: 'slot-13' }],
+            ownerDocument: document,
+            parentNode: host5,
+            selectors: [':dir(ltr)'],
+        })
+        new HTMLDivElement({
+            attributes: [{ localName: 'dir', value: 'ltr' }],
+            ownerDocument: document,
+            parentNode: body,
+            selectors: [':dir(ltr)'],
+        })
+        const host6 = new HTMLDivElement({
+            ownerDocument: document,
+            parentNode: body.childNodes._list.at(-1),
+            selectors: [':dir(ltr)'],
+        })
+        const shadowRoot6 = new ShadowRoot({ host: host6, ownerDocument: document })
+        const host7 = new HTMLDivElement({
+            ownerDocument: document,
+            parentNode: shadowRoot6,
+            selectors: [':dir(ltr)'],
+        })
+        const shadowRoot7 = new ShadowRoot({ host: host7, ownerDocument: document })
+        new HTMLSlotElement({
+            attributes: [{ localName: 'dir', value: 'auto' }],
+            ownerDocument: document,
+            parentNode: shadowRoot7,
+            selectors: [':dir(ltr)'],
+        })
+        new HTMLDivElement({
+            ownerDocument: document,
+            parentNode: host7,
+            selectors: [':dir(ltr)'],
+            slot: '',
+        })
+        new HTMLSlotElement({
+            ownerDocument: document,
+            parentNode: host7.childNodes._list.at(-1),
+            selectors: [':dir(ltr)'],
+        })
+        new Text({ data: '؈', parentNode: host7.childNodes._list.at(-1) })
+        const host8 = new HTMLDivElement({
+            attributes: [{ localName: 'dir', value: 'rtl' }],
+            ownerDocument: document,
+            parentNode: body.childNodes._list.at(-1),
+            selectors: [':dir(rtl)'],
+        })
+        const shadowRoot8 = new ShadowRoot({ host: host8, ownerDocument: document })
+        const host9 = new HTMLDivElement({
+            ownerDocument: document,
+            parentNode: shadowRoot8,
+            selectors: [':dir(rtl)'],
+        })
+        const shadowRoot9 = new ShadowRoot({ host: host9, ownerDocument: document })
+        new HTMLSlotElement({
+            attributes: [{ localName: 'dir', value: 'auto' }],
+            ownerDocument: document,
+            parentNode: shadowRoot9,
+            selectors: [':dir(rtl)'],
+        })
+        new HTMLDivElement({
+            ownerDocument: document,
+            parentNode: host9,
+            selectors: [':dir(rtl)'],
+            slot: '',
+        })
+        new HTMLSlotElement({
+            ownerDocument: document,
+            parentNode: host9.childNodes._list.at(-1),
+            selectors: [':dir(rtl)'],
+        })
+        new Text({ data: 'L', parentNode: host9.childNodes._list.at(-1) })
+
+        new HTMLElement({
+            attributes: [{ localName: 'dir', value: 'auto' }],
+            localName: 'bdi',
+            ownerDocument: document,
+            parentNode: body,
+            selectors: [':dir(rtl)'],
+        })
+        new Text({ data: '؈', parentNode: body.childNodes._list.at(-1) })
+        new HTMLElement({
+            localName: 'bdi',
+            ownerDocument: document,
+            parentNode: body,
+            selectors: [':dir(rtl)'],
+        })
+        new Text({ data: '؈', parentNode: body.childNodes._list.at(-1) })
+
+        new HTMLDivElement({
+            attributes: [{ localName: 'dir', value: 'rtl' }],
+            ownerDocument: document,
+            parentNode: body,
+            selectors: [':dir(rtl)'],
+        })
+        new HTMLInputElement({
+            attributes: [{ localName: 'type', value: 'tel' }],
+            ownerDocument: document,
+            parentNode: body.childNodes._list.at(-1),
+            selectors: [':dir(ltr)'],
+        })
+
+        assert.match(':dir(ltr)', document._selected.get(':dir(ltr)'), document)
+        assert.match(':dir(rtl)', document._selected.get(':dir(rtl)'), document)
+    })
     test(':lang()', () => {
 
         /**

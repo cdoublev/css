@@ -245,7 +245,22 @@ export class CharacterData extends Node {
 }
 
 export class Comment extends CharacterData { nodeType = COMMENT_NODE_TYPE }
-export class Text extends CharacterData { nodeType = TEXT_NODE_TYPE }
+export class Text extends CharacterData {
+
+    nodeType = TEXT_NODE_TYPE
+
+    /**
+     * @param {object} properties
+     */
+    constructor(properties) {
+        super(properties)
+        const { slot } = properties
+        if (typeof slot === 'string') {
+            this.parentElement.shadowRoot.children._list.find(element => element.name === slot)?._slotted.push(this)
+        }
+    }
+
+}
 
 export class Document extends Node {
 
@@ -384,6 +399,7 @@ export class Element extends Node {
         this.isContentEditable = isContentEditable
         this.localName = localName
 
+        this.dir = this.getAttribute('dir') ?? ''
         this.form = form
         if (this.getAttribute('type') !== 'image') {
             form?.elements._list.push(this)
@@ -773,6 +789,7 @@ export class HTMLProgressElement extends HTMLElement {
     value = ''
 }
 
+export class HTMLScriptElement extends HTMLElement { localName = 'script' }
 
 export class HTMLSelectElement extends HTMLElement {
 
