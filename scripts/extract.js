@@ -99,7 +99,7 @@ const replaced = {
         // https://github.com/w3c/csswg-drafts/issues/8032
         'glyph-orientation-vertical': { value: 'auto | <angle> | <number>' },
         // https://github.com/w3c/svgwg/issues/1101
-        'path-length': { value: 'none | <number [0,∞]>' },
+        'path-length': { value: 'none | <length [0,∞]>' },
         // https://github.com/w3c/svgwg/issues/888
         'stop-color': { inherited: 'no', initial: 'black', value: "<'color'>" },
         'stop-opacity': { inherited: 'no', initial: '1', value: "<'opacity'>" },
@@ -123,7 +123,6 @@ const replaced = {
         '<age>': 'child | young | old',
         '<angle>': '<dimension>',
         '<animation-action>': 'none | play | play-once | play-forwards | play-backwards | pause | reset | replay',
-        '<basic-shape>': '<basic-shape-rect> | <circle()> | <ellipse()> | <polygon()> | <path()> | <shape()>',
         '<counter-name>': '<custom-ident>',
         '<counter-style-name>': '<custom-ident>',
         '<custom-ident>': '<ident>',
@@ -177,7 +176,6 @@ const replaced = {
         '<timeline-range-center-subject>': 'source | target',
         '<timeline-range-name>': 'contain | cover | entry | entry-crossing | exit | exit-crossing | fill | fit | scroll',
         '<transform-function>': '<matrix()> | <matrix3d()> | <perspective()> | <translate()> | <translateX()> | <translateY()> | <translateZ()> | <translate3d()> | <scale()> | <scaleX()> | <scaleY()> | <scaleZ()> | <scale3d()> | <rotate()> | <rotateX()> | <rotateY()> | <rotateZ()> | <rotate3d()> | <skew()> | <skewX()> | <skewY()>',
-        '<uri>': '<url>',
         '<url-modifier>': '<request-url-modifier> | <param()> | <ident> | <function-token> <any-value>? )',
         '<url-set>': '<image-set()>',
         '<voice-family-name>': '<string> | <custom-ident>+',
@@ -202,7 +200,7 @@ const replaced = {
         // https://github.com/w3c/fxtf-drafts/issues/532
         '<mask-reference>': 'none | <image>',
         // TODO: fix `value` of `<pseudo-page>`
-        '<pseudo-page>': ': [left | right | first | blank | nth(<an+b> [of <custom-ident>]?)]',
+        '<pseudo-page>': ': [left | right | first | blank | nth(<a-n-plus-b> [of <custom-ident>]?)]',
         // https://github.com/w3c/csswg-drafts/issues/7897
         '<single-transition>': '<time> || <easing-function> || <time> || <transition-behavior-value> || [none | <single-transition-property>]',
         // https://github.com/w3c/csswg-drafts/issues/12426
@@ -559,6 +557,8 @@ const excluded = {
             '<counter>',
             '<counter()>',
             '<counters()>',
+            // Obsoleted by CSS Values
+            '<uri>',
             // https://github.com/w3c/fxtf-drafts/pull/468
             '<bottom>',
             '<left>',
@@ -645,10 +645,6 @@ const errors = {
     '@charset': {
         cause: 'It should always be ignored in a CSS input.',
         link: ['https://drafts.csswg.org/css-syntax-3/#charset-rule'],
-    },
-    '@container': {
-        cause: 'It should be defined with <rule-list> instead of <block-contents>.',
-        links: ['https://github.com/w3c/csswg-drafts/pull/9215'],
     },
     '@contents': { cause: 'It is not yet supported.' },
     '@custom-media': { cause: 'It is not yet supported.' },

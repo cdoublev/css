@@ -117,6 +117,7 @@ describe('media', () => {
             ['(scan)'],
             ['(scripting)'],
             ['(shape)'],
+            ['(ua-color-scheme)'],
             ['(update)'],
             ['(video-color-gamut)'],
             ['(video-dynamic-range)'],
@@ -208,6 +209,8 @@ describe('media', () => {
             ['(scripting: enabled)'],
             ['(shape: round)', false],
             ['(shape: rect)'],
+            ['(ua-color-scheme: dark)', false],
+            ['(ua-color-scheme: light)'],
             ['(update: none)', false],
             ['(update: fast)'],
             ['(video-color-gamut: p3)', false],
@@ -5453,6 +5456,7 @@ describe('support', () => {
     })
     test('named feature', () => {
         assert.equal(match('named-feature(unknown)'), false)
+        assert.equal(match('named-feature(anchor-position-follows-transforms)'), true)
     })
     test('named condition', () => {
         assert.equal(match('(--unknown)'), false)

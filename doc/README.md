@@ -160,7 +160,7 @@ For example, the declaration value of a property defined with `rgb(...)` include
   >
   > Consume a token from `input`, and let `function` be a new function with its name equal the returned token’s value, and a value set to an empty list.
 
-However, the list is not defined as being produced and returned from matching against the grammar, whereas some values like math functions or `<an+b>` must be parsed into a specific representation.
+However, the list is not defined as being produced and returned from matching against the grammar, whereas some values like math functions or `<a-n-plus-b>` must be parsed into a specific representation.
 
 Furthermore, while [*serialize a CSS value*](https://drafts.csswg.org/cssom-1/#serialize-a-css-value) only enforces idempotence, ie. `assert.equal(serialize(parse(input)), serialize(parse(serialize(parse(input)))))`, a component value must be associated the matched productions to apply their serialization rules. For example, a component value matching `<percentage>` and `<alpha-value>` must serialize as a `<number>` to the shortest possible form, rather than as a `<percentage>`.
 
