@@ -5148,6 +5148,8 @@ describe('selector', () => {
             [':scope', [host], shadowRoot],
             [':scope', [html], document, { scopes: { roots: [document] } }],
             [':scope', [html], document, { scopes: { inclusive: true, roots: [html] } }],
+            [':scope', [], shadowRoot, { scopes: { roots: [shadowRoot] } }],
+            [':scope', [], shadowRoot, { scopes: { inclusive: true, roots: [shadowRoot] } }],
             [':scope > *', [host, div], document, { scopes: { roots: [body] } }],
             [':scope > *', [], shadowRoot, { scopes: { roots: [shadowRoot] } }],
             [':scope > *', [], fragment, { scopes: { roots: [fragment] } }],
