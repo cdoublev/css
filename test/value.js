@@ -2712,6 +2712,9 @@ describe('<color>', () => {
         assert.valid('<color>', '#0000ff', 'rgb(0, 0, 255)')
         assert.valid('<color>', '#ff00ffff', 'rgb(255, 0, 255)')
         assert.valid('<color>', '#ff00ff66', 'rgba(255, 0, 255, 0.4)')
+        assert.valid('<color>', '#0000007F', 'rgba(0, 0, 0, 0.498)')
+        assert.valid('<color>', '#00000080', 'rgba(0, 0, 0, 0.5)')
+        assert.valid('<color>', '#00000081', 'rgba(0, 0, 0, 0.506)')
     })
     test('valid <rgb()> or <rgba()>', () => {
         // To legacy <rgb()> or <rgba()> depending on <alpha-value>
