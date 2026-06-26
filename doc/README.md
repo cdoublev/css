@@ -10,7 +10,7 @@ This section defines the requirements for a CSS parser before presenting the rel
 
 ### Theory
 
-Parsing is the process of deriving an unstructured input, by applying production rules, into a representation that exposes its grammatical structure.
+Parsing is the process of deriving an unstructured input into a representation that exposes its grammatical structure by applying production rules.
 
 A ***parse tree*** (aka. derivation tree) is a hierarchical representation of this derivation. A branch node represents zero or more tokens matching a non-terminal, a combination, a repetition. A leaf node represents a single token matching a terminal.
 

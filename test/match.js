@@ -3900,7 +3900,6 @@ describe('selector', () => {
         selectors.forEach(selector => assert.match(selector, document._selected.get(selector), document))
     })
     // Resource
-    test.todo(':animated-image')
     test(':buffering, :muted, :paused, :playing, :seeking, :stalled, :volume-locked', () => {
 
         /**
@@ -4054,7 +4053,7 @@ describe('selector', () => {
          *         <div>
          *           #shadow-root-9
          *             <slot dir="auto"></slot>
-         *           <div><slot>L</slot></div
+         *           <div><slot>L</slot></div>
          *         </div>
          *     </div>
          *

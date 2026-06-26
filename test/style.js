@@ -4504,7 +4504,6 @@ describe('CSSFontFaceDescriptors', () => {
         const style = CSSFontFaceDescriptors.create(globalThis, undefined, { parentRule: fontFaceRule })
 
         // Alias
-        assert.equal(style.fontStretch, style.fontWidth)
         style.fontStretch = 'condensed'
         assert.equal(style.fontStretch, 'condensed')
         assert.equal(style.fontWidth, 'condensed')

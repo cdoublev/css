@@ -38,7 +38,7 @@ async function extractCharacterBidiClassDefinition(source) {
         fs.writeFile(
             path.join(import.meta.dirname, '..', 'lib', 'values', 'rtl.js'),
             `${head}    ${rtl.join(',\n    ')},\n]\n`),
-        ])
+    ])
 }
 
 try {
