@@ -1023,6 +1023,7 @@ describe('color', () => {
         const resolved = [
             // currentColor
             ['currentcolor', 'rgb(0, 128, 0)'],
+            ['currentcolor', 'rgb(0, 0, 0)', 'currentcolor'],
             // transparent
             ['transparent', 'rgba(0, 0, 0, 0)'],
             // <named-color>
@@ -1032,7 +1033,11 @@ describe('color', () => {
             // <deprecated-color>
             ['inactivecaptiontext', 'rgb(96, 0, 0)'],
         ]
-        resolved.forEach(([input, expected]) => {
+        resolved.forEach(([input, expected, rootColor]) => {
+            if (rootColor) {
+                html.style.color = rootColor
+            }
+            html.setAttribute('color', input)
             body.style.color = input
             assert.equal(style.color, expected)
         })
