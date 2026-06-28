@@ -3305,8 +3305,8 @@ describe('<gradient>', () => {
         // Omitted component values
         assert.valid('<gradient>', 'conic-gradient(from 0, red)', 'conic-gradient(red)')
         assert.valid('<gradient>', 'conic-gradient(from 0deg, red)', 'conic-gradient(red)')
-        assert.valid('<gradient>', 'conic-gradient(at center, red)', 'conic-gradient(at center center, red)')
-        assert.valid('<gradient>', 'conic-gradient(at center center, red)')
+        assert.valid('<gradient>', 'conic-gradient(at center, red)', 'conic-gradient(red)')
+        assert.valid('<gradient>', 'conic-gradient(at center center, red)', 'conic-gradient(red)')
         assert.valid('<gradient>', 'conic-gradient(in oklab, red)', 'conic-gradient(red)')
         assert.valid('<gradient>', 'linear-gradient(to bottom, red)', 'linear-gradient(red)')
         assert.valid('<gradient>', 'linear-gradient(in oklab, red)', 'linear-gradient(red)')
@@ -3316,8 +3316,8 @@ describe('<gradient>', () => {
         assert.valid('<gradient>', 'radial-gradient(ellipse farthest-corner, red)', 'radial-gradient(red)')
         assert.valid('<gradient>', 'radial-gradient(ellipse 1px 1px, red)', 'radial-gradient(1px, red)')
         assert.valid('<gradient>', 'radial-gradient(ellipse farthest-side farthest-side, red)', 'radial-gradient(farthest-side, red)')
-        assert.valid('<gradient>', 'radial-gradient(at center, red)', 'radial-gradient(at center center, red)')
-        assert.valid('<gradient>', 'radial-gradient(at center center, red)')
+        assert.valid('<gradient>', 'radial-gradient(at center, red)', 'radial-gradient(red)')
+        assert.valid('<gradient>', 'radial-gradient(at center center, red)', 'radial-gradient(red)')
         assert.valid('<gradient>', 'radial-gradient(in oklab, red)', 'radial-gradient(red)')
         // Implicit color stop
         assert.valid('<gradient>', 'conic-gradient(red 0deg 180deg)', 'conic-gradient(red 0deg, red 180deg)')
