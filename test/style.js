@@ -471,15 +471,15 @@ describe('CSSStyleDeclaration.setProperty(), CSSStyleDeclaration.getPropertyValu
     it('resolves a value by cascading declared values', () => {
 
         const document = new HTMLDocument({
-            userAgentStyleSheet: 'html { order: 2 !important }',
-            userStyleSheet: 'html { order: 3 !important }',
+            userAgentStyleSheet: 'html { order: 1 !important }',
+            userStyleSheet: 'html { order: 2 !important }',
         })
         const { _userAgentStyleSheet, _userStyleSheet } = document
         const html = new HTMLHtmlElement({
             attributes: [
                 { localName: 'id', value: 'id' },
                 { localName: 'class', value: 'class' },
-                { localName: 'style', value: 'order: 1 !important' },
+                { localName: 'style', value: 'order: 3 !important' },
             ],
             ownerDocument: document,
             parentNode: document,
@@ -492,11 +492,11 @@ describe('CSSStyleDeclaration.setProperty(), CSSStyleDeclaration.getPropertyValu
         })
 
         assert.equal(style.order, '1')
-        html.style.order = '5'
-        assert.equal(style.order, '2')
         _userAgentStyleSheet.cssRules[0].style.order = '8'
-        assert.equal(style.order, '3')
+        assert.equal(style.order, '2')
         _userStyleSheet.cssRules[0].style.order = '7'
+        assert.equal(style.order, '3')
+        html.style.order = '5'
         assert.equal(style.order, '4')
         authorStyleSheet.cssRules[0].style.order = '6'
         assert.equal(style.order, '5')
