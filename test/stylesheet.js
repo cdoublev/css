@@ -714,7 +714,7 @@ describe('CSSImportRule', () => {
         assert.notEqual(rule.styleSheet.media, rule.media)
         assert.equal(rule.styleSheet.media.mediaText, rule.media.mediaText)
         assert.equal(rule.styleSheet.parentStyleSheet, styleSheet)
-        assert.equal(rule.styleSheet.title, '')
+        assert.equal(rule.styleSheet.title, null)
         assert.equal(rule.styleSheet.type, 'text/css')
 
         // Alternative CSSImportRule attribute syntax
