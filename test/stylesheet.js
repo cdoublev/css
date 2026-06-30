@@ -351,13 +351,17 @@ describe('CSSStyleSheet.replace(), CSSStyleSheet.replaceSync()', () => {
         const styleSheet = new globalThis.CSSStyleSheet
         const { cssRules } = styleSheet
 
-        assert.equal(await styleSheet.replace('style { color: orange }'), styleSheet)
+        assert.equal(await styleSheet.replace('@keyframes name { to { color: green } }'), styleSheet)
         assert.equal(cssRules.length, 1)
-        assert.equal(cssRules[0].style.color, 'orange')
+
+        const rule = cssRules[0]
+        const nestedRule = rule.cssRules[0]
 
         styleSheet.replaceSync('style { color: green }')
 
-        assert.equal(cssRules.length, 1)
+        assert.equal(rule.parentStyleSheet, null)
+        assert.equal(nestedRule.parentStyleSheet, null)
+        assert.equal(nestedRule.parentRule, null)
         assert.equal(cssRules[0].style.color, 'green')
     })
     it('ignores opening and ending HTML comment tokens', () => {
