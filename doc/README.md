@@ -387,7 +387,7 @@ The state machine allows defining transition actions for a specific production.
 
 The next state is based on the output of the previous action, which can be `undefined`, `null`, `Error`, or a valid parse result, except the initial transition action, which must return a node.
 
-When `Error` is returned, it means that the input is guaranteed to be invalid, up to the first context ignoring invalid contents. When `null` is returned, it means that the part of the value at the front of the input is guaranteed be invalid for the node. Returning `undefined` has different meaning depending on the action:
+When `Error` is returned, it means that the input is guaranteed to be invalid, up to the first context ignoring invalid contents. When `null` is returned, it means that the part of the value at the front of the input is guaranteed to be invalid for the node. Returning `undefined` has different meaning depending on the action:
 
   - `preprocess`: continue parsing with `match`
   - `match`: continue parsing with `replace`
