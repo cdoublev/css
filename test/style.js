@@ -2682,16 +2682,16 @@ describe('flex', () => {
         assert.equal(style.flex, '0 auto')
 
         // Omitted values
-        style.flex = '1'
-        assert.equal(style.flexGrow, '1')
+        style.flex = '0'
+        assert.equal(style.flexGrow, '0')
         assert.equal(style.flexShrink, '1')
         assert.equal(style.flexBasis, '0px')
-        assert.equal(style.flex, '1')
-        style.flex = '1 1'
+        assert.equal(style.flex, '0')
+        style.flex = '1 0'
         assert.equal(style.flexGrow, '1')
-        assert.equal(style.flexShrink, '1')
+        assert.equal(style.flexShrink, '0')
         assert.equal(style.flexBasis, '0px')
-        assert.equal(style.flex, '1')
+        assert.equal(style.flex, '1 0')
         style.flex = '1 0px'
         assert.equal(style.flexGrow, '1')
         assert.equal(style.flexShrink, '1')
