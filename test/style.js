@@ -2692,11 +2692,16 @@ describe('flex', () => {
         assert.equal(style.flexShrink, '1')
         assert.equal(style.flexBasis, '0px')
         assert.equal(style.flex, '1')
-        style.flex = '0px'
+        style.flex = '1 0px'
         assert.equal(style.flexGrow, '1')
         assert.equal(style.flexShrink, '1')
         assert.equal(style.flexBasis, '0px')
         assert.equal(style.flex, '1')
+        style.flex = 'auto'
+        assert.equal(style.flexGrow, '1')
+        assert.equal(style.flexShrink, '1')
+        assert.equal(style.flexBasis, 'auto')
+        assert.equal(style.flex, 'auto')
 
         // none
         style.flex = 'none'
