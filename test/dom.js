@@ -226,6 +226,13 @@ export class Node {
         }
         return this
     }
+
+    /**
+     * @returns {boolean}
+     */
+    get isConnected() {
+        return this.getRootNode().nodeType === DOCUMENT_NODE_TYPE
+    }
 }
 
 export class CharacterData extends Node {
