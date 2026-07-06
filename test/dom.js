@@ -418,7 +418,7 @@ export class Element extends Node {
 
         const { parentElement } = this
         if (parentElement?.shadowRoot) {
-            parentElement.shadowRoot.children._list.find(element => element.name === this.slot)._slotted.push(this)
+            parentElement.shadowRoot.children._list.find(element => element.name === this.slot)?._slotted.push(this)
         }
 
         const { ownerDocument: { _selected } } = this

@@ -12,7 +12,7 @@ import {
     CSSStyleProperties,
     CSSStyleSheet,
 } from '../lib/cssom/index.js'
-import { HTMLBodyElement, HTMLDivElement, HTMLDocument, HTMLHtmlElement, HTMLStyleElement } from './dom.js'
+import { HTMLBodyElement, HTMLDivElement, HTMLDocument, HTMLHtmlElement, HTMLStyleElement, ShadowRoot } from './dom.js'
 import { describe, it, test } from 'node:test'
 import { UPDATE_READONLY_STYLE_DECLARATION_ERROR } from '../lib/error.js'
 import assert from 'node:assert/strict'
@@ -590,6 +590,23 @@ describe('CSSStyleDeclaration.setProperty(), CSSStyleDeclaration.getPropertyValu
         assert.equal(style.getPropertyValue('--custom-2'), '')
         assert.equal(style.fontSize, '1px')
         assert.equal(style.marginTop, '0px')
+    })
+    it('resolves a value to an empty string when the element is not connected', () => {
+
+        const element = new HTMLDivElement({ ownerDocument: new HTMLDocument })
+        const style = createResolvedStyle(element)
+
+        assert.equal(style.color, '')
+    })
+    it('resolves a value to an empty string when the element is not part of the flat tree', () => {
+
+        const document = new HTMLDocument
+        const host = new HTMLDivElement({ ownerDocument: document, parentNode: document })
+        const shadowRoot = new ShadowRoot({ host, ownerDocument: document })
+        const element = new HTMLDivElement({ ownerDocument: document, parentNode: host })
+        const style = createResolvedStyle(element)
+
+        assert.equal(style.color, '')
     })
 })
 
