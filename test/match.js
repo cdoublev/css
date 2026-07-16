@@ -390,9 +390,10 @@ describe('selector', () => {
          * @param {Element[]} elements
          * @param {Document|Element|ShadowRoot} tree
          * @param {object} [context]
+         * @param {object} [options]
          * @returns {*[]}
          */
-        match(selector, elements = [], tree, { namespaces: ns = {}, ...context } = {}) {
+        match(selector, elements = [], tree, { namespaces: ns = {}, ...context } = {}, options = { includeSubtrees: true }) {
 
             const ctx = createContext()
             const { namespaces } = ctx
@@ -400,7 +401,6 @@ describe('selector', () => {
             Object.entries(ns).forEach(([key, value]) => namespaces.set(key, value))
 
             const selectorList = parseGrammar(selector, '<selector-list>', ctx)
-            const options = { includeSubtrees: true }
             const matched = matchTreesAgainstSelectors([tree], selectorList, { ...context, namespaces }, options)
             const length = Math.max(elements.length, matched.length)
 
@@ -455,20 +455,25 @@ describe('selector', () => {
 
         const selections = [
             ['*', [html, body, host, shadowDiv, noNamespace, svg]],
-            ['*', [html, body, host, shadowDiv], { '': HTML_NAMESPACE }],
-            ['*', [shadowDiv], {}, shadowRoot],
+            ['*', [html, body, host, noNamespace, svg], document, { scopes: { roots: [document] } }, { includeSubtrees: false }],
+            ['*', [html, body, host, shadowDiv], document, { namespaces: { '': HTML_NAMESPACE } }],
+            ['*', [html, body, host], document, { namespaces: { '': HTML_NAMESPACE }, scopes: { roots: [document] } }, { includeSubtrees: false }],
+            ['*', [shadowDiv], shadowRoot],
+            ['*', [shadowDiv], shadowRoot, { scopes: { roots: [shadowRoot] } }, { includeSubtrees: false }],
             ['|*', [noNamespace]],
+            ['|*', [noNamespace], document, { scopes: { roots: [document] } }, { includeSubtrees: false }],
             ['*|*', [html, body, host, shadowDiv, noNamespace, svg]],
-            ['prefix|*', [html, body, host, shadowDiv], { prefix: HTML_NAMESPACE }],
-            ['html|*', [svg], { html: SVG_NAMESPACE }],
+            ['prefix|*', [html, body, host, shadowDiv], document, { namespaces: { prefix: HTML_NAMESPACE } }],
+            ['prefix|*', [html, body, host], document, { namespaces: { prefix: HTML_NAMESPACE }, scopes: { roots: [document] } }, { includeSubtrees: false }],
+            ['html|*', [svg], document, { namespaces: { html: SVG_NAMESPACE } }],
             ['div', [host, shadowDiv]],
-            ['div', [host, shadowDiv], { '': HTML_NAMESPACE }],
+            ['div', [host, shadowDiv], document, { namespaces: { '': HTML_NAMESPACE } }],
             ['DIV', [host, shadowDiv, noNamespace]],
             ['svg', [svg]],
             ['SVG', []],
         ]
-        selections.forEach(([selector, expected, namespaces, tree = document]) =>
-            assert.match(selector, expected, tree, { namespaces }))
+        selections.forEach(([selector, expected, tree = document, context, options]) =>
+            assert.match(selector, expected, tree, context, options))
     })
     test('id', () => {
 
@@ -508,9 +513,13 @@ describe('selector', () => {
         })
 
         assert.match('#div', [div, noNamespace], document)
+        assert.match('#div', [div, noNamespace], document, { scopes: { roots: [document] } }, { includeSubtrees: false })
         assert.match('#div', [div, noNamespace], document, { namespaces: { '': HTML_NAMESPACE } })
+        assert.match('#div', [div, noNamespace], document, { namespaces: { '': HTML_NAMESPACE }, scopes: { roots: [document] } }, { includeSubtrees: false })
         assert.match('#DIV', [], document)
+        assert.match('#DIV', [], document, { scopes: { roots: [document] } }, { includeSubtrees: false })
         assert.match('#\\31', [one], document)
+        assert.match('#\\31', [one], document, { scopes: { roots: [document] } }, { includeSubtrees: false })
     })
     test('class', () => {
 
@@ -551,13 +560,18 @@ describe('selector', () => {
 
         const selections = [
             ['.class-1', [div, noNamespace]],
-            ['.class-1', [div, noNamespace], { '': HTML_NAMESPACE }],
+            ['.class-1', [div, noNamespace], { scopes: { roots: [document] } }, { includeSubtrees: false }],
+            ['.class-1', [div, noNamespace], { namespaces: { '': HTML_NAMESPACE } }],
+            ['.class-1', [div, noNamespace], { namespaces: { '': HTML_NAMESPACE }, scopes: { roots: [document] } }, { includeSubtrees: false }],
             ['.CLASS-1', []],
+            ['.CLASS-1', [], { scopes: { roots: [document] } }, { includeSubtrees: false }],
             ['.class-1.class-2', [div]],
+            ['.class-1.class-2', [div], { scopes: { roots: [document] } }, { includeSubtrees: false }],
             ['.\\31', [one]],
+            ['.\\31', [one], { scopes: { roots: [document] } }, { includeSubtrees: false }],
         ]
-        selections.forEach(([selector, expected, namespaces]) =>
-            assert.match(selector, expected, document, { namespaces }))
+        selections.forEach(([selector, expected, context, options]) =>
+            assert.match(selector, expected, document, context, options))
     })
     test('attribute', () => {
 
@@ -613,8 +627,9 @@ describe('selector', () => {
 
         const selections = [
             ['[id]', [div, noNamespace]],
+            ['[id]', [div, noNamespace], { scopes: { roots: [document] } }, { includeSubtrees: false }],
             ['[ID]', [div]],
-            ['[id]', [div, noNamespace], { '': HTML_NAMESPACE }],
+            ['[id]', [div, noNamespace], { namespaces: { '': HTML_NAMESPACE } }],
             ['[viewBox]', [svg]],
             ['[VIEWBOX]', []],
             ['[href]'],
@@ -622,8 +637,8 @@ describe('selector', () => {
             ['[|href]'],
             ['[*|id]', [div, noNamespace, svg]],
             ['[*|href]', [use]],
-            ['[another-prefix|href]', [use], { 'another-prefix': XLINK_NAMESPACE }],
-            ['[xlink|href]', [], { xlink: 'http://www.w3.org/1999/another-xlink' }],
+            ['[another-prefix|href]', [use], { namespaces: { 'another-prefix': XLINK_NAMESPACE } }],
+            ['[xlink|href]', [], { namespaces: { xlink: 'http://www.w3.org/1999/another-xlink' } }],
             ['[id=div]', [div]],
             ['[ID=div]', [div]],
             ['[id=DIV]', []],
@@ -644,8 +659,8 @@ describe('selector', () => {
             ['[empty$=""]'],
             ['[empty*=""]'],
         ]
-        selections.forEach(([selector, expected, namespaces]) =>
-            assert.match(selector, expected, document, { namespaces }))
+        selections.forEach(([selector, expected, context, options]) =>
+            assert.match(selector, expected, document, context, options))
     })
 
     test('complex', () => {
@@ -668,12 +683,14 @@ describe('selector', () => {
 
         const selections = [
             ['html *', [body, section, div1, div2]],
+            ['html *', [body, section, div1, div2], { scopes: { roots: [document] } }, { includeSubtrees: false }],
             ['body > *', [section, div1, div2]],
             ['section + *', [div1]],
             ['section ~ *', [div1, div2]],
             ['html body section', [section]],
         ]
-        selections.forEach(selection => assert.match(...selection, document))
+        selections.forEach(([selector, expected, context]) =>
+            assert.match(selector, expected, document, context))
     })
 
     // Display

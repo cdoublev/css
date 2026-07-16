@@ -369,6 +369,51 @@ export class Document extends Node {
     get documentElement() {
         return this.children._list[0]
     }
+
+    /**
+     * @param {string} id
+     * @returns {Element|null}
+     */
+    getElementById(id) {
+        for (const element of traverse(this)) {
+            if (element.getAttribute('id') === id) {
+                return element
+            }
+        }
+        return null
+    }
+
+    /**
+     * @param {string} name
+     * @returns {HTMLCollection}
+     */
+    getElementsByClassName(name) {
+        const elements = []
+        for (const element of traverse(this)) {
+            if (element.classList.contains(name)) {
+                elements.push(element)
+            }
+        }
+        return new HTMLCollection(elements)
+    }
+
+    /**
+     * @param {string} namespace
+     * @param {string} name
+     * @returns {HTMLCollection}
+     */
+    getElementsByTagNameNS(namespace, name) {
+        const elements = []
+        for (const element of traverse(this)) {
+            if (
+                (namespace === '*' || namespace  === element.namespaceURI)
+                && (name === '*' || name === element.localName)
+            ) {
+                elements.push(element)
+            }
+        }
+        return new HTMLCollection(elements)
+    }
 }
 
 export class HTMLDocument extends Document { contentType = 'text/html' }
@@ -397,6 +442,19 @@ export class DocumentFragment extends Node {
      */
     get previousElementSibling() {
         return getPreviousSibling(this)
+    }
+
+    /**
+     * @param {string} id
+     * @returns {Element|null}
+     */
+    getElementById(id) {
+        for (const element of traverse(this)) {
+            if (element.getAttribute('id') === id) {
+                return element
+            }
+        }
+        return null
     }
 }
 
@@ -517,6 +575,38 @@ export class Element extends Node {
      */
     getAttributeNodeNS(namespace, name) {
         return this.attributes._list.find(attribute => attribute.localName === name && attribute.namespaceURI === namespace) ?? null
+    }
+
+    /**
+     * @param {string} name
+     * @returns {HTMLCollection}
+     */
+    getElementsByClassName(name) {
+        const elements = []
+        for (const element of traverse(this)) {
+            if (element.classList.contains(name)) {
+                elements.push(element)
+            }
+        }
+        return new HTMLCollection(elements)
+    }
+
+    /**
+     * @param {string} namespace
+     * @param {string} name
+     * @returns {HTMLCollection}
+     */
+    getElementsByTagNameNS(namespace, name) {
+        const elements = []
+        for (const element of traverse(this)) {
+            if (
+                (namespace === '*' || namespace  === element.namespaceURI)
+                && (name === '*' || name === element.localName)
+            ) {
+                elements.push(element)
+            }
+        }
+        return new HTMLCollection(elements)
     }
 
     /**
