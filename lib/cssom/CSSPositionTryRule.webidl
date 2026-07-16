@@ -3,5 +3,5 @@
 [Exposed=Window]
 interface CSSPositionTryRule : CSSRule {
     readonly attribute CSSOMString name;
-    [SameObject, PutForwards=cssText] readonly attribute CSSPositionProperties style;
+    [SameObject, PutForwards=cssText] readonly attribute CSSPositionTryDescriptors style;
 };
