@@ -1,18 +1,11 @@
 
 import {
-    ATTRIBUTE_NODE_TYPE,
-    CDATA_SECTION_NODE_TYPE,
     COMMENT_NODE_TYPE,
     DOCUMENT_FRAGMENT_NODE_TYPE,
     DOCUMENT_NODE_TYPE,
-    DOCUMENT_TYPE_NODE_TYPE,
     ELEMENT_NODE_TYPE,
-    ENTITY_NODE_TYPE,
-    ENTITY_REFERENCE_NODE_TYPE,
     HTML_NAMESPACE,
     MATHML_NAMESPACE,
-    NOTATION_NODE_TYPE,
-    PROCESSING_INSTRUCTION_NODE_TYPE,
     SVG_NAMESPACE,
     TEXT_NODE_TYPE,
 } from '../lib/utils/dom/constants.js'
@@ -148,19 +141,6 @@ export class NodeList {
 }
 
 export class Node {
-
-    static ATTRIBUTE_NODE = ATTRIBUTE_NODE_TYPE
-    static CDATA_SECTION_NODE = CDATA_SECTION_NODE_TYPE
-    static COMMENT_NODE = COMMENT_NODE_TYPE
-    static DOCUMENT_FRAGMENT_NODE = DOCUMENT_FRAGMENT_NODE_TYPE
-    static DOCUMENT_NODE = DOCUMENT_NODE_TYPE
-    static DOCUMENT_TYPE_NODE = DOCUMENT_TYPE_NODE_TYPE
-    static ELEMENT_NODE = ELEMENT_NODE_TYPE
-    static ENTITY_NODE = ENTITY_NODE_TYPE
-    static ENTITY_REFERENCE_NODE = ENTITY_REFERENCE_NODE_TYPE
-    static NOTATION_NODE = NOTATION_NODE_TYPE
-    static PROCESSING_INSTRUCTION_NODE = PROCESSING_INSTRUCTION_NODE_TYPE
-    static TEXT_NODE = TEXT_NODE_TYPE
 
     childNodes = new NodeList
 
@@ -416,12 +396,15 @@ export class Element extends Node {
         this.required = !!this.getAttributeNode('required')
         this.slot = this.getAttribute('slot') ?? ''
 
-        const { parentElement } = this
+        const {
+            ownerDocument: { _selected },
+            parentElement,
+        } = this
+
         if (parentElement?.shadowRoot) {
             parentElement.shadowRoot.children._list.find(element => element.name === this.slot)?._slotted.push(this)
         }
 
-        const { ownerDocument: { _selected } } = this
         selectors.forEach(selector => {
             if (_selected.has(selector)) {
                 _selected.get(selector).push(this)
@@ -501,6 +484,14 @@ export class Element extends Node {
      */
     get previousElementSibling() {
         return getPreviousSibling(this)
+    }
+
+    /**
+     * @param {string} type
+     * @returns {CSSPseudoElement|null}
+     */
+    pseudo(type) {
+        return null
     }
 
     /**

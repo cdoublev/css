@@ -82,9 +82,9 @@ Below are their accepted `privateProperties`:
 
   - [`element.closest()`](https://dom.spec.whatwg.org/#dom-element-closest) with `matchElementAgainstSelectors(ancestor, selectors, { scopes: { inclusive: true, roots: [element] } })`
   - [`element.matches()`](https://dom.spec.whatwg.org/#dom-element-matches) with `matchElementAgainstSelectors(element, selectors, { scopes: { inclusive: true, roots: [element] } })`
-  - [`element.querySelector()`](https://dom.spec.whatwg.org/#dom-parentnode-queryselector) with `matchTreesAgainstSelectors([document], selectors, { scopes: { roots: [element] } }, true)`
+  - [`element.querySelector()`](https://dom.spec.whatwg.org/#dom-parentnode-queryselector) with `matchTreesAgainstSelectors([document], selectors, { scopes: { roots: [element] } }, { first: true })`
   - [`element.querySelectorAll()`](https://dom.spec.whatwg.org/#dom-parentnode-queryselectorall) with `matchTreesAgainstSelectors([document], selectors, { scopes: { roots: [element] } })`
 
 `selectors` is expected to be a [`<complex-selector-list>`](https://drafts.csswg.org/selectors-4/#typedef-selector-list) or [`<complex-real-selector-list>`](https://drafts.csswg.org/selectors-4/#typedef-complex-real-selector-list).
 
-The third argument can also be assigned an `elementCache` as a `Map` or `WeakMap` of (string) selectors as keys and elements as values. If the result from matching a tree against the subject selector (ie. the rightmost compound selector) is stored in this cache, it will be used to match other selectors with the same subject, which avoids a tree traversal.
+The fourth argument can also be assigned an `elementCache` as a `Map` or `WeakMap` of (string) selectors as keys and elements as values. If the result from matching a tree against the subject selector (ie. the rightmost compound selector) is stored in this cache, it will be used to match other selectors with the same subject, which avoids a tree traversal.
