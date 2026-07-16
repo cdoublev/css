@@ -1,17 +1,24 @@
 
 import {
     COMMENT_NODE_TYPE,
+    CONTAINED_BY_NODE_POSITION,
+    CONTAINS_NODE_POSITION,
+    DISCONNECTED_NODE_POSITION,
     DOCUMENT_FRAGMENT_NODE_TYPE,
     DOCUMENT_NODE_TYPE,
     ELEMENT_NODE_TYPE,
+    FOLLOWING_NODE_POSITION,
     HTML_NAMESPACE,
+    IMPLEMENTATION_SPECIFIC_NODE_POSITION,
     MATHML_NAMESPACE,
+    PRECEDING_NODE_POSITION,
     SVG_NAMESPACE,
     TEXT_NODE_TYPE,
 } from '../lib/utils/dom/constants.js'
 import { CSSStyleProperties, CSSStyleSheet, StyleSheetList } from '../lib/cssom/index.js'
-import { findAncestor } from '../lib/utils/dom/element.js'
+import { findAncestor, getParent } from '../lib/utils/dom/element.js'
 import { implForWrapper } from '../lib/cssom/utils.js'
+import { traverse } from '../lib/utils/dom/tree.js'
 
 /**
  * @param {Element} element
@@ -174,6 +181,63 @@ export class Node {
      */
     get baseURI() {
         return this.ownerDocument.baseURI
+    }
+
+    /**
+     * @param {Node} other
+     * @returns {number}
+     */
+    compareDocumentPosition(other) {
+
+        if (this === other) {
+            return 0
+        }
+
+        const thisAncestors = [this]
+        const otherAncestors = [other]
+
+        let { parentNode } = this
+        while (parentNode) {
+            if (parentNode === other) {
+                return CONTAINS_NODE_POSITION | PRECEDING_NODE_POSITION
+            }
+            thisAncestors.push(parentNode)
+            parentNode = getParent(parentNode)
+        }
+        parentNode = other.parentNode
+        while (parentNode) {
+            if (parentNode === this) {
+                return CONTAINED_BY_NODE_POSITION | FOLLOWING_NODE_POSITION
+            }
+            otherAncestors.push(parentNode)
+            parentNode = getParent(parentNode)
+        }
+
+        const root = thisAncestors.at(-1)
+        if (!root || root !== otherAncestors.at(-1)) {
+            return DISCONNECTED_NODE_POSITION | IMPLEMENTATION_SPECIFIC_NODE_POSITION | FOLLOWING_NODE_POSITION
+        }
+
+        let commonAncestorIndex = 0
+        const ancestorsMinLength = Math.min(thisAncestors.length, otherAncestors.length)
+
+        for (let index = 0; index < ancestorsMinLength; index++) {
+            const thisAncestor  = thisAncestors[thisAncestors.length - 1 - index]
+            const otherAncestor = otherAncestors[otherAncestors.length - 1 - index]
+            if (thisAncestor !== otherAncestor) {
+                break
+            }
+            commonAncestorIndex = index
+        }
+
+        for (const node of traverse(thisAncestors[commonAncestorIndex])) {
+            if (node === this) {
+                return FOLLOWING_NODE_POSITION
+            }
+            if (node === other) {
+                return PRECEDING_NODE_POSITION
+            }
+        }
     }
 
     /**

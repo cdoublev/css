@@ -86,5 +86,3 @@ Below are their accepted `privateProperties`:
   - [`element.querySelectorAll()`](https://dom.spec.whatwg.org/#dom-parentnode-queryselectorall) with `matchTreesAgainstSelectors([document], selectors, { scopes: { roots: [element] } })`
 
 `selectors` is expected to be a [`<complex-selector-list>`](https://drafts.csswg.org/selectors-4/#typedef-selector-list) or [`<complex-real-selector-list>`](https://drafts.csswg.org/selectors-4/#typedef-complex-real-selector-list).
-
-The fourth argument can also be assigned an `elementCache` as a `Map` or `WeakMap` of (string) selectors as keys and elements as values. If the result from matching a tree against the subject selector (ie. the rightmost compound selector) is stored in this cache, it will be used to match other selectors with the same subject, which avoids a tree traversal.
