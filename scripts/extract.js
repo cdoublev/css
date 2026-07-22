@@ -715,23 +715,19 @@ function reportMissingPseudoSelectors(selectors, key) {
         }
         addTypes(values, key)
         if (name.startsWith('::')) {
-            if (name.endsWith('()')) {
-                if (!elements.functions[name.slice(2, -2)]) {
-                    reportError(key, name, `${name} is a new pseudo-element`)
-                }
-            } else if (!elements.identifiers[name.slice(2)]) {
+            if (!elements[name.slice(2)]) {
                 reportError(key, name, `${name} is a new pseudo-element`)
             }
             return
         }
         if (name.endsWith('()')) {
-            if (!classes.functions[name.slice(1, -2)]) {
+            if (!classes[name.slice(1)]) {
                 reportError(key, name, `${name} is a new pseudo-class`)
             }
             return
         }
         // Ignore pseudo-elements with legacy syntax and `:lang()` incorrectly named `:lang` in CSS 2
-        if (!classes.identifiers.includes(name.slice(1)) && key !== 'CSS') {
+        if (!classes[name.slice(1)] && key !== 'CSS') {
             reportError(key, name, `${name} is a new pseudo-class`)
         }
     })
