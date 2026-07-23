@@ -602,7 +602,7 @@ describe('CSSStyleDeclaration.setProperty(), CSSStyleDeclaration.getPropertyValu
 
         const document = new HTMLDocument
         const host = new HTMLDivElement({ ownerDocument: document, parentNode: document })
-        const shadowRoot = new ShadowRoot({ host, ownerDocument: document })
+        new ShadowRoot({ host, ownerDocument: document })
         const element = new HTMLDivElement({ ownerDocument: document, parentNode: host })
         const style = createResolvedStyle(element)
 

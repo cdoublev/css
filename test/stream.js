@@ -36,12 +36,12 @@ describe('consume(item, fallback)', () => {
         assert.equal(stream.index, 0)
     })
     it('consumes an item matching the given predicate at the front of the stream', () => {
-        assert.equal(stream.consume(char => char === 'h'), 'h')
-        assert.equal(stream.consume(char => char === 'e' ? 'success' : null), 'success')
-        assert.equal(stream.consume(char => char === 'e' ? 'success' : false), null)
-        assert.equal(stream.consume(char => char === 'e' ? 'success' : error), error)
-        assert.equal(stream.consume(char => char === stream.current), 'l')
-        assert.equal(stream.consume((char, arg1, arg2) => char === 'l' ? `${arg1}${arg2}` : null, 'l', 'o'), 'lo')
+        assert.equal(stream.consume(character => character === 'h'), 'h')
+        assert.equal(stream.consume(character => character === 'e' ? 'success' : null), 'success')
+        assert.equal(stream.consume(character => character === 'e' ? 'success' : false), null)
+        assert.equal(stream.consume(character => character === 'e' ? 'success' : error), error)
+        assert.equal(stream.consume(character => character === stream.current), 'l')
+        assert.equal(stream.consume((character, arg1, arg2) => character === 'l' ? `${arg1}${arg2}` : null, 'l', 'o'), 'lo')
         assert.equal(stream.index, 3)
     })
 })
@@ -85,7 +85,7 @@ describe('consumeRunOf(...items)', () => {
     })
     it('consumes all consecutive items matching the given predicate at the front of the stream', () => {
         const stream = new Stream('csscsscss.')
-        assert.equal(stream.consumeRunOf(char => char === 'c' || char === 's'), 'csscsscss')
+        assert.equal(stream.consumeRunOf(character => character === 'c' || character === 's'), 'csscsscss')
         assert.equal(stream.current, 's')
         assert.equal(stream.index, 8)
     })
@@ -138,8 +138,8 @@ describe('prev(size, offset = 0)', () => {
 
 describe('peek(predicate)', () => {
     it('returns whether the next item satisfies the given predicate', () => {
-        assert.equal(stream.peek(char => char === '.'), false)
-        assert.equal(stream.peek(char => char === 'h'), true)
+        assert.equal(stream.peek(character => character === '.'), false)
+        assert.equal(stream.peek(character => character === 'h'), true)
         stream.index = string.length - 1
         assert.equal(stream.peek(_ => true), false)
     })
@@ -163,10 +163,10 @@ describe('loops', () => {
         const stream = new Stream(string)
         let index = 0
         assert.equal(stream.current, undefined)
-        for (const char of stream) {
-            assert.notEqual(char, undefined)
-            assert.equal(char, string[index])
-            assert.equal(stream.current, char)
+        for (const character of stream) {
+            assert.notEqual(character, undefined)
+            assert.equal(character, string[index])
+            assert.equal(stream.current, character)
             assert.equal(stream.index, index)
             assert.equal(stream.next(), string[index + 1])
             if (++index === string.length) {
@@ -184,11 +184,11 @@ describe('loops', () => {
         let nested = ''
         parentLoop: for (const _ of stream) {
             if (stream.consume(' ')) {
-                for (const char of stream) {
-                    if (char === ' ') {
+                for (const character of stream) {
+                    if (character === ' ') {
                         break parentLoop
                     }
-                    nested += char
+                    nested += character
                 }
             }
         }
@@ -201,11 +201,11 @@ describe('loops', () => {
         while (!stream.atEnd()) {
             const current = stream.consume()
             if (current === ' ') {
-                for (const char of stream) {
-                    if (char === ' ') {
+                for (const character of stream) {
+                    if (character === ' ') {
                         break
                     }
-                    nested += char
+                    nested += character
                 }
             }
         }
@@ -215,11 +215,11 @@ describe('loops', () => {
         const stream = new Stream(string)
         let output = ''
         let i = 0
-        for (const char of stream) {
-            if (char === 'e' && ++i < 3) {
+        for (const character of stream) {
+            if (character === 'e' && ++i < 3) {
                 stream.reconsume()
             }
-            output += char
+            output += character
         }
         assert.equal(output, 'heeello')
     })
@@ -257,8 +257,8 @@ it('works with an array', () => {
 
     stream.index = -1
     let index = 0
-    for (const char of stream) {
-        assert.equal(char, ['hello', ' ', 'beautiful', ' ', 'world', '!'][index++])
+    for (const character of stream) {
+        assert.equal(character, ['hello', ' ', 'beautiful', ' ', 'world', '!'][index++])
     }
 })
 it('works with an iterator', () => {
@@ -288,7 +288,7 @@ it('works with an iterator', () => {
     stream.index = -1
 
     let index = 0
-    for (const char of stream) {
-        assert.equal(char, string[index++])
+    for (const character of stream) {
+        assert.equal(character, string[index++])
     }
 })

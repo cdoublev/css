@@ -406,7 +406,7 @@ export class Document extends Node {
         const elements = []
         for (const element of traverse(this)) {
             if (
-                (namespace === '*' || namespace  === element.namespaceURI)
+                (namespace === '*' || namespace === element.namespaceURI)
                 && (name === '*' || name === element.localName)
             ) {
                 elements.push(element)
@@ -600,7 +600,7 @@ export class Element extends Node {
         const elements = []
         for (const element of traverse(this)) {
             if (
-                (namespace === '*' || namespace  === element.namespaceURI)
+                (namespace === '*' || namespace === element.namespaceURI)
                 && (name === '*' || name === element.localName)
             ) {
                 elements.push(element)
@@ -1023,7 +1023,7 @@ export class HTMLStyleElement extends HTMLElement {
 
         super(properties)
 
-        this.sheet = CSSStyleSheet.create(globalThis, undefined, { rules: properties.innerText })
+        this.sheet = CSSStyleSheet.create(globalThis, undefined, { rules: properties.innerText ?? '' })
         implForWrapper(this.ownerDocument.styleSheets)._list.push(implForWrapper(this.sheet))
     }
 }
