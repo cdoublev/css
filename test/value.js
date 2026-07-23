@@ -963,6 +963,7 @@ describe('<ident>', () => {
         // Starts with identifier start code point(s)
         assert.valid('<ident>', 'identifier')
         assert.valid('<ident>', '·identifier')
+        assert.valid('<ident>', '𐀀identifier')
         assert.valid('<ident>', '_identifier')
         // Starts with an escape sequence
         assert.valid('<ident>', '\\', '�')

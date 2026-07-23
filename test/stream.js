@@ -264,7 +264,7 @@ it('works with an array', () => {
 it('works with an iterator', () => {
 
     const iterator = string[Symbol.iterator]()
-    const stream = new Stream(iterator)
+    const stream = new Stream({ empty: [], iterator })
 
     assert.equal(stream.current, undefined)
     assert.equal(stream.next(), 'h')
