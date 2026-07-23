@@ -28,9 +28,9 @@
   },
   "scripts": {
     "build": "npm run build:interface && npm run build:definitions",
-    "build:definitions": "npm run build:definitions:extract && npm run build:definitions:initial",
+    "build:definitions": "npm run build:definitions:extract && npm run build:definitions:normalize",
     "build:definitions:extract": "node ./scripts/extract.js",
-    "build:definitions:initial": "node ./scripts/initial.js",
+    "build:definitions:normalize": "node ./scripts/normalize.js",
     "build:directionality": "node ./scripts/directionality.js",
     "build:interface": "node ./scripts/interface.js",
     "lint": "eslint",

@@ -24,9 +24,7 @@ import { findRule } from '../lib/utils/definition.js'
 import forgiving from '../lib/values/forgiving.js'
 import fs from 'node:fs/promises'
 import logical from '../lib/properties/logical.js'
-import parseDefinition from '../lib/parse/definition.js'
 import path from 'node:path'
-import { serializeDefinition } from '../lib/serialize.js'
 import shorthands from '../lib/properties/shorthands.js'
 
 const logicalGroups = Object.keys(logical)
@@ -774,7 +772,7 @@ function serializeValueDefinition(value, depth = 1) {
             return `{\n${value}${tab(depth)}}`
         }
         case 'string':
-            return quote(serializeDefinition(parseDefinition(value)))
+            return quote(value)
         default:
             throw RangeError('Unexpected value definition type')
     }

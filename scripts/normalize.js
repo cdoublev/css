@@ -1,5 +1,6 @@
 /**
  * This script rewrites property and descriptor definition files by replacing
+ * their `value` with the result from a round-trip (parse and serialize) and
  * their `initial` value with an object associating:
  *
  *   - `parsed` to the result of parsing `initial`
@@ -7,14 +8,17 @@
  */
 import { isFailure, isList, isOmitted } from '../lib/utils/value.js'
 import { quote, tab } from '../lib/utils/string.js'
+import { serializeDefinition, serializeValue } from '../lib/serialize.js'
+import contextSensitiveTypes from '../lib/values/context-sensitive.js'
 import descriptors from '../lib/descriptors/definitions.js'
 import fs from 'node:fs/promises'
 import { install } from '@cdoublev/css'
 import { parseDeclarationValue } from '../lib/parse/parser.js'
+import parseDefinition from '../lib/parse/definition.js'
 import path from 'node:path'
 import properties from '../lib/properties/definitions.js'
-import { serializeValue } from '../lib/serialize.js'
 import shorthands from '../lib/properties/shorthands.js'
+import types from '../lib/values/definitions.js'
 
 install()
 
@@ -22,7 +26,7 @@ install()
  * @param {string[]} types
  * @returns {string}
  */
-function serializeTypes(types) {
+function serializeValueTypes(types) {
     return `[${types.map(quote).join(', ')}]`
 }
 
@@ -40,7 +44,7 @@ function serializeListArguments(separator, types, tabs) {
         }
         return `,\n${tabs}'${separator}'`
     }
-    return `,\n${tabs}'${separator}',\n${tabs}${serializeTypes(types)}`
+    return `,\n${tabs}'${separator}',\n${tabs}${serializeValueTypes(types)}`
 }
 
 /**
@@ -68,7 +72,7 @@ function serializeComponentValue(object, depth) {
         (string, key) => {
             let { [key]: value } = object
             if (key === 'types') {
-                value = serializeTypes(value)
+                value = serializeValueTypes(value)
             } else if (typeof value === 'string') {
                 value = quote(value)
             } else if (typeof value === 'object') {
@@ -78,6 +82,52 @@ function serializeComponentValue(object, depth) {
         },
         '{\n')
         .concat(`${tab(depth)}}`)
+}
+
+/**
+ * @param {string} value
+ * @returns {string}
+ */
+function serializeValueDefinition(value, depth = 1) {
+    switch (typeof value) {
+        case 'function':
+            return value
+        case 'object': {
+            value = Object.entries(value).reduce(
+                (string, [key, value]) => {
+                    if (key === 'value') {
+                        value = serializeValueDefinition(value, depth + 1)
+                    } else if (typeof value === 'string') {
+                        value = quote(value)
+                    }
+                    return `${string}${tab(depth + 1)}${key}: ${value},\n`
+                },
+                '')
+            return `{\n${value}${tab(depth)}}`
+        }
+        case 'string':
+            return quote(serializeDefinition(parseDefinition(value)))
+        default:
+            throw RangeError('Unexpected value definition type')
+    }
+}
+
+/**
+ * @param {object} types
+ * @returns {string}
+ */
+function serializeTypes(types) {
+    const imports = ["import definitions from './context-sensitive.js'"]
+    types = Object.entries(types).reduce(
+        (string, [type, value]) => {
+            if (contextSensitiveTypes[type]) {
+                return string
+            }
+            return `${string}${tab(1)}${quote(type)}: ${serializeValueDefinition(value)},\n`
+        },
+        `${tab(1)}...definitions,\n`)
+
+    return `\n${imports.join('\n')}\n\nexport default {\n${types}}\n`
 }
 
 /**
@@ -102,8 +152,9 @@ function getInitialValue(name, value, context, depth) {
  * @param {object} properties
  * @returns {string}
  */
-function serializePropertyDefinitions(properties) {
-    return Object.entries(properties).reduce(
+function serializeProperties(properties) {
+    const imports = ["import { list, omitted } from '../values/value.js'"]
+    properties = Object.entries(properties).reduce(
         (string, [property, { animate, group, inherited, initial, value }]) => {
             string += `${tab(1)}${quote(property)}: {\n`
             if (animate === false || shorthands.get(property)?.flat().every(name => properties[name]?.animate === false)) {
@@ -122,19 +173,21 @@ function serializePropertyDefinitions(properties) {
                 string += `${tab(3)}serialized: ${quote(serialized)},\n`
                 string += `${tab(2)}},\n`
             }
-            string += `${tab(2)}value: ${quote(value)},\n`
+            string += `${tab(2)}value: ${serializeValueDefinition(value)},\n`
             string += `${tab(1)}},\n`
             return string
         },
         '')
+    return `\n${imports.join('\n')}\n\nexport default {\n${properties}}\n`
 }
 
 /**
  * @param {object} descriptors
  * @returns {string}
  */
-function serializeDescriptorDefinitions(descriptors) {
-    return Object.entries(descriptors).reduce(
+function serializeDescriptors(descriptors) {
+    const imports = ["import { list, omitted } from '../values/value.js'"]
+    descriptors = Object.entries(descriptors).reduce(
         (string, [rule, definitions]) => {
             string += `${tab(1)}${quote(rule)}: {\n`
             Object.entries(definitions).forEach(([descriptor, { initial, type, value }]) => {
@@ -148,33 +201,28 @@ function serializeDescriptorDefinitions(descriptors) {
                 } else if (type) {
                     string += `${tab(3)}type: '${type}',\n`
                 }
-                string += `${tab(3)}value: ${quote(value)},\n`
+                string += `${tab(3)}value: ${serializeValueDefinition(value)},\n`
                 string += `${tab(2)}},\n`
             })
             string += `${tab(1)}},\n`
             return string
         },
         '')
-}
-
-/**
- * @returns {Promise}
- */
-function serializeDefinitions() {
-    const dependency = "import { list, omitted } from '../values/value.js'"
-    const header = `\n${dependency}\n\nexport default {\n`
-    return Promise.all([
-        fs.writeFile(
-            path.join(import.meta.dirname, '..', 'lib', 'descriptors', 'definitions.js'),
-            `${header}${serializeDescriptorDefinitions(descriptors)}}\n`),
-        fs.writeFile(
-            path.join(import.meta.dirname, '..', 'lib', 'properties', 'definitions.js'),
-            `${header}${serializePropertyDefinitions(properties)}}\n`),
-    ])
+    return `\n${imports.join('\n')}\n\nexport default {\n${descriptors}}\n`
 }
 
 try {
-    await serializeDefinitions()
+    await Promise.all([
+        fs.writeFile(
+            path.join(import.meta.dirname, '..', 'lib', 'descriptors', 'definitions.js'),
+            serializeDescriptors(descriptors)),
+        fs.writeFile(
+            path.join(import.meta.dirname, '..', 'lib', 'properties', 'definitions.js'),
+            serializeProperties(properties)),
+        fs.writeFile(
+            path.join(import.meta.dirname, '..', 'lib', 'values', 'definitions.js'),
+            serializeTypes(types)),
+    ])
 } catch (error) {
     console.log('Please report this issue: https://github.com/cdoublev/css/issues/new')
     throw error
