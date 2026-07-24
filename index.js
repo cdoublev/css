@@ -19,7 +19,7 @@ function install(globalObject = globalThis) {
     globalObject.CSS = cssom.CSS.create(globalObject)
 }
 
-export { CSSStyleProperties, CSSStyleSheet, StyleSheetList } from './lib/cssom/index.js'
+export { CSSPseudoElement, CSSStyleProperties, CSSStyleSheet, StyleSheetList } from './lib/cssom/index.js'
 export { matchElementAgainstSelectors, matchTreesAgainstSelectors } from './lib/match/selector.js'
 export { parseGrammar, parseListGrammar } from './lib/parse/parser.js'
 export { install }

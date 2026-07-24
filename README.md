@@ -7,6 +7,7 @@ JavaScript implementation of CSS.
 
 ```js
 const {
+  CSSPseudoElement,
   CSSStyleProperties,
   CSSStyleSheet,
   StyleSheetList,
@@ -39,6 +40,7 @@ const elements = matchTreesAgainstSelectors([document], selectors)
 
 `CSSStyleSheet`, `CSSStyleProperties`, `StyleSheetList`, are [`webidl2js`](https://github.com/jsdom/webidl2js) wrappers intended to implement:
 
+- [`Element.pseudo()`](https://drafts.csswg.org/css-pseudo-4/#dom-element-pseudo) and [`Window.getComputedStyle()`](https://drafts.csswg.org/cssom-1/#dom-window-getcomputedstyle)
 - *create a CSS style sheet*: when processing or updating the content of [`HTMLStyleElement`](https://html.spec.whatwg.org/multipage/semantics.html#the-style-element), when processing the resource referenced by [`HTMLLinkElement`](https://html.spec.whatwg.org/multipage/links.html#link-type-stylesheet) or an HTTP `Link` header with `rel="stylesheet"`
 - (get) [the `style` attribute of an `HTMLElement`](https://html.spec.whatwg.org/multipage/dom.html#the-style-attribute)
 - *return a live CSS declaration block* from [`Window.getComputedStyle()`](https://drafts.csswg.org/cssom-1/#extensions-to-the-window-interface)
