@@ -9,6 +9,7 @@ import {
     CSSMarginDescriptors,
     CSSPageDescriptors,
     CSSPositionTryDescriptors,
+    CSSPseudoElement,
     CSSStyleProperties,
     CSSStyleSheet,
 } from '../lib/cssom/index.js'
@@ -391,6 +392,22 @@ describe('CSSStyleDeclaration.setProperty(), CSSStyleDeclaration.getPropertyValu
 
         style.borderBlockStartColor = 'green'
         assert.equal(style.cssText, 'border-top-color: green; border-block-start-color: green;')
+    })
+    it('resolves a value for a pseudo-element', () => {
+
+        const document = new HTMLDocument
+        const html = new HTMLHtmlElement({ ownerDocument: document, parentNode: document })
+        const body = new HTMLBodyElement({ ownerDocument: document, parentNode: html })
+        new HTMLStyleElement({ innerText: '::before { color: green }', ownerDocument: document, parentNode: body })
+        const before = CSSPseudoElement.createImpl(globalThis, {
+            element: body,
+            parent: body,
+            selectorText: '::before',
+            type: '::before',
+        })
+        const style = createResolvedStyle(before)
+
+        assert.equal(style.color, 'rgb(0, 128, 0)')
     })
     it('resolves a value by collecting declarations in conditional rules', () => {
 

@@ -41,10 +41,11 @@ import { HTML_NAMESPACE, SVG_NAMESPACE, XLINK_NAMESPACE, XML_NAMESPACE } from '.
 import assert, { Assert, AssertionError } from 'node:assert/strict'
 import { createContext, parseGrammar } from '../lib/parse/parser.js'
 import { describe, test } from 'node:test'
+import { matchPseudoElementAgainstSelectors, matchTreesAgainstSelectors } from '../lib/match/selector.js'
+import { CSSPseudoElement } from '../lib/cssom/index.js'
 import { install } from '@cdoublev/css'
 import matchMediaQueryList from '../lib/match/media.js'
 import matchSupport from '../lib/match/support.js'
-import { matchTreesAgainstSelectors } from '../lib/match/selector.js'
 import { omitted } from '../lib/values/value.js'
 
 install()
@@ -661,6 +662,24 @@ describe('selector', () => {
         ]
         selections.forEach(([selector, expected, context, options]) =>
             assert.match(selector, expected, document, context, options))
+    })
+    test('pseudo-element', () => {
+
+        const document = new HTMLDocument
+        const html = new HTMLHtmlElement({ ownerDocument: document, parentNode: document })
+        const highlight = CSSPseudoElement.createImpl(globalThis, {
+            element: html,
+            parent: html,
+            selectorText: '::highlight(identifier)',
+            type: '::highlight',
+        })
+
+        const selectors = ['::highlight(identifier)', 'html::highlight(identifier)']
+
+        selectors.forEach(selector => {
+            selector = parseGrammar(selector, '<selector-list>')
+            assert.equal(!!matchPseudoElementAgainstSelectors(highlight, selector), true)
+        })
     })
 
     test('complex', () => {
