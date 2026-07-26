@@ -2236,7 +2236,16 @@ describe('<progress()>', () => {
         // Identical units
         assert.valid('<number>', 'progress(1, 0, 2)', 'calc(0.5)')
         assert.valid('<number>', 'progress(1, 2, 0)', 'calc(0.5)')
-        assert.valid('<number>', 'progress(-1, 0, 2)', 'calc(-0.5)')
+        assert.valid('<number>', 'progress(-1, 0, 1)', 'calc(0)')
+        assert.valid('<number>', 'progress(no-clamp, -1, 0, 1)', 'calc(-1)')
+        assert.valid('<number>', 'progress(2, 0, 1)', 'calc(1)')
+        assert.valid('<number>', 'progress(no-clamp, 2, 0, 1)', 'calc(2)')
+        assert.valid('<number>', 'progress(1, 1, 1)', 'calc(0)')
+        assert.valid('<number>', 'progress(no-clamp, 1, 1, 1)', 'calc(0)')
+        assert.valid('<number>', 'progress(0, 1, 1)', 'calc(0)')
+        assert.valid('<number>', 'progress(no-clamp, 0, 1, 1)', 'calc(-infinity)')
+        assert.valid('<number>', 'progress(1, 0, 0)', 'calc(0)')
+        assert.valid('<number>', 'progress(no-clamp, 1, 0, 0)', 'calc(infinity)')
         assert.valid('<number>', 'PROGRESS(1em, 0em, 2em)', 'progress(1em, 0em, 2em)')
         assert.valid('<length-percentage>', 'calc(1px * progress(1%, 0%, 2%))')
         // Different units
@@ -2245,8 +2254,6 @@ describe('<progress()>', () => {
         // Consistent type
         assert.valid('<number>', 'progress(1 * 1, 360deg / 1turn, 1em / 1px)', 'progress(1, 1, 1em / 1px)')
         assert.valid('<length-percentage>', 'calc(1px * progress(1 * 1, 1% / 1%, 1em / 1px))', 'calc(1px * progress(1, 1% / 1%, 1em / 1px))')
-        // Equal argument values
-        assert.valid('<number>', 'progress(1, 1, 1)', 'calc(0)')
     })
 })
 describe('<calc-mix()>', () => {
@@ -2642,7 +2649,7 @@ describe('<calc-size()>', () => {
         ...context,
         context,
         definition: {
-            name: 'width',
+            name: 'max-width',
             type: 'declaration',
             value: properties.width.value,
         },
@@ -2650,7 +2657,8 @@ describe('<calc-size()>', () => {
 
     test('invalid', () => {
         // Invalid basis
-        assert.invalid('<calc-size()>', 'calc-size(none)', context)
+        assert.invalid('<calc-size()>', 'calc-size(none, 1px)', context)
+        assert.invalid('<calc-size()>', 'calc-size(anchor-size(1px), 1px)', context)
         assert.invalid('<calc-size()>', 'calc-size(1, 1px)', context)
         // Invalid calculation
         assert.invalid('<calc-size()>', 'calc-size(any, size)', context)
@@ -2667,7 +2675,8 @@ describe('<calc-size()>', () => {
         assert.representation('<calc-size()>', 'calc-size(any, 1px)', size, context)
     })
     test('valid', () => {
-        assert.valid('<calc-size()>', 'CALC-SIZE(AUTO, 1 * 1% + 1px + calc(size))', 'calc-size(auto, 1% + 1px + size)', context)
+        assert.valid('<calc-size()>', 'CALC-SIZE(fit-content, 1 * 1% + 1px + calc(size))', 'calc-size(fit-content, 1% + 1px + size)', context)
+        assert.valid('<calc-size()>', 'calc-size(fit-content(1px), 1px)', 'calc-size(fit-content(1px), 1px)', context)
     })
 })
 describe('<color>', () => {
@@ -4196,6 +4205,15 @@ describe('<var()>', () => {
         assert.valid('<var()>', 'var(--custom, {,})', 'var(--custom,,)')
         assert.valid('<var()>', 'var(--custom, {{}})')
         assert.valid('<var()>', 'var(--custom, {{} a})')
+    })
+})
+describe('<view-transition-type>', () => {
+    test('invalid', () => {
+        assert.invalid('<view-transition-type>', 'none')
+        assert.invalid('<view-transition-type>', '-ua-type')
+    })
+    test('representation', () => {
+        assert.representation('<view-transition-type>', 'type', customIdentifier('type', ['<view-transition-type>']))
     })
 })
 describe('<view()>', () => {

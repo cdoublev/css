@@ -164,7 +164,6 @@ const replaced = {
         '<signed-integer>': '<number-token>',
         '<signless-integer>': '<number-token>',
         '<size-feature>': '<media-feature>',
-        '<size-keyword>': '<ident>',
         '<string>': '<string-token>',
         '<style-feature-name>': '<ident>',
         '<supports-condition-name>': '<extension-name>',
@@ -177,6 +176,7 @@ const replaced = {
         '<url-modifier>': '<request-url-modifier> | <param()> | <ident> | <function-token> <any-value>? )',
         '<url-set>': '<image-set()>',
         '<voice-family-name>': '<string> | <custom-ident>+',
+        '<view-transition-type>': '<custom-ident>',
         '<whole-value>': '<declaration-value>?',
         '<zero>': '<number-token>',
         // https://github.com/w3c/csswg-drafts/issues/12849
@@ -197,6 +197,8 @@ const replaced = {
         '<progress-source>': "<calc-sum> | <'animation-timeline'>",
         // https://github.com/w3c/fxtf-drafts/issues/532
         '<mask-reference>': 'none | <image>',
+        // https://github.com/w3c/csswg-drafts/issues/14221
+        '<progress()>': 'progress(no-clamp? , <calc-sum> , <calc-sum> , <calc-sum>)',
         // TODO: fix `value` of `<pseudo-page>`
         '<pseudo-page>': ': [left | right | first | blank | nth(<a-n-plus-b> [of <custom-ident>]?)]',
         // https://github.com/w3c/csswg-drafts/issues/7897

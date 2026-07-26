@@ -1696,7 +1696,7 @@ describe('animation', () => {
         // All longhands cannot be represented
         style.animationName = 'none, none'
         assert.equal(style.animation, '')
-        assert.equal(style.cssText, 'animation-duration: auto; animation-timing-function: linear; animation-delay: 0s; animation-iteration-count: 1; animation-direction: normal; animation-fill-mode: none; animation-play-state: running; animation-name: none, none; animation-timeline: auto; animation-composition: replace; animation-range: normal; animation-trigger: none;')
+        assert.equal(style.cssText, 'animation-duration: auto; animation-timing-function: linear; animation-delay-start: 0s; animation-iteration-count: 1; animation-direction: normal; animation-fill-mode: none; animation-play-state: running; animation-name: none, none; animation-timeline: auto; animation-composition: replace; animation-range: normal; animation-trigger: none;')
 
         // Coordinated value list
         style.animation = `${animation}, ${animation}`
@@ -1707,6 +1707,34 @@ describe('animation', () => {
                     ? initial(longhand)
                     : `${initial(longhand)}, ${initial(longhand)}`))
         assert.equal(style.animation, `${animation}, ${animation}`)
+    })
+})
+describe('animation-delay', () => {
+    test('expansion and reification', () => {
+
+        const style = createStyle()
+        const longhands = shorthands.get('animation-delay')[0]
+
+        // Initial longhand values
+        style.animationDelay = '0s 0s'
+        assert.equal(style.length, longhands.length)
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.animationDelay, '0s')
+
+        // Omitted values
+        style.animationDelay = '1s'
+        assert.equal(style.animationDelayStart, '1s')
+        assert.equal(style.animationDelayEnd, '0s')
+        assert.equal(style.animationDelay, '1s')
+        style.animationDelay = '0s 1s'
+        assert.equal(style.animationDelayStart, '0s')
+        assert.equal(style.animationDelayEnd, '1s')
+        assert.equal(style.animationDelay, '0s 1s')
+
+        // Coordinated value list
+        style.animationDelay = '0s, 0s'
+        longhands.forEach(longhand => assert.equal(style[longhand], `${initial(longhand)}, ${initial(longhand)}`))
+        assert.equal(style.animationDelay, '0s, 0s')
     })
 })
 describe('animation-range', () => {

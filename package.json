@@ -43,9 +43,9 @@
     "undici": "^8.0.0"
   },
   "devDependencies": {
-    "@cdoublev/eslint-config": "^0.12.0",
+    "@cdoublev/eslint-config": "^0.13.0",
     "webidl2js": "cdoublev/webidl2js",
-    "webref": "w3c/webref#f00ab01f55fa5db248a51bd9af88e7760707730d"
+    "webref": "w3c/webref#e3e12f59d63d73290135cabcf21cbe6097a88259"
   },
   "publishConfig": {
     "access": "public"
