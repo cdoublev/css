@@ -73,7 +73,7 @@ describe('CSS.supports()', () => {
             ['color/**/', 'red', false],
             ['color', 'red !important', false],
             ['COLOR', 'green'],
-            ['--custom', '1'],
+            ['--custom', ''],
             ['color', 'initial'],
             ['color', 'var(--custom)'],
             ['color', 'first-valid(green)'],
