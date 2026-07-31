@@ -2563,12 +2563,13 @@ describe('selector', () => {
          *   <body>
          *
          *     <!-- not :indeterminate -->
+         *     <input type="radio" checked>
+         *     <input type="radio" name="" checked>
          *     <input type="radio" name="shadow">
          *     <input type="radio" name="shadow" checked>
          *     <form id="form">
          *       <input type="checkbox">
          *       <div type="checkbox"></div>                <!-- the user set `indeterminate` to `true` -->
-         *       <input type="radio" name="">               <!-- the user set `indeterminate` to `true` -->
          *       <input type="radio" name="group" checked>  <!-- the user set `indeterminate` to `true` -->
          *       <progress value=""></progress>             <!-- the user set `indeterminate` to `true` -->
          *     </form>
@@ -2579,7 +2580,8 @@ describe('selector', () => {
          *     <!-- :indeterminate -->
          *     <input type="checkbox">                      <!-- the user set `indeterminate` to `true` -->
          *     <input type="checkbox" disabled readonly>    <!-- the user set `indeterminate` to `true` -->
-         *     <input type="radio" name=" ">
+         *     <input type="radio">
+         *     <input type="radio" name="">
          *     <input type="radio" name="group">
          *     <div>
          *       #shadow-root
@@ -2595,6 +2597,23 @@ describe('selector', () => {
         const body = new HTMLBodyElement({ ownerDocument: document, parentNode: html })
 
         // Not :indeterminate
+        new HTMLInputElement({
+            attributes: [
+                { localName: 'type', value: 'radio' },
+                { localName: 'checked' },
+            ],
+            ownerDocument: document,
+            parentNode: body,
+        })
+        new HTMLInputElement({
+            attributes: [
+                { localName: 'type', value: 'radio' },
+                { localName: 'name' },
+                { localName: 'checked' },
+            ],
+            ownerDocument: document,
+            parentNode: body,
+        })
         new HTMLInputElement({
             attributes: [
                 { localName: 'type', value: 'radio' },
@@ -2625,16 +2644,6 @@ describe('selector', () => {
         })
         new HTMLDivElement({
             attributes: [{ localName: 'type', value: 'checkbox' }],
-            form,
-            indeterminate: true,
-            ownerDocument: document,
-            parentNode: form,
-        })
-        new HTMLInputElement({
-            attributes: [
-                { localName: 'type', value: 'radio' },
-                { localName: 'name' },
-            ],
             form,
             indeterminate: true,
             ownerDocument: document,
