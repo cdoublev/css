@@ -973,6 +973,8 @@ describe('<ident>', () => {
         assert.valid('<ident>', '\\110000', '�')
         assert.valid('<ident>', '\\0000311', '\\31 1')
         assert.valid('<ident>', '\\31 1')
+        assert.valid('<ident>', '\\31\f1', '\\31 1')
+        assert.valid('<ident>', '\\31\r\n1', '\\31 1')
         assert.valid('<ident>', '\\31\\31', '\\31 1')
         assert.valid('<ident>', '\\Aidentifier', '\\a identifier')
         assert.valid('<ident>', '\\69 dentifier', 'identifier')
@@ -985,10 +987,12 @@ describe('<ident>', () => {
         assert.valid('<ident>', '--')
         assert.valid('<ident>', '-identifier')
         assert.valid('<ident>', '-·identifier')
+        assert.valid('<ident>', '-𐀀identifier')
         assert.valid('<ident>', '-_identifier')
         assert.valid('<ident>', '-\\31identifier', '-\\31 identifier')
         // Only contains identifier code points and escape sequences
         assert.valid('<ident>', 'identifier·')
+        assert.valid('<ident>', 'identifier𐀀')
         assert.valid('<ident>', 'identifier_')
         assert.valid('<ident>', 'identifier1')
         assert.valid('<ident>', 'identifier-')
@@ -1303,6 +1307,7 @@ describe('<dimension>', () => {
         // The unit starts with identifier start code point(s)
         assert.valid('<dimension>', '1identifier')
         assert.valid('<dimension>', '1·identifier')
+        assert.valid('<dimension>', '1𐀀identifier')
         assert.valid('<dimension>', '1_identifier')
         // The unit starts with an escape sequence
         assert.valid('<dimension>', '1\\', '1�')
@@ -1324,10 +1329,12 @@ describe('<dimension>', () => {
         assert.valid('<dimension>', '1--')
         assert.valid('<dimension>', '1-identifier')
         assert.valid('<dimension>', '1-·identifier')
+        assert.valid('<dimension>', '1-𐀀identifier')
         assert.valid('<dimension>', '1-_identifier')
         assert.valid('<dimension>', '1-\\31identifier', '1-\\31 identifier')
         // The unit only contains identifier code points and escape sequences
         assert.valid('<dimension>', '1identifier·')
+        assert.valid('<dimension>', '1identifier𐀀')
         assert.valid('<dimension>', '1identifier_')
         assert.valid('<dimension>', '1identifier1')
         assert.valid('<dimension>', '1identifier-')
@@ -3385,6 +3392,7 @@ describe('<id-selector>', () => {
         // Starts with identifier start code point
         assert.valid('<id-selector>', '#identifier')
         assert.valid('<id-selector>', '#·identifier')
+        assert.valid('<id-selector>', '#𐀀identifier')
         assert.valid('<id-selector>', '#_identifier')
         // Starts with an escape sequence
         assert.valid('<id-selector>', '#\\', '#�')
@@ -3406,10 +3414,12 @@ describe('<id-selector>', () => {
         assert.valid('<id-selector>', '#--')
         assert.valid('<id-selector>', '#-identifier')
         assert.valid('<id-selector>', '#-·identifier')
+        assert.valid('<id-selector>', '#-𐀀identifier')
         assert.valid('<id-selector>', '#-_identifier')
         assert.valid('<id-selector>', '#-\\31identifier', '#-\\31 identifier')
         // Only contains identifier code points and escape sequences
         assert.valid('<id-selector>', '#identifier·')
+        assert.valid('<id-selector>', '#identifier𐀀')
         assert.valid('<id-selector>', '#identifier_')
         assert.valid('<id-selector>', '#identifier1')
         assert.valid('<id-selector>', '#identifier-')

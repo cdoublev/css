@@ -25,8 +25,8 @@ describe('CSS.escape()', () => {
             ['0', '\\30 '],
             ['-0', '-\\30 '],
             ['-', '\\-'],
-            ['·-_09AZaz'],
-            ['[`', '\\[\\`'],
+            ['·𐀀-_09AZaz'],
+            ['[`\ud800', '\\[\\`\\\ud800'],
         ]
         values.forEach(([input, expected = input]) => assert.equal(CSS.escape(input), expected))
     })
