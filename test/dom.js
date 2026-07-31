@@ -316,7 +316,6 @@ export class Text extends CharacterData {
 export class Document extends Node {
 
     adoptedStyleSheets = []
-    defaultView = globalThis
     fullscreenElement = null
     nodeType = DOCUMENT_NODE_TYPE
     pictureInPictureElement = null
@@ -331,6 +330,7 @@ export class Document extends Node {
 
         const {
             activeViewTransition = null,
+            defaultView = globalThis,
             selected,
             url = 'http://localhost/',
             userAgentStyleSheet = '',
@@ -341,6 +341,7 @@ export class Document extends Node {
 
         this.activeViewTransition = activeViewTransition
         this.children = new HTMLCollection(this.childNodes._list)
+        this.defaultView = defaultView
         this.location = new URL(url)
         this.URL = url
 

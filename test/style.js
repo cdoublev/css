@@ -625,6 +625,14 @@ describe('CSSStyleDeclaration.setProperty(), CSSStyleDeclaration.getPropertyValu
 
         assert.equal(style.color, '')
     })
+    it('resolves a value to an empty string when the top-level root has no navigable', () => {
+
+        const document = new HTMLDocument({ defaultView: null })
+        const element = new HTMLDivElement({ ownerDocument: document, parentNode: document })
+        const style = createResolvedStyle(element)
+
+        assert.equal(style.color, '')
+    })
 })
 
 describe('CSS-wide keywords', () => {
