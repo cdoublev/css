@@ -16,7 +16,6 @@ function install(globalObject = globalThis) {
         }
         wrapper.install(globalObject, ['Window'])
     }
-    globalObject.CSS = cssom.CSS.create(globalObject)
 }
 
 export { CSSPseudoElement, CSSStyleProperties, CSSStyleSheet, StyleSheetList } from './lib/cssom/index.js'

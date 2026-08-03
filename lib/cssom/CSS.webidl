@@ -9,9 +9,7 @@
 // https://drafts.csswg.org/css-images-4/#dom-css-elementsources
 // https://github.com/w3c/csswg-drafts/issues/9372
 [Exposed=Window]
-// `namespace` is not supported by `webidl2js`
-//namespace CSS {
-interface CSS {
+namespace CSS {
 
     //[SameObject] readonly attribute Worklet animationWorklet;
     //[SameObject] readonly attribute any elementSources;
@@ -20,9 +18,9 @@ interface CSS {
     //[SameObject] readonly attribute Worklet paintWorklet;
 
     CSSOMString escape(CSSOMString ident);
-	undefined registerProperty(PropertyDefinition definition);
-    boolean supports(CSSOMString property, CSSOMString value);
-    boolean supports(CSSOMString conditionText);
+	[WebIDL2JSCallWithGlobal] undefined registerProperty(PropertyDefinition definition);
+    [WebIDL2JSCallWithGlobal] boolean supports(CSSOMString property, CSSOMString value);
+    [WebIDL2JSCallWithGlobal] boolean supports(CSSOMString conditionText);
 };
 
 // https://drafts.css-houdini.org/css-properties-values-api-1/#dictdef-propertydefinition
