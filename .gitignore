@@ -1,12 +1,2 @@
-/lib/cssom/*.js
-!/lib/cssom/*-impl.js
-!/lib/cssom/index.js
-/lib/cssom/CSSFontFaceDescriptors.webidl
-/lib/cssom/CSSFunctionDescriptors.webidl
-/lib/cssom/CSSKeyframeProperties.webidl
-/lib/cssom/CSSMarginDescriptors.webidl
-/lib/cssom/CSSPageDescriptors.webidl
-/lib/cssom/CSSPositionTryDescriptors.webidl
-/lib/cssom/CSSStyleProperties.webidl
 /node_modules/
 /test-results.xml
