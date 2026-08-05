@@ -188,7 +188,7 @@ In contexts where declarations cascade or apply to elements, the grammar is impl
 
 `Element.style` accept declarations for property values applying on `Element`. On the other hand, `Element.sizes` is independent of `Element`: it does not accept the aforementioned element dependent substitutions, and a relative length would resolve based on the initial `font-size` rather than its computed value for `Element`. So the context must be initialized with `Element` to parse `Element.style` but not `Element.sizes`.
 
-Validating a value in the context, before or after matching its definition, often requires traversing the parse tree to access a sibling or parent node. For example, there must be a whitespace preceding `+` and `-` in `<calc-sum>`. So if it is omitted, the validation action associated to the node representing `+` or `-` must return an error if its parent node represents `<calc-sum>`.
+Validating a value in the context, before or after matching its definition, often requires traversing the parse tree to access a sibling or parent node. For example, there must be a whitespace preceding `+` and `-` in `<calc-sum>`. So if it is omitted, the validation action associated with the node representing `+` or `-` must return an error if its parent node represents `<calc-sum>`.
 
 Other grammar rules require modifying the value definition. For example, calculation functions must support at least 32 arguments, which means the default value (20) of the `#` multiplier of `<calc-sum>` must be overridden. Similarly, `#` must be ignored at the top-level of a production rule for a property value range.
 
@@ -263,7 +263,7 @@ A **node** is implemented as a plain object with the following properties:
 
 `node.definition.name` is used to resolve specific [state transition actions](#State-machine) for this production, is pushed into `node.value.types` after parsing, and is used to serialize `node.value` according to the specific rules defined for this type.
 
-`node.state.status` represents the finite [state](#State-machine) of the node. `node.state.extended` is a `Map` that is primarily intended to be updated by descendant nodes to signal a pending substitution, increment a countor of calculation values and random functions, etc.
+`node.state.status` represents the finite [state](#State-machine) of the node. `node.state.extended` is a `Map` that is primarily intended to be updated by descendant nodes to signal a pending substitution, increment a counter of calculation values and random functions, etc.
 
 `node.value` is initially `undefined`. A node representing a rule is assigned its CSSOM representation *before* parsing its block value. All other nodes are assigned the successful parse result, which can be:
 
