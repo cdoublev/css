@@ -286,18 +286,19 @@ A **context** is a [node](#Node) that does not have children, but is the *origin
 
 It is extended with the following properties:
 
-| Property     | Type      | Description                                                               |
-| ------------ | --------- | ------------------------------------------------------------------------- |
-| `namespaces` | `Map`     | The namespace prefixes and URIs registered with `@namespace` rules        |
-| `separator`  | `String`  | Defines whether a whitespace can appear or must be omitted between tokens |
-| `strict`     | `Boolean` | Defines whether forgiving grammars must be parsed unforgivingly           |
-| `trees`      | `[Node]`  | The list of root nodes                                                    |
+| Property       | Type      | Description                                                               |
+| -------------- | --------- | ------------------------------------------------------------------------- |
+| `globalObject` | `Window`  | The relevant global object                                                |
+| `namespaces`   | `Map`     | The namespace prefixes and URIs registered with `@namespace` rules        |
+| `separator`    | `String`  | Defines whether a whitespace can appear or must be omitted between tokens |
+| `strict`       | `Boolean` | Defines whether forgiving grammars must be parsed unforgivingly           |
+| `trees`        | `[Node]`  | The list of root nodes                                                    |
 
 `context.separator` is reset before parsing *originated* nodes, to allow a whitespace between tokens.
 
 `context.trees` allows traversing root nodes to access the root of the current tree with `trees.at(-1)`, find a higher level tree with `trees.findLast(accept)`, etc.
 
-A context is initially created by the parser entry point with an optional instance of `CSSStyleSheet`, `CSSRule`, `CSSFontFeatureValuesMap`, `CSSStyleDeclaration`, or one or more rule production names (to create an arbitrary context). Any other context value is assumed to be an instance of `Element`.
+A context is initially created by the parser entry point with an optional instance of `CSSStyleSheet`, `CSSRule`, `CSSFontFeatureValuesMap`, `Element`, `Window`, or one or more rule production names (to create a virtual context).
 
 It can be overriden in `configure` transition actions, eg. by returning `{ ...context, strict: true }`.
 

@@ -31,10 +31,11 @@ import { createContext, parseGrammar } from '../lib/parse/parser.js'
 import { describe, test } from 'node:test'
 import { toDegrees, toRadians } from '../lib/utils/math.js'
 import { Assert } from 'node:assert/strict'
-import CSS from '../lib/cssom/CSS-impl.js'
+import { createVirtualContext } from '../lib/utils/context.js'
 import { keywords as cssWideKeywords } from '../lib/values/substitutions.js'
 import { isFailure } from '../lib/utils/value.js'
 import properties from '../lib/properties/definitions.js'
+import { randomCacheNames } from '../lib/state.js'
 import { serializeComponentValue } from '../lib/serialize.js'
 
 /**
@@ -62,7 +63,7 @@ function createDeclarationContext(context, name = 'any-property') {
  * @param {object|string} [context]
  * @returns {object|object[]|string|null}
  */
-function parse(definition, value, serialize = true, context) {
+function parse(definition, value, serialize = true, context = globalThis) {
     value = parseGrammar(value, definition, context)
     if (isFailure(value)) {
         if (serialize) {
@@ -2344,7 +2345,8 @@ describe('<random()>', () => {
     })
     test('valid', () => {
 
-        CSS.randomCacheNames.push(
+        const names = randomCacheNames.get(globalThis)
+        names.push(
             { base: 0.5, element: null, identifier: null, scope: 'ua-any-property' },
             { base: 0, element: null, identifier: null, scope: 'ua-any-property-1' },
             { base: 1, element: null, identifier: null, scope: 'ua-any-property-2' },
@@ -2357,13 +2359,13 @@ describe('<random()>', () => {
         assert.valid('<number>', 'random(fixed 0, 0, 1)', 'calc(0)', styleRule)
         assert.valid('<number>', 'random(fixed 1, 0, 1)', 'calc(1)', styleRule)
         assert.valid('<number>', 'random(--name, 0, 1px / 1em)', 'random(--name, 0, 1px / 1em)', styleRule)
-        assert.valid('<number>', 'random(--name, 0, 1, 1)', `calc(${CSS.randomCacheNames.at(-1).base < 0.5 ? 0 : 1})`, styleRule)
+        assert.valid('<number>', 'random(--name, 0, 1, 1)', `calc(${names.at(-1).base < 0.5 ? 0 : 1})`, styleRule)
         assert.valid('<number>', 'random(property-scoped, 0, 1)', 'calc(0.5)', createDeclarationContext(styleRule))
         assert.valid('<number>{2}', 'random(property-index-scoped, 0, 1) random(property-index-scoped, 0, 1)', 'calc(0) calc(1)', createDeclarationContext(styleRule))
         assert.valid('<number>{2}', 'random(ua-any-property-2, 0, 1) random(ua-any-property-1, 0, 1)', 'calc(1) calc(0)', createDeclarationContext(styleRule))
         assert.valid('<length>', 'random(fixed 1, 0em, 1em)', 'random(fixed 1, 0em, 1em)', styleRule)
         assert.valid('<length-percentage>', 'random(fixed 1, 0%, 1%)', 'random(fixed 1, 0%, 1%)', styleRule)
-        assert.valid('<percentage>', 'random(fixed 1, 0%, 1%)', 'calc(1%)', styleRule)
+        assert.valid('<percentage>', 'random(fixed 1, 0%, 1%)', 'calc(1%)')
         // Different units
         assert.valid('<length>', 'random(fixed 1, 1px, 1in)', 'calc(96px)', styleRule)
         assert.valid('<length>', 'random(fixed 1, 1px, 1em)', 'random(fixed 1, 1px, 1em)', styleRule)
@@ -3221,8 +3223,8 @@ describe('<font-family-name>', () => {
         const invalid = ['SERIF', 'caption']
         const contexts = [
             createDeclarationContext(styleRule, 'font-family'),
-            createDeclarationContext('@font-face', 'src'),
-            createContext('@font-feature-values'),
+            createDeclarationContext(createVirtualContext(globalThis, '@font-face'), 'src'),
+            createVirtualContext(globalThis, '@font-feature-values'),
         ]
         invalid.forEach(input =>
             contexts.forEach(context =>

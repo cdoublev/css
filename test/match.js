@@ -402,7 +402,7 @@ describe('selector', () => {
          */
         match(selector, elements = [], tree, { namespaces: ns = {}, ...context } = {}, options = { includeSubtrees: true }) {
 
-            const ctx = createContext()
+            const ctx = createContext(globalThis)
             const { namespaces } = ctx
 
             Object.entries(ns).forEach(([key, value]) => namespaces.set(key, value))

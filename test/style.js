@@ -88,7 +88,7 @@ describe('CSSStyleDeclaration / CSSStyleProperties', () => {
 
         const value = properties.color.initial
         const declarations = [{ name: 'color', value: value.parsed }]
-        const parentRule = {}
+        const parentRule = { _globalObject: globalThis }
         const style = createStyle({ declarations, parentRule })
 
         assert.equal(style.color, value.serialized)
@@ -99,6 +99,7 @@ describe('CSSStyleDeclaration / CSSStyleProperties', () => {
             getAttribute() {
                 return 'color: green !important; color: orange;'
             },
+            ownerDocument: { defaultView: globalThis },
         }
         const style = createStyle({ ownerNode: element })
         assert.equal(style.color, 'green')
