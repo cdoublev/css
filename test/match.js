@@ -65,7 +65,7 @@ describe('media', () => {
     }
 
     function match(query, window) {
-        return matchMediaQueryList(parseGrammar(query, '<media-query-list>'), window)
+        return matchMediaQueryList(parseGrammar(query, '<media-query-list>', window), window)
     }
 
     test('empty', () => {
