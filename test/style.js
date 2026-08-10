@@ -19,6 +19,7 @@ import { UPDATE_READONLY_STYLE_DECLARATION_ERROR } from '../lib/error.js'
 import assert from 'node:assert/strict'
 import { install } from '@cdoublev/css'
 import properties from '../lib/properties/definitions.js'
+import { randomCacheNames } from '../lib/state.js'
 import shorthands from '../lib/properties/shorthands.js'
 import { toIDLAttribute } from '../lib/utils/string.js'
 
@@ -4572,6 +4573,11 @@ describe('CSSFontFaceDescriptors', () => {
             ['toggle(1)', 'toggle(1%)'],
             ['calc-interpolate(0, 0: 1)', 'calc-interpolate(0, 0: 1%)'],
             ['random(element-scoped, 1, 1)', 'random(element-scoped, 1%, 1%)'],
+            ['random(1, 1)', 'random(1%, 1%)'],
+            ['random(auto, 1, 1)', 'random(auto, 1%, 1%)'],
+            ['random(--name element-scoped, 1, 1)', 'random(--name element-scoped, 1%, 1%)'],
+            ['random(--name property-scoped, 1, 1)', 'random(--name property-scoped, 1%, 1%)'],
+            ['random(--name property-index-scoped, 1, 1)', 'random(--name property-index-scoped, 1%, 1%)'],
             ['sibling-count()', 'calc(1% * sibling-count())'],
         ]
         invalid.forEach(([fontWeight, sizeAdjust = fontWeight]) => {
@@ -4583,6 +4589,10 @@ describe('CSSFontFaceDescriptors', () => {
     test('valid', () => {
 
         const style = CSSFontFaceDescriptors.create(globalThis, undefined, { parentRule: fontFaceRule })
+
+        randomCacheNames
+            .get(globalThis)
+            .push({ base: 0.5, identifier: '--name', scope: null })
 
         // Alias
         style.fontStretch = 'condensed'
@@ -4606,6 +4616,12 @@ describe('CSSFontFaceDescriptors', () => {
         style.sizeAdjust = 'calc(1% * progress(1, 0, 1))'
         assert.equal(style.fontWeight, 'calc(1)')
         assert.equal(style.sizeAdjust, 'calc(1%)')
+        style.fontWeight = 'random(fixed 1, 0, 1)'
+        style.sizeAdjust = 'random(fixed 1%, 0, 1%)'
+        assert.equal(style.fontWeight, 'calc(1)')
+        style.fontWeight = 'random(--name, 0, 1)'
+        style.sizeAdjust = 'random(--name, 0%, 1%)'
+        assert.equal(style.fontWeight, 'calc(0.5)')
 
         // Specific serialization rule
         style.ascentOverride = '1% 1%'
