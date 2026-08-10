@@ -113,6 +113,7 @@ class CSSAssert extends Assert {
 
 install()
 
+globalThis.devicePixelRatio = 2
 globalThis.document = {}
 
 const styleSheet = CSSStyleSheet.createImpl(globalThis, [{ media: '' }])
@@ -1861,6 +1862,7 @@ describe('<round()>', () => {
         assert.invalid('<number> | <length>', 'round(1, 1px)')
         assert.invalid('<number> | <length>', 'round(1px)')
         assert.invalid('<number> | <percentage>', 'round(1, 1%)')
+        assert.invalid('<number> | <length>', 'round(line-width, 1)')
         // Result type mismatch
         assert.invalid('<number> | <percentage>', 'round(1, (1% + 1px) / 1px)')
         assert.invalid('<length>', 'round(1px, 1%)')
@@ -1873,6 +1875,16 @@ describe('<round()>', () => {
         assert.valid('<number>', 'round(down, 1.9)', 'calc(1)')
         assert.valid('<number>', 'round(to-zero, 1, 2)', 'calc(0)')
         assert.valid('<number>', 'round(to-zero, -1, 2)', 'calc(0)')
+        assert.valid('<length>', 'round(line-width, -0.1px)', 'calc(-0.5px)')
+        assert.valid('<length>', 'round(line-width, 0.1px)', 'calc(0.5px)')
+        assert.valid('<length>', 'round(line-width, -0.6px)', 'calc(-0.5px)')
+        assert.valid('<length>', 'round(line-width, -0.8px)', 'calc(-1px)')
+        assert.valid('<length>', 'round(line-width, 0.6px)', 'calc(0.5px)')
+        assert.valid('<length>', 'round(line-width, 0.8px)', 'calc(1px)')
+        assert.valid('<length>', 'round(line-width, -0.1px, 0.5px)', 'calc(-0.5px)')
+        assert.valid('<length>', 'round(line-width, -0.1px, -0.5px)', 'calc(-0.5px)')
+        assert.valid('<length>', 'round(line-width, 0.1px, 0.5px)', 'calc(0.5px)')
+        assert.valid('<length>', 'round(line-width, 0.1px, -0.5px)', 'calc(0.5px)')
         assert.valid('<length>', 'ROUND(1em, 1em)', 'round(1em, 1em)')
         assert.valid('<length-percentage>', 'round(1%, 1%)')
         assert.valid('<percentage>', 'round(1%, 1%)', 'calc(1%)')
@@ -1891,8 +1903,10 @@ describe('<round()>', () => {
         assert.valid('<number>', 'calc(1 / round(-1, 2))', 'calc(-infinity)')
         // 0 as step value results to NaN
         assert.valid('<number>', 'round(1, 0)', 'calc(NaN)')
+        assert.valid('<length>', 'round(line-width, 1px, 0px)', 'calc(NaN * 1px)')
         // An infinite input and step values result to NaN
         assert.valid('<number>', 'round(1 / 0, 1 / 0)', 'calc(NaN)')
+        assert.valid('<length>', 'round(line-width, 1px / 0, 1px / 0)', 'calc(NaN * 1px)')
         assert.valid('<number>', 'round(1 / 0, -1 / 0)', 'calc(NaN)')
         assert.valid('<number>', 'round(-1 / 0, 1 / 0)', 'calc(NaN)')
         assert.valid('<number>', 'round(-1 / 0, -1 / 0)', 'calc(NaN)')
