@@ -1,5 +1,6 @@
 
 import * as cssom from './lib/cssom/index.js'
+import { create as createState } from './lib/state.js'
 
 /**
  * @param {Window} globalObject
@@ -16,6 +17,7 @@ function install(globalObject = globalThis) {
         }
         wrapper.install(globalObject, ['Window'])
     }
+    createState(globalObject)
 }
 
 export { CSSPseudoElement, CSSStyleProperties, CSSStyleSheet, StyleSheetList } from './lib/cssom/index.js'

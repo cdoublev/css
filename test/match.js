@@ -65,7 +65,7 @@ describe('media', () => {
     }
 
     function match(query, window) {
-        return matchMediaQueryList(parseGrammar(query, '<media-query-list>'), window)
+        return matchMediaQueryList(parseGrammar(query, '<media-query-list>', window), window)
     }
 
     test('empty', () => {
@@ -402,7 +402,7 @@ describe('selector', () => {
          */
         match(selector, elements = [], tree, { namespaces: ns = {}, ...context } = {}, options = { includeSubtrees: true }) {
 
-            const ctx = createContext()
+            const ctx = createContext(globalThis)
             const { namespaces } = ctx
 
             Object.entries(ns).forEach(([key, value]) => namespaces.set(key, value))

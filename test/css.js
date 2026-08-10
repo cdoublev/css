@@ -9,12 +9,12 @@ import {
 } from '../lib/error.js'
 import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
+import { customProperties } from '../lib/state.js'
 import { install } from '@cdoublev/css'
 
 install()
 
-const registeredProperties = new Map
-globalThis.document = { _registeredProperties: registeredProperties }
+const registeredProperties = customProperties.get(globalThis)
 
 describe('CSS.escape()', () => {
     it('serializes the given value', () => {

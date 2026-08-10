@@ -10,6 +10,7 @@ import { isFailure, isList, isOmitted } from '../lib/utils/value.js'
 import { quote, tab } from '../lib/utils/string.js'
 import { serializeDefinition, serializeValue } from '../lib/serialize.js'
 import contextSensitiveTypes from '../lib/values/context-sensitive.js'
+import { createVirtualContext } from '../lib/utils/context.js'
 import descriptors from '../lib/descriptors/definitions.js'
 import fs from 'node:fs/promises'
 import { install } from '@cdoublev/css'
@@ -140,6 +141,7 @@ function getInitialValue(name, value, context, depth) {
     if (!value) {
         return [null, '']
     }
+    context = createVirtualContext({}, context)
     value = parseDeclarationValue(value, name, context)
     if (isFailure(value)) {
         console.error(`Parse error: cannot parse initial value of "${name}"`)
