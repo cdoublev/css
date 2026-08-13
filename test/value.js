@@ -2288,9 +2288,32 @@ describe('<calc-mix()>', () => {
         assert.invalid('<length>', 'calc-mix(1px, 1% + 1px)')
     })
     test('valid', () => {
-        assert.valid('<length>', 'CALC-MIX(1px * 1, 1px)', 'calc-mix(1px, 1px)')
-        assert.valid('<length-percentage>', 'calc-mix(1px, 1%)')
-        assert.valid('<length-percentage>', 'calc(1px * calc-mix(1% / 1px, (1% + 1px) / 1px))')
+        // Single argument
+        assert.valid('<number>', 'calc-mix(1)', 'calc(1)')
+        assert.valid('<number>', 'calc-mix(1 100%)', 'calc(1)')
+        assert.valid('<number>', 'calc-mix(1 50%)', 'calc(0.5)')
+        assert.valid('<number>', 'calc-mix(1 0%)', 'calc(0)')
+        assert.valid('<length>', 'calc-mix(1px 0%)', 'calc(0px)')
+        assert.valid('<length-percentage>', 'calc-mix(1% 0%)', 'calc(0%)')
+        assert.valid('<percentage>', 'calc-mix(1% 0%)', 'calc(0%)')
+        // Identical units
+        assert.valid('<number>', 'CALC-MIX(1, sibling-count(), 2, 3)', 'calc-mix(2 75%, sibling-count() 25%)', styleRule)
+        assert.valid('<number>', 'calc-mix(1, sibling-count() 0%, 3, 8)', 'calc(4)', styleRule)
+        assert.valid('<number>', 'calc-mix(1 25%, 3 25%, 5 50%, 7)', 'calc(3.5)')
+        assert.valid('<length>', 'calc-mix(1em, 3em, 8em)', 'calc(4em)')
+        assert.valid('<length-percentage>', 'calc-mix(1%, 3%, 8%)', 'calc(4%)')
+        // Different units
+        assert.valid('<length>', 'calc-mix(1in, 4px)', 'calc(50px)')
+        assert.valid('<length>', 'calc-mix(1em, 1px)')
+        assert.valid('<length-percentage>', 'calc-mix(1px, calc-mix(1%))', 'calc-mix(1px, 1%)')
+        assert.valid('<length-percentage>', 'calc-mix(1px, 1em, 1%, 3%, 3em, 3px)', 'calc-mix(2px, 2em, 2%)')
+        assert.valid('<length-percentage>', 'calc-mix(1px 0%, 1% 0%)', 'calc(0%)')
+        assert.valid('<length-percentage>', 'calc-mix(1px, 1px * sibling-count() 0%, min(1em, 1px) 0%, 1% 0%, 3px)', 'calc-mix(2px 100%, 0% 0%)', styleRule)
+        // Declared weight lower or greater than 100%
+        assert.valid('<number>', 'calc-mix(1 25%, 3 25%, 5, 7)', 'calc(4)')
+        assert.valid('<length>', 'calc-mix(1px 25%, 3em 25%, 5em, 7em)', 'calc-mix(1px 25%, 5em 75%)')
+        assert.valid('<number>', 'calc-mix(1 75%, 3 75%, 1, 1)', 'calc(2)')
+        assert.valid('<length-percentage>', 'calc-mix(1px 75%, 3em 75%, 1px, 1em, 1%, 1%)', 'calc-mix(1px 50%, 3em 50%, 0% 0%)')
     })
 })
 describe('<calc-interpolate()>', () => {
