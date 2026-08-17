@@ -1820,6 +1820,7 @@ describe('<min()>, <max()>', () => {
         // Different units
         assert.valid('<length>', 'min(1px, 1in)', 'calc(1px)')
         assert.valid('<length>', 'max(1px, 1in)', 'calc(96px)')
+        assert.valid('<length>', 'min(1px, 1em)')
         assert.valid('<length-percentage>', 'min(1px, min(0%, 1%))')
         // Maximum 32 <calc-value>
         assert.valid('<number>', `min(${[...Array(15)].map(() => '1 + 1').join(', ')}, 1)`, 'calc(1)')
@@ -2181,8 +2182,8 @@ describe('<hypot()>', () => {
     test('valid', () => {
         // Identical units
         assert.valid('<number>', 'hypot(3, 4)', 'calc(5)')
-        assert.valid('<length>', 'HYPOT(1em, 2em)', 'hypot(1em, 2em)')
-        assert.valid('<length-percentage>', 'hypot(1%)')
+        assert.valid('<length>', 'HYPOT(3em, 4em)', 'hypot(3em, 4em)')
+        assert.valid('<length-percentage>', 'hypot(3%, 4%)')
         assert.valid('<percentage>', 'hypot(3%, 4%)', 'calc(5%)')
         // Different units
         assert.valid('<length>', 'hypot(1in, 72px)', 'calc(120px)')
@@ -2285,7 +2286,7 @@ describe('<calc-mix()>', () => {
         assert.invalid('<number> | <percentage>', 'calc-mix(1, 1%)')
         // Result type mismatch
         assert.invalid('<number> | <percentage>', 'calc-mix(1, (1% + 1px) / 1px)')
-        assert.invalid('<length>', 'calc-mix(1px, 1% + 1px)')
+        assert.invalid('<length>', 'calc-mix(1px, 1%)')
     })
     test('valid', () => {
         // Single argument

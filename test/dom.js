@@ -93,7 +93,7 @@ export class HTMLCollection {
      * @returns {number}
      */
     get length() {
-        return this._list.reduce((sum, node) => sum += node instanceof Element ? 1 : 0, 0)
+        return this._list.reduce((sum, node) => sum + (node instanceof Element ? 1 : 0), 0)
     }
 }
 

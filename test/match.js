@@ -2701,9 +2701,15 @@ describe('selector', () => {
             selectors: [':indeterminate'],
         })
         new HTMLInputElement({
+            attributes: [{ localName: 'type', value: 'radio' }],
+            ownerDocument: document,
+            parentNode: body,
+            selectors: [':indeterminate'],
+        })
+        new HTMLInputElement({
             attributes: [
                 { localName: 'type', value: 'radio' },
-                { localName: 'name', value: ' ' },
+                { localName: 'name' },
             ],
             ownerDocument: document,
             parentNode: body,
