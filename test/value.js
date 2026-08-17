@@ -3500,7 +3500,7 @@ describe('<keyframe-selector>', () => {
             ['from', '0%'],
             ['to', '100%'],
             // Element-dependent numeric substitution
-            ['calc-interpolate(0, 0: 1% * sibling-count())'],
+            ['calc-interpolate(--timeline, 0: 1% * sibling-count())'],
         ]
         valid.forEach(([input, expected]) =>
             assert.valid('<keyframe-selector>', input, expected, keyframeRule))
@@ -3650,7 +3650,7 @@ describe('<mf-value>', () => {
     test('invalid', () => {
         assert.invalid('<mf-value>', 'var(--custom)', mediaRule)
         assert.invalid('<mf-value>', 'attr(name)', mediaRule)
-        assert.invalid('<mf-value>', 'calc-interpolate(0, 0: 1)', mediaRule)
+        assert.invalid('<mf-value>', 'calc-interpolate(--timeline, 0: 1)', mediaRule)
         assert.invalid('<mf-value>', 'sibling-count()', mediaRule)
     })
     test('representation', () => {
@@ -3662,7 +3662,7 @@ describe('<mf-value>', () => {
             ['env(name)', containerRule],
             ['var(--custom)', containerRule],
             ['attr(name)', containerRule],
-            ['calc-interpolate(0, 0: 1 * sibling-count())', containerRule],
+            ['calc-interpolate(--timeline, 0: 1 * sibling-count())', containerRule],
         ]
         valid.forEach(([input, context]) =>
             assert.valid('<mf-value>', input, input, context))
@@ -3992,7 +3992,7 @@ describe('<style-feature>', () => {
             ['width: initial'],
             ['width: attr(name)'],
             ['width: interpolate(0, 0: 1px)'],
-            ['width: calc-interpolate(0, 0: 1px * sibling-count())'],
+            ['width: calc-interpolate(--timeline, 0: 1px * sibling-count())'],
             // Arbitrary substitution of a range value
             ['var(--custom) < 1px'],
         ]
@@ -4042,7 +4042,7 @@ describe('<supports-decl>', () => {
             ['(width: initial)'],
             ['(width: attr(name))'],
             ['(width: interpolate(0, 0: 1px))'],
-            ['(width: calc-interpolate(0, 0: random(element-scoped, 1px, 1px), 1: 1px * sibling-count()))'],
+            ['(width: calc-interpolate(--timeline, 0: random(element-scoped, 1px, 1px), 1: 1px * sibling-count()))'],
         ]
         valid.forEach(([input, expected]) =>
             assert.valid('<supports-decl>', input, expected, styleRule))

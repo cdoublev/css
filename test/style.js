@@ -4571,7 +4571,7 @@ describe('CSSFontFaceDescriptors', () => {
             ['random-item(--key, 1)', 'random-item(--key, 1%)'],
             ['interpolate(0, 0: 1)', 'interpolate(0, 0: 1%)'],
             ['toggle(1)', 'toggle(1%)'],
-            ['calc-interpolate(0, 0: 1)', 'calc-interpolate(0, 0: 1%)'],
+            ['calc-interpolate(--timeline, 0: 1)', 'calc-interpolate(--timeline, 0: 1%)'],
             ['random(element-scoped, 1, 1)', 'random(element-scoped, 1%, 1%)'],
             ['random(1, 1)', 'random(1%, 1%)'],
             ['random(auto, 1, 1)', 'random(auto, 1%, 1%)'],
@@ -4712,8 +4712,8 @@ describe('CSSKeyframeProperties', () => {
         assert.equal(style.fontWeight, 'interpolate(0, 0: 1)')
         style.fontWeight = 'toggle(1)'
         assert.equal(style.fontWeight, 'toggle(1)')
-        style.fontWeight = 'calc-interpolate(0, 0: 1)'
-        assert.equal(style.fontWeight, 'calc-interpolate(0, 0: 1)')
+        style.fontWeight = 'calc-interpolate(--timeline, 0: 1)'
+        assert.equal(style.fontWeight, 'calc-interpolate(--timeline, 0: 1)')
         style.fontWeight = 'random(1, 1)'
         assert.equal(style.fontWeight, 'random(element-scoped ua-font-weight-1, 1, 1)')
         style.fontWeight = 'sibling-count()'
@@ -4771,8 +4771,8 @@ describe('CSSMarginDescriptors', () => {
         assert.equal(style.fontWeight, 'interpolate(0, 0: 1)')
         style.fontWeight = 'toggle(1)'
         assert.equal(style.fontWeight, 'toggle(1)')
-        style.fontWeight = 'calc-interpolate(0, 0: 1)'
-        assert.equal(style.fontWeight, 'calc-interpolate(0, 0: 1)')
+        style.fontWeight = 'calc-interpolate(--timeline, 0: 1)'
+        assert.equal(style.fontWeight, 'calc-interpolate(--timeline, 0: 1)')
         style.fontWeight = 'random(1, 1)'
         assert.equal(style.fontWeight, 'random(element-scoped ua-font-weight-1, 1, 1)')
         style.fontWeight = 'sibling-count()'
@@ -4854,10 +4854,10 @@ describe('CSSPageDescriptors', () => {
         style.size = 'toggle(1px)'
         assert.equal(style.fontWeight, 'toggle(1)')
         assert.equal(style.size, 'toggle(1px)')
-        style.fontWeight = 'calc-interpolate(0, 0: 1)'
-        style.size = 'calc-interpolate(0, 0: 1px)'
-        assert.equal(style.fontWeight, 'calc-interpolate(0, 0: 1)')
-        assert.equal(style.size, 'calc-interpolate(0, 0: 1px)')
+        style.fontWeight = 'calc-interpolate(--timeline, 0: 1)'
+        style.size = 'calc-interpolate(--timeline, 0: 1px)'
+        assert.equal(style.fontWeight, 'calc-interpolate(--timeline, 0: 1)')
+        assert.equal(style.size, 'calc-interpolate(--timeline, 0: 1px)')
         style.fontWeight = 'random(1, 1)'
         style.size = 'random(1px, 1px)'
         assert.equal(style.fontWeight, 'random(element-scoped ua-font-weight-1, 1, 1)')
@@ -4921,8 +4921,8 @@ describe('CSSPositionTryDescriptors', () => {
         assert.equal(style.top, 'interpolate(0, 0: 1px)')
         style.top = 'toggle(1px)'
         assert.equal(style.top, 'toggle(1px)')
-        style.top = 'calc-interpolate(0, 0: 1px)'
-        assert.equal(style.top, 'calc-interpolate(0, 0: 1px)')
+        style.top = 'calc-interpolate(--timeline, 0: 1px)'
+        assert.equal(style.top, 'calc-interpolate(--timeline, 0: 1px)')
         style.top = 'random(1px, 1px)'
         assert.equal(style.top, 'random(element-scoped ua-top-1, 1px, 1px)')
         style.top = 'calc(1px * sibling-count())'
