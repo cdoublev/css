@@ -2349,7 +2349,8 @@ describe('<calc-interpolate()>', () => {
     test('valid', () => {
         const valid = [
             // Mixed <progress-source> and <input-position> types
-            ['<number>', 'CALC-INTERPOLATE(--timeline, 0px: 1, 1%: 1)', 'calc-interpolate(--timeline, 0px: 1, 1%: 1)'],
+            ['<number>', 'CALC-INTERPOLATE(--timeline, 0: 0, 1%: 1)', 'calc-interpolate(--timeline, 0: 0, 1%: 1)'],
+            ['<number>', 'calc-interpolate(--timeline, 0px: 1, 1%: 1)'],
             ['<number>', 'calc-interpolate(0, 0px: 1, 100%: 1)'],
             ['<number>', 'calc-interpolate(0%, 0px: 1, 1: 1)'],
             ['<number>', 'calc-interpolate(0px, 0px: 1, 1: 1)'],
