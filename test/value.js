@@ -1627,16 +1627,16 @@ describe('<calc()>', () => {
             value: list([one, { types: ['<calc-invert>'], value: two }], '*', ['<calc-product>']),
         })
         // Resolved calculation
-        assert.representation('<number>', 'calc(1)', {
+        assert.representation('<integer [-1,0]>', 'calc(1)', {
             name: 'calc',
-            range: undefined,
-            round: false,
+            range: { max: 0, min: -1 },
+            round: true,
             types: ['<function>', '<calc()>', '<calc-function>'],
             value: number(1, ['<calc-value>']),
         })
         assert.representation('<number>', 'calc(1 + 2)', {
             name: 'calc',
-            range: undefined,
+            range: { max: Number.MAX_SAFE_INTEGER, min: Number.MIN_SAFE_INTEGER },
             round: false,
             types: ['<function>', '<calc()>', '<calc-function>'],
             value: {
