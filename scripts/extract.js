@@ -117,7 +117,7 @@ const replaced = {
         '<single-animation-timeline>': 'auto | none | <dashed-ident> | <pointer()> | <scroll()> | <view()>',
         '<transform-list>': '<transform-function>+ | <transform-mix()> | <transform-interpolate()>',
         // Missing production rules
-        '<absolute-size>': 'xx-small | x-small | small | medium | large | x-large | xx-large',
+        '<absolute-size>': 'xx-small | x-small | small | medium | large | x-large | xx-large | xxx-large',
         '<age>': 'child | young | old',
         '<angle>': '<dimension>',
         '<animation-action>': 'none | play | play-once | play-forwards | play-backwards | pause | reset | replay',
