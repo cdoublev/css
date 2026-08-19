@@ -6,7 +6,7 @@
  *   - `parsed` to the result of parsing `initial`
  *   - `serialized` to the result of serializing `parsed`
  */
-import { isFailure, isList, isOmitted } from '../lib/utils/value.js'
+import { isFailure, isList, isOmitted } from '../lib/values/value.js'
 import { quote, tab } from '../lib/utils/string.js'
 import { serializeDefinition, serializeValue } from '../lib/serialize.js'
 import contextSensitiveTypes from '../lib/values/context-sensitive.js'

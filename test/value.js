@@ -15,6 +15,7 @@ import {
     identifier,
     identifierToken,
     integer,
+    isFailure,
     keyword,
     length,
     list,
@@ -33,7 +34,6 @@ import { toDegrees, toRadians } from '../lib/utils/math.js'
 import { Assert } from 'node:assert/strict'
 import { createVirtualContext } from '../lib/utils/context.js'
 import { keywords as cssWideKeywords } from '../lib/values/substitutions.js'
-import { isFailure } from '../lib/utils/value.js'
 import properties from '../lib/properties/definitions.js'
 import { randomCacheNames } from '../lib/state.js'
 import { serializeComponentValue } from '../lib/serialize.js'
