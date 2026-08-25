@@ -35,8 +35,8 @@ import { Assert } from 'node:assert/strict'
 import { createVirtualContext } from '../lib/utils/context.js'
 import { keywords as cssWideKeywords } from '../lib/values/substitutions.js'
 import properties from '../lib/properties/definitions.js'
-import { randomCacheNames } from '../lib/state.js'
 import { serializeComponentValue } from '../lib/serialize.js'
+import { states } from '../lib/state.js'
 
 /**
  * @param {object} context

@@ -9,12 +9,12 @@ import {
 } from '../lib/error.js'
 import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
-import { customProperties } from '../lib/state.js'
 import { install } from '@cdoublev/css'
+import { states } from '../lib/state.js'
 
 install()
 
-const registeredProperties = customProperties.get(globalThis)
+const { customProperties } = states.get(globalThis)
 
 describe('CSS.escape()', () => {
     it('serializes the given value', () => {
@@ -47,7 +47,7 @@ describe('CSS.registerProperty()', () => {
             [{ inherits: true, initialValue: 'calc(1em + 1px)', name: '--custom', syntax: '<length>' }, INVALID_INITIAL_CUSTOM_PROPERTY_VALUE],
             [{ inherits: true, initialValue: 'initial', name: '--custom', syntax: '*' }, INVALID_INITIAL_CUSTOM_PROPERTY_VALUE],
         ]
-        registeredProperties.set('--registered', { inherits: true, initialValue: 'green', syntax: '<color>' })
+        customProperties.set('--registered', { inherits: true, initialValue: 'green', syntax: '<color>' })
         invalid.forEach(([definition, error]) => assert.throws(() => CSS.registerProperty(definition), error))
     })
     it('registers a valid definition', () => {
@@ -61,7 +61,7 @@ describe('CSS.registerProperty()', () => {
         ]
         valid.forEach(property => {
             CSS.registerProperty(property)
-            assert.equal(registeredProperties.has(property.name), true)
+            assert.equal(customProperties.has(property.name), true)
         })
     })
 })

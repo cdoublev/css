@@ -19,8 +19,8 @@ import { UPDATE_READONLY_STYLE_DECLARATION_ERROR } from '../lib/error.js'
 import assert from 'node:assert/strict'
 import { install } from '@cdoublev/css'
 import properties from '../lib/properties/definitions.js'
-import { randomCacheNames } from '../lib/state.js'
 import shorthands from '../lib/properties/shorthands.js'
+import { states } from '../lib/state.js'
 import { toIDLAttribute } from '../lib/utils/string.js'
 
 /**
@@ -4590,9 +4590,7 @@ describe('CSSFontFaceDescriptors', () => {
 
         const style = CSSFontFaceDescriptors.create(globalThis, undefined, { parentRule: fontFaceRule })
 
-        randomCacheNames
-            .get(globalThis)
-            .push({ base: 0.5, identifier: '--name', scope: null })
+        states.get(globalThis).randomCacheNames.push({ base: 0.5, identifier: '--name', scope: null })
 
         // Alias
         style.fontStretch = 'condensed'
