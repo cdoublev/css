@@ -670,7 +670,7 @@ describe('selector', () => {
 
         const document = new HTMLDocument
         const html = new HTMLHtmlElement({ ownerDocument: document, parentNode: document })
-        const highlight = CSSPseudoElement.createImpl(globalThis, {
+        const highlight = CSSPseudoElement.createImpl(globalThis, undefined, {
             element: html,
             parent: html,
             selectorText: '::highlight(identifier)',

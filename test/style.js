@@ -401,7 +401,7 @@ describe('CSSStyleDeclaration.setProperty(), CSSStyleDeclaration.getPropertyValu
         const html = new HTMLHtmlElement({ ownerDocument: document, parentNode: document })
         const body = new HTMLBodyElement({ ownerDocument: document, parentNode: html })
         new HTMLStyleElement({ innerText: '::before { color: green }', ownerDocument: document, parentNode: body })
-        const before = CSSPseudoElement.createImpl(globalThis, {
+        const before = CSSPseudoElement.createImpl(globalThis, undefined, {
             element: body,
             parent: body,
             selectorText: '::before',

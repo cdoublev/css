@@ -11,13 +11,13 @@ test('CSSPseudoElement', () => {
 
     const document = new HTMLDocument
     const element = new HTMLDivElement({ ownerDocument: document })
-    const properties = {
+    const privateData = {
         element,
         parent: element,
         selectorText: '::before',
         type: '::before',
     }
-    const before = CSSPseudoElement.create(globalThis, properties)
+    const before = CSSPseudoElement.create(globalThis, undefined, privateData)
 
     assert.equal(CSSPseudoElement.is(before), true)
     assert.equal(before.element, element)
