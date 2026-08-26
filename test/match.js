@@ -64,8 +64,9 @@ describe('media', () => {
         },
     }
 
-    function match(query, window) {
-        return matchMediaQueryList(parseGrammar(query, '<media-query-list>', window), window)
+    function match(query, override = {}) {
+        Object.assign(globalThis, window, override)
+        return matchMediaQueryList(parseGrammar(query, '<media-query-list>', globalThis), globalThis)
     }
 
     test('empty', () => {
@@ -84,8 +85,7 @@ describe('media', () => {
             ['not tty'],
             ['not unknown'],
         ]
-        queries.forEach(([query, expected = true, context = window]) =>
-            assert.equal(match(query, context), expected))
+        queries.forEach(([query, expected = true]) => assert.equal(match(query), expected))
     })
     test('boolean', () => {
         const queries = [
@@ -148,8 +148,7 @@ describe('media', () => {
             ['(width)'],
             ['(width)', false, { innerWidth: 0 }],
         ]
-        queries.forEach(([query, expected = true, context = window]) =>
-            assert.equal(match(query, context), expected))
+        queries.forEach(([query, expected = true, context]) => assert.equal(match(query, context), expected))
     })
     test('plain', () => {
         const queries = [
@@ -261,8 +260,7 @@ describe('media', () => {
             ['(width: 0px)', false],
             ['(width: 100px)'],
         ]
-        queries.forEach(([query, expected = true, context = window]) =>
-            assert.equal(match(query, context), expected))
+        queries.forEach(([query, expected = true, context]) => assert.equal(match(query, context), expected))
     })
     test('range', () => {
         const queries = [
@@ -324,8 +322,7 @@ describe('media', () => {
             ['(aspect-ratio >= 0 / 0)', false],
             ['(aspect-ratio >= 0 / 0)', false, { innerHeight: 1, innerWidth: 0 }],
         ]
-        queries.forEach(([query, expected = true, context = window]) =>
-            assert.equal(match(query, context), expected))
+        queries.forEach(([query, expected = true, context]) => assert.equal(match(query, context), expected))
     })
     test('combinations', () => {
         const queries = [
@@ -350,8 +347,7 @@ describe('media', () => {
             ['(not (hover)) or (hover)'],
             ['(not (unknown)) or (color)'],
         ]
-        queries.forEach(([query, expected = true, context = window]) =>
-            assert.equal(match(query, context), expected))
+        queries.forEach(([query, expected = true]) => assert.equal(match(query), expected))
     })
 })
 
@@ -5535,8 +5531,7 @@ describe('support', () => {
             // <complex-selector>
             ['type + .class'],
         ]
-        selectors.forEach(([selector, expected = true]) =>
-            assert.equal(match(`selector(${selector})`), expected))
+        selectors.forEach(([selector, expected = true]) => assert.equal(match(`selector(${selector})`), expected))
     })
     test('combinations', () => {
         const queries = [

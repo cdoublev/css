@@ -2,10 +2,24 @@
 import * as cssom from './lib/cssom/index.js'
 import { states } from './lib/state.js'
 
+const defaultSharedState = {
+    userPreference: {
+        colorTheme: 'light',
+        fontSize: 16,
+    },
+    viewportInset: {
+        bottom: { expanded: false, value: 0 },
+        left: { expanded: false, value: 0 },
+        right: { expanded: false, value: 0 },
+        top: { expanded: false, value: 0 },
+    },
+}
+
 /**
  * @param {Window} globalObject
+ * @param {Map} [state]
  */
-function install(globalObject = globalThis) {
+function install(globalObject = globalThis, state = defaultSharedState) {
     const entries = Object.entries(cssom)
     while (0 < entries.length) {
         const entry = entries.pop()
@@ -19,7 +33,9 @@ function install(globalObject = globalThis) {
     }
     states.set(globalObject, {
         customProperties: new Map,
+        fontFaces: new Set,
         randomCacheNames: [],
+        shared: state,
     })
 }
 

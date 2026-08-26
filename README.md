@@ -18,11 +18,8 @@ const {
   parseListGrammar,
 } = require('@cdoublev/css')
 
-/**
- * install() expects a window-like global object (default: globalThis) with
- * document, Array, Object, Number, String, TypeError.
- */
-install(/*myGlobalObject*/)
+// Install CSSOM interfaces on the global object
+install()
 
 // Create a CSSStyleSheet or CSSStyleProperties wrapper
 const stylesheet = CSSStyleSheet.create(myGlobalObject, undefined, privateProperties)
@@ -38,17 +35,21 @@ const list = parseListGrammar('(width < 30rem), (orientation: portrait)', '<medi
 const elements = matchTreesAgainstSelectors([document], selectors)
 ```
 
-`CSSStyleSheet`, `CSSStyleProperties`, `StyleSheetList`, are [`webidl2js`](https://github.com/jsdom/webidl2js) wrappers intended to implement:
+`install()` accepts two optional arguments:
 
-- [`Element.pseudo()`](https://drafts.csswg.org/css-pseudo-4/#dom-element-pseudo) and [`Window.getComputedStyle()`](https://drafts.csswg.org/cssom-1/#dom-window-getcomputedstyle)
-- *create a CSS style sheet*: when processing or updating the content of [`HTMLStyleElement`](https://html.spec.whatwg.org/multipage/semantics.html#the-style-element), when processing the resource referenced by [`HTMLLinkElement`](https://html.spec.whatwg.org/multipage/links.html#link-type-stylesheet) or an HTTP `Link` header with `rel="stylesheet"`
-- (get) [the `style` attribute of an `HTMLElement`](https://html.spec.whatwg.org/multipage/dom.html#the-style-attribute)
-- *return a live CSS declaration block* from [`Window.getComputedStyle()`](https://drafts.csswg.org/cssom-1/#extensions-to-the-window-interface)
-- [`DocumentOrShadowRoot.styleSheets`](https://drafts.csswg.org/cssom-1/#dom-documentorshadowroot-stylesheets)
+  - a window-like global object (default: `globalThis`) that must have the following properties: `document`, `Array`, `Object`, `Number`, `String`, `TypeError`
+  - a shared state object (default: see in [./index.js](./index.js)) that defines the user preferred color theme and font size, the length of the UA interfaces affecting the small/dynamic viewport size, etc
 
-Below are their accepted `privateProperties`:
+`CSSPseudoElement`, `CSSStyleSheet`, `CSSStyleProperties`, `StyleSheetList`, are [`webidl2js`](https://github.com/jsdom/webidl2js) wrappers intended to implement:
 
-[**`CSSStyleSheet`**](https://drafts.csswg.org/cssom-1/#css-style-sheet)
+  - [`DocumentOrShadowRoot.styleSheets`](https://drafts.csswg.org/cssom-1/#dom-documentorshadowroot-stylesheets)
+  - *create a CSS style sheet*: when processing the content of [`HTMLStyleElement`](https://html.spec.whatwg.org/multipage/semantics.html#the-style-element) or the resource referenced by [`HTMLLinkElement`](https://html.spec.whatwg.org/multipage/links.html#link-type-stylesheet) or an HTTP `Link` header with `rel="stylesheet"`
+  - [`ElementCSSInlineStyle.style`](https://drafts.csswg.org/cssom/#elementcssinlinestyle)
+  - [`Element.pseudo()`](https://drafts.csswg.org/css-pseudo-4/#dom-element-pseudo) and [`Window.getComputedStyle()`](https://drafts.csswg.org/cssom-1/#dom-window-getcomputedstyle)
+
+[**`CSSPseudoElement`**](https://drafts.csswg.org/css-pseudo-4/#csspseudoelement) accept `privateProperties` that correspond to its attributes.
+
+[**`CSSStyleSheet`**](https://drafts.csswg.org/cssom-1/#css-style-sheet) accept the following `privateProperties`:
 
   - *CSS rules*: `rules` (`String` or `ReadableStream`)
   - *alternate flag*: `alternate` (`Boolean`, optional, default: `false`)
@@ -61,7 +62,7 @@ Below are their accepted `privateProperties`:
   - *parent CSS style sheet*: `parentStyleSheet` (`CSSStyleSheet`, optional, default: `null`)
   - *title*: `title` (`String`, optional, default: `''`)
 
-[**`CSSStyleProperties`**](https://drafts.csswg.org/cssom-1/#css-declaration-block)
+[**`CSSStyleProperties`**](https://drafts.csswg.org/cssom-1/#css-declaration-block) accept the following `privateProperties`:
 
   - *computed flag*: `computed` (`Boolean`, optional, default: `false`)
   - *declarations*: `declarations` (`[Declaration]`, optional, default: `[]`)
