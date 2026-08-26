@@ -33,6 +33,7 @@ function install(globalObject = globalThis, state = defaultSharedState) {
     }
     states.set(globalObject, {
         customProperties: new Map,
+        environmentVariables: new Map,
         fontFaces: new Set,
         randomCacheNames: [],
         shared: state,

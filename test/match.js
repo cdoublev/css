@@ -47,6 +47,7 @@ import { install } from '@cdoublev/css'
 import matchMediaQueryList from '../lib/match/media.js'
 import matchSupport from '../lib/match/support.js'
 import { omitted } from '../lib/values/value.js'
+import { states } from '../lib/state.js'
 
 install()
 
@@ -5466,8 +5467,8 @@ describe('selector', () => {
 
 describe('support', () => {
 
-    function match(query, globalObject) {
-        return matchSupport(parseGrammar(`(${query})`, '<supports-condition>'), globalObject)
+    function match(query) {
+        return matchSupport(parseGrammar(`(${query})`, '<supports-condition>'), globalThis)
     }
 
     test('at-rule', () => {
@@ -5495,10 +5496,10 @@ describe('support', () => {
     })
     test('environment variable', () => {
 
-        const globalObject = { document: { _registeredEnvironmentVariables: new Map([['--custom', omitted]]) } }
+        states.get(globalThis).environmentVariables.set('--custom', omitted)
 
-        assert.equal(match('env(--CUSTOM)', globalObject), false)
-        assert.equal(match('env(--custom)', globalObject), true)
+        assert.equal(match('env(--CUSTOM)'), false)
+        assert.equal(match('env(--custom)'), true)
         assert.equal(match('env(preferred-text-scale)'), true)
     })
     test('font format', () => {
