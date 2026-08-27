@@ -657,10 +657,9 @@ const errors = {
         links: ['https://github.com/w3c/csswg-drafts/issues/9926'],
     },
     '@layer': { cause: 'It is the only rule with alternative definitions therefore only the first (block) definition is correctly checked.' },
-    '@macro': { cause: 'It is not yet supported.' },
     '@mixin': { cause: 'It is not yet supported.' },
-    '@result': { cause: 'It is not yet supported.' },
     '@supports-condition': { cause: 'It is not yet supported.' },
+    '@private': { cause: 'It is not yet supported.' },
     '@when': { cause: 'It is not yet supported.' },
     '<box>': {
         cause: 'It is a generic type that is not used anywhere, and should not be exported.',

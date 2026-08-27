@@ -1077,11 +1077,11 @@ describe('CSSPositionTryRule', () => {
 describe('CSSPropertyRule', () => {
     test('properties', () => {
 
-        const styleSheet = createStyleSheet('@property --name { syntax: "*"; inherits: true }')
+        const styleSheet = createStyleSheet('@property --name { initial-value: }')
         const rule = styleSheet.cssRules[0]
 
         // CSSRule
-        assert.equal(rule.cssText, '@property --name { syntax: "*"; inherits: true; }')
+        assert.equal(rule.cssText, '@property --name { syntax: "*"; inherits: true; initial-value: ; }')
         assert.equal(rule.parentRule, null)
         assert.equal(rule.parentStyleSheet, styleSheet)
 
@@ -1089,6 +1089,7 @@ describe('CSSPropertyRule', () => {
         assert.equal(rule.name, '--name')
         assert.equal(rule.syntax, '"*"')
         assert.equal(rule.inherits, true)
+        assert.equal(rule.initialValue, '')
     })
 })
 describe('CSSScopeRule', () => {
@@ -1567,7 +1568,7 @@ describe('CSS grammar - semantic', () => {
                 components: none;
                 components: var(--custom);
                 components: attr(name);
-                components: toggle(name);
+                components: cycle(name);
                 components: name !important;
 
                 src: url("profile.icc");
@@ -1640,7 +1641,7 @@ describe('CSS grammar - semantic', () => {
                 pad: initial;
                 pad: var(--custom);
                 pad: attr(name);
-                pad: toggle(symbolic);
+                pad: cycle(symbolic);
                 pad: calc-interpolate(--timeline, 0: 1) ' ';
                 pad: sibling-count() ' ';
                 pad: 1 ' ' !important;
@@ -1679,8 +1680,8 @@ describe('CSS grammar - semantic', () => {
                 size-adjust: var(--custom);
                 font-weight: attr(name);
                 size-adjust: attr(name);
-                font-weight: toggle(1);
-                size-adjust: toggle(1%);
+                font-weight: cycle(1);
+                size-adjust: cycle(1%);
                 font-weight: calc-interpolate(--timeline, 0: 1);
                 size-adjust: calc-interpolate(--timeline, 0: 1%);
                 font-weight: sibling-count();
@@ -1741,7 +1742,7 @@ describe('CSS grammar - semantic', () => {
                 font-display: initial;
                 font-display: var(--custom);
                 font-display: attr(name);
-                font-display: toggle(name);
+                font-display: cycle(name);
                 font-display: swap !important;
 
                 font-display: block;
@@ -1792,7 +1793,7 @@ describe('CSS grammar - semantic', () => {
                 base-palette: initial;
                 base-palette: var(--custom);
                 base-palette: attr(name);
-                base-palette: toggle(1);
+                base-palette: cycle(1);
                 base-palette: calc-interpolate(--timeline, 0: 1);
                 base-palette: sibling-count();
                 base-palette: 1 !important;
@@ -2045,10 +2046,10 @@ describe('CSS grammar - semantic', () => {
             'size: var(--custom);',
             'margin-top: attr(name);',
             'size: attr(name);',
+            'margin-top: cycle(1px);',
+            'size: cycle(1px);',
             'margin-top: first-valid(1px);',
             'size: first-valid(1px);',
-            'margin-top: toggle(1px);',
-            'size: toggle(1px);',
             'margin-top: calc-interpolate(--timeline, 0: 1px);',
             'size: calc-interpolate(--timeline, 0: 1px);',
             'margin-top: calc(1px * sibling-count());',
@@ -2081,8 +2082,8 @@ describe('CSS grammar - semantic', () => {
             'top: {env(name)}',
             'top: var(--custom)',
             'top: attr(name)',
+            'top: cycle(1px)',
             'top: first-valid(1px)',
-            'top: toggle(1px)',
             'top: calc-interpolate(--timeline, 0: 1px)',
             'top: calc(1px * sibling-count())',
         ]
@@ -2092,18 +2093,9 @@ describe('CSS grammar - semantic', () => {
             assert.equal(styleSheet.cssRules[0].cssText, normalizeText(input))
         })
     })
-    test('@property - missing declaration for inherits', () => {
-        assert.equal(createStyleSheet('@property --name { syntax: "*"; initial-value: 1; }').cssRules.length, 0)
-    })
-    test('@property - missing declaration for syntax', () => {
-        assert.equal(createStyleSheet('@property --name { inherits: true; initial-value: 1; }').cssRules.length, 0)
-    })
     test('@property - invalid block contents', () => {
         const styleSheet = createStyleSheet(`
             @property --name {
-
-                syntax: "*";
-                inherits: true;
 
                 style {}
                 color: red;
@@ -2139,9 +2131,9 @@ describe('CSS grammar - semantic', () => {
             ['env(name)', '<length>'],
             ['random-item(--key, 1px)', '<length>'],
             ['var(--custom)', '<length>'],
+            ['cycle(1px)', '<length>'],
             ['first-valid(1px)', '<length>'],
             ['interpolate(0, 0: 1px)', '<length>'],
-            ['toggle(1px)', '<length>'],
             // Computationally dependent
             ['1em', '<length>'],
             ['calc(1em + 1px)', '<length>'],
@@ -2178,7 +2170,6 @@ describe('CSS grammar - semantic', () => {
                         syntax: "${syntax}";
                         initial-value: 1px;
                         initial-value: ${value};
-                        inherits: true;
                     }
                 `)
                 assert.equal(styleSheet.cssRules.length, index)
@@ -2237,7 +2228,7 @@ describe('CSS grammar - semantic', () => {
             'top: inherit(--custom)',
             'top: var(--custom)',
             'top: attr(name)',
-            'top: toggle(1px)',
+            'top: cycle(1px)',
             'top: calc-interpolate(--timeline, 0: 1px)',
             'top: calc(1px * sibling-count())',
             'top: 1px !important',
@@ -2348,7 +2339,7 @@ describe('CSS grammar - semantic', () => {
                 types: initial;
                 types: var(--custom);
                 types: attr(name);
-                types: toggle(name);
+                types: cycle(name);
                 types: name !important;
 
                 navigation: auto;
@@ -2378,7 +2369,7 @@ describe('CSS grammar - semantic', () => {
                     name: initial;
                     name: var(--custom);
                     name: attr(name);
-                    name: toggle(name);
+                    name: cycle(name);
                     name: calc-interpolate(--timeline, 0: 1) 1;
                     name: sibling-count() 1;
                     name: 0 !important;
@@ -2446,8 +2437,8 @@ describe('CSS grammar - semantic', () => {
             'top: {env(name)}',
             'top: var(--custom)',
             'top: attr(name)',
+            'top: cycle(1px)',
             'top: first-valid(1px)',
-            'top: toggle(1px)',
             'top: calc-interpolate(--timeline, 0: 1px)',
             'top: calc(1px * sibling-count())',
             'color: color-interpolate(0, 0: green)',
@@ -2476,8 +2467,8 @@ describe('CSS grammar - semantic', () => {
             'margin-top: {env(name)}',
             'margin-top: var(--custom)',
             'margin-top: attr(name)',
+            'margin-top: cycle(1px)',
             'margin-top: first-valid(1px)',
-            'margin-top: toggle(1px)',
             'margin-top: calc-interpolate(--timeline, 0: 1px)',
             'margin-top: calc(1px * sibling-count())',
             'margin-top: 1px !important',
@@ -2543,7 +2534,7 @@ describe('CSS grammar - semantic', () => {
             'top: var(--custom)',
             'top: attr(name)',
             'top: first-valid(1px)',
-            'top: toggle(1px)',
+            'top: cycle(1px)',
             'top: calc-interpolate(--timeline, 0: 1px)',
             'top: calc(1px * sibling-count())',
             'color: color-interpolate(0, 0: green)',
@@ -2671,8 +2662,8 @@ describe('CSS grammar - semantic', () => {
             'top: {env(name)}',
             'top: var(--custom)',
             'top: attr(name)',
+            'top: cycle(1px)',
             'top: first-valid(1px)',
-            'top: toggle(1px)',
             'top: calc-interpolate(--timeline, 0: 1px)',
             'top: calc(1px * sibling-count())',
             'color: color-interpolate(0, 0: green)',
@@ -2772,8 +2763,8 @@ describe('CSS grammar - semantic', () => {
             'top: {env(name)}',
             'top: var(--custom)',
             'top: attr(name)',
+            'top: cycle(1px)',
             'top: first-valid(1px)',
-            'top: toggle(1px)',
             'top: calc-interpolate(--timeline, 0: 1px)',
             'top: calc(1px * sibling-count())',
             'top: 1px !important',

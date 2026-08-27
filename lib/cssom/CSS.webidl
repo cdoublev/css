@@ -25,7 +25,7 @@ namespace CSS {
 
 // https://drafts.css-houdini.org/css-properties-values-api-1/#dictdef-propertydefinition
 dictionary PropertyDefinition {
-    required boolean inherits;
+    boolean inherits = true;
     DOMString initialValue;
     required DOMString name;
     DOMString syntax = "*";

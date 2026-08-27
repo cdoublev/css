@@ -721,6 +721,7 @@ describe('arbitrary substitution', () => {
             ['--custom(--custom(!))'],
             ['attr(name, attr())'],
             ['env(name, env())'],
+            ['ident(ident())'],
             ['if(if():)'],
             ['inherit(--custom, inherit())'],
             ['random-item(--key, random-item())'],
@@ -731,6 +732,7 @@ describe('arbitrary substitution', () => {
             ['  /**/ @1/**/1e0 --CUSTOM(  /**/ 1e0 /**/  ', '@1 1 --CUSTOM(1)'],
             ['  /**/ @1/**/1e0 ATTR(  name, /**/ 1e0 /**/  ', '@1 1 attr(name, 1)'],
             ['  /**/ @1/**/1e0 ENV(  name, /**/ 1e0 /**/  ', '@1 1 env(name, 1)'],
+            ['  /**/ @1/**/1e0 IDENT(  identifier /**/ 1e0 /**/  ', '@1 1 ident(identifier 1)'],
             ['  /**/ @1/**/1e0 IF(  if(): /**/ 1e0 /**/  ', '@1 1 if(if(): 1)'],
             ['  /**/ @1/**/1e0 RANDOM-ITEM(  --key, /**/ 1e0 /**/  ', '@1 1 random-item(--key, 1)'],
             ['  /**/ @1/**/1e0 VAR(  --custom, /**/ 1e0 /**/  ', '@1 1 var(--custom, 1)'],
@@ -746,19 +748,19 @@ describe('<whole-value>', () => {
         const style = createStyle()
         const invalid = [
             // Not the <whole-value>
+            ['cycle(0) 0', 'margin'],
+            ['cycle(first-valid(0) 0)', 'margin'],
             ['first-valid(0) 0', 'margin'],
             ['interpolate(0, 0: 0) 0', 'margin'],
             ['interpolate(0, 0: first-valid(0) 0)', 'margin'],
-            ['toggle(0) 0', 'margin'],
-            ['toggle(first-valid(0) 0)', 'margin'],
             // Invalid <whole-value> argument for the property
+            ['cycle(invalid)', 'color'],
             ['first-valid(first-valid(invalid))', 'color'],
             ['interpolate(0, 0: interpolate(0, 0: invalid))', 'color'],
-            ['toggle(invalid)', 'color'],
             // interpolate() for non-animatable property
             ['interpolate(0, 0: 0s)', 'animation-duration'],
-            // toggle() nested inside itself
-            ['toggle(toggle(1))', 'opacity'],
+            // cycle() nested inside itself
+            ['cycle(cycle(1))', 'opacity'],
         ]
         invalid.forEach(([substitution, property]) => style[property] = substitution)
         assert.equal(style.length, 0)
@@ -769,19 +771,19 @@ describe('<whole-value>', () => {
             // Resolved at parse time
             ['FIRST-VALID(1)', '1', 'opacity'],
             // Serialize the list of tokens
+            ['  /**/  CYCLE(  /**/ 1e0 /**/  ', 'cycle(1)', 'opacity'],
             ['  /**/  INTERPOLATE(  0, 0: /**/ 1e0 /**/  ', 'interpolate(0, 0: 1)', 'opacity'],
-            ['  /**/  TOGGLE(  /**/ 1e0 /**/  ', 'toggle(1)', 'opacity'],
             // Nested inside itself
-            ['first-valid(toggle(first-valid(1)))', 'toggle(1)', 'opacity'],
-            ['interpolate(0, 0: toggle(interpolate(0, 0: 1)))', 'interpolate(0, 0: toggle(interpolate(0, 0: 1)))', 'opacity'],
+            ['first-valid(cycle(first-valid(1)))', 'cycle(1)', 'opacity'],
+            ['interpolate(0, 0: cycle(interpolate(0, 0: 1)))', 'interpolate(0, 0: cycle(interpolate(0, 0: 1)))', 'opacity'],
             // Omitted value
+            ['cycle(,)', 'cycle(,)', '--custom'],
             ['interpolate(0, 0:)', 'interpolate(0, 0:)', '--custom'],
-            ['toggle(,)', 'toggle(,)', '--custom'],
             // Priority to the declaration value range
+            ['cycle(1) 1', 'cycle(1) 1', '--custom'],
+            ['cycle(cycle(1))', 'cycle(cycle(1))', '--custom'],
             ['first-valid(1) 1', 'first-valid(1) 1', '--custom'],
             ['interpolate(0, 0: 1) 1', 'interpolate(0, 0: 1) 1', '--custom'],
-            ['toggle(1) 1', 'toggle(1) 1', '--custom'],
-            ['toggle(toggle(1))', 'toggle(toggle(1))', '--custom'],
         ]
         valid.forEach(([input, expected, property]) => {
             style.cssText = `${property}: ${input}`
@@ -826,7 +828,7 @@ describe('--*', () => {
             // Substitution
             ['var(  --PROPerty, /**/ 1e0 /**/  )  ', 'var(  --PROPerty, /**/ 1e0 /**/  )'],
             ['initial initial'],
-            ['toggle(1) 1'],
+            ['cycle(1) 1'],
         ]
         valid.forEach(([input, expected = input]) => {
             style.cssText = `--custom: ${input}`
@@ -1823,9 +1825,9 @@ describe('background', () => {
         style.background = 'var(--custom)'
         longhands.forEach(longhand => assert.equal(style[longhand], ''))
         assert.equal(style.background, 'var(--custom)')
-        style.background = 'toggle(none)'
+        style.background = 'cycle(none)'
         longhands.forEach(longhand => assert.equal(style[longhand], ''))
-        assert.equal(style.background, 'toggle(none)')
+        assert.equal(style.background, 'cycle(none)')
 
         // Omitted values
         const values = [
@@ -1859,10 +1861,10 @@ describe('background', () => {
         style.backgroundImage = 'var(--custom)'
         assert.equal(style.background, '')
         assert.equal(style.cssText, 'background-image: var(--custom); background-position: ; background-size: ; background-repeat-x: ; background-repeat-y: ; background-attachment: ; background-origin: ; background-clip: ; background-color: ; background-blend-mode: ;')
-        style.background = 'toggle(initial)'
-        style.backgroundImage = 'toggle(initial)'
+        style.background = 'cycle(initial)'
+        style.backgroundImage = 'cycle(initial)'
         assert.equal(style.background, '')
-        assert.equal(style.cssText, 'background-image: toggle(initial); background-position: ; background-size: ; background-repeat-x: ; background-repeat-y: ; background-attachment: ; background-origin: ; background-clip: ; background-color: ; background-blend-mode: ;')
+        assert.equal(style.cssText, 'background-image: cycle(initial); background-position: ; background-size: ; background-repeat-x: ; background-repeat-y: ; background-attachment: ; background-origin: ; background-clip: ; background-color: ; background-blend-mode: ;')
 
         // Coordinated value list
         style.background = `${background.replace(' transparent', '')}, ${background}`
@@ -4569,8 +4571,8 @@ describe('CSSFontFaceDescriptors', () => {
             ['--custom()'],
             ['attr(name)'],
             ['random-item(--key, 1)', 'random-item(--key, 1%)'],
+            ['cycle(1)', 'cycle(1%)'],
             ['interpolate(0, 0: 1)', 'interpolate(0, 0: 1%)'],
-            ['toggle(1)', 'toggle(1%)'],
             ['calc-interpolate(--timeline, 0: 1)', 'calc-interpolate(--timeline, 0: 1%)'],
             ['random(element-scoped, 1, 1)', 'random(element-scoped, 1%, 1%)'],
             ['random(1, 1)', 'random(1%, 1%)'],
@@ -4602,6 +4604,10 @@ describe('CSSFontFaceDescriptors', () => {
         style.sizeAdjust = 'env(name, attr(name))'
         assert.equal(style.fontWeight, 'env(name, attr(name))')
         assert.equal(style.sizeAdjust, 'env(name, attr(name))')
+        style.fontWeight = 'ident(identifier attr(name))'
+        style.sizeAdjust = 'ident(identifier attr(name))'
+        assert.equal(style.fontWeight, 'ident(identifier attr(name))')
+        assert.equal(style.sizeAdjust, 'ident(identifier attr(name))')
         style.fontWeight = 'if(media(width): 1)'
         style.sizeAdjust = 'if(media(width): 1%)'
         assert.equal(style.fontWeight, 'if(media(width): 1)')
@@ -4684,6 +4690,8 @@ describe('CSSKeyframeProperties', () => {
         // Dependency-free substitution
         style.fontWeight = 'env(name)'
         assert.equal(style.fontWeight, 'env(name)')
+        style.fontWeight = 'ident(identifier)'
+        assert.equal(style.fontWeight, 'ident(identifier)')
         style.fontWeight = 'if(media(width): 1)'
         assert.equal(style.fontWeight, 'if(media(width): 1)')
         style.fontWeight = 'first-valid(1)'
@@ -4706,10 +4714,10 @@ describe('CSSKeyframeProperties', () => {
         assert.equal(style.fontWeight, 'attr(name)')
         style.fontWeight = 'random-item(--key, 1)'
         assert.equal(style.fontWeight, 'random-item(--key, 1)')
+        style.fontWeight = 'cycle(1)'
+        assert.equal(style.fontWeight, 'cycle(1)')
         style.fontWeight = 'interpolate(0, 0: 1)'
         assert.equal(style.fontWeight, 'interpolate(0, 0: 1)')
-        style.fontWeight = 'toggle(1)'
-        assert.equal(style.fontWeight, 'toggle(1)')
         style.fontWeight = 'calc-interpolate(--timeline, 0: 1)'
         assert.equal(style.fontWeight, 'calc-interpolate(--timeline, 0: 1)')
         style.fontWeight = 'random(1, 1)'
@@ -4743,6 +4751,8 @@ describe('CSSMarginDescriptors', () => {
         // Dependency-free substitution
         style.fontWeight = 'env(name)'
         assert.equal(style.fontWeight, 'env(name)')
+        style.fontWeight = 'ident(identifier)'
+        assert.equal(style.fontWeight, 'ident(identifier)')
         style.fontWeight = 'if(media(width): 1)'
         assert.equal(style.fontWeight, 'if(media(width): 1)')
         style.fontWeight = 'first-valid(1)'
@@ -4765,10 +4775,10 @@ describe('CSSMarginDescriptors', () => {
         assert.equal(style.fontWeight, 'attr(name)')
         style.fontWeight = 'random-item(--key, 1)'
         assert.equal(style.fontWeight, 'random-item(--key, 1)')
+        style.fontWeight = 'cycle(1)'
+        assert.equal(style.fontWeight, 'cycle(1)')
         style.fontWeight = 'interpolate(0, 0: 1)'
         assert.equal(style.fontWeight, 'interpolate(0, 0: 1)')
-        style.fontWeight = 'toggle(1)'
-        assert.equal(style.fontWeight, 'toggle(1)')
         style.fontWeight = 'calc-interpolate(--timeline, 0: 1)'
         assert.equal(style.fontWeight, 'calc-interpolate(--timeline, 0: 1)')
         style.fontWeight = 'random(1, 1)'
@@ -4804,6 +4814,10 @@ describe('CSSPageDescriptors', () => {
         style.size = 'env(name, attr(name))'
         assert.equal(style.fontWeight, 'env(name, attr(name))')
         assert.equal(style.size, 'env(name, attr(name))')
+        style.fontWeight = 'ident(identifier attr(name))'
+        style.size = 'ident(identifier attr(name))'
+        assert.equal(style.fontWeight, 'ident(identifier attr(name))')
+        assert.equal(style.size, 'ident(identifier attr(name))')
         style.fontWeight = 'if(media(width): 1)'
         style.size = 'if(media(width): 1px)'
         assert.equal(style.fontWeight, 'if(media(width): 1)')
@@ -4844,14 +4858,14 @@ describe('CSSPageDescriptors', () => {
         style.size = 'random-item(--key, 1px)'
         assert.equal(style.fontWeight, 'random-item(--key, 1)')
         assert.equal(style.size, 'random-item(--key, 1px)')
+        style.fontWeight = 'cycle(1)'
+        style.size = 'cycle(1px)'
+        assert.equal(style.fontWeight, 'cycle(1)')
+        assert.equal(style.size, 'cycle(1px)')
         style.fontWeight = 'interpolate(0, 0: 1)'
         style.size = 'interpolate(0, 0: 1px)'
         assert.equal(style.fontWeight, 'interpolate(0, 0: 1)')
         assert.equal(style.size, 'interpolate(0, 0: 1px)')
-        style.fontWeight = 'toggle(1)'
-        style.size = 'toggle(1px)'
-        assert.equal(style.fontWeight, 'toggle(1)')
-        assert.equal(style.size, 'toggle(1px)')
         style.fontWeight = 'calc-interpolate(--timeline, 0: 1)'
         style.size = 'calc-interpolate(--timeline, 0: 1px)'
         assert.equal(style.fontWeight, 'calc-interpolate(--timeline, 0: 1)')
@@ -4893,6 +4907,8 @@ describe('CSSPositionTryDescriptors', () => {
         // Dependency-free substitution
         style.top = 'env(name)'
         assert.equal(style.top, 'env(name)')
+        style.top = 'ident(identifier)'
+        assert.equal(style.top, 'ident(identifier)')
         style.top = 'if(media(width): 1px)'
         assert.equal(style.top, 'if(media(width): 1px)')
         style.top = 'first-valid(1px)'
@@ -4915,10 +4931,10 @@ describe('CSSPositionTryDescriptors', () => {
         assert.equal(style.top, 'attr(name)')
         style.top = 'random-item(--key, 1px)'
         assert.equal(style.top, 'random-item(--key, 1px)')
+        style.top = 'cycle(1px)'
+        assert.equal(style.top, 'cycle(1px)')
         style.top = 'interpolate(0, 0: 1px)'
         assert.equal(style.top, 'interpolate(0, 0: 1px)')
-        style.top = 'toggle(1px)'
-        assert.equal(style.top, 'toggle(1px)')
         style.top = 'calc-interpolate(--timeline, 0: 1px)'
         assert.equal(style.top, 'calc-interpolate(--timeline, 0: 1px)')
         style.top = 'random(1px, 1px)'
