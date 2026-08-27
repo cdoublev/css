@@ -2384,8 +2384,8 @@ describe('<random()>', () => {
     })
     test('valid', () => {
 
-        const names = randomCacheNames.get(globalThis)
-        names.push(
+        const { randomCacheNames } = states.get(globalThis)
+        randomCacheNames.push(
             { base: 0.5, element: null, identifier: null, scope: 'ua-any-property' },
             { base: 0, element: null, identifier: null, scope: 'ua-any-property-1' },
             { base: 1, element: null, identifier: null, scope: 'ua-any-property-2' },
@@ -2398,7 +2398,7 @@ describe('<random()>', () => {
         assert.valid('<number>', 'random(fixed 0, 0, 1)', 'calc(0)')
         assert.valid('<number>', 'random(fixed 1, 0, 1)', 'calc(1)')
         assert.valid('<number>', 'random(--name, 0, 1px / 1em)', 'random(--name, 0, 1px / 1em)')
-        assert.valid('<number>', 'random(--name, 0, 1, 1)', `calc(${names.at(-1).base < 0.5 ? 0 : 1})`)
+        assert.valid('<number>', 'random(--name, 0, 1, 1)', `calc(${randomCacheNames.at(-1).base < 0.5 ? 0 : 1})`)
         assert.valid('<number>', 'random(property-scoped, 0, 1)', 'calc(0.5)', createDeclarationContext(styleRule))
         assert.valid('<number>{2}', 'random(property-index-scoped, 0, 1) random(property-index-scoped, 0, 1)', 'calc(0) calc(1)', createDeclarationContext(styleRule))
         assert.valid('<number>{2}', 'random(ua-any-property-2, 0, 1) random(ua-any-property-1, 0, 1)', 'calc(1) calc(0)', createDeclarationContext(styleRule))
