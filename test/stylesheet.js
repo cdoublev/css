@@ -1088,7 +1088,7 @@ describe('CSSPropertyRule', () => {
         // CSSPropertyRule
         assert.equal(rule.name, '--name')
         assert.equal(rule.syntax, '"*"')
-        assert.equal(rule.inherits, 'true')
+        assert.equal(rule.inherits, true)
     })
 })
 describe('CSSScopeRule', () => {
@@ -2119,11 +2119,11 @@ describe('CSS grammar - semantic', () => {
     })
     test('@property - valid block contents', () => {
         const declarations = [
-            'INHERITS: {env(name)}',
-            'inherits: first-valid(false)',
+            'INITIAL-VALUE: {env(name)}',
+            'initial-value: first-valid()',
         ]
         declarations.forEach(declaration => {
-            const input = `@PROPERTY --name { syntax: "*"; ${declaration}; }`
+            const input = `@PROPERTY --name { syntax: "*"; inherits: true; ${declaration}; }`
             const styleSheet = createStyleSheet(input)
             assert.equal(styleSheet.cssRules[0].cssText, normalizeText(input))
         })
