@@ -837,7 +837,9 @@ function serializeDescriptors(descriptors) {
             string += `${tab(1)}${quote(rule)}: {\n`
             definitions.sort(sortByName).forEach(([descriptor, { initial, type, value }]) => {
                 string += `${tab(2)}${quote(descriptor)}: {\n`
-                if (initial && !initial.toLowerCase().startsWith('n/a')) {
+                if (initial === null) {
+                    string += `${tab(3)}initial: null,\n`
+                } else if (initial && !initial.toLowerCase().startsWith('n/a')) {
                     string += `${tab(3)}initial: ${quote(initial)},\n`
                 } else if (type) {
                     string += `${tab(3)}type: '${type}',\n`
