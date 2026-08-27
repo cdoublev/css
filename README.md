@@ -22,8 +22,8 @@ const {
 install()
 
 // Create a CSSStyleSheet or CSSStyleProperties wrapper
-const stylesheet = CSSStyleSheet.create(myGlobalObject, undefined, privateProperties)
-const style = CSSStyleProperties.create(myGlobalObject, undefined, privateProperties)
+const stylesheet = CSSStyleSheet.create(myGlobalObject, undefined, privateData)
+const style = CSSStyleProperties.create(myGlobalObject, undefined, privateData)
 
 // Parse something according to a CSS grammar
 const selectors = parseGrammar('div', '<selector-list>')

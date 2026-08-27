@@ -41,21 +41,21 @@ import { wrapperForImpl } from '../lib/cssom/utils.js'
 
 /**
  * @param {string} [rules]
- * @param {object} [properties]
+ * @param {object} [privateData]
  * @returns {CSSStyleSheet}
  *
  * It returns a non-constructed CSSStyleSheet by using default values for the
  * required arguments.
  */
-function createStyleSheet(rules = '', properties = {}) {
-    properties = {
+function createStyleSheet(rules = '', privateData = {}) {
+    privateData = {
         encoding: globalThis.document.characterSet,
         location: baseURL,
         media: '',
         rules,
-        ...properties,
+        ...privateData,
     }
-    const styleSheet = CSSStyleSheet.create(globalThis, undefined, properties)
+    const styleSheet = CSSStyleSheet.create(globalThis, undefined, privateData)
     styleSheets._list.push(styleSheet)
     return styleSheet
 }
@@ -212,8 +212,8 @@ describe('CSSStyleSheet', () => {
         const media = 'all'
         const ownerNode = { type: 'HTMLLinkElement' }
         const title = 'Main CSS'
-        const properties = { location, media, ownerNode, title }
-        const styleSheet = createStyleSheet('', properties)
+        const privateData = { location, media, ownerNode, title }
+        const styleSheet = createStyleSheet('', privateData)
 
         // StyleSheet properties
         assert.equal(styleSheet.disabled, false)
@@ -1720,14 +1720,14 @@ describe('CSS grammar - semantic', () => {
                 @counter-style name {}
                 @font-face {}
                 @font-feature-values name {}
-                @font-palette-values --name { font-family: name; }
+                @font-palette-values --name { font-family: name }
                 @function --name() {}
                 @keyframes name {}
                 @layer name;
                 @media {}
                 @page {}
                 @position-try --name {}
-                @property --name { syntax: "*"; inherits: false; }
+                @property --name { syntax: "*"; inherits: false }
                 @scope {}
                 @starting-style {}
                 @supports (color: red) {}
