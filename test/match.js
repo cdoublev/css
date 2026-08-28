@@ -55,7 +55,6 @@ describe('media', () => {
 
     const window = {
         devicePixelRatio: 1,
-        document: new HTMLDocument,
         innerHeight: 100,
         innerWidth: 100,
         screen: {
@@ -64,9 +63,12 @@ describe('media', () => {
             width: 200,
         },
     }
+    const document = new HTMLDocument({ userStyleSheet: ':root { font-size: 32px'})
+    new HTMLHtmlElement({ ownerDocument: document, parentNode: document })
 
-    function match(query, override = {}) {
-        Object.assign(globalThis, window, override)
+    function match(query, { document: documentProperties = {}, ...windowProperties } = {}) {
+        Object.assign(globalThis, window, windowProperties)
+        Object.assign(document, documentProperties)
         return matchMediaQueryList(parseGrammar(query, '<media-query-list>', globalThis), globalThis)
     }
 
@@ -229,6 +231,8 @@ describe('media', () => {
             ['(aspect-ratio: 1)'],
             ['(aspect-ratio: 1 / 1)'],
             ['(aspect-ratio: calc(1))'],
+            ['(aspect-ratio: calc(2em / 1em))', false],
+            ['(aspect-ratio: calc(1em / 1em))'],
             ['(min-aspect-ratio: 2)', false],
             ['(min-aspect-ratio: 1)'],
             ['(max-aspect-ratio: 1)'],
@@ -247,7 +251,9 @@ describe('media', () => {
             ['(height: 0px)', false],
             ['(height: 100px)'],
             ['(height: 1in)', true, { innerHeight: 96 }],
-            ['(height: 2in)', false, { innerHeight: 96 }],
+            ['(height: 2in)', false],
+            ['(height: 1em)', true, { innerHeight: states.get(globalThis).shared.userPreference.fontSize }],
+            ['(height: 1em)', false],
             ['(horizontal-viewport-segments: 0)', false],
             ['(horizontal-viewport-segments: 1)'],
             ['(monochrome: 1)', false],
