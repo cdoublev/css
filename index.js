@@ -4,7 +4,7 @@ import { states } from './lib/state.js'
 
 const defaultSharedState = {
     userPreference: {
-        colorTheme: 'light',
+        colorScheme: 'light',
         fontSize: 16,
     },
     viewportInset: {
