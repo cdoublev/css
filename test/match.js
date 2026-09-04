@@ -53,8 +53,19 @@ install()
 
 describe('media', () => {
 
+    const document = new HTMLDocument({ userStyleSheet: ':root { font-size: 32px }' })
+    const html = new HTMLHtmlElement({ ownerDocument: document, parentNode: document })
+    new HTMLMetaElement({
+        attributes: [
+            { localName: 'name', value: 'color-scheme' },
+            { localName: 'content', value: 'dark light' },
+        ],
+        ownerDocument: document,
+        parentNode: html,
+    })
     const window = {
         devicePixelRatio: 1,
+        document,
         innerHeight: 100,
         innerWidth: 100,
         screen: {
@@ -63,13 +74,40 @@ describe('media', () => {
             width: 200,
         },
     }
-    const document = new HTMLDocument({ userStyleSheet: ':root { font-size: 32px'})
-    new HTMLHtmlElement({ ownerDocument: document, parentNode: document })
 
-    function match(query, { document: documentProperties = {}, ...windowProperties } = {}) {
-        Object.assign(globalThis, window, windowProperties)
-        Object.assign(document, documentProperties)
-        return matchMediaQueryList(parseGrammar(query, '<media-query-list>', globalThis), globalThis)
+    /**
+     * @param {object} initial
+     * @param {object} state
+     * @returns {object}
+     */
+    function mergeState(initial = {}, state) {
+        return Object.entries(state).reduce(
+            (initial, [key, value]) => {
+                if (typeof value === 'object' && !Array.isArray(value)) {
+                    value = mergeState(initial[key], value)
+                }
+                return { ...initial, [key]: value }
+            },
+            initial)
+    }
+
+    /**
+     * @param {string} query
+     * @param {object} [state] override
+     * @param {object} [globalObject] override
+     */
+    function match(query, state = {}, globalObject = {}) {
+
+        const initialState = states.get(globalThis)
+
+        Object.assign(globalThis, window, globalObject)
+        states.set(globalThis, mergeState(initialState, { shared: state }))
+
+        const result = matchMediaQueryList(parseGrammar(query, '<media-query-list>', globalThis), globalThis)
+
+        states.set(globalThis, initialState)
+
+        return result
     }
 
     test('empty', () => {
@@ -79,6 +117,7 @@ describe('media', () => {
         const queries = [
             ['all'],
             ['screen'],
+            ['print', true, { agent: { type: 'print' } }],
             ['not screen', false],
             ['print', false],
             ['tty', false],
@@ -88,7 +127,7 @@ describe('media', () => {
             ['not tty'],
             ['not unknown'],
         ]
-        queries.forEach(([query, expected = true]) => assert.equal(match(query), expected))
+        queries.forEach(([query, expected = true, state]) => assert.equal(match(query, state), expected))
     })
     test('boolean', () => {
         const queries = [
@@ -98,7 +137,9 @@ describe('media', () => {
             ['(min-color)', false],
             // Discrete
             ['(-webkit-transform-3d)'],
+            ['(any-hover)', false, { system: { pointers: [{ motionable: false }] } }],
             ['(any-hover)'],
+            ['(any-pointer)', false, { system: { pointers: [] } }],
             ['(any-pointer)'],
             ['(color-gamut)'],
             ['(display-mode)'],
@@ -106,52 +147,68 @@ describe('media', () => {
             ['(dynamic-range)'],
             ['(environment-blending)'],
             ['(forced-colors)', false],
+            ['(forced-colors)', true, { user: { forcedColors: {} } }],
             ['(grid)', false],
+            ['(grid)', true, { system: { display: { graphicMode: false } } }],
+            ['(hover)', false, { system: { pointers: [{}, { motionable: true }] } }],
             ['(hover)'],
             ['(inverted-colors)', false],
-            ['(nav-controls)', false],
+            ['(inverted-colors)', true, { user: { invertedColors: true } }],
+            ['(nav-controls)', false, { agent: { navigation: [] } }],
+            ['(nav-controls)'],
             ['(orientation)'],
+            ['(overflow-block)', false, { agent: { viewport: { overflow: ['scroll', 'none'] } } }],
             ['(overflow-block)'],
+            ['(overflow-inline)', false, { agent: { viewport: { overflow: ['none', 'scroll'] } } }],
             ['(overflow-inline)'],
+            ['(pointer)', false, { system: { pointers: [] } }],
             ['(pointer)'],
             ['(prefers-color-scheme)'],
             ['(prefers-contrast)', false],
+            ['(prefers-contrast)', true, { user: { highContrast: true } }],
+            ['(prefers-contrast)', true, { user: { forcedColors: { canvas: 'rgb(255, 255, 255)', canvastext: 'rgb(0, 0, 0)' } } }],
             ['(prefers-reduced-data)', false],
+            ['(prefers-reduced-data)', true, { user: { reducedData: true } }],
             ['(prefers-reduced-motion)', false],
+            ['(prefers-reduced-motion)', true, { user: { reducedMotion: true } }],
             ['(prefers-reduced-transparency)', false],
+            ['(prefers-reduced-transparency)', true, { user: { reducedTransparency: true } }],
+            ['(resizable)', false, { agent: { viewport: { resizable: false } } }],
             ['(resizable)'],
             ['(scan)'],
+            ['(scripting)', false, { agent: { scripting: 'none' } }],
             ['(scripting)'],
             ['(shape)'],
             ['(ua-color-scheme)'],
+            ['(update)', false, { system: { display: { update: 'none' } } }],
             ['(update)'],
             ['(video-color-gamut)'],
             ['(video-dynamic-range)'],
             // Range
             ['(aspect-ratio)'],
-            ['(aspect-ratio)', true, { innerHeight: 1, innerWidth: 0 }],
-            ['(aspect-ratio)', true, { innerHeight: 0, innerWidth: 0 }],
+            ['(aspect-ratio)', true, undefined, { innerHeight: 1, innerWidth: 0 }],
+            ['(aspect-ratio)', true, undefined, { innerHeight: 0, innerWidth: 0 }],
             ['(color)'],
-            ['(color)', false, { screen: { colorDepth: 0 } }],
+            ['(color)', false, undefined, { screen: { colorDepth: 0 } }],
             ['(color-index)', false],
             ['(device-aspect-ratio)'],
-            ['(device-aspect-ratio)', true, { screen: { height: 1, width: 0 } }],
-            ['(device-aspect-ratio)', true, { screen: { height: 0, width: 0 } }],
+            ['(device-aspect-ratio)', true, undefined, { screen: { height: 1, width: 0 } }],
+            ['(device-aspect-ratio)', true, undefined, { screen: { height: 0, width: 0 } }],
             ['(device-height)'],
-            ['(device-height)', false, { screen: { height: 0 } }],
+            ['(device-height)', false, undefined, { screen: { height: 0 } }],
             ['(device-width)'],
-            ['(device-width)', false, { screen: { width: 0 } }],
+            ['(device-width)', false, undefined, { screen: { width: 0 } }],
             ['(height)'],
-            ['(height)', false, { innerHeight: 0 }],
+            ['(height)', false, undefined, { innerHeight: 0 }],
             ['(horizontal-viewport-segments)'],
             ['(monochrome)', false],
             ['(resolution)'],
-            ['(resolution)', false, { devicePixelRatio: 0 }],
+            ['(resolution)', false, undefined, { devicePixelRatio: 0 }],
             ['(vertical-viewport-segments)'],
             ['(width)'],
-            ['(width)', false, { innerWidth: 0 }],
+            ['(width)', false, undefined, { innerWidth: 0 }],
         ]
-        queries.forEach(([query, expected = true, context]) => assert.equal(match(query, context), expected))
+        queries.forEach(([query, expected = true, context, state]) => assert.equal(match(query, context, state), expected))
     })
     test('plain', () => {
         const queries = [
@@ -163,64 +220,105 @@ describe('media', () => {
             ['(-webkit-transform-3d: 0)', false],
             ['(-webkit-transform-3d: 1)'],
             ['(any-hover: none)', false],
+            ['(any-hover: hover)', false, { system: { pointers: [{ motionable: false }] } }],
+            ['(any-hover: none)', true, { system: { pointers: [] } }],
             ['(any-hover: hover)'],
             ['(any-pointer: none)', false],
+            ['(any-pointer: coarse)', false],
+            ['(any-pointer: fine)', false, { system: { pointers: [{ precision: 'coarse' }] } }],
+            ['(any-pointer: none)', true, { system: { pointers: [] } }],
+            ['(any-pointer: coarse)', true, { system: { pointers: [{ precision: 'coarse' }] } }],
             ['(any-pointer: fine)'],
             ['(color-gamut: p3)', false],
             ['(color-gamut: srgb)'],
             ['(display-mode: fullscreen)', false],
+            ['(display-mode: fullscreen)', false, { manifest: { display: 'standalone' } }],
+            ['(display-mode: fullscreen)', true, { manifest: { display: 'fullscreen' } }],
+            ['(display-mode: fullscreen)', true, undefined, { document: { fullscreenEnabled: true } }],
+            ['(display-mode: picture-in-picture)', true, undefined, { document: { pictureInPictureEnabled: true } }],
             ['(display-mode: browser)'],
-            ['(display-mode: fullscreen)', true, { document: { fullscreenEnabled: true } }],
-            ['(display-mode: picture-in-picture)', true, { document: { pictureInPictureEnabled: true } }],
             ['(display-state: fullscreen)', false],
+            ['(display-state: fullscreen)', true, { agent: { viewport: { state: 'fullscreen' } } }],
             ['(display-state: normal)'],
             ['(dynamic-range: high)', false],
+            ['(dynamic-range: high)', true, { system: { display: { hdr: true } } }],
             ['(dynamic-range: standard)'],
             ['(environment-blending: additive)', false],
+            ['(environment-blending: additive)', true, { system: { display: { blending: 'additive' } } }],
             ['(environment-blending: opaque)'],
             ['(forced-colors: active)', false],
+            ['(forced-colors: active)', true, { user: { forcedColors: {} } }],
             ['(forced-colors: none)'],
             ['(grid: 1)', false],
+            ['(grid: 1)', true, { system: { display: { graphicMode: false } } }],
             ['(grid: 0)'],
             ['(hover: none)', false],
+            ['(hover: none)', true, { system: { pointers: [{ motionable: false }] } }],
             ['(hover)'],
             ['(inverted-colors: inverted)', false],
+            ['(inverted-colors: inverted)', true, { user: { invertedColors: true } }],
             ['(inverted-colors: none)'],
-            ['(nav-controls: back)', false],
-            ['(nav-controls: none)'],
+            ['(nav-controls: none)', false],
+            ['(nav-controls: none)', true, { agent: { navigation: [] } }],
+            ['(nav-controls: back)'],
             ['(orientation: landscape)', false],
-            ['(orientation: landscape)', false, { innerHeight: 2, innerWidth: 1 }],
-            ['(orientation: portrait)', false, { innerHeight: 1, innerWidth: 2 }],
+            ['(orientation: landscape)', false, undefined, { innerHeight: 2, innerWidth: 1 }],
+            ['(orientation: portrait)', false, undefined, { innerHeight: 1, innerWidth: 2 }],
             ['(orientation: portrait)'],
-            ['(orientation: portrait)', true, { innerHeight: 2, innerWidth: 1 }],
-            ['(orientation: landscape)', true, { innerHeight: 1, innerWidth: 2 }],
+            ['(orientation: portrait)', true, undefined, { innerHeight: 2, innerWidth: 1 }],
+            ['(orientation: landscape)', true, undefined, { innerHeight: 1, innerWidth: 2 }],
             ['(overflow-block: none)', false],
+            ['(overflow-block: none)', true, { agent: { viewport: { overflow: ['scroll', 'none'] } } }],
+            ['(overflow-block: paged)', true, { agent: { viewport: { overflow: ['none', 'paged'] } } }],
             ['(overflow-block: scroll)'],
             ['(overflow-inline: none)', false],
+            ['(overflow-inline: none)', true, { agent: { viewport: { overflow: ['none', 'scroll'] } } }],
             ['(overflow-inline: scroll)'],
             ['(pointer: none)', false],
+            ['(pointer: none)', true, { system: { pointers: [] } }],
             ['(pointer: fine)'],
             ['(prefers-color-scheme: dark)', false],
+            ['(prefers-color-scheme: dark)', false, { user: { colorScheme: 'dark', forcedColors: { canvas: 'rgb(255, 255, 255)', canvastext: 'rgb(0, 0, 0)' } } }],
+            ['(prefers-color-scheme: dark)', true, { user: { colorScheme: 'light', forcedColors: { canvas: 'rgb(0, 0, 0)', canvastext: 'rgb(255, 255, 255)' } } }],
+            ['(prefers-color-scheme: dark)', true, { user: { colorScheme: 'dark' } }],
             ['(prefers-color-scheme: light)'],
             ['(prefers-contrast: more)', false],
+            ['(prefers-contrast: more)', false, { user: { forcedColors: { canvas: 'rgb(0, 0, 0)', canvastext: 'rgb(0, 0, 0)' } } }],
+            ['(prefers-contrast: no-preference)', false, { user: { forcedColors: {} } }],
+            ['(prefers-contrast: more)', true, { user: { forcedColors: { canvas: 'rgb(255, 255, 255)', canvastext: 'rgb(0, 0, 0)' } } }],
+            ['(prefers-contrast: custom)', true, { user: { forcedColors: { canvas: 'rgb(0, 0, 0)', canvastext: 'rgb(130, 130, 130)' } } }],
+            ['(prefers-contrast: less)', true, { user: { forcedColors: { canvas: 'rgb(0, 0, 0)', canvastext: 'rgb(0, 0, 0)' } } }],
             ['(prefers-contrast: no-preference)'],
             ['(prefers-reduced-data: reduce)', false],
+            ['(prefers-reduced-data: no-preference)', false, { user: { reducedData: true } }],
+            ['(prefers-reduced-data: reduce)', true, { user: { reducedData: true } }],
             ['(prefers-reduced-data: no-preference)'],
             ['(prefers-reduced-motion: reduce)', false],
+            ['(prefers-reduced-motion: no-preference)', false, { user: { reducedMotion: true } }],
+            ['(prefers-reduced-motion: reduce)', true, { user: { reducedMotion: true } }],
             ['(prefers-reduced-motion: no-preference)'],
             ['(prefers-reduced-transparency: reduce)', false],
+            ['(prefers-reduced-transparency: no-preference)', false, { user: { reducedTransparency: true } }],
+            ['(prefers-reduced-transparency: reduce)', true, { user: { reducedTransparency: true } }],
             ['(prefers-reduced-transparency: no-preference)'],
             ['(resizable: false)', false],
+            ['(resizable: false)', true, { agent: { viewport: { resizable: false } } }],
             ['(resizable: true)'],
             ['(scan: interlace)', false],
+            ['(scan: interlace)', true, { system: { display: { interlaced: true } } }],
             ['(scan: progressive)'],
             ['(scripting: none)', false],
+            ['(scripting: enabled)', false, { agent: { scripting: 'none' } }],
+            ['(scripting: none)', true, { agent: { scripting: 'none' } }],
             ['(scripting: enabled)'],
             ['(shape: round)', false],
+            ['(shape: round)', true, { system: { display: { shape: 'round' } } }],
             ['(shape: rect)'],
             ['(ua-color-scheme: dark)', false],
+            ['(ua-color-scheme: dark)', true, { user: { colorScheme: 'dark' } }],
             ['(ua-color-scheme: light)'],
             ['(update: none)', false],
+            ['(update: none)', true, { system: { display: { update: 'none' } } }],
             ['(update: fast)'],
             ['(video-color-gamut: p3)', false],
             ['(video-color-gamut: srgb)'],
@@ -239,7 +337,8 @@ describe('media', () => {
             ['(max-aspect-ratio: 0)', false],
             ['(color: 0)', false],
             ['(color: 24)'],
-            ['(color-index: 16777216)', false],
+            ['(color-index: 256)', false],
+            ['(color-index: 256)', true, { system: { display: { colorIndex: 256 } } }],
             ['(color-index: 0)'],
             ['(device-aspect-ratio: 0)', false],
             ['(device-aspect-ratio: 2)'],
@@ -250,24 +349,27 @@ describe('media', () => {
             ['(device-width: 200px)'],
             ['(height: 0px)', false],
             ['(height: 100px)'],
-            ['(height: 1in)', true, { innerHeight: 96 }],
+            ['(height: 1in)', true, undefined, { innerHeight: 96 }],
             ['(height: 2in)', false],
-            ['(height: 1em)', true, { innerHeight: states.get(globalThis).shared.userPreference.fontSize }],
+            ['(height: 1em)', true, undefined, { innerHeight: states.get(globalThis).shared.user.fontSize }],
             ['(height: 1em)', false],
             ['(horizontal-viewport-segments: 0)', false],
+            ['(horizontal-viewport-segments: 2)', true, { system: { display: { segments: [2, 1] } } }],
             ['(horizontal-viewport-segments: 1)'],
             ['(monochrome: 1)', false],
+            ['(monochrome: 1)', true, { system: { display: { monochrome: 1 } } }],
             ['(monochrome: 0)'],
             ['(resolution: 2dppx)', false],
             ['(resolution: 1dppx)'],
-            ['(resolution: infinite)', true, { devicePixelRatio: Infinity }],
-            ['(resolution: calc(infinity))', false, { devicePixelRatio: Infinity }],
+            ['(resolution: infinite)', true, undefined, { devicePixelRatio: Infinity }],
+            ['(resolution: calc(infinity))', false, undefined, { devicePixelRatio: Infinity }],
             ['(vertical-viewport-segments: 0)', false],
+            ['(vertical-viewport-segments: 2)', true, { system: { display: { segments: [1, 2] } } }],
             ['(vertical-viewport-segments: 1)'],
             ['(width: 0px)', false],
             ['(width: 100px)'],
         ]
-        queries.forEach(([query, expected = true, context]) => assert.equal(match(query, context), expected))
+        queries.forEach(([query, expected = true, state, media]) => assert.equal(match(query, state, media), expected))
     })
     test('range', () => {
         const queries = [
@@ -329,7 +431,7 @@ describe('media', () => {
             ['(aspect-ratio >= 0 / 0)', false],
             ['(aspect-ratio >= 0 / 0)', false, { innerHeight: 1, innerWidth: 0 }],
         ]
-        queries.forEach(([query, expected = true, context]) => assert.equal(match(query, context), expected))
+        queries.forEach(([query, expected = true, media]) => assert.equal(match(query, undefined, media), expected))
     })
     test('combinations', () => {
         const queries = [
