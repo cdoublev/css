@@ -98,9 +98,9 @@ const elements = matchTreesAgainstSelectors([document], selectors)
   - [`ElementCSSInlineStyle.style`](https://drafts.csswg.org/cssom/#elementcssinlinestyle)
   - [`Element.pseudo()`](https://drafts.csswg.org/css-pseudo-4/#dom-element-pseudo) and [`Window.getComputedStyle()`](https://drafts.csswg.org/cssom-1/#dom-window-getcomputedstyle)
 
-[**`CSSPseudoElement`**](https://drafts.csswg.org/css-pseudo-4/#csspseudoelement) accept `privateProperties` that correspond to its attributes.
+[**`CSSPseudoElement`**](https://drafts.csswg.org/css-pseudo-4/#csspseudoelement) accepts `privateProperties` that correspond to its attributes.
 
-[**`CSSStyleSheet`**](https://drafts.csswg.org/cssom-1/#css-style-sheet) accept the following `privateProperties`:
+[**`CSSStyleSheet`**](https://drafts.csswg.org/cssom-1/#css-style-sheet) accepts the following `privateProperties`:
 
   - *CSS rules*: `rules` (`String` or `ReadableStream`)
   - *alternate flag*: `alternate` (`Boolean`, optional, default: `false`)
@@ -113,7 +113,7 @@ const elements = matchTreesAgainstSelectors([document], selectors)
   - *parent CSS style sheet*: `parentStyleSheet` (`CSSStyleSheet`, optional, default: `null`)
   - *title*: `title` (`String`, optional, default: `''`)
 
-[**`CSSStyleProperties`**](https://drafts.csswg.org/cssom-1/#css-declaration-block) accept the following `privateProperties`:
+[**`CSSStyleProperties`**](https://drafts.csswg.org/cssom-1/#css-declaration-block) accepts the following `privateProperties`:
 
   - *computed flag*: `computed` (`Boolean`, optional, default: `false`)
   - *declarations*: `declarations` (`[Declaration]`, optional, default: `[]`)
@@ -123,7 +123,7 @@ const elements = matchTreesAgainstSelectors([document], selectors)
 `Declaration` must be a plain object with the following properties:
 
   - `name`: `String`
-  - `value`: `String`
+  - `value`: `Object|[Object]` (parsed value)
   - `important`: `Boolean` (optional, default: `false`)
 
 `parseGrammar()` and `parseListGrammar()` are implementations of [*parse something according to a CSS grammar*](https://drafts.csswg.org/css-syntax-3/#css-parse-something-according-to-a-css-grammar) and [*parse a comma-separated list according to a CSS grammar*](https://drafts.csswg.org/css-syntax-3/#css-parse-a-comma-separated-list-according-to-a-css-grammar), which take 3 arguments:

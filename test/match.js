@@ -503,7 +503,6 @@ describe('selector', () => {
          * @param {Document|Element|ShadowRoot} tree
          * @param {object} [context]
          * @param {object} [options]
-         * @returns {*[]}
          */
         match(selector, elements = [], tree, { namespaces: ns = {}, ...context } = {}, options = { includeSubtrees: true }) {
 
