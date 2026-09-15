@@ -3081,9 +3081,11 @@ describe('<color>', () => {
     test('valid <color-mix()>', () => {
         // Omitted <color-interpolation-method> and <percentage>
         assert.valid('<color>', 'color-mix(in oklab, green 50%, green 50%)', 'color-mix(green, green)')
+        assert.valid('<color>', 'color-mix(green 75%, green 75%)', 'color-mix(green, green)')
         // Explicit <percentage>
         assert.valid('<color>', 'color-mix(green 1%, green)', 'color-mix(green 1%, green 99%)')
         assert.valid('<color>', 'color-mix(green calc(50%), green 50%)')
+        assert.valid('<color>', 'color-mix(green 25%, green 25%)')
         assert.valid('<color>', 'color-mix(green 75%, green 75%, green)', 'color-mix(green 75%, green 75%, green 0%)')
         // Preserve color components except <hue> and <alpha-value>
         assert.valid(
