@@ -16,9 +16,20 @@ import {
     TEXT_NODE_TYPE,
 } from '../lib/utils/dom/constants.js'
 import { CSSStyleProperties, CSSStyleSheet, StyleSheetList } from '../lib/cssom/index.js'
-import { findAncestor, getParent } from '../lib/utils/dom/element.js'
+import { findAncestorElement, getParentElement, isHTMLElement, traverse } from '../lib/utils/dom/node.js'
 import { implForWrapper } from '../lib/cssom/utils.js'
-import { traverse } from '../lib/utils/dom/tree.js'
+
+/**
+ * @param {Node} node
+ */
+function assignNodeToSlot(node) {
+    if (node.parentElement?.shadowRoot) {
+        const slot = node.getAttribute?.('slot') ?? ''
+        node.parentElement.shadowRoot.children._list
+            .find(element => isHTMLElement(element, 'slot') && element.name === slot)?._slotted
+            .push(node)
+    }
+}
 
 /**
  * @param {Element} element
@@ -202,7 +213,7 @@ export class Node {
                 return CONTAINS_NODE_POSITION | PRECEDING_NODE_POSITION
             }
             thisAncestors.push(parentNode)
-            parentNode = getParent(parentNode)
+            parentNode = getParentElement(parentNode)
         }
         parentNode = other.parentNode
         while (parentNode) {
@@ -210,7 +221,7 @@ export class Node {
                 return CONTAINED_BY_NODE_POSITION | FOLLOWING_NODE_POSITION
             }
             otherAncestors.push(parentNode)
-            parentNode = getParent(parentNode)
+            parentNode = getParentElement(parentNode)
         }
 
         const root = thisAncestors.at(-1)
@@ -305,12 +316,8 @@ export class Text extends CharacterData {
      */
     constructor(properties) {
         super(properties)
-        const { slot } = properties
-        if (typeof slot === 'string') {
-            this.parentElement.shadowRoot.children._list.find(element => element.name === slot)?._slotted.push(this)
-        }
+        assignNodeToSlot(this)
     }
-
 }
 
 export class Document extends Node {
@@ -517,17 +524,10 @@ export class Element extends Node {
         }
         this.name = this.getAttribute('name') ?? ''
         this.required = !!this.getAttributeNode('required')
-        this.slot = this.getAttribute('slot') ?? ''
 
-        const {
-            ownerDocument: { _selected },
-            parentElement,
-        } = this
+        assignNodeToSlot(this)
 
-        if (parentElement?.shadowRoot) {
-            parentElement.shadowRoot.children._list.find(element => element.name === this.slot)?._slotted.push(this)
-        }
-
+        const { ownerDocument: { _selected } } = this
         selectors.forEach(selector => {
             if (_selected.has(selector)) {
                 _selected.get(selector).push(this)
@@ -919,7 +919,7 @@ export class HTMLOptionElement extends HTMLElement {
 
         this.selected = properties.selected ?? !!this.getAttributeNode('selected')
 
-        const select = findAncestor(this, element => element instanceof HTMLSelectElement)
+        const select = findAncestorElement(this, element => element instanceof HTMLSelectElement)
         if (select) {
             select.options.push(this)
             const { multiple, options, selectedIndex } = select
@@ -1002,10 +1002,10 @@ export class HTMLSlotElement extends HTMLElement {
     _slotted = []
 
     /**
-     * @param {object} options
-     * @returns {Node}
+     * @param {object} [options]
+     * @returns {Node[]}
      */
-    assignedNodes({ flatten }) {
+    assignedNodes({ flatten } = {}) {
         if (flatten) {
             return this._slotted.flat(Infinity)
         }

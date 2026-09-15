@@ -581,7 +581,7 @@ describe('selector', () => {
             ['div', [host, shadowDiv], document, { namespaces: { '': HTML_NAMESPACE } }],
             ['DIV', [host, shadowDiv, noNamespace]],
             ['svg', [svg]],
-            ['SVG', []],
+            ['SVG'],
         ]
         selections.forEach(([selector, expected, tree = document, context, options]) =>
             assert.match(selector, expected, tree, context, options))
@@ -624,13 +624,13 @@ describe('selector', () => {
         })
 
         assert.match('#div', [div, noNamespace], document)
-        assert.match('#div', [div, noNamespace], document, { scopes: { roots: [document] } }, { includeSubtrees: false })
+        assert.match('#div', [div, noNamespace], document, { scopes: { roots: [document] } })
         assert.match('#div', [div, noNamespace], document, { namespaces: { '': HTML_NAMESPACE } })
-        assert.match('#div', [div, noNamespace], document, { namespaces: { '': HTML_NAMESPACE }, scopes: { roots: [document] } }, { includeSubtrees: false })
+        assert.match('#div', [div, noNamespace], document, { namespaces: { '': HTML_NAMESPACE }, scopes: { roots: [document] } })
         assert.match('#DIV', [], document)
-        assert.match('#DIV', [], document, { scopes: { roots: [document] } }, { includeSubtrees: false })
+        assert.match('#DIV', [], document, { scopes: { roots: [document] } })
         assert.match('#\\31', [one], document)
-        assert.match('#\\31', [one], document, { scopes: { roots: [document] } }, { includeSubtrees: false })
+        assert.match('#\\31', [one], document, { scopes: { roots: [document] } })
     })
     test('class', () => {
 
@@ -671,18 +671,18 @@ describe('selector', () => {
 
         const selections = [
             ['.class-1', [div, noNamespace]],
-            ['.class-1', [div, noNamespace], { scopes: { roots: [document] } }, { includeSubtrees: false }],
+            ['.class-1', [div, noNamespace], { scopes: { roots: [document] } }],
             ['.class-1', [div, noNamespace], { namespaces: { '': HTML_NAMESPACE } }],
-            ['.class-1', [div, noNamespace], { namespaces: { '': HTML_NAMESPACE }, scopes: { roots: [document] } }, { includeSubtrees: false }],
-            ['.CLASS-1', []],
-            ['.CLASS-1', [], { scopes: { roots: [document] } }, { includeSubtrees: false }],
+            ['.class-1', [div, noNamespace], { namespaces: { '': HTML_NAMESPACE }, scopes: { roots: [document] } }],
+            ['.CLASS-1'],
+            ['.CLASS-1', [], { scopes: { roots: [document] } }],
             ['.class-1.class-2', [div]],
-            ['.class-1.class-2', [div], { scopes: { roots: [document] } }, { includeSubtrees: false }],
+            ['.class-1.class-2', [div], { scopes: { roots: [document] } }],
             ['.\\31', [one]],
-            ['.\\31', [one], { scopes: { roots: [document] } }, { includeSubtrees: false }],
+            ['.\\31', [one], { scopes: { roots: [document] } }],
         ]
-        selections.forEach(([selector, expected, context, options]) =>
-            assert.match(selector, expected, document, context, options))
+        selections.forEach(([selector, expected, context]) =>
+            assert.match(selector, expected, document, context))
     })
     test('attribute', () => {
 
@@ -691,7 +691,7 @@ describe('selector', () => {
          *   <body>
          *     <div id="div" class="class-1 class-2" empty=""></div>
          *     <div id="no-namespace"></div>
-         *     <svg viewBox="0 0 1 1">
+         *     <svg id="svg" viewBox="0 0 1 1">
          *       <use xlink:href />
          *     </svg>
          *     <div 1="1"></div>
@@ -738,11 +738,11 @@ describe('selector', () => {
 
         const selections = [
             ['[id]', [div, noNamespace]],
-            ['[id]', [div, noNamespace], { scopes: { roots: [document] } }, { includeSubtrees: false }],
+            ['[id]', [div, noNamespace], { scopes: { roots: [document] } }],
             ['[ID]', [div]],
             ['[id]', [div, noNamespace], { namespaces: { '': HTML_NAMESPACE } }],
             ['[viewBox]', [svg]],
-            ['[VIEWBOX]', []],
+            ['[VIEWBOX]'],
             ['[href]'],
             ['[|id]', [div, noNamespace]],
             ['[|href]'],
@@ -752,11 +752,11 @@ describe('selector', () => {
             ['[xlink|href]', [], { namespaces: { xlink: 'http://www.w3.org/1999/another-xlink' } }],
             ['[id=div]', [div]],
             ['[ID=div]', [div]],
-            ['[id=DIV]', []],
+            ['[id=DIV]'],
             ['[id=DIV i]', [div]],
             ['[\\31=\\31]', [one]],
             ['[color="#FFF"]', [div]],
-            ['[color="#FFF" s]', []],
+            ['[color="#FFF" s]'],
             ['[class~=class-1]', [div]],
             ['[class~="class-1"]', [div]],
             ['[class|=class]', [div]],
@@ -770,8 +770,8 @@ describe('selector', () => {
             ['[empty$=""]'],
             ['[empty*=""]'],
         ]
-        selections.forEach(([selector, expected, context, options]) =>
-            assert.match(selector, expected, document, context, options))
+        selections.forEach(([selector, expected, context]) =>
+            assert.match(selector, expected, document, context))
     })
     test('pseudo-element', () => {
 
@@ -812,7 +812,7 @@ describe('selector', () => {
 
         const selections = [
             ['html *', [body, section, div1, div2]],
-            ['html *', [body, section, div1, div2], { scopes: { roots: [document] } }, { includeSubtrees: false }],
+            ['html *', [body, section, div1, div2], { scopes: { roots: [document] } }],
             ['body > *', [section, div1, div2]],
             ['section + *', [div1]],
             ['section ~ *', [div1, div2]],
@@ -4592,7 +4592,7 @@ describe('selector', () => {
             parentNode: shadowRoot1,
             selectors: [':dir(ltr)'],
         })
-        new Text({ data: '؈L', parentNode: host1, slot: '' })
+        new Text({ data: '؈L', parentNode: host1 })
         const host2 = new HTMLDivElement({
             ownerDocument: document,
             parentNode: body,
@@ -4605,7 +4605,7 @@ describe('selector', () => {
             parentNode: shadowRoot2,
             selectors: [':dir(rtl)'],
         })
-        new Text({ data: '־L', parentNode: host2, slot: '' })
+        new Text({ data: '־L', parentNode: host2 })
         const host3 = new HTMLDivElement({
             ownerDocument: document,
             parentNode: body,
@@ -4618,7 +4618,7 @@ describe('selector', () => {
             parentNode: shadowRoot3,
             selectors: [':dir(ltr)'],
         })
-        new Text({ data: 'L؈', parentNode: host3, slot: '' })
+        new Text({ data: 'L؈', parentNode: host3 })
         const host4 = new HTMLDivElement({
             ownerDocument: document,
             parentNode: body,
@@ -4631,7 +4631,7 @@ describe('selector', () => {
             parentNode: shadowRoot4,
             selectors: [':dir(ltr)'],
         })
-        new Text({ data: '1', parentNode: host4, slot: '' })
+        new Text({ data: '1', parentNode: host4 })
         const host5 = new HTMLDivElement({
             ownerDocument: document,
             parentNode: body,
@@ -4902,7 +4902,6 @@ describe('selector', () => {
             ownerDocument: document,
             parentNode: host7,
             selectors: [':dir(ltr)'],
-            slot: '',
         })
         new HTMLSlotElement({
             ownerDocument: document,
@@ -4933,7 +4932,6 @@ describe('selector', () => {
             ownerDocument: document,
             parentNode: host9,
             selectors: [':dir(rtl)'],
-            slot: '',
         })
         new HTMLSlotElement({
             ownerDocument: document,
@@ -5294,15 +5292,15 @@ describe('selector', () => {
             [':root', [html]],
             [':root', [], shadowRoot],
             [':root > *', [], fragment],
-            [':host', []],
+            [':host'],
             [':host', [host], shadowRoot],
             [':host > *', [shadowElement], shadowRoot],
             [':host + *', [], shadowRoot],
             [':host(div)', [], shadowRoot],
-            [':host(section)', []],
+            [':host(section)'],
             [':host(section)', [host], shadowRoot],
             [':host-context(div)', [], shadowRoot],
-            [':host-context(section)', []],
+            [':host-context(section)'],
             [':host-context(section)', [host], shadowRoot],
             [':host-context(body)', [host], shadowRoot],
             [':scope', [html]],
@@ -5463,7 +5461,7 @@ describe('selector', () => {
         new HTMLDivElement({ ownerDocument: document, parentNode: body })
 
         const selections = [
-            [':has(html)', []],
+            [':has(html)'],
             [':has(body)', [html]],
             [':has(section)', [html, body]],
             [':has(> section)', [body]],
@@ -5503,8 +5501,8 @@ describe('selector', () => {
         })
         new HTMLSlotElement({ ownerDocument: document, parentNode: shadowRoot })
 
-        new HTMLDivElement({ ownerDocument: document, parentNode: host, slot: '' })
-        new HTMLDivElement({ ownerDocument: document, parentNode: host, slot: '' })
+        new HTMLDivElement({ ownerDocument: document, parentNode: host })
+        new HTMLDivElement({ ownerDocument: document, parentNode: host })
         new HTMLDivElement({
             attributes: [{ localName: 'slot', value: 'slot-2' }],
             ownerDocument: document,

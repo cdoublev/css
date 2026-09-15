@@ -1,6 +1,6 @@
 
 import { CSSStyleSheet, install } from '@cdoublev/css'
-import { MAX_INTEGER, MIN_INTEGER } from '../lib/values/integers.js'
+import { MAX_INTEGER, MIN_INTEGER } from '../lib/values/integer.js'
 import {
     angle,
     customIdentifier,
@@ -2388,8 +2388,7 @@ describe('<random()>', () => {
         randomCacheNames.push(
             { base: 0.5, element: null, identifier: null, scope: 'ua-any-property' },
             { base: 0, element: null, identifier: null, scope: 'ua-any-property-1' },
-            { base: 1, element: null, identifier: null, scope: 'ua-any-property-2' },
-        )
+            { base: 1, element: null, identifier: null, scope: 'ua-any-property-2' })
 
         // Explicit <random-key>
         assert.valid('<number>', 'RANDOM(1, 1)', 'random(element-scoped ua-any-property-1, 1, 1)', createDeclarationContext(styleRule))

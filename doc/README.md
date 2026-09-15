@@ -343,7 +343,7 @@ Other entry points are not implemented:
 
   - [*parse a style sheet*](https://drafts.csswg.org/css-syntax-3/#parse-a-stylesheet), which is only used in [*fetch an `@import`*](https://drafts.csswg.org/css-cascade-4/#fetch-an-import) (but should not, cf. [issue](https://github.com/w3c/csswg-drafts/issues/13049)) and [*parse a CSS style sheet*](https://drafts.csswg.org/css-syntax-3/#parse-a-css-stylesheet), which is unused, barely defined, and also not implemented
   - [*parse a style sheet's contents*](https://drafts.csswg.org/css-cascade-4/#fetch-an-import), which is only used to parse rules from `CSSStyleSheet.replace()`, and is replaced with `parseGrammar()`
-  - [*parse a CSS declaration block*](https://drafts.csswg.org/cssom-1/#parse-a-css-declaration-block), which is only used to parse `CSSStyleDeclaration.cssText` (a list of declarations) by validating the declarations returned by [*parse a block's contents*](https://drafts.csswg.org/css-syntax-3/#parse-a-blocks-contents) (implemented with `parseDeclarations()`), whereas they are already validated
+  - [*parse a CSS declaration block*](https://drafts.csswg.org/cssom-1/#parse-a-css-declaration-block), which is only used to parse `CSSStyleDeclaration.cssText` (a list of declarations) by validating the declarations returned by [*parse a block's contents*](https://drafts.csswg.org/css-syntax-3/#parse-a-blocks-contents), whereas they are already validated, and is replaced with `parseDeclarations()`
   - [*parse a CSS rule*](https://drafts.csswg.org/cssom-1/#parse-a-css-rule), which is only used to parse the argument of `CSSStyleSheet.insertRule()` by validating the rule returned by [*parse a rule*](https://drafts.csswg.org/css-syntax-3/#parse-a-rule), whereas it is already validated
   - [*parse a declaration*](https://drafts.csswg.org/css-syntax-3/#parse-a-declaration), which is only used to parse `<declaration>`, and is replaced with `matchDeclaration()`
 
@@ -353,12 +353,16 @@ Below is a list of all implemented entry points:
   - `parseListGrammar(input, grammar, context)`
   - `parseDeclarations(input, context)`
   - `parseRule(input, context)`
-  - `parseDestructuredDeclaration(name, value, important, context)`
   - `parseDeclarationValue(input, grammar, context)`
+  - `parseDestructuredDeclaration(name, value, important, context)`
 
-`parseDestructuredDeclaration()` is used to validate the arguments of `CSSStyleDeclaration.setProperty()`, which is defined to be handled with [*parse a CSS value*](https://drafts.csswg.org/cssom-1/#parse-a-css-value), but it does not validate the priority argument (cf. w3c/csswg-drafts#9241).
+`parseListGrammar()` is the implementation of [*parse a comma-separated list according to a CSS grammar*](https://drafts.csswg.org/css-syntax-3/#parse-comma-list), but it uses `parseGrammar()` and `consumeComponentValues()` instead of an implementation of *parse a comma-separated list of component values*, for the reasons explained above.
 
-`parseDeclarationValue()` is a generalized implementation of *parse a CSS value* that can also be used to parse a declaration value from `matchDeclaration()`, `parseDestructuredDeclaration()`, `set CSS*Rule.[descriptor]()`.
+`parseRule()` is the implementation of [*parse a rule*](https://drafts.csswg.org/css-syntax-3/#parse-a-rule), but it uses `parseGrammar()` to validate the rule in a declarative way, rather than encoding the validation in `matchRule()`.
+
+`parseDeclarationValue()` is a generalized implementation of [*parse a CSS value*](https://drafts.csswg.org/cssom-1/#parse-a-css-value) that can also be used to parse a declaration value from `matchDeclaration()`, `parseDestructuredDeclaration()`, `set CSS*Rule.[descriptor]()`.
+
+`parseDestructuredDeclaration()` is used to validate the arguments of `CSSStyleDeclaration.setProperty()`, which is defined to be handled with *parse a CSS value*, but it does not validate the priority argument (cf. w3c/csswg-drafts#9241).
 
 
 #### Rules and declarations

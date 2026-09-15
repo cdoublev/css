@@ -12,11 +12,11 @@
  *   - ./lib/rules/definitions.js
  *   - ./lib/values/pseudos.js
  */
-import * as colors from '../lib/values/colors.js'
 import * as compatibility from '../lib/compatibility.js'
 import * as environment from '../lib/utils/environment.js'
 import * as pseudos from '../lib/values/pseudos.js'
 import * as webref from './webref.js'
+import { deprecated as deprecatedColors, named as namedColors, system as systemColors } from '../lib/values/color.js'
 import { quote, tab } from '../lib/utils/string.js'
 import arbitrary from '../lib/parse/arbitrary.js'
 import contextSensitiveTypes from '../lib/values/context-sensitive.js'
@@ -128,7 +128,7 @@ const replaced = {
         '<dashed-ident>': '<custom-ident>',
         '<dashndashdigit-ident>': '<ident-token>',
         '<decibel>': '<dimension>',
-        '<deprecated-color>': Object.keys(colors.deprecated).join(' | '),
+        '<deprecated-color>': Object.keys(deprecatedColors).join(' | '),
         '<dimension>': '<dimension-token>',
         '<extension-name>': '<dashed-ident>',
         '<flex>': '<dimension>',
@@ -142,7 +142,7 @@ const replaced = {
         '<level>': '<number-token>',
         '<mq-boolean>': '<integer [0,1]>',
         '<n-dimension>': '<dimension-token>',
-        '<named-color>': Object.keys(colors.named).join(' | '),
+        '<named-color>': Object.keys(namedColors).join(' | '),
         '<ndash-dimension>': '<dimension-token>',
         '<ndashdigit-dimension>': '<dimension-token>',
         '<ndashdigit-ident>': '<ident-token>',
@@ -167,7 +167,7 @@ const replaced = {
         '<string>': '<string-token>',
         '<style-feature-name>': '<ident>',
         '<supports-condition-name>': '<extension-name>',
-        '<system-color>': Object.keys(colors.system).join(' | '),
+        '<system-color>': Object.keys(systemColors).join(' | '),
         '<target-name>': '<string>',
         '<time>': '<dimension>',
         '<timeline-range-center-subject>': 'source | target',
