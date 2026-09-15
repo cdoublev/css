@@ -694,7 +694,7 @@ describe('selector', () => {
          *     <svg id="svg" viewBox="0 0 1 1">
          *       <use xlink:href />
          *     </svg>
-         *     <div 1="1"></div>
+         *     <div 1="1" lie:name="false" truth:name="true"></div>
          *   </body>
          * </html>
          */
@@ -731,7 +731,11 @@ describe('selector', () => {
             parentNode: svg,
         })
         const one = new HTMLDivElement({
-            attributes: [{ localName: '1', value: '1' }],
+            attributes: [
+                { localName: '1', value: '1' },
+                { localName: 'name', value: 'true', prefix: 'lie' },
+                { localName: 'name', value: 'true', prefix: 'truth' },
+            ],
             ownerDocument: document,
             parentNode: body,
         })
@@ -756,6 +760,7 @@ describe('selector', () => {
             ['[id=DIV i]', [div]],
             ['[id=no-namespace i]'],
             ['[ID=NO-NAMESPACE i]'],
+            ['[*|name=true]', [one], { namespaces: { lie: 'http://www.w3.org/lie', truth: 'http://www.w3.org/truth' } }],
             ['[\\31=\\31]', [one]],
             ['[color="#FFF"]', [div]],
             ['[color="#FFF" s]'],
