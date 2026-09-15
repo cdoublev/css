@@ -3084,6 +3084,7 @@ describe('<color>', () => {
         // Explicit <percentage>
         assert.valid('<color>', 'color-mix(green 1%, green)', 'color-mix(green 1%, green 99%)')
         assert.valid('<color>', 'color-mix(green calc(50%), green 50%)')
+        assert.valid('<color>', 'color-mix(green 75%, green 75%, green)', 'color-mix(green 75%, green 75%, green 0%)')
         // Preserve color components except <hue> and <alpha-value>
         assert.valid(
             '<color>',
