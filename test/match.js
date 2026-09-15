@@ -690,7 +690,7 @@ describe('selector', () => {
          * <html>
          *   <body>
          *     <div id="div" class="class-1 class-2" empty=""></div>
-         *     <div id="no-namespace"></div>
+         *     <div ID="no-namespace"></div>
          *     <svg id="svg" viewBox="0 0 1 1">
          *       <use xlink:href />
          *     </svg>
@@ -712,7 +712,7 @@ describe('selector', () => {
             parentNode: body,
         })
         const noNamespace = new Element({
-            attributes: [{ localName: 'id', value: 'no-namespace' }],
+            attributes: [{ localName: 'ID', value: 'no-namespace' }],
             localName: 'div',
             ownerDocument: document,
             parentNode: body,
@@ -737,16 +737,16 @@ describe('selector', () => {
         })
 
         const selections = [
-            ['[id]', [div, noNamespace]],
-            ['[id]', [div, noNamespace], { scopes: { roots: [document] } }],
-            ['[ID]', [div]],
-            ['[id]', [div, noNamespace], { namespaces: { '': HTML_NAMESPACE } }],
+            ['[id]', [div]],
+            ['[id]', [div], { scopes: { roots: [document] } }],
+            ['[ID]', [div, noNamespace]],
+            ['[ID]', [div, noNamespace], { namespaces: { '': HTML_NAMESPACE } }],
             ['[viewBox]', [svg]],
             ['[VIEWBOX]'],
             ['[href]'],
-            ['[|id]', [div, noNamespace]],
+            ['[|ID]', [div, noNamespace]],
             ['[|href]'],
-            ['[*|id]', [div, noNamespace, svg]],
+            ['[*|ID]', [div, noNamespace]],
             ['[*|href]', [use]],
             ['[another-prefix|href]', [use], { namespaces: { 'another-prefix': XLINK_NAMESPACE } }],
             ['[xlink|href]', [], { namespaces: { xlink: 'http://www.w3.org/1999/another-xlink' } }],
