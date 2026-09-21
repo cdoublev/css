@@ -784,6 +784,8 @@ export class HTMLFormElement extends HTMLElement {
     localName = 'form'
 }
 
+export class HTMLHeadElement extends HTMLElement { localName = 'head' }
+
 export class HTMLHeadingElement extends HTMLElement {
 
     /**

@@ -13,7 +13,15 @@ import {
     CSSStyleProperties,
     CSSStyleSheet,
 } from '../lib/cssom/index.js'
-import { HTMLBodyElement, HTMLDivElement, HTMLDocument, HTMLHtmlElement, HTMLStyleElement, ShadowRoot } from './dom.js'
+import {
+    HTMLBodyElement,
+    HTMLDivElement,
+    HTMLDocument,
+    HTMLHeadElement,
+    HTMLHtmlElement,
+    HTMLStyleElement,
+    ShadowRoot,
+} from './dom.js'
 import { describe, it, test } from 'node:test'
 import { UPDATE_READONLY_STYLE_DECLARATION_ERROR } from '../lib/error.js'
 import assert from 'node:assert/strict'
@@ -398,9 +406,19 @@ describe('CSSStyleDeclaration.setProperty(), CSSStyleDeclaration.getPropertyValu
     it('resolves a value for a pseudo-element', () => {
 
         const document = new HTMLDocument
-        const html = new HTMLHtmlElement({ ownerDocument: document, parentNode: document })
-        const body = new HTMLBodyElement({ ownerDocument: document, parentNode: html })
-        new HTMLStyleElement({ innerText: '::before { color: green }', ownerDocument: document, parentNode: body })
+        const html = new HTMLHtmlElement({
+            ownerDocument: document,
+            parentNode: document,
+        })
+        const body = new HTMLBodyElement({
+            ownerDocument: document,
+            parentNode: html,
+        })
+        new HTMLStyleElement({
+            innerText: '::before { color: green }',
+            ownerDocument: document,
+            parentNode: body,
+        })
         const before = CSSPseudoElement.createImpl(globalThis, undefined, {
             element: body,
             parent: body,
@@ -413,36 +431,44 @@ describe('CSSStyleDeclaration.setProperty(), CSSStyleDeclaration.getPropertyValu
     })
     it('resolves a value by collecting declarations in conditional rules', () => {
 
-        const styleSheet = `
-            html {
-                container-name: name;
-            }
-            body {
-
-                @container name {
-                    margin-top: 1px;
-                }
-                @container other-name {
-                    margin-top: 0px;
-                }
-                @media all {
-                    margin-right: 1px;
-                }
-                @media not all {
-                    margin-right: 0px;
-                }
-                @supports (color: green) {
-                    margin-bottom: 1px;
-                }
-                @supports (color: unknown) {
-                    margin-bottom: 0px;
-                }
-            }
-        `
         const document = new HTMLDocument
-        const html = new HTMLHtmlElement({ ownerDocument: document, parentNode: document })
-        const body = new HTMLBodyElement({ ownerDocument: document, parentNode: html })
-        new HTMLStyleElement({ innerText: styleSheet, ownerDocument: document, parentNode: body })
+        const html = new HTMLHtmlElement({
+            ownerDocument: document,
+            parentNode: document,
+        })
+        const body = new HTMLBodyElement({
+            ownerDocument: document,
+            parentNode: html,
+        })
+        new HTMLStyleElement({
+            innerText: `
+                html {
+                    container-name: name;
+                }
+                body {
+                    @container name {
+                        margin-top: 1px;
+                    }
+                    @container other-name {
+                        margin-top: 0px;
+                    }
+                    @media all {
+                        margin-right: 1px;
+                    }
+                    @media not all {
+                        margin-right: 0px;
+                    }
+                    @supports (color: green) {
+                        margin-bottom: 1px;
+                    }
+                    @supports (color: unknown) {
+                        margin-bottom: 0px;
+                    }
+                }
+            `,
+            ownerDocument: document,
+            parentNode: body,
+        })
         const style = createResolvedStyle(body)
 
         assert.equal(style.marginTop, '1px')
@@ -451,24 +477,26 @@ describe('CSSStyleDeclaration.setProperty(), CSSStyleDeclaration.getPropertyValu
     })
     it('resolves a value by filtering declared values in scoped style rules', () => {
 
-        /**
-         * <html>
-         *   <body id="root">
-         *     <div class="limit"></div>
-         *     <div></div>
-         *   </body>
-         * </html>
-         */
-        const styleSheet = `
-            @scope (#root) to (.limit) {
-                &, * {
-                    margin-top: 1px;
-                }
-            }
-        `
         const document = new HTMLDocument
-        const html = new HTMLHtmlElement({ ownerDocument: document, parentNode: document })
-        new HTMLStyleElement({ innerText: styleSheet, ownerDocument: document, parentNode: html })
+        const html = new HTMLHtmlElement({
+            ownerDocument: document,
+            parentNode: document,
+        })
+        const head = new HTMLHeadElement({
+            ownerDocument: document,
+            parentNode: html,
+        })
+        new HTMLStyleElement({
+            innerText: `
+                @scope (#root) to (.limit) {
+                    &, * {
+                        margin-top: 1px;
+                    }
+                }
+            `,
+            ownerDocument: document,
+            parentNode: head,
+        })
         const root = new HTMLBodyElement({
             attributes: [{ localName: 'id', value: 'root' }],
             ownerDocument: document,
@@ -505,12 +533,16 @@ describe('CSSStyleDeclaration.setProperty(), CSSStyleDeclaration.getPropertyValu
             ownerDocument: document,
             parentNode: document,
         })
-        const style = createResolvedStyle(html)
-        const { sheet: authorStyleSheet } = new HTMLStyleElement({
-            innerText: 'html { order: 4 !important }',
+        const head = new HTMLHeadElement({
             ownerDocument: document,
             parentNode: html,
         })
+        const { sheet: authorStyleSheet } = new HTMLStyleElement({
+            innerText: 'html { order: 4 !important }',
+            ownerDocument: document,
+            parentNode: head,
+        })
+        const style = createResolvedStyle(html)
 
         assert.equal(style.order, '1')
         agent.styleSheet.cssRules[0].style.order = '8'
@@ -575,38 +607,58 @@ describe('CSSStyleDeclaration.setProperty(), CSSStyleDeclaration.getPropertyValu
     })
     it('resolves a value by cascading declared values in layers declared in a specific order', () => {
 
-        const styleSheet = `
-            @layer first, last;
-            @layer last {
-              html {
-                order: 2;
-              }
-            }
-            @layer first {
-              html {
-                order: 1;
-              }
-            }
-        `
         const document = new HTMLDocument
-        const html = new HTMLHtmlElement({ ownerDocument: document, parentNode: document })
-        new HTMLStyleElement({ innerText: styleSheet, ownerDocument: document, parentNode: html })
+        const html = new HTMLHtmlElement({
+            ownerDocument: document,
+            parentNode: document,
+        })
+        const head = new HTMLHeadElement({
+            ownerDocument: document,
+            parentNode: html,
+        })
+        new HTMLStyleElement({
+            innerText: `
+                @layer first, last;
+                @layer last {
+                    html {
+                        order: 2;
+                    }
+                }
+                @layer first {
+                    html {
+                        order: 1;
+                    }
+                }
+            `,
+            ownerDocument: document,
+            parentNode: head,
+        })
         const style = createResolvedStyle(html)
 
         assert.equal(style.order, '2')
     })
     it('resolves a value by defaulting the cascaded value', () => {
 
-        const styleSheet = `
-            html {
-                --custom-1: 1;
-                font-size: 1px;
-                margin-top: 1px;
-            }`
         const document = new HTMLDocument
-        const html = new HTMLHtmlElement({ ownerDocument: document, parentNode: document })
-        new HTMLStyleElement({ innerText: styleSheet, ownerDocument: document, parentNode: html })
-        const body = new HTMLBodyElement({ ownerDocument: document, parentNode: html })
+        const html = new HTMLHtmlElement({
+            ownerDocument: document,
+            parentNode: document,
+        })
+        const body = new HTMLBodyElement({
+            ownerDocument: document,
+            parentNode: html,
+        })
+        new HTMLStyleElement({
+            innerText: `
+                html {
+                    --custom-1: 1;
+                    font-size: 1px;
+                    margin-top: 1px;
+                }
+            `,
+            ownerDocument: document,
+            parentNode: body,
+        })
         const style = createResolvedStyle(body)
 
         assert.equal(style.getPropertyValue('--custom-1'), '1')
@@ -657,18 +709,18 @@ describe('CSS-wide keywords', () => {
         user.styleSheet.insertRule(`
             html {
                 font-style: italic;
-                visibility: hidden;
                 margin-top: 1px;
                 margin-right: 1px;
+                visibility: hidden;
             }
         `)
         user.styleSheet.insertRule(`
             body {
 
-                font-style: initial;
-                margin-top: inherit;
-                margin-right: unset;
-                visibility: unset;
+                font-style:    initial;
+                margin-top:    inherit;
+                margin-right:  unset;
+                visibility:    unset;
                 margin-bottom: revert;
 
                 @layer one {
@@ -884,8 +936,19 @@ describe('background-color', () => {
     test('resolved', () => {
 
         const document = new HTMLDocument
-        const html = new HTMLHtmlElement({ ownerDocument: document, parentNode: document })
-        new HTMLStyleElement({ innerText: 'html { color: green }', ownerDocument: document, parentNode: html })
+        const html = new HTMLHtmlElement({
+            ownerDocument: document,
+            parentNode: document,
+        })
+        const head = new HTMLHeadElement({
+            ownerDocument: document,
+            parentNode: html,
+        })
+        new HTMLStyleElement({
+            innerText: 'html { color: green }',
+            ownerDocument: document,
+            parentNode: head,
+        })
         const style = createResolvedStyle(html)
 
         html.style.backgroundColor = 'currentcolor'
@@ -1076,9 +1139,15 @@ describe('color', () => {
     test('resolved', () => {
 
         const document = new HTMLDocument
-        const html = new HTMLHtmlElement({ ownerDocument: document, parentNode: document })
-        new HTMLStyleElement({ innerText: 'html { color: green }', ownerDocument: document, parentNode: html })
-        const body = new HTMLBodyElement({ ownerDocument: document, parentNode: html })
+        const html = new HTMLHtmlElement({
+            attributes: [{ localName: 'style', value: 'color: green' }],
+            ownerDocument: document,
+            parentNode: document,
+        })
+        const body = new HTMLBodyElement({
+            ownerDocument: document,
+            parentNode: html,
+        })
         const style = createResolvedStyle(body)
 
         const resolved = [
@@ -1098,7 +1167,6 @@ describe('color', () => {
             if (rootColor) {
                 html.style.color = rootColor
             }
-            html.setAttribute('color', input)
             body.style.color = input
             assert.equal(style.color, expected)
         })

@@ -27,13 +27,13 @@ const stylesheet = CSSStyleSheet.create(myGlobalObject, undefined, privateData)
 const style = CSSStyleProperties.create(myGlobalObject, undefined, privateData)
 
 // Parse something according to a CSS grammar
-const selectors = parseGrammar('div', '<selector-list>')
+const selector = parseGrammar('div', '<complex-selector>')
 
 // Parse a comma-separated list according to a CSS grammar
-const list = parseListGrammar('(width < 30rem), (orientation: portrait)', '<media-query-list>')
+const selectors = parseListGrammar('div, :invalid', '<complex-selector>')
 
 // Match a tree against a complex selector list
-const elements = matchTreesAgainstSelectors([document], selectors)
+const elements = matchTreesAgainstSelectors([document], selectors.filter(Boolean))
 
 // Add a pointing device
 states.get(myGlobalObject).system.pointers.push({ precision: 'fine', motionable: true })

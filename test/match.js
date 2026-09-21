@@ -15,6 +15,7 @@ import {
     HTMLElement,
     HTMLFieldSetElement,
     HTMLFormElement,
+    HTMLHeadElement,
     HTMLHeadingElement,
     HTMLHtmlElement,
     HTMLInputElement,
@@ -55,18 +56,19 @@ describe('media', () => {
 
     const document = new HTMLDocument
     const html = new HTMLHtmlElement({ ownerDocument: document, parentNode: document })
+    const head = new HTMLHeadElement({ ownerDocument: document, parentNode: html })
     new HTMLMetaElement({
         attributes: [
             { localName: 'name', value: 'color-scheme' },
             { localName: 'content', value: 'dark light' },
         ],
         ownerDocument: document,
-        parentNode: html,
+        parentNode: head,
     })
     new HTMLStyleElement({
         innerText: ':root { font-size: 32px }',
         ownerDocument: document,
-        parentNode: html,
+        parentNode: head,
     })
 
     const window = {
@@ -725,8 +727,8 @@ describe('selector', () => {
         const one = new HTMLDivElement({
             attributes: [
                 { localName: '1', value: '1' },
-                { localName: 'name', value: 'true', prefix: 'lie' },
-                { localName: 'name', value: 'true', prefix: 'truth' },
+                { localName: 'name', prefix: 'lie', value: 'true' },
+                { localName: 'name', prefix: 'truth', value: 'true' },
             ],
             ownerDocument: document,
             parentNode: body,
