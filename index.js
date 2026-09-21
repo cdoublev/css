@@ -1,55 +1,13 @@
 
 import * as cssom from './lib/cssom/index.js'
-import { states } from './lib/state.js'
-
-const defaultSharedState = {
-    agent: {
-        colorSchemes: ['light', 'dark'],
-        navigation: ['back'],
-        scripting: 'enabled',
-        type: 'screen',
-        viewport: {
-            interfaces: {
-                bottom: { expanded: false, value: 0 },
-                left: { expanded: false, value: 0 },
-                right: { expanded: false, value: 0 },
-                top: { expanded: false, value: 0 },
-            },
-            overflow: ['scroll', 'scroll'],
-            resizable: true,
-            state: 'normal',
-        },
-    },
-    system: {
-        display: {
-            blending: 'opaque',
-            colorIndex: 0,
-            graphicMode: true,
-            hdr: false,
-            interlaced: false,
-            monochrome: 0,
-            segments: [1, 1],
-            shape: 'rect',
-            update: 'fast',
-        },
-        pointers: [{ motionable: true, precision: 'fine' }],
-    },
-    user: {
-        colorScheme: 'light',
-        fontSize: 16,
-        highContrast: false,
-        invertedColors: false,
-        reducedData: false,
-        reducedMotion: false,
-        reducedTransparency: false,
-    },
-}
+import { create as createState } from './lib/state.js'
 
 /**
  * @param {Window} globalObject
  * @param {Map} [state]
+ * @returns {object}
  */
-function install(globalObject = globalThis, state = defaultSharedState) {
+function install(globalObject = globalThis, state = {}) {
     const entries = Object.entries(cssom)
     while (0 < entries.length) {
         const entry = entries.pop()
@@ -61,16 +19,11 @@ function install(globalObject = globalThis, state = defaultSharedState) {
         }
         wrapper.install(globalObject, ['Window'])
     }
-    states.set(globalObject, {
-        customProperties: new Map,
-        environmentVariables: new Map,
-        fontFaces: new Set,
-        randomCacheNames: [],
-        shared: state,
-    })
+    createState(state, globalObject)
 }
 
 export { CSSPseudoElement, CSSStyleProperties, CSSStyleSheet, StyleSheetList } from './lib/cssom/index.js'
 export { matchElementAgainstSelectors, matchTreesAgainstSelectors } from './lib/match/selector.js'
 export { parseGrammar, parseListGrammar } from './lib/parse/parser.js'
 export { install }
+export { states } from './lib/state.js'

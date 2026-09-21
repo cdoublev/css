@@ -13,7 +13,7 @@ import { states } from '../lib/state.js'
 
 install()
 
-const { customProperties } = states.get(globalThis)
+const { document: { customProperties } } = states.get(globalThis)
 
 describe('CSS.escape()', () => {
     it('serializes the given value', () => {

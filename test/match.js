@@ -42,12 +42,12 @@ import assert, { Assert, AssertionError } from 'node:assert/strict'
 import { createContext, parseGrammar } from '../lib/parse/parser.js'
 import { describe, test } from 'node:test'
 import { matchPseudoElementAgainstSelectors, matchTreesAgainstSelectors } from '../lib/match/selector.js'
+import { merge, states } from '../lib/state.js'
 import { CSSPseudoElement } from '../lib/cssom/index.js'
 import { install } from '@cdoublev/css'
 import matchMediaQueryList from '../lib/match/media.js'
 import matchSupport from '../lib/match/support.js'
 import { omitted } from '../lib/values/value.js'
-import { states } from '../lib/state.js'
 
 install()
 
@@ -76,22 +76,6 @@ describe('media', () => {
     }
 
     /**
-     * @param {object} initial
-     * @param {object} state
-     * @returns {object}
-     */
-    function mergeState(initial = {}, state) {
-        return Object.entries(state).reduce(
-            (initial, [key, value]) => {
-                if (typeof value === 'object' && !Array.isArray(value)) {
-                    value = mergeState(initial[key], value)
-                }
-                return { ...initial, [key]: value }
-            },
-            initial)
-    }
-
-    /**
      * @param {string} query
      * @param {object} [state] override
      * @param {object} [globalObject] override
@@ -101,7 +85,7 @@ describe('media', () => {
         const initialState = states.get(globalThis)
 
         Object.assign(globalThis, window, globalObject)
-        states.set(globalThis, mergeState(initialState, { shared: state }))
+        states.set(globalThis, merge(state, initialState))
 
         const result = matchMediaQueryList(parseGrammar(query, '<media-query-list>', globalThis), globalThis)
 
@@ -232,8 +216,8 @@ describe('media', () => {
             ['(color-gamut: p3)', false],
             ['(color-gamut: srgb)'],
             ['(display-mode: fullscreen)', false],
-            ['(display-mode: fullscreen)', false, { manifest: { display: 'standalone' } }],
-            ['(display-mode: fullscreen)', true, { manifest: { display: 'fullscreen' } }],
+            ['(display-mode: fullscreen)', false, { document: { manifest: { display: 'standalone' } } }],
+            ['(display-mode: fullscreen)', true, { document: { manifest: { display: 'fullscreen' } } }],
             ['(display-mode: fullscreen)', true, undefined, { document: { fullscreenEnabled: true } }],
             ['(display-mode: picture-in-picture)', true, undefined, { document: { pictureInPictureEnabled: true } }],
             ['(display-mode: browser)'],
@@ -351,7 +335,7 @@ describe('media', () => {
             ['(height: 100px)'],
             ['(height: 1in)', true, undefined, { innerHeight: 96 }],
             ['(height: 2in)', false],
-            ['(height: 1em)', true, undefined, { innerHeight: states.get(globalThis).shared.user.fontSize }],
+            ['(height: 1em)', true, undefined, { innerHeight: states.get(globalThis).user.fontSize }],
             ['(height: 1em)', false],
             ['(horizontal-viewport-segments: 0)', false],
             ['(horizontal-viewport-segments: 2)', true, { system: { display: { segments: [2, 1] } } }],
@@ -5608,7 +5592,7 @@ describe('support', () => {
     })
     test('environment variable', () => {
 
-        states.get(globalThis).environmentVariables.set('--custom', omitted)
+        states.get(globalThis).document.environmentVariables.set('--custom', omitted)
 
         assert.equal(match('env(--CUSTOM)'), false)
         assert.equal(match('env(--custom)'), true)

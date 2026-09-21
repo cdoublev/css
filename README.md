@@ -16,10 +16,11 @@ const {
   matchTreesAgainstSelectors,
   parseGrammar,
   parseListGrammar,
+  states,
 } = require('@cdoublev/css')
 
 // Install CSSOM interfaces on the global object
-install()
+install(myGlobalObject, { user: { fontSize: 20 } })
 
 // Create a CSSStyleSheet or CSSStyleProperties wrapper
 const stylesheet = CSSStyleSheet.create(myGlobalObject, undefined, privateData)
@@ -33,6 +34,11 @@ const list = parseListGrammar('(width < 30rem), (orientation: portrait)', '<medi
 
 // Match a tree against a complex selector list
 const elements = matchTreesAgainstSelectors([document], selectors)
+
+// Add a pointing device
+states.get(myGlobalObject).system.pointers.push({ precision: 'fine', motionable: true })
+// Change the user preferred font size
+states.get(myGlobalObject).user.fontSize = 16
 ```
 
 `install()` accepts two optional arguments:
@@ -41,51 +47,65 @@ const elements = matchTreesAgainstSelectors([document], selectors)
   - <details>
     <summary>an object defining the user agent, system, and preferences (default: see below)</summary><br>
 
-    | Property                      | Default                         | Affected values
-    | ----------------------------- | ------------------------------- | ----------------------------------------------- |
-    | `agent.colorSchemes`          | `['light', 'dark']`             | `@media/*-color-scheme`                         |
-    | `agent.navigation`            | `['back']`                      | `@media/nav-controls`                           |
-    | `agent.scripting`             | `'enabled'`                     | `@media/scripting`                              |
-    | `agent.type`                  | `'screen'`                      | `@media` (`<media-type>`)                       |
-    | `agent.viewport.interfaces.*` | `{ expanded: false, value: 0 }` | `*dv*` and `*sv*` length values                 |
-    | `agent.viewport.overflow`     | `['scroll', 'scroll']`          | `@media/overflow-*`                             |
-    | `agent.viewport.resizable`    | `true`                          | `@media/resizable`                              |
-    | `agent.viewport.state`        | `'normal'`                      | `@media/display-state`                          |
-    | `manifest`                    | undefined                       | `@media/display-mode`                           |
-    | `system.display.blending`     | `'opaque'`                      | `@media/environment-blending`                   |
-    | `system.display.colorIndex`   | `0`                             | `@media/color-index`                            |
-    | `system.display.graphicMode`  | `true`                          | `@media/grid`                                   |
-    | `system.display.hdr`          | `false`                         | `@media/*-dynamic-range`                        |
-    | `system.display.interlaced`   | `false`                         | `@media/scan`                                   |
-    | `system.display.monochrome`   | `0`                             | `@media/monochrome`                             |
-    | `system.display.segments`     | `[1, 1]`                        | `@media/*-segments`                             |
-    | `system.display.shape`        | `'rect'`                        | `@media/shape`                                  |
-    | `system.display.update`       | `'fast'`                        | `@media/update`                                 |
-    | `system.pointers`             | See below                       | `@media/*-hover`, `@media/*-pointer`            |
-    | `user.colorScheme`            | `'light'`                       | `@media/*-color-scheme`, `<system-color>`       |
-    | `user.forcedColors`           | undefined                       | `@media/forced-colors`, `@media/prefers-color-scheme`, `@media/prefers-contrast`, `<system-color>` |
-    | `user.highContrast`           | `false`                         | `@media/prefers-contrast`                       |
-    | `user.fontFamily`             | `monospace`                     | `font-family`                                   |
-    | `user.fontSize`               | `16`                            | `font-size`                                     |
-    | `user.invertedColors`         | `false`                         | `@media/inverted-colors`                        |
-    | `user.reducedData`            | `false`                         | `@media/prefers-reduced-data`                   |
-    | `user.reducedMotion`          | `false`                         | `@media/prefers-reduced-motion`                 |
-    | `user.reducedTransparency`    | `false`                         | `@media/prefers-reduced-transparency`           |
-    | `user.voiceFamily`            | `female`                        | `voice-family`                                  |
+    They ​​will be recursively merged with the default values.
 
-    `agent.colorSchemes` represents the color schemes supported by the user agent, with the first entry representing the default color scheme. `user.colorScheme` represents the user's preferred color scheme, which is assumed to be included in `agent.colorSchemes`.
+    | Property                         | Default                         | Affected values
+    | -------------------------------- | ------------------------------- | ----------------------------------------------- |
+    | `agent.colorSchemes`             | `['light', 'dark']`             | `@media/*-color-scheme`                         |
+    | `agent.navigation`               | `['back']`                      | `@media/nav-controls`                           |
+    | `agent.scripting`                | `'enabled'`                     | `@media/scripting`                              |
+    | `agent.type`                     | `'screen'`                      | `@media` (`<media-type>`)                       |
+    | `agent.viewport.interfaces.*`    | `{ expanded: false, value: 0 }` | `<length>`                                      |
+    | `agent.viewport.overflow`        | `['scroll', 'scroll']`          | `@media/overflow-*`                             |
+    | `agent.viewport.resizable`       | `true`                          | `@media/resizable`                              |
+    | `agent.viewport.state`           | `'normal'`                      | `@media/display-state`                          |
+    | `document.manifest`              | `null`                          | `@media/display-mode`                           |
+    | `document.customProperties`      | `new Map`                       | `<var()>`                                       |
+    | `document.environmentVariables`  | `new Map`                       | `<env()>`                                       |
+    | `document.fontFaces`             | `new Set`                       | `<length>`, `line-height`                       |
+    | `document.randomCacheNames`      | `[]`                            | `<random()>`                                    |
+    | `system.display.blending`        | `'opaque'`                      | `@media/environment-blending`                   |
+    | `system.display.colorIndex`      | `0`                             | `@media/color-index`                            |
+    | `system.display.graphicMode`     | `true`                          | `@media/grid`                                   |
+    | `system.display.hdr`             | `false`                         | `@media/*-dynamic-range`                        |
+    | `system.display.interlaced`      | `false`                         | `@media/scan`                                   |
+    | `system.display.monochrome`      | `0`                             | `@media/monochrome`                             |
+    | `system.display.segments`        | `[1, 1]`                        | `@media/*-segments`                             |
+    | `system.display.shape`           | `'rect'`                        | `@media/shape`                                  |
+    | `system.display.update`          | `'fast'`                        | `@media/update`                                 |
+    | `system.pointers`                | See below                       | `@media/*-hover`, `@media/*-pointer`            |
+    | `user.colorScheme`               | `'light'`                       | `@media/*-color-scheme`, `<system-color>`       |
+    | `user.forcedColors`              | `null`                          | `@media/forced-colors`, `@media/prefers-color-scheme`, `@media/prefers-contrast`, `<system-color>` |
+    | `user.highContrast`              | `false`                         | `@media/prefers-contrast`                       |
+    | `user.fontSize`                  | `16`                            | `font-size`                                     |
+    | `user.invertedColors`            | `false`                         | `@media/inverted-colors`                        |
+    | `user.reducedData`               | `false`                         | `@media/prefers-reduced-data`                   |
+    | `user.reducedMotion`             | `false`                         | `@media/prefers-reduced-motion`                 |
+    | `user.reducedTransparency`       | `false`                         | `@media/prefers-reduced-transparency`           |
 
-    `agent.viewport.interfaces` must be an object with the properties `bottom`, `left`, `right`, `top`, assigned `{ expanded: Boolean, value: Number }`. It represents the user agent interfaces affecting the viewport area when expanded.
+    `agent.colorSchemes` represents the color schemes supported by the user agent. The first entry is the default color scheme.
+
+    `agent.viewport.interfaces` represents the user agent interfaces affecting the viewport area when expanded. It must be an object with the properties `bottom`, `left`, `right`, `top`, assigned `{ expanded: Boolean, value: Number }`.
 
     `agent.viewport.overflow` represents the overflow behavior in the inline and block direction, respectively.
 
-    `manifest` (parsed JSON) must be defined only when emulating a Web application environment.
+    `document.manifest` (parsed JSON) must be defined only when emulating a Web application environment.
+
+    `document.customProperties` represents custom properties registered with `CSS.registerProperty()`.
+
+    `document.environmentVariables` represents environment variables registered with an interface that has not yet been defined in specifications.
+
+    `document.fontFaces` represents font faces registered with `@font-face`.
+
+    `document.randomCacheNames` represents `random()` base values associated with the data that determines when they are shared.
 
     `system.display.segments` represents the number of horizontal and vertical segments, respectively.
 
     `system.pointers` must be a list of pointer definitions as `{ motionable: Boolean, precision: 'coarse|fine' }`. The first entry represents the primary pointer, which defaults to `{ motionable: true, precision: 'fine' }`.
 
-    `user.forcedColors` must be an object mapping a `<system-color>` keyword in lowercase to a resolved legacy `<rgb()>`. It represents the colors from the high contrast mode in Windows or Firefox. When it is defined, `user.highContrast` must not be defined: it will be evaluated based on the WCAG contrast ratio between `canvas` and `canvastext`, which are assumed to always be defined.
+    `user.colorScheme` represents the user's preferred color scheme, which is assumed to be included in `agent.colorSchemes`.
+
+    `user.forcedColors` represents the colors from the high contrast mode in Windows or Firefox. It must be an object mapping a `<system-color>` keyword in lowercase to a resolved legacy `<rgb()>`. When it is defined, `user.highContrast` must not be defined: it will be evaluated based on the WCAG contrast ratio between `canvas` and `canvastext`, which are assumed to always be defined.
 
     `user.highContrast` corresponds to the high contrast mode in macOS, which does not activate the forced color mode, so `user.forcedColors` is assumed to be undefined.
 

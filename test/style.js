@@ -4592,7 +4592,7 @@ describe('CSSFontFaceDescriptors', () => {
 
         const style = CSSFontFaceDescriptors.create(globalThis, undefined, { parentRule: fontFaceRule })
 
-        states.get(globalThis).randomCacheNames.push({ base: 0.5, identifier: '--name', scope: null })
+        states.get(globalThis).document.randomCacheNames.push({ base: 0.5, identifier: '--name', scope: null })
 
         // Alias
         style.fontStretch = 'condensed'

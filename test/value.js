@@ -2384,7 +2384,7 @@ describe('<random()>', () => {
     })
     test('valid', () => {
 
-        const { randomCacheNames } = states.get(globalThis)
+        const { document: { randomCacheNames } } = states.get(globalThis)
         randomCacheNames.push(
             { base: 0.5, element: null, identifier: null, scope: 'ua-any-property' },
             { base: 0, element: null, identifier: null, scope: 'ua-any-property-1' },
