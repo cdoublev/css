@@ -340,8 +340,6 @@ export class Document extends Node {
             defaultView = globalThis,
             selected,
             url = 'http://localhost/',
-            userAgentStyleSheet = '',
-            userStyleSheet = '',
         } = properties
 
         globalThis.document = this
@@ -354,14 +352,6 @@ export class Document extends Node {
 
         // Private
         this._selected = selected
-        this._userAgentStyleSheet = CSSStyleSheet.create(globalThis, undefined, {
-            location: this.baseURI,
-            rules: userAgentStyleSheet,
-        })
-        this._userStyleSheet = CSSStyleSheet.create(globalThis, undefined, {
-            location: this.baseURI,
-            rules: userStyleSheet,
-        })
     }
 
     /**

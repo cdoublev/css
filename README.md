@@ -54,6 +54,7 @@ states.get(myGlobalObject).user.fontSize = 16
     | `agent.colorSchemes`             | `['light', 'dark']`             | `@media/*-color-scheme`                         |
     | `agent.navigation`               | `['back']`                      | `@media/nav-controls`                           |
     | `agent.scripting`                | `'enabled'`                     | `@media/scripting`                              |
+    | `agent.styleSheet`               | `CSSStyleSheet`                 | *                                               |
     | `agent.type`                     | `'screen'`                      | `@media` (`<media-type>`)                       |
     | `agent.viewport.interfaces.*`    | `{ expanded: false, value: 0 }` | `<length>`                                      |
     | `agent.viewport.overflow`        | `['scroll', 'scroll']`          | `@media/overflow-*`                             |
@@ -82,8 +83,11 @@ states.get(myGlobalObject).user.fontSize = 16
     | `user.reducedData`               | `false`                         | `@media/prefers-reduced-data`                   |
     | `user.reducedMotion`             | `false`                         | `@media/prefers-reduced-motion`                 |
     | `user.reducedTransparency`       | `false`                         | `@media/prefers-reduced-transparency`           |
+    | `user.styleSheet`                | `CSSStyleSheet`                 | *                                               |
 
     `agent.colorSchemes` represents the color schemes supported by the user agent. The first entry is the default color scheme.
+
+    `agent.styleSheet` and `user.styleSheet` are parsed into `CSSStyleSheet`s.
 
     `agent.viewport.interfaces` represents the user agent interfaces affecting the viewport area when expanded. It must be an object with the properties `bottom`, `left`, `right`, `top`, assigned `{ expanded: Boolean, value: Number }`.
 

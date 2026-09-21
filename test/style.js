@@ -459,15 +459,16 @@ describe('CSSStyleDeclaration.setProperty(), CSSStyleDeclaration.getPropertyValu
          *   </body>
          * </html>
          */
-        const userStyleSheet = `
+        const styleSheet = `
             @scope (#root) to (.limit) {
                 &, * {
                     margin-top: 1px;
                 }
             }
         `
-        const document = new HTMLDocument({ userStyleSheet })
+        const document = new HTMLDocument
         const html = new HTMLHtmlElement({ ownerDocument: document, parentNode: document })
+        new HTMLStyleElement({ innerText: styleSheet, ownerDocument: document, parentNode: html })
         const root = new HTMLBodyElement({
             attributes: [{ localName: 'id', value: 'root' }],
             ownerDocument: document,
@@ -489,11 +490,12 @@ describe('CSSStyleDeclaration.setProperty(), CSSStyleDeclaration.getPropertyValu
     })
     it('resolves a value by cascading declared values', () => {
 
-        const document = new HTMLDocument({
-            userAgentStyleSheet: 'html { order: 1 !important }',
-            userStyleSheet: 'html { order: 2 !important }',
-        })
-        const { _userAgentStyleSheet, _userStyleSheet } = document
+        const { agent, user } = states.get(globalThis)
+
+        agent.styleSheet.insertRule('html { order: 1 !important }')
+        user.styleSheet.insertRule('html { order: 2 !important }')
+
+        const document = new HTMLDocument
         const html = new HTMLHtmlElement({
             attributes: [
                 { localName: 'id', value: 'id' },
@@ -511,9 +513,9 @@ describe('CSSStyleDeclaration.setProperty(), CSSStyleDeclaration.getPropertyValu
         })
 
         assert.equal(style.order, '1')
-        _userAgentStyleSheet.cssRules[0].style.order = '8'
+        agent.styleSheet.cssRules[0].style.order = '8'
         assert.equal(style.order, '2')
-        _userStyleSheet.cssRules[0].style.order = '7'
+        user.styleSheet.cssRules[0].style.order = '7'
         assert.equal(style.order, '3')
         html.style.order = '5'
         assert.equal(style.order, '4')
@@ -523,9 +525,9 @@ describe('CSSStyleDeclaration.setProperty(), CSSStyleDeclaration.getPropertyValu
         assert.equal(style.order, '6')
         authorStyleSheet.deleteRule(0)
         assert.equal(style.order, '7')
-        _userStyleSheet.deleteRule(0)
+        user.styleSheet.deleteRule(0)
         assert.equal(style.order, '8')
-        _userAgentStyleSheet.deleteRule(0)
+        agent.styleSheet.deleteRule(0)
 
         const constructedStyleSheet = new globalThis.CSSStyleSheet()
 
@@ -573,7 +575,7 @@ describe('CSSStyleDeclaration.setProperty(), CSSStyleDeclaration.getPropertyValu
     })
     it('resolves a value by cascading declared values in layers declared in a specific order', () => {
 
-        const userStyleSheet = `
+        const styleSheet = `
             @layer first, last;
             @layer last {
               html {
@@ -586,22 +588,24 @@ describe('CSSStyleDeclaration.setProperty(), CSSStyleDeclaration.getPropertyValu
               }
             }
         `
-        const document = new HTMLDocument({ userStyleSheet })
+        const document = new HTMLDocument
         const html = new HTMLHtmlElement({ ownerDocument: document, parentNode: document })
+        new HTMLStyleElement({ innerText: styleSheet, ownerDocument: document, parentNode: html })
         const style = createResolvedStyle(html)
 
         assert.equal(style.order, '2')
     })
     it('resolves a value by defaulting the cascaded value', () => {
 
-        const userStyleSheet = `
+        const styleSheet = `
             html {
                 --custom-1: 1;
                 font-size: 1px;
                 margin-top: 1px;
             }`
-        const document = new HTMLDocument({ userStyleSheet })
+        const document = new HTMLDocument
         const html = new HTMLHtmlElement({ ownerDocument: document, parentNode: document })
+        new HTMLStyleElement({ innerText: styleSheet, ownerDocument: document, parentNode: html })
         const body = new HTMLBodyElement({ ownerDocument: document, parentNode: html })
         const style = createResolvedStyle(body)
 
@@ -647,14 +651,18 @@ describe('CSS-wide keywords', () => {
     })
     test('resolved', () => {
 
-        const userAgentStyleSheet = 'body { margin-bottom: 1px }'
-        const userStyleSheet = `
+        const { agent, user } = states.get(globalThis)
+
+        agent.styleSheet.insertRule('body { margin-bottom: 1px }')
+        user.styleSheet.insertRule(`
             html {
                 font-style: italic;
                 visibility: hidden;
                 margin-top: 1px;
                 margin-right: 1px;
             }
+        `)
+        user.styleSheet.insertRule(`
             body {
 
                 font-style: initial;
@@ -673,8 +681,9 @@ describe('CSS-wide keywords', () => {
                     }
                 }
             }
-        `
-        const document = new HTMLDocument({ userAgentStyleSheet, userStyleSheet })
+        `)
+
+        const document = new HTMLDocument
         const html = new HTMLHtmlElement({ ownerDocument: document, parentNode: document })
         const body = new HTMLBodyElement({ ownerDocument: document, parentNode: html })
         const style = createResolvedStyle(body)
@@ -685,6 +694,10 @@ describe('CSS-wide keywords', () => {
         assert.equal(style.marginLeft, '1px')
         assert.equal(style.marginBottom, '1px')
         assert.equal(style.visibility, 'hidden')
+
+        agent.styleSheet.deleteRule(0)
+        user.styleSheet.deleteRule(0)
+        user.styleSheet.deleteRule(0)
     })
 })
 describe('arbitrary substitution', () => {
@@ -870,8 +883,9 @@ describe('animation-range-start, timeline-trigger-activation-range-start, timeli
 describe('background-color', () => {
     test('resolved', () => {
 
-        const document = new HTMLDocument({ userStyleSheet: 'html { color: green }' })
+        const document = new HTMLDocument
         const html = new HTMLHtmlElement({ ownerDocument: document, parentNode: document })
+        new HTMLStyleElement({ innerText: 'html { color: green }', ownerDocument: document, parentNode: html })
         const style = createResolvedStyle(html)
 
         html.style.backgroundColor = 'currentcolor'
@@ -1061,8 +1075,9 @@ describe('clip-path', () => {
 describe('color', () => {
     test('resolved', () => {
 
-        const document = new HTMLDocument({ userStyleSheet: 'html { color: green }' })
+        const document = new HTMLDocument
         const html = new HTMLHtmlElement({ ownerDocument: document, parentNode: document })
+        new HTMLStyleElement({ innerText: 'html { color: green }', ownerDocument: document, parentNode: html })
         const body = new HTMLBodyElement({ ownerDocument: document, parentNode: html })
         const style = createResolvedStyle(body)
 

@@ -42,7 +42,7 @@ import assert, { Assert, AssertionError } from 'node:assert/strict'
 import { createContext, parseGrammar } from '../lib/parse/parser.js'
 import { describe, test } from 'node:test'
 import { matchPseudoElementAgainstSelectors, matchTreesAgainstSelectors } from '../lib/match/selector.js'
-import { merge, states } from '../lib/state.js'
+import { create as createState, states } from '../lib/state.js'
 import { CSSPseudoElement } from '../lib/cssom/index.js'
 import { install } from '@cdoublev/css'
 import matchMediaQueryList from '../lib/match/media.js'
@@ -53,7 +53,7 @@ install()
 
 describe('media', () => {
 
-    const document = new HTMLDocument({ userStyleSheet: ':root { font-size: 32px }' })
+    const document = new HTMLDocument
     const html = new HTMLHtmlElement({ ownerDocument: document, parentNode: document })
     new HTMLMetaElement({
         attributes: [
@@ -63,6 +63,12 @@ describe('media', () => {
         ownerDocument: document,
         parentNode: html,
     })
+    new HTMLStyleElement({
+        innerText: ':root { font-size: 32px }',
+        ownerDocument: document,
+        parentNode: html,
+    })
+
     const window = {
         devicePixelRatio: 1,
         document,
@@ -80,12 +86,14 @@ describe('media', () => {
      * @param {object} [state] override
      * @param {object} [globalObject] override
      */
-    function match(query, state = {}, globalObject = {}) {
+    function match(query, state, globalObject) {
 
         const initialState = states.get(globalThis)
 
         Object.assign(globalThis, window, globalObject)
-        states.set(globalThis, merge(state, initialState))
+        if (state) {
+            createState(state, globalThis)
+        }
 
         const result = matchMediaQueryList(parseGrammar(query, '<media-query-list>', globalThis), globalThis)
 
