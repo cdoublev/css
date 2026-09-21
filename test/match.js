@@ -18,6 +18,7 @@ import {
     HTMLHeadElement,
     HTMLHeadingElement,
     HTMLHtmlElement,
+    HTMLIFrameElement,
     HTMLInputElement,
     HTMLLegendElement,
     HTMLMediaElement,
@@ -5554,6 +5555,40 @@ describe('selector', () => {
 
         assert.match(':heading', headings, document)
         assert.match(':heading(1, 3, 5)', headings.filter(isOdd), document)
+    })
+    // User action
+    test(':focus, :focus-visible, :focus-within', () => {
+
+        /**
+         * <html>
+         *   <iframe></iframe>
+         *   <div>
+         *     #shadow-root
+         *       <input>
+         *   </div>
+         * </html>
+         */
+        const document = new HTMLDocument
+        const html = new HTMLHtmlElement({ ownerDocument: document, parentNode: document })
+        const iframe = new HTMLIFrameElement({ ownerDocument: document, parentNode: html })
+        const host = new HTMLDivElement({ ownerDocument: document, parentNode: html })
+        const shadowRoot = new ShadowRoot({ host, ownerDocument: document })
+        const input = new HTMLInputElement({ ownerDocument: document, parentNode: shadowRoot })
+
+        const selections = [
+            [':focus', [], iframe],
+            [':focus', [host, input], input],
+            [':focus-visible', [], input, false],
+            [':focus-visible', [input], input, false, true],
+            [':focus-within', [html, host, input], input],
+        ]
+        selections.forEach(([selector, expected, node, visible = true, prefersVisibleFocus]) => {
+            states.get(globalThis).document.focus = { node, visible }
+            if (prefersVisibleFocus) {
+                states.get(globalThis).user.visibleFocus = prefersVisibleFocus
+            }
+            assert.match(selector, expected, document)
+        })
     })
     // View transition
     test(':active-view-transition, :active-view-transition()', () => {

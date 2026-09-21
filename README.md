@@ -63,7 +63,7 @@ states.get(myGlobalObject).user.fontSize = 16
     | `document.manifest`              | `null`                          | `@media/display-mode`                           |
     | `document.customProperties`      | `new Map`                       | `<var()>`                                       |
     | `document.environmentVariables`  | `new Map`                       | `<env()>`                                       |
-    | `document.fontFaces`             | `new Set`                       | `<length>`, `line-height`                       |
+    | `document.focused`               | `null`                          | `:focus-*`                                      |
     | `document.randomCacheNames`      | `[]`                            | `<random()>`                                    |
     | `system.display.blending`        | `'opaque'`                      | `@media/environment-blending`                   |
     | `system.display.colorIndex`      | `0`                             | `@media/color-index`                            |

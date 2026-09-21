@@ -800,6 +800,8 @@ export class HTMLHeadingElement extends HTMLElement {
 
 export class HTMLHtmlElement extends HTMLElement { localName = 'html' }
 
+export class HTMLIFrameElement extends HTMLElement { localName = 'iframe' }
+
 export class HTMLInputElement extends HTMLElement {
 
     localName = 'input'
