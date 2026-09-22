@@ -84,6 +84,8 @@ describe('media', () => {
         },
     }
 
+    globalThis.top = globalThis
+
     /**
      * @param {string} query
      * @param {object} [state] override
