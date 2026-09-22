@@ -203,7 +203,7 @@ describe('media', () => {
             ['(width)'],
             ['(width)', false, undefined, { innerWidth: 0 }],
         ]
-        queries.forEach(([query, expected = true, context, state]) => assert.equal(match(query, context, state), expected))
+        queries.forEach(([query, expected = true, state, context]) => assert.equal(match(query, state, context), expected))
     })
     test('plain', () => {
         const queries = [
@@ -364,7 +364,7 @@ describe('media', () => {
             ['(width: 0px)', false],
             ['(width: 100px)'],
         ]
-        queries.forEach(([query, expected = true, state, media]) => assert.equal(match(query, state, media), expected))
+        queries.forEach(([query, expected = true, state, context]) => assert.equal(match(query, state, context), expected))
     })
     test('range', () => {
         const queries = [
@@ -426,7 +426,7 @@ describe('media', () => {
             ['(aspect-ratio >= 0 / 0)', false],
             ['(aspect-ratio >= 0 / 0)', false, { innerHeight: 1, innerWidth: 0 }],
         ]
-        queries.forEach(([query, expected = true, media]) => assert.equal(match(query, undefined, media), expected))
+        queries.forEach(([query, expected = true, context]) => assert.equal(match(query, undefined, context), expected))
     })
     test('combinations', () => {
         const queries = [
