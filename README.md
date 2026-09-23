@@ -84,6 +84,7 @@ states.get(myGlobalObject).user.fontSize = 16
     | `user.reducedMotion`             | `false`                         | `@media/prefers-reduced-motion`                 |
     | `user.reducedTransparency`       | `false`                         | `@media/prefers-reduced-transparency`           |
     | `user.styleSheet`                | `CSSStyleSheet`                 | *                                               |
+    | `user.visibleFocus`              | `false`                         | `:focus-visible`                                |
 
     `agent.colorSchemes` represents the color schemes supported by the user agent. The first entry is the default color scheme.
 
