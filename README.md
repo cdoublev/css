@@ -108,7 +108,7 @@ states.get(myGlobalObject).user.fontSize = 16
 
     `system.pointers` must be a list of pointer definitions as `{ motionable: Boolean, precision: 'coarse|fine' }`. The first entry represents the primary pointer, which defaults to `{ motionable: true, precision: 'fine' }`.
 
-    `user.colorScheme` represents the user's preferred color scheme, which is assumed to be included in `agent.colorSchemes`.
+    `user.colorScheme` represents the user's preferred color scheme, which is assumed to be included in `agent.colorSchemes`. Prefix the color scheme with `overriding-` to indicate an overriding preference.
 
     `user.forcedColors` represents the colors from the high contrast mode in Windows or Firefox. It must be an object mapping a `<system-color>` keyword in lowercase to a resolved legacy `<rgb()>`. When it is defined, `user.highContrast` must not be defined: it will be evaluated based on the WCAG contrast ratio between `canvas` and `canvastext`, which are assumed to always be defined.
 

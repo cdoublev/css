@@ -1139,37 +1139,40 @@ describe('color', () => {
     test('resolved', () => {
 
         const document = new HTMLDocument
-        const html = new HTMLHtmlElement({
-            attributes: [{ localName: 'style', value: 'color: green' }],
-            ownerDocument: document,
-            parentNode: document,
-        })
-        const body = new HTMLBodyElement({
-            ownerDocument: document,
-            parentNode: html,
-        })
+        const html = new HTMLHtmlElement({ ownerDocument: document, parentNode: document })
+        const body = new HTMLBodyElement({ ownerDocument: document, parentNode: html })
         const style = createResolvedStyle(body)
 
-        const resolved = [
-            // currentColor
-            ['currentcolor', 'rgb(0, 128, 0)'],
-            ['currentcolor', 'rgb(0, 0, 0)', 'currentcolor'],
-            // transparent
-            ['transparent', 'rgba(0, 0, 0, 0)'],
-            // <named-color>
-            ['green', 'rgb(0, 128, 0)'],
-            // <system-color>
-            ['graytext', 'rgb(96, 0, 0)'],
-            // <deprecated-color>
-            ['inactivecaptiontext', 'rgb(96, 0, 0)'],
-        ]
-        resolved.forEach(([input, expected, rootColor]) => {
-            if (rootColor) {
-                html.style.color = rootColor
-            }
-            body.style.color = input
-            assert.equal(style.color, expected)
-        })
+        // currentColor
+        body.style.color = 'currentcolor'
+        assert.equal(style.color, 'rgb(0, 0, 0)')
+        html.style.color = 'green'
+        assert.equal(style.color, 'rgb(0, 128, 0)')
+
+        // transparent
+        body.style.color = 'transparent'
+        assert.equal(style.color, 'rgba(0, 0, 0, 0)')
+
+        // <named-color>
+        body.style.color = 'green'
+        assert.equal(style.color, 'rgb(0, 128, 0)')
+
+        // <system-color>
+        body.style.color = 'graytext'
+        assert.equal(style.color, 'rgb(96, 0, 0)')
+        body.style.colorScheme = 'dark'
+        assert.equal(style.color, 'rgb(63, 242, 63)')
+        states.get(globalThis).user.colorScheme = 'overriding-light'
+        assert.equal(style.color, 'rgb(96, 0, 0)')
+        body.style.colorScheme = 'dark only'
+        assert.equal(style.color, 'rgb(63, 242, 63)')
+
+        // <deprecated-color>
+        body.style.color = 'inactivecaptiontext'
+        assert.equal(style.color, 'rgb(63, 242, 63)')
+        body.style.colorScheme = ''
+        states.get(globalThis).user.colorScheme = 'light'
+        assert.equal(style.color, 'rgb(96, 0, 0)')
     })
 })
 describe('color-scheme', () => {
