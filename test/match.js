@@ -58,7 +58,7 @@ describe('media', () => {
     const document = new HTMLDocument
     const html = new HTMLHtmlElement({ ownerDocument: document, parentNode: document })
     const head = new HTMLHeadElement({ ownerDocument: document, parentNode: html })
-    new HTMLMetaElement({
+    const meta = new HTMLMetaElement({
         attributes: [
             { localName: 'name', value: 'color-scheme' },
             { localName: 'content', value: 'dark light' },
@@ -82,27 +82,28 @@ describe('media', () => {
             height: 100,
             width: 200,
         },
+        top: globalThis,
     }
-
-    globalThis.top = globalThis
 
     /**
      * @param {string} query
-     * @param {object} [state] override
-     * @param {object} [globalObject] override
+     * @param {object} [state] partial
+     * @param {object} [context] partial
+     * @param {string} [colorSchemes]
      */
-    function match(query, state, globalObject) {
+    function match(query, state = {}, context, colorSchemes = 'dark light') {
 
         const initialState = states.get(globalThis)
+        const initialColorSchemes = meta.content
 
-        Object.assign(globalThis, window, globalObject)
-        if (state) {
-            createState(state, globalThis)
-        }
+        context = Object.assign(globalThis, window, context)
+        createState(state, context)
+        meta.setAttribute('content', colorSchemes)
 
-        const result = matchMediaQueryList(parseGrammar(query, '<media-query-list>', globalThis), globalThis)
+        const result = matchMediaQueryList(parseGrammar(query, '<media-query-list>', context), context)
 
         states.set(globalThis, initialState)
+        meta.setAttribute('content', initialColorSchemes)
 
         return result
     }
@@ -279,6 +280,16 @@ describe('media', () => {
             ['(prefers-color-scheme: dark)', true, { user: { colorScheme: 'light', forcedColors: { canvas: 'rgb(0, 0, 0)', canvastext: 'rgb(255, 255, 255)' } } }],
             ['(prefers-color-scheme: dark)', true, { user: { colorScheme: 'dark' } }],
             ['(prefers-color-scheme: light)'],
+            ['(prefers-color-scheme: light)', true, undefined, undefined, 'unsupported-color-scheme'],
+            ['(prefers-color-scheme: dark)', false, undefined, undefined, 'unsupported-color-scheme'],
+            ['(prefers-color-scheme: light)', false, { user: { colorScheme: 'dark' } }, undefined, 'unsupported-color-scheme'],
+            ['(prefers-color-scheme: dark)', true, { user: { colorScheme: 'dark' } }, undefined, 'unsupported-color-scheme'],
+            ['(prefers-color-scheme: light)', true, undefined, undefined, 'normal'],
+            ['(prefers-color-scheme: dark)', false, undefined, undefined, 'normal'],
+            ['(prefers-color-scheme: light)', false, undefined, undefined, 'dark'],
+            ['(prefers-color-scheme: dark)', true, undefined, undefined, 'dark'],
+            ['(prefers-color-scheme: light)', true, { user: { colorScheme: 'overriding-light' } }, undefined, 'dark'],
+            ['(prefers-color-scheme: light)', false, { user: { colorScheme: 'overriding-light' } }, undefined, 'dark only'],
             ['(prefers-contrast: more)', false],
             ['(prefers-contrast: more)', false, { user: { forcedColors: { canvas: 'rgb(0, 0, 0)', canvastext: 'rgb(0, 0, 0)' } } }],
             ['(prefers-contrast: no-preference)', false, { user: { forcedColors: {} } }],
