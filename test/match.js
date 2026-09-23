@@ -108,363 +108,366 @@ describe('media', () => {
         return result
     }
 
+    class CSSAssert extends Assert {
+
+        /**
+         * @param {string} query
+         * @param {object} [state] partial
+         * @param {object} [context] partial
+         * @param {string} [colorSchemes]
+         */
+        match(query, state, context, colorSchemes) {
+            assert.equal(match(query, state, context, colorSchemes), true)
+        }
+        mismatch(query, state, context, colorSchemes) {
+            assert.equal(match(query, state, context, colorSchemes), false)
+        }
+    }
+
+    const assert = new CSSAssert({ skipPrototype: true })
+
     test('empty', () => {
-        assert.equal(match(''), true)
+        assert.match('')
     })
     test('types', () => {
-        const queries = [
-            ['all'],
-            ['screen'],
-            ['print', true, { agent: { type: 'print' } }],
-            ['not screen', false],
-            ['print', false],
-            ['tty', false],
-            ['unknown', false],
-            ['not all', false],
-            ['not print'],
-            ['not tty'],
-            ['not unknown'],
-        ]
-        queries.forEach(([query, expected = true, state]) => assert.equal(match(query, state), expected))
+        assert.match('all')
+        assert.match('screen')
+        assert.match('print', { agent: { type: 'print' } })
+        assert.mismatch('not screen')
+        assert.mismatch('print')
+        assert.mismatch('tty')
+        assert.mismatch('unknown')
+        assert.mismatch('not all')
+        assert.match('not print')
+        assert.match('not tty')
+        assert.match('not unknown')
     })
     test('boolean', () => {
-        const queries = [
-            // <general-enclosed>
-            ['(unknown)', false],
-            ['(min-orientation)', false],
-            ['(min-color)', false],
-            // Discrete
-            ['(-webkit-transform-3d)'],
-            ['(any-hover)', false, { system: { pointers: [{ motionable: false }] } }],
-            ['(any-hover)'],
-            ['(any-pointer)', false, { system: { pointers: [] } }],
-            ['(any-pointer)'],
-            ['(color-gamut)'],
-            ['(display-mode)'],
-            ['(display-state)'],
-            ['(dynamic-range)'],
-            ['(environment-blending)'],
-            ['(forced-colors)', false],
-            ['(forced-colors)', true, { user: { forcedColors: {} } }],
-            ['(grid)', false],
-            ['(grid)', true, { system: { display: { graphicMode: false } } }],
-            ['(hover)', false, { system: { pointers: [{}, { motionable: true }] } }],
-            ['(hover)'],
-            ['(inverted-colors)', false],
-            ['(inverted-colors)', true, { user: { invertedColors: true } }],
-            ['(nav-controls)', false, { agent: { navigation: [] } }],
-            ['(nav-controls)'],
-            ['(orientation)'],
-            ['(overflow-block)', false, { agent: { viewport: { overflow: ['scroll', 'none'] } } }],
-            ['(overflow-block)'],
-            ['(overflow-inline)', false, { agent: { viewport: { overflow: ['none', 'scroll'] } } }],
-            ['(overflow-inline)'],
-            ['(pointer)', false, { system: { pointers: [] } }],
-            ['(pointer)'],
-            ['(prefers-color-scheme)'],
-            ['(prefers-contrast)', false],
-            ['(prefers-contrast)', true, { user: { highContrast: true } }],
-            ['(prefers-contrast)', true, { user: { forcedColors: { canvas: 'rgb(255, 255, 255)', canvastext: 'rgb(0, 0, 0)' } } }],
-            ['(prefers-reduced-data)', false],
-            ['(prefers-reduced-data)', true, { user: { reducedData: true } }],
-            ['(prefers-reduced-motion)', false],
-            ['(prefers-reduced-motion)', true, { user: { reducedMotion: true } }],
-            ['(prefers-reduced-transparency)', false],
-            ['(prefers-reduced-transparency)', true, { user: { reducedTransparency: true } }],
-            ['(resizable)', false, { agent: { viewport: { resizable: false } } }],
-            ['(resizable)'],
-            ['(scan)'],
-            ['(scripting)', false, { agent: { scripting: 'none' } }],
-            ['(scripting)'],
-            ['(shape)'],
-            ['(ua-color-scheme)'],
-            ['(update)', false, { system: { display: { update: 'none' } } }],
-            ['(update)'],
-            ['(video-color-gamut)'],
-            ['(video-dynamic-range)'],
-            // Range
-            ['(aspect-ratio)'],
-            ['(aspect-ratio)', true, undefined, { innerHeight: 1, innerWidth: 0 }],
-            ['(aspect-ratio)', true, undefined, { innerHeight: 0, innerWidth: 0 }],
-            ['(color)'],
-            ['(color)', false, undefined, { screen: { colorDepth: 0 } }],
-            ['(color-index)', false],
-            ['(device-aspect-ratio)'],
-            ['(device-aspect-ratio)', true, undefined, { screen: { height: 1, width: 0 } }],
-            ['(device-aspect-ratio)', true, undefined, { screen: { height: 0, width: 0 } }],
-            ['(device-height)'],
-            ['(device-height)', false, undefined, { screen: { height: 0 } }],
-            ['(device-width)'],
-            ['(device-width)', false, undefined, { screen: { width: 0 } }],
-            ['(height)'],
-            ['(height)', false, undefined, { innerHeight: 0 }],
-            ['(horizontal-viewport-segments)'],
-            ['(monochrome)', false],
-            ['(resolution)'],
-            ['(resolution)', false, undefined, { devicePixelRatio: 0 }],
-            ['(vertical-viewport-segments)'],
-            ['(width)'],
-            ['(width)', false, undefined, { innerWidth: 0 }],
-        ]
-        queries.forEach(([query, expected = true, state, context]) => assert.equal(match(query, state, context), expected))
+        // <general-enclosed>
+        assert.mismatch('(unknown)')
+        assert.mismatch('(min-orientation)')
+        assert.mismatch('(min-color)')
+        // Discrete
+        assert.match('(-webkit-transform-3d)')
+        assert.mismatch('(any-hover)', { system: { pointers: [{ motionable: false }] } })
+        assert.match('(any-hover)')
+        assert.mismatch('(any-pointer)', { system: { pointers: [] } })
+        assert.match('(any-pointer)')
+        assert.match('(color-gamut)')
+        assert.match('(display-mode)')
+        assert.match('(display-state)')
+        assert.match('(dynamic-range)')
+        assert.match('(environment-blending)')
+        assert.mismatch('(forced-colors)')
+        assert.match('(forced-colors)', { user: { forcedColors: {} } })
+        assert.mismatch('(grid)')
+        assert.match('(grid)', { system: { display: { graphicMode: false } } })
+        assert.mismatch('(hover)', { system: { pointers: [{}, { motionable: true }] } })
+        assert.match('(hover)')
+        assert.mismatch('(inverted-colors)')
+        assert.match('(inverted-colors)', { user: { invertedColors: true } })
+        assert.mismatch('(nav-controls)', { agent: { navigation: [] } })
+        assert.match('(nav-controls)')
+        assert.match('(orientation)')
+        assert.mismatch('(overflow-block)', { agent: { viewport: { overflow: ['scroll', 'none'] } } })
+        assert.match('(overflow-block)')
+        assert.mismatch('(overflow-inline)', { agent: { viewport: { overflow: ['none', 'scroll'] } } })
+        assert.match('(overflow-inline)')
+        assert.mismatch('(pointer)', { system: { pointers: [] } })
+        assert.match('(pointer)')
+        assert.match('(prefers-color-scheme)')
+        assert.mismatch('(prefers-contrast)')
+        assert.match('(prefers-contrast)', { user: { highContrast: true } })
+        assert.match('(prefers-contrast)', { user: { forcedColors: { canvas: 'rgb(255, 255, 255)', canvastext: 'rgb(0, 0, 0)' } } })
+        assert.mismatch('(prefers-reduced-data)')
+        assert.match('(prefers-reduced-data)', { user: { reducedData: true } })
+        assert.mismatch('(prefers-reduced-motion)')
+        assert.match('(prefers-reduced-motion)', { user: { reducedMotion: true } })
+        assert.mismatch('(prefers-reduced-transparency)')
+        assert.match('(prefers-reduced-transparency)', { user: { reducedTransparency: true } })
+        assert.mismatch('(resizable)', { agent: { viewport: { resizable: false } } })
+        assert.match('(resizable)')
+        assert.match('(scan)')
+        assert.mismatch('(scripting)', { agent: { scripting: 'none' } })
+        assert.match('(scripting)')
+        assert.match('(shape)')
+        assert.match('(ua-color-scheme)')
+        assert.mismatch('(update)', { system: { display: { update: 'none' } } })
+        assert.match('(update)')
+        assert.match('(video-color-gamut)')
+        assert.match('(video-dynamic-range)')
+        // Range
+        assert.match('(aspect-ratio)')
+        assert.match('(aspect-ratio)', undefined, { innerHeight: 1, innerWidth: 0 })
+        assert.match('(aspect-ratio)', undefined, { innerHeight: 0, innerWidth: 0 })
+        assert.match('(color)')
+        assert.mismatch('(color)', undefined, { screen: { colorDepth: 0 } })
+        assert.mismatch('(color-index)')
+        assert.match('(device-aspect-ratio)')
+        assert.match('(device-aspect-ratio)', undefined, { screen: { height: 1, width: 0 } })
+        assert.match('(device-aspect-ratio)', undefined, { screen: { height: 0, width: 0 } })
+        assert.match('(device-height)')
+        assert.mismatch('(device-height)', undefined, { screen: { height: 0 } })
+        assert.match('(device-width)')
+        assert.mismatch('(device-width)', undefined, { screen: { width: 0 } })
+        assert.match('(height)')
+        assert.mismatch('(height)', undefined, { innerHeight: 0 })
+        assert.match('(horizontal-viewport-segments)')
+        assert.mismatch('(monochrome)')
+        assert.match('(resolution)')
+        assert.mismatch('(resolution)', undefined, { devicePixelRatio: 0 })
+        assert.match('(vertical-viewport-segments)')
+        assert.match('(width)')
+        assert.mismatch('(width)', undefined, { innerWidth: 0 })
     })
     test('plain', () => {
-        const queries = [
-            // <general-enclosed>
-            ['(unknown: 1)', false],
-            ['(min-orientation: portrait)', false],
-            ['(max-orientation: portrait)', false],
-            // Discrete
-            ['(-webkit-transform-3d: 0)', false],
-            ['(-webkit-transform-3d: 1)'],
-            ['(any-hover: none)', false],
-            ['(any-hover: hover)', false, { system: { pointers: [{ motionable: false }] } }],
-            ['(any-hover: none)', true, { system: { pointers: [] } }],
-            ['(any-hover: hover)'],
-            ['(any-pointer: none)', false],
-            ['(any-pointer: coarse)', false],
-            ['(any-pointer: fine)', false, { system: { pointers: [{ precision: 'coarse' }] } }],
-            ['(any-pointer: none)', true, { system: { pointers: [] } }],
-            ['(any-pointer: coarse)', true, { system: { pointers: [{ precision: 'coarse' }] } }],
-            ['(any-pointer: fine)'],
-            ['(color-gamut: p3)', false],
-            ['(color-gamut: srgb)'],
-            ['(display-mode: fullscreen)', false],
-            ['(display-mode: fullscreen)', false, { document: { manifest: { display: 'standalone' } } }],
-            ['(display-mode: fullscreen)', true, { document: { manifest: { display: 'fullscreen' } } }],
-            ['(display-mode: fullscreen)', true, undefined, { document: { fullscreenEnabled: true } }],
-            ['(display-mode: picture-in-picture)', true, undefined, { document: { pictureInPictureEnabled: true } }],
-            ['(display-mode: browser)'],
-            ['(display-state: fullscreen)', false],
-            ['(display-state: fullscreen)', true, { agent: { viewport: { state: 'fullscreen' } } }],
-            ['(display-state: normal)'],
-            ['(dynamic-range: high)', false],
-            ['(dynamic-range: high)', true, { system: { display: { hdr: true } } }],
-            ['(dynamic-range: standard)'],
-            ['(environment-blending: additive)', false],
-            ['(environment-blending: additive)', true, { system: { display: { blending: 'additive' } } }],
-            ['(environment-blending: opaque)'],
-            ['(forced-colors: active)', false],
-            ['(forced-colors: active)', true, { user: { forcedColors: {} } }],
-            ['(forced-colors: none)'],
-            ['(grid: 1)', false],
-            ['(grid: 1)', true, { system: { display: { graphicMode: false } } }],
-            ['(grid: 0)'],
-            ['(hover: none)', false],
-            ['(hover: none)', true, { system: { pointers: [{ motionable: false }] } }],
-            ['(hover)'],
-            ['(inverted-colors: inverted)', false],
-            ['(inverted-colors: inverted)', true, { user: { invertedColors: true } }],
-            ['(inverted-colors: none)'],
-            ['(nav-controls: none)', false],
-            ['(nav-controls: none)', true, { agent: { navigation: [] } }],
-            ['(nav-controls: back)'],
-            ['(orientation: landscape)', false],
-            ['(orientation: landscape)', false, undefined, { innerHeight: 2, innerWidth: 1 }],
-            ['(orientation: portrait)', false, undefined, { innerHeight: 1, innerWidth: 2 }],
-            ['(orientation: portrait)'],
-            ['(orientation: portrait)', true, undefined, { innerHeight: 2, innerWidth: 1 }],
-            ['(orientation: landscape)', true, undefined, { innerHeight: 1, innerWidth: 2 }],
-            ['(overflow-block: none)', false],
-            ['(overflow-block: none)', true, { agent: { viewport: { overflow: ['scroll', 'none'] } } }],
-            ['(overflow-block: paged)', true, { agent: { viewport: { overflow: ['none', 'paged'] } } }],
-            ['(overflow-block: scroll)'],
-            ['(overflow-inline: none)', false],
-            ['(overflow-inline: none)', true, { agent: { viewport: { overflow: ['none', 'scroll'] } } }],
-            ['(overflow-inline: scroll)'],
-            ['(pointer: none)', false],
-            ['(pointer: none)', true, { system: { pointers: [] } }],
-            ['(pointer: fine)'],
-            ['(prefers-color-scheme: dark)', false],
-            ['(prefers-color-scheme: dark)', false, { user: { colorScheme: 'dark', forcedColors: { canvas: 'rgb(255, 255, 255)', canvastext: 'rgb(0, 0, 0)' } } }],
-            ['(prefers-color-scheme: dark)', true, { user: { colorScheme: 'light', forcedColors: { canvas: 'rgb(0, 0, 0)', canvastext: 'rgb(255, 255, 255)' } } }],
-            ['(prefers-color-scheme: dark)', true, { user: { colorScheme: 'dark' } }],
-            ['(prefers-color-scheme: light)'],
-            ['(prefers-color-scheme: light)', true, undefined, undefined, 'unsupported-color-scheme'],
-            ['(prefers-color-scheme: dark)', false, undefined, undefined, 'unsupported-color-scheme'],
-            ['(prefers-color-scheme: light)', false, { user: { colorScheme: 'dark' } }, undefined, 'unsupported-color-scheme'],
-            ['(prefers-color-scheme: dark)', true, { user: { colorScheme: 'dark' } }, undefined, 'unsupported-color-scheme'],
-            ['(prefers-color-scheme: light)', true, undefined, undefined, 'normal'],
-            ['(prefers-color-scheme: dark)', false, undefined, undefined, 'normal'],
-            ['(prefers-color-scheme: light)', false, undefined, undefined, 'dark'],
-            ['(prefers-color-scheme: dark)', true, undefined, undefined, 'dark'],
-            ['(prefers-color-scheme: light)', true, { user: { colorScheme: 'overriding-light' } }, undefined, 'dark'],
-            ['(prefers-color-scheme: light)', false, { user: { colorScheme: 'overriding-light' } }, undefined, 'dark only'],
-            ['(prefers-contrast: more)', false],
-            ['(prefers-contrast: more)', false, { user: { forcedColors: { canvas: 'rgb(0, 0, 0)', canvastext: 'rgb(0, 0, 0)' } } }],
-            ['(prefers-contrast: no-preference)', false, { user: { forcedColors: {} } }],
-            ['(prefers-contrast: more)', true, { user: { forcedColors: { canvas: 'rgb(255, 255, 255)', canvastext: 'rgb(0, 0, 0)' } } }],
-            ['(prefers-contrast: custom)', true, { user: { forcedColors: { canvas: 'rgb(0, 0, 0)', canvastext: 'rgb(130, 130, 130)' } } }],
-            ['(prefers-contrast: less)', true, { user: { forcedColors: { canvas: 'rgb(0, 0, 0)', canvastext: 'rgb(0, 0, 0)' } } }],
-            ['(prefers-contrast: no-preference)'],
-            ['(prefers-reduced-data: reduce)', false],
-            ['(prefers-reduced-data: no-preference)', false, { user: { reducedData: true } }],
-            ['(prefers-reduced-data: reduce)', true, { user: { reducedData: true } }],
-            ['(prefers-reduced-data: no-preference)'],
-            ['(prefers-reduced-motion: reduce)', false],
-            ['(prefers-reduced-motion: no-preference)', false, { user: { reducedMotion: true } }],
-            ['(prefers-reduced-motion: reduce)', true, { user: { reducedMotion: true } }],
-            ['(prefers-reduced-motion: no-preference)'],
-            ['(prefers-reduced-transparency: reduce)', false],
-            ['(prefers-reduced-transparency: no-preference)', false, { user: { reducedTransparency: true } }],
-            ['(prefers-reduced-transparency: reduce)', true, { user: { reducedTransparency: true } }],
-            ['(prefers-reduced-transparency: no-preference)'],
-            ['(resizable: false)', false],
-            ['(resizable: false)', true, { agent: { viewport: { resizable: false } } }],
-            ['(resizable: true)'],
-            ['(scan: interlace)', false],
-            ['(scan: interlace)', true, { system: { display: { interlaced: true } } }],
-            ['(scan: progressive)'],
-            ['(scripting: none)', false],
-            ['(scripting: enabled)', false, { agent: { scripting: 'none' } }],
-            ['(scripting: none)', true, { agent: { scripting: 'none' } }],
-            ['(scripting: enabled)'],
-            ['(shape: round)', false],
-            ['(shape: round)', true, { system: { display: { shape: 'round' } } }],
-            ['(shape: rect)'],
-            ['(ua-color-scheme: dark)', false],
-            ['(ua-color-scheme: dark)', true, { user: { colorScheme: 'dark' } }],
-            ['(ua-color-scheme: light)'],
-            ['(update: none)', false],
-            ['(update: none)', true, { system: { display: { update: 'none' } } }],
-            ['(update: fast)'],
-            ['(video-color-gamut: p3)', false],
-            ['(video-color-gamut: srgb)'],
-            ['(video-dynamic-range: high)', false],
-            ['(video-dynamic-range: standard)'],
-            // Range
-            ['(aspect-ratio: 0)', false],
-            ['(aspect-ratio: 1)'],
-            ['(aspect-ratio: 1 / 1)'],
-            ['(aspect-ratio: calc(1))'],
-            ['(aspect-ratio: calc(2em / 1em))', false],
-            ['(aspect-ratio: calc(1em / 1em))'],
-            ['(min-aspect-ratio: 2)', false],
-            ['(min-aspect-ratio: 1)'],
-            ['(max-aspect-ratio: 1)'],
-            ['(max-aspect-ratio: 0)', false],
-            ['(color: 0)', false],
-            ['(color: 24)'],
-            ['(color-index: 256)', false],
-            ['(color-index: 256)', true, { system: { display: { colorIndex: 256 } } }],
-            ['(color-index: 0)'],
-            ['(device-aspect-ratio: 0)', false],
-            ['(device-aspect-ratio: 2)'],
-            ['(device-aspect-ratio: 2 / 1)'],
-            ['(device-height: 0px)', false],
-            ['(device-height: 100px)'],
-            ['(device-width: 0px)', false],
-            ['(device-width: 200px)'],
-            ['(height: 0px)', false],
-            ['(height: 100px)'],
-            ['(height: 1in)', true, undefined, { innerHeight: 96 }],
-            ['(height: 2in)', false],
-            ['(height: 1em)', true, undefined, { innerHeight: states.get(globalThis).user.fontSize }],
-            ['(height: 1em)', false],
-            ['(horizontal-viewport-segments: 0)', false],
-            ['(horizontal-viewport-segments: 2)', true, { system: { display: { segments: [2, 1] } } }],
-            ['(horizontal-viewport-segments: 1)'],
-            ['(monochrome: 1)', false],
-            ['(monochrome: 1)', true, { system: { display: { monochrome: 1 } } }],
-            ['(monochrome: 0)'],
-            ['(resolution: 2dppx)', false],
-            ['(resolution: 1dppx)'],
-            ['(resolution: infinite)', true, undefined, { devicePixelRatio: Infinity }],
-            ['(resolution: calc(infinity))', false, undefined, { devicePixelRatio: Infinity }],
-            ['(vertical-viewport-segments: 0)', false],
-            ['(vertical-viewport-segments: 2)', true, { system: { display: { segments: [1, 2] } } }],
-            ['(vertical-viewport-segments: 1)'],
-            ['(width: 0px)', false],
-            ['(width: 100px)'],
-        ]
-        queries.forEach(([query, expected = true, state, context]) => assert.equal(match(query, state, context), expected))
+        // <general-enclosed>
+        assert.mismatch('(unknown: 1)')
+        assert.mismatch('(min-orientation: portrait)')
+        assert.mismatch('(max-orientation: portrait)')
+        // Discrete
+        assert.mismatch('(-webkit-transform-3d: 0)')
+        assert.match('(-webkit-transform-3d: 1)')
+        assert.mismatch('(any-hover: none)')
+        assert.mismatch('(any-hover: hover)', { system: { pointers: [{ motionable: false }] } })
+        assert.match('(any-hover: none)', { system: { pointers: [] } })
+        assert.match('(any-hover: hover)')
+        assert.mismatch('(any-pointer: none)')
+        assert.mismatch('(any-pointer: coarse)')
+        assert.mismatch('(any-pointer: fine)', { system: { pointers: [{ precision: 'coarse' }] } })
+        assert.match('(any-pointer: none)', { system: { pointers: [] } })
+        assert.match('(any-pointer: coarse)', { system: { pointers: [{ precision: 'coarse' }] } })
+        assert.match('(any-pointer: fine)')
+        assert.mismatch('(color-gamut: p3)')
+        assert.match('(color-gamut: srgb)')
+        assert.mismatch('(display-mode: fullscreen)')
+        assert.mismatch('(display-mode: fullscreen)', { document: { manifest: { display: 'standalone' } } })
+        assert.match('(display-mode: fullscreen)', { document: { manifest: { display: 'fullscreen' } } })
+        assert.match('(display-mode: fullscreen)', undefined, { document: { fullscreenEnabled: true } })
+        assert.match('(display-mode: picture-in-picture)', undefined, { document: { pictureInPictureEnabled: true } })
+        assert.match('(display-mode: browser)')
+        assert.mismatch('(display-state: fullscreen)')
+        assert.match('(display-state: fullscreen)', { agent: { viewport: { state: 'fullscreen' } } })
+        assert.match('(display-state: normal)')
+        assert.mismatch('(dynamic-range: high)')
+        assert.match('(dynamic-range: high)', { system: { display: { hdr: true } } })
+        assert.match('(dynamic-range: standard)')
+        assert.mismatch('(environment-blending: additive)')
+        assert.match('(environment-blending: additive)', { system: { display: { blending: 'additive' } } })
+        assert.match('(environment-blending: opaque)')
+        assert.mismatch('(forced-colors: active)')
+        assert.match('(forced-colors: active)', { user: { forcedColors: {} } })
+        assert.match('(forced-colors: none)')
+        assert.mismatch('(grid: 1)')
+        assert.match('(grid: 1)', { system: { display: { graphicMode: false } } })
+        assert.match('(grid: 0)')
+        assert.mismatch('(hover: none)')
+        assert.match('(hover: none)', { system: { pointers: [{ motionable: false }] } })
+        assert.match('(hover: hover)')
+        assert.mismatch('(inverted-colors: inverted)')
+        assert.match('(inverted-colors: inverted)', { user: { invertedColors: true } })
+        assert.match('(inverted-colors: none)')
+        assert.mismatch('(nav-controls: none)')
+        assert.match('(nav-controls: none)', { agent: { navigation: [] } })
+        assert.match('(nav-controls: back)')
+        assert.mismatch('(orientation: landscape)')
+        assert.mismatch('(orientation: landscape)', undefined, { innerHeight: 2, innerWidth: 1 })
+        assert.mismatch('(orientation: portrait)', undefined, { innerHeight: 1, innerWidth: 2 })
+        assert.match('(orientation: portrait)')
+        assert.match('(orientation: portrait)', undefined, { innerHeight: 2, innerWidth: 1 })
+        assert.match('(orientation: landscape)', undefined, { innerHeight: 1, innerWidth: 2 })
+        assert.mismatch('(overflow-block: none)')
+        assert.match('(overflow-block: none)', { agent: { viewport: { overflow: ['scroll', 'none'] } } })
+        assert.match('(overflow-block: paged)', { agent: { viewport: { overflow: ['none', 'paged'] } } })
+        assert.match('(overflow-block: scroll)')
+        assert.mismatch('(overflow-inline: none)')
+        assert.match('(overflow-inline: none)', { agent: { viewport: { overflow: ['none', 'scroll'] } } })
+        assert.match('(overflow-inline: scroll)')
+        assert.mismatch('(pointer: none)')
+        assert.match('(pointer: none)', { system: { pointers: [] } })
+        assert.match('(pointer: fine)')
+        assert.mismatch('(prefers-color-scheme: dark)')
+        assert.mismatch('(prefers-color-scheme: dark)', { user: { colorScheme: 'dark', forcedColors: { canvas: 'rgb(255, 255, 255)', canvastext: 'rgb(0, 0, 0)' } } })
+        assert.match('(prefers-color-scheme: dark)', { user: { colorScheme: 'light', forcedColors: { canvas: 'rgb(0, 0, 0)', canvastext: 'rgb(255, 255, 255)' } } })
+        assert.match('(prefers-color-scheme: dark)', { user: { colorScheme: 'dark' } })
+        assert.match('(prefers-color-scheme: light)')
+        assert.match('(prefers-color-scheme: light)', undefined, undefined, 'unsupported-color-scheme')
+        assert.mismatch('(prefers-color-scheme: dark)', undefined, undefined, 'unsupported-color-scheme')
+        assert.mismatch('(prefers-color-scheme: light)', { user: { colorScheme: 'dark' } }, undefined, 'unsupported-color-scheme')
+        assert.match('(prefers-color-scheme: dark)', { user: { colorScheme: 'dark' } }, undefined, 'unsupported-color-scheme')
+        assert.match('(prefers-color-scheme: light)', undefined, undefined, 'normal')
+        assert.mismatch('(prefers-color-scheme: dark)', undefined, undefined, 'normal')
+        assert.mismatch('(prefers-color-scheme: light)', undefined, undefined, 'dark')
+        assert.match('(prefers-color-scheme: dark)', undefined, undefined, 'dark')
+        assert.match('(prefers-color-scheme: light)', { user: { colorScheme: 'overriding-light' } }, undefined, 'dark')
+        assert.mismatch('(prefers-color-scheme: light)', { user: { colorScheme: 'overriding-light' } }, undefined, 'dark only')
+        assert.mismatch('(prefers-contrast: more)')
+        assert.mismatch('(prefers-contrast: more)', { user: { forcedColors: { canvas: 'rgb(0, 0, 0)', canvastext: 'rgb(0, 0, 0)' } } })
+        assert.mismatch('(prefers-contrast: no-preference)', { user: { forcedColors: {} } })
+        assert.match('(prefers-contrast: more)', { user: { forcedColors: { canvas: 'rgb(255, 255, 255)', canvastext: 'rgb(0, 0, 0)' } } })
+        assert.match('(prefers-contrast: custom)', { user: { forcedColors: { canvas: 'rgb(0, 0, 0)', canvastext: 'rgb(130, 130, 130)' } } })
+        assert.match('(prefers-contrast: less)', { user: { forcedColors: { canvas: 'rgb(0, 0, 0)', canvastext: 'rgb(0, 0, 0)' } } })
+        assert.match('(prefers-contrast: no-preference)')
+        assert.mismatch('(prefers-reduced-data: reduce)')
+        assert.mismatch('(prefers-reduced-data: no-preference)', { user: { reducedData: true } })
+        assert.match('(prefers-reduced-data: reduce)', { user: { reducedData: true } })
+        assert.match('(prefers-reduced-data: no-preference)')
+        assert.mismatch('(prefers-reduced-motion: reduce)')
+        assert.mismatch('(prefers-reduced-motion: no-preference)', { user: { reducedMotion: true } })
+        assert.match('(prefers-reduced-motion: reduce)', { user: { reducedMotion: true } })
+        assert.match('(prefers-reduced-motion: no-preference)')
+        assert.mismatch('(prefers-reduced-transparency: reduce)')
+        assert.mismatch('(prefers-reduced-transparency: no-preference)', { user: { reducedTransparency: true } })
+        assert.match('(prefers-reduced-transparency: reduce)', { user: { reducedTransparency: true } })
+        assert.match('(prefers-reduced-transparency: no-preference)')
+        assert.mismatch('(resizable: false)')
+        assert.match('(resizable: false)', { agent: { viewport: { resizable: false } } })
+        assert.match('(resizable: true)')
+        assert.mismatch('(scan: interlace)')
+        assert.match('(scan: interlace)', { system: { display: { interlaced: true } } })
+        assert.match('(scan: progressive)')
+        assert.mismatch('(scripting: none)')
+        assert.mismatch('(scripting: enabled)', { agent: { scripting: 'none' } })
+        assert.match('(scripting: none)', { agent: { scripting: 'none' } })
+        assert.match('(scripting: enabled)')
+        assert.mismatch('(shape: round)')
+        assert.match('(shape: round)', { system: { display: { shape: 'round' } } })
+        assert.match('(shape: rect)')
+        assert.mismatch('(ua-color-scheme: dark)')
+        assert.match('(ua-color-scheme: dark)', { user: { colorScheme: 'dark' } })
+        assert.match('(ua-color-scheme: light)')
+        assert.mismatch('(update: none)')
+        assert.match('(update: none)', { system: { display: { update: 'none' } } })
+        assert.match('(update: fast)')
+        assert.mismatch('(video-color-gamut: p3)')
+        assert.match('(video-color-gamut: srgb)')
+        assert.mismatch('(video-dynamic-range: high)')
+        assert.match('(video-dynamic-range: standard)')
+        // Range
+        assert.mismatch('(aspect-ratio: 0)')
+        assert.match('(aspect-ratio: 1)')
+        assert.match('(aspect-ratio: 1 / 1)')
+        assert.match('(aspect-ratio: calc(1))')
+        assert.mismatch('(aspect-ratio: calc(2em / 1em))')
+        assert.match('(aspect-ratio: calc(1em / 1em))')
+        assert.mismatch('(min-aspect-ratio: 2)')
+        assert.match('(min-aspect-ratio: 1)')
+        assert.match('(max-aspect-ratio: 1)')
+        assert.mismatch('(max-aspect-ratio: 0)')
+        assert.mismatch('(color: 0)')
+        assert.match('(color: 24)')
+        assert.mismatch('(color-index: 256)')
+        assert.match('(color-index: 256)', { system: { display: { colorIndex: 256 } } })
+        assert.match('(color-index: 0)')
+        assert.mismatch('(device-aspect-ratio: 0)')
+        assert.match('(device-aspect-ratio: 2)')
+        assert.match('(device-aspect-ratio: 2 / 1)')
+        assert.mismatch('(device-height: 0px)')
+        assert.match('(device-height: 100px)')
+        assert.mismatch('(device-width: 0px)')
+        assert.match('(device-width: 200px)')
+        assert.mismatch('(height: 0px)')
+        assert.match('(height: 100px)')
+        assert.match('(height: 1in)', undefined, { innerHeight: 96 })
+        assert.mismatch('(height: 2in)')
+        assert.match('(height: 1em)', undefined, { innerHeight: states.get(globalThis).user.fontSize })
+        assert.mismatch('(height: 1em)')
+        assert.mismatch('(horizontal-viewport-segments: 0)')
+        assert.match('(horizontal-viewport-segments: 2)', { system: { display: { segments: [2, 1] } } })
+        assert.match('(horizontal-viewport-segments: 1)')
+        assert.mismatch('(monochrome: 1)')
+        assert.match('(monochrome: 1)', { system: { display: { monochrome: 1 } } })
+        assert.match('(monochrome: 0)')
+        assert.mismatch('(resolution: 2dppx)')
+        assert.match('(resolution: 1dppx)')
+        assert.match('(resolution: infinite)', undefined, { devicePixelRatio: Infinity })
+        assert.mismatch('(resolution: calc(infinity))', undefined, { devicePixelRatio: Infinity })
+        assert.mismatch('(vertical-viewport-segments: 0)')
+        assert.match('(vertical-viewport-segments: 2)', { system: { display: { segments: [1, 2] } } })
+        assert.match('(vertical-viewport-segments: 1)')
+        assert.mismatch('(width: 0px)')
+        assert.match('(width: 100px)')
     })
     test('range', () => {
-        const queries = [
-            // <general-enclosed>
-            ['(unknown = 1)', false],
-            ['(-webkit-transform-3d = 1)', false],
-            ['(min-color = 24)', false],
-            ['(max-color = 24)', false],
-            // Guinea pig for all range features
-            ['(color = 24)'],
-            ['(color < 23)', false],
-            ['(color < 24)', false],
-            ['(color < 25)'],
-            ['(color <= 23)', false],
-            ['(color <= 24)'],
-            ['(color <= 25)'],
-            ['(color > 23)'],
-            ['(color > 24)', false],
-            ['(color > 25)', false],
-            ['(color >= 23)'],
-            ['(color >= 24)'],
-            ['(color >= 25)', false],
-            ['(23 < color)'],
-            ['(24 < color)', false],
-            ['(25 < color)', false],
-            ['(23 <= color)'],
-            ['(24 <= color)'],
-            ['(25 <= color)', false],
-            ['(23 > color)', false],
-            ['(24 > color)', false],
-            ['(25 > color)'],
-            ['(23 >= color)', false],
-            ['(24 >= color)'],
-            ['(25 >= color)'],
-            ['(23 < color < 25)'],
-            ['(24 < color < 24)', false],
-            ['(24 <= color < 24)', false],
-            ['(24 < color <= 24)', false],
-            ['(24 <= color <= 24)'],
-            ['(25 > color > 23)'],
-            ['(24 > color > 24)', false],
-            ['(24 >= color > 24)', false],
-            ['(24 > color >= 24)', false],
-            ['(24 >= color >= 24)'],
-            ['(color = calc(24))'],
-            ['(color < calc(25))'],
-            ['(calc(23) < color < calc(25))'],
-            // Special case: aspect-ratio against 0 / 0
-            ['(aspect-ratio = 0 / 0)', true, { innerHeight: 0, innerWidth: 0 }],
-            ['(aspect-ratio = 0 / 0)', false, { innerHeight: 0, innerWidth: 1 }],
-            ['(aspect-ratio = 0 / 0)', false],
-            ['(aspect-ratio = 0 / 0)', false, { innerHeight: 1, innerWidth: 0 }],
-            ['(aspect-ratio <= 0 / 0)', true, { innerHeight: 0, innerWidth: 0 }],
-            ['(aspect-ratio <= 0 / 0)', false, { innerHeight: 0, innerWidth: 1 }],
-            ['(aspect-ratio <= 0 / 0)', false],
-            ['(aspect-ratio <= 0 / 0)', false, { innerHeight: 1, innerWidth: 0 }],
-            ['(aspect-ratio >= 0 / 0)', true, { innerHeight: 0, innerWidth: 0 }],
-            ['(aspect-ratio >= 0 / 0)', false, { innerHeight: 0, innerWidth: 1 }],
-            ['(aspect-ratio >= 0 / 0)', false],
-            ['(aspect-ratio >= 0 / 0)', false, { innerHeight: 1, innerWidth: 0 }],
-        ]
-        queries.forEach(([query, expected = true, context]) => assert.equal(match(query, undefined, context), expected))
+        // <general-enclosed>
+        assert.mismatch('(unknown = 1)')
+        assert.mismatch('(-webkit-transform-3d = 1)')
+        assert.mismatch('(min-color = 24)')
+        assert.mismatch('(max-color = 24)')
+        // Guinea pig for all range features
+        assert.match('(color = 24)')
+        assert.mismatch('(color < 23)')
+        assert.mismatch('(color < 24)')
+        assert.match('(color < 25)')
+        assert.mismatch('(color <= 23)')
+        assert.match('(color <= 24)')
+        assert.match('(color <= 25)')
+        assert.match('(color > 23)')
+        assert.mismatch('(color > 24)')
+        assert.mismatch('(color > 25)')
+        assert.match('(color >= 23)')
+        assert.match('(color >= 24)')
+        assert.mismatch('(color >= 25)')
+        assert.match('(23 < color)')
+        assert.mismatch('(24 < color)')
+        assert.mismatch('(25 < color)')
+        assert.match('(23 <= color)')
+        assert.match('(24 <= color)')
+        assert.mismatch('(25 <= color)')
+        assert.mismatch('(23 > color)')
+        assert.mismatch('(24 > color)')
+        assert.match('(25 > color)')
+        assert.mismatch('(23 >= color)')
+        assert.match('(24 >= color)')
+        assert.match('(25 >= color)')
+        assert.match('(23 < color < 25)')
+        assert.mismatch('(24 < color < 24)')
+        assert.mismatch('(24 <= color < 24)')
+        assert.mismatch('(24 < color <= 24)')
+        assert.match('(24 <= color <= 24)')
+        assert.match('(25 > color > 23)')
+        assert.mismatch('(24 > color > 24)')
+        assert.mismatch('(24 >= color > 24)')
+        assert.mismatch('(24 > color >= 24)')
+        assert.match('(24 >= color >= 24)')
+        assert.match('(color = calc(24))')
+        assert.match('(color < calc(25))')
+        assert.match('(calc(23) < color < calc(25))')
+        // Special case: aspect-ratio against 0 / 0
+        assert.match('(aspect-ratio = 0 / 0)', undefined, { innerHeight: 0, innerWidth: 0 })
+        assert.mismatch('(aspect-ratio = 0 / 0)', undefined, { innerHeight: 0, innerWidth: 1 })
+        assert.mismatch('(aspect-ratio = 0 / 0)')
+        assert.mismatch('(aspect-ratio = 0 / 0)', undefined, { innerHeight: 1, innerWidth: 0 })
+        assert.match('(aspect-ratio <= 0 / 0)', undefined, { innerHeight: 0, innerWidth: 0 })
+        assert.mismatch('(aspect-ratio <= 0 / 0)', undefined, { innerHeight: 0, innerWidth: 1 })
+        assert.mismatch('(aspect-ratio <= 0 / 0)')
+        assert.mismatch('(aspect-ratio <= 0 / 0)', undefined, { innerHeight: 1, innerWidth: 0 })
+        assert.match('(aspect-ratio >= 0 / 0)', undefined, { innerHeight: 0, innerWidth: 0 })
+        assert.mismatch('(aspect-ratio >= 0 / 0)', undefined, { innerHeight: 0, innerWidth: 1 })
+        assert.mismatch('(aspect-ratio >= 0 / 0)')
+        assert.mismatch('(aspect-ratio >= 0 / 0)', undefined, { innerHeight: 1, innerWidth: 0 })
     })
     test('combinations', () => {
-        const queries = [
-            // <media-query> = [not|only]? <media-type> [and <media-condition-without-or>]
-            ['all and (color)'],
-            ['tty and (color)', false],
-            ['unknown and (color)', false],
-            ['not all and (color)', false],
-            ['not tty and (color)'],
-            ['not unknown and (color)'],
-            // <media-query> = <media-condition> = <media-in-parens> <media-and>*
-            ['(color) and (color)'],
-            ['(color) and (color: 0)', false],
-            ['(color) and (unknown)', false],
-            ['(not (color)) and (color)', false],
-            ['(not (color: 0)) and (color)'],
-            ['(not (unknown)) and (color)', false],
-            // <media-query> = <media-query> = <media-condition> = <media-in-parens> <media-or>*
-            ['(color) or (color)'],
-            ['(color: 0) or (color)'],
-            ['(not (color)) or (color)'],
-            ['(not (hover)) or (hover)'],
-            ['(not (unknown)) or (color)'],
-        ]
-        queries.forEach(([query, expected = true]) => assert.equal(match(query), expected))
+        // <media-query> = [not|only]? <media-type> [and <media-condition-without-or>]
+        assert.match('all and (color)')
+        assert.mismatch('tty and (color)')
+        assert.mismatch('unknown and (color)')
+        assert.mismatch('not all and (color)')
+        assert.match('not tty and (color)')
+        assert.match('not unknown and (color)')
+        // <media-query> = <media-condition> = <media-in-parens> <media-and>*
+        assert.match('(color) and (color)')
+        assert.mismatch('(color) and (color: 0)')
+        assert.mismatch('(color) and (unknown)')
+        assert.mismatch('(not (color)) and (color)')
+        assert.match('(not (color: 0)) and (color)')
+        assert.mismatch('(not (unknown)) and (color)')
+        // <media-query> = <media-query> = <media-condition> = <media-in-parens> <media-or>*
+        assert.match('(color) or (color)')
+        assert.match('(color: 0) or (color)')
+        assert.match('(not (color)) or (color)')
+        assert.match('(not (hover)) or (hover)')
+        assert.match('(not (unknown)) or (color)')
     })
 })
 
@@ -5621,91 +5624,101 @@ describe('selector', () => {
 
 describe('support', () => {
 
+    /**
+     * @param {string} query
+     * @returns {boolean}
+     */
     function match(query) {
         return matchSupport(parseGrammar(`(${query})`, '<supports-condition>'), globalThis)
     }
 
+    class CSSAssert extends Assert {
+
+        /**
+         * @param {string} query
+         */
+        match(query) {
+            assert.equal(match(query), true)
+        }
+        mismatch(query) {
+            assert.equal(match(query), false)
+        }
+    }
+
+    const assert = new CSSAssert({ skipPrototype: true })
+
     test('at-rule', () => {
-        assert.equal(match('at-rule(@style)'), false)
+        assert.mismatch('at-rule(@style)')
         assert.equal(match('at-rule(@annotation)'), true)
     })
     test('declaration', () => {
-        const declarations = [
-            // <general-enclosed>
-            ['unknown', false],
-            ['unknown: 1', false],
-            ['color: invalid', false],
-            // Property value range
-            ['color: green !important'],
-            ['--custom: 1'],
-            // Property value substitution
-            ['color: initial'],
-            ['color: var(--custom)'],
-            ['color: first-valid(green)'],
-            // Aliased/mapped property
-            ['grid-gap: 1px'],
-            ['-webkit-box-align: center'],
-        ]
-        declarations.forEach(([declaration, expected = true]) => assert.equal(match(declaration), expected))
+        // <general-enclosed>
+        assert.mismatch('unknown')
+        assert.mismatch('unknown: 1')
+        assert.mismatch('color: invalid')
+        // Property value range
+        assert.match('color: green !important')
+        assert.match('--custom: 1')
+        // Property value substitution
+        assert.match('color: initial')
+        assert.match('color: var(--custom)')
+        assert.match('color: first-valid(green)')
+        // Aliased/mapped property
+        assert.match('grid-gap: 1px')
+        assert.match('-webkit-box-align: center')
     })
     test('environment variable', () => {
 
         states.get(globalThis).document.environmentVariables.set('--custom', omitted)
 
-        assert.equal(match('env(--CUSTOM)'), false)
-        assert.equal(match('env(--custom)'), true)
-        assert.equal(match('env(preferred-text-scale)'), true)
+        assert.mismatch('env(--CUSTOM)')
+        assert.match('env(--custom)')
+        assert.match('env(preferred-text-scale)')
     })
     test('font format', () => {
-        assert.equal(match('font-format("woff")'), false)
-        assert.equal(match('font-format(woff)'), true)
+        assert.mismatch('font-format("woff")')
+        assert.match('font-format(woff)')
     })
     test('font technology', () => {
-        assert.equal(match('font-tech(unknown)'), false)
-        assert.equal(match('font-tech(color-svg)'), true)
+        assert.mismatch('font-tech(unknown)')
+        assert.match('font-tech(color-svg)')
     })
     test('named feature', () => {
-        assert.equal(match('named-feature(unknown)'), false)
-        assert.equal(match('named-feature(anchor-position-follows-transforms)'), true)
+        assert.mismatch('named-feature(unknown)')
+        assert.match('named-feature(anchor-position-follows-transforms)')
     })
     test('named condition', () => {
-        assert.equal(match('(--unknown)'), false)
+        assert.mismatch('(--unknown)')
     })
     test('selector', () => {
-        const selectors = [
-            // <general-enclosed>
-            [':unknown', false],
-            [':nth-child(+ n-1)', false],
-            [':is(::before)', false],
-            ['::before:is(type)', false],
-            ['::before:not(type)', false],
-            ['::-webkit-unknown', false],
-            ['::slotted(type > type)', false],
-            ['#1', false],
-            ['undeclared|*', false],
-            // <complex-selector>
-            ['type + .class'],
-        ]
-        selectors.forEach(([selector, expected = true]) => assert.equal(match(`selector(${selector})`), expected))
+        // <general-enclosed>
+        assert.mismatch('selector(:unknown)')
+        assert.mismatch('selector(:nth-child(+ n-1))')
+        assert.mismatch('selector(:is(::before))')
+        assert.mismatch('selector(::before:is(type))')
+        assert.mismatch('selector(::before:not(type))')
+        assert.mismatch('selector(::-webkit-unknown)')
+        assert.mismatch('selector(::slotted(type > type))')
+        assert.mismatch('selector(#1)')
+        assert.mismatch('selector(undeclared|*)')
+        // <complex-selector>
+        assert.match('selector(type + .class)')
     })
     test('combinations', () => {
-        const queries = [
-            // not
-            ['not (unknown: 1)'],
-            ['not (color: unknown)'],
-            ['not (color: green)', false],
-            // and
-            ['(unknown) and (unknown)', false],
-            ['(unknown) and (color: green)', false],
-            ['(color: green) and (color: green)'],
-            // or
-            ['(unknown) or (unknown)', false],
-            ['(unknown) or (color: green)'],
-            ['(color: green) or (color: green)'],
-            // and/or
-            ['((unknown) and (unknown)) or (color: green)'],
-            ['((unknown) or (color: green)) and (color: green)'],
-        ]
-        queries.forEach(([query, expected = true]) => assert.equal(match(query), expected))
+        // not
+        assert.match('not (unknown: 1)')
+        assert.match('not (color: unknown)')
+        assert.mismatch('not (color: green)')
+        // and
+        assert.mismatch('(unknown) and (unknown)')
+        assert.mismatch('(unknown) and (color: green)')
+        assert.match('(color: green) and (color: green)')
+        // or
+        assert.mismatch('(unknown) or (unknown)')
+        assert.match('(unknown) or (color: green)')
+        assert.match('(color: green) or (color: green)')
+        // and/or
+        assert.match('((unknown) and (unknown)) or (color: green)')
+        assert.match('((unknown) or (color: green)) and (color: green)')
     })
 })

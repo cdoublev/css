@@ -32,12 +32,13 @@ import {
     StyleSheetList,
 } from '../lib/cssom/index.js'
 import { after, afterEach, describe, it, test } from 'node:test'
+import { HTMLDocument } from './dom.js'
 import assert from 'node:assert/strict'
 import fs from 'node:fs/promises'
 import http from 'node:http'
 import { install } from '@cdoublev/css'
 import path from 'node:path'
-import { wrapperForImpl } from '../lib/cssom/utils.js'
+import { implForWrapper } from '../lib/cssom/utils.js'
 
 /**
  * @param {string} [rules]
@@ -49,14 +50,14 @@ import { wrapperForImpl } from '../lib/cssom/utils.js'
  */
 function createStyleSheet(rules = '', privateData = {}) {
     privateData = {
-        encoding: globalThis.document.characterSet,
+        encoding: document.characterSet,
         location: baseURL,
         media: '',
         rules,
         ...privateData,
     }
     const styleSheet = CSSStyleSheet.create(globalThis, undefined, privateData)
-    styleSheets._list.push(styleSheet)
+    styleSheets.push(styleSheet)
     return styleSheet
 }
 
@@ -156,17 +157,12 @@ const servers = [
     http.createServer(createServerHandler(baseURL)).listen(port),
     http.createServer(createServerHandler(crossOrigin)).listen(port + 1),
 ]
-const styleSheets = StyleSheetList.createImpl(globalThis)
 
-globalThis.document = {
-    adoptedStyleSheets: [],
-    baseURI: baseURL,
-    characterSet: 'UTF-8',
-    styleSheets: wrapperForImpl(styleSheets),
-}
+const document = new HTMLDocument({ url: baseURL })
+const styleSheets = implForWrapper(document.styleSheets)._list
 
 afterEach(() => {
-    styleSheets._list.splice(0)
+    styleSheets.splice(0)
 })
 after(() => {
     servers.forEach(server => server.close())

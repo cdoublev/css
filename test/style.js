@@ -54,19 +54,15 @@ function initial(property) {
 
 install()
 
-globalThis.document = {}
-
-const styleSheet = CSSStyleSheet.createImpl(globalThis, [{ media: '' }])
-
-styleSheet.replaceSync(`
+const rules = `
     @font-face {}
     @function --name() {}
     @keyframes animation { 0% {} }
     @page { @top-left {} }
     @position-try --custom {}
     style {}
-`)
-
+`
+const styleSheet = CSSStyleSheet.createImpl(globalThis, undefined, { rules })
 const { cssRules: { _rules: [fontFaceRule, functionRule, keyframesRule, pageRule, positionTryRule, styleRule] } } = styleSheet
 const { cssRules: { _rules: [keyframeRule] } } = keyframesRule
 const { cssRules: { _rules: [marginRule] } } = pageRule

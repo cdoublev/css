@@ -114,11 +114,8 @@ class CSSAssert extends Assert {
 install()
 
 globalThis.devicePixelRatio = 2
-globalThis.document = {}
 
-const styleSheet = CSSStyleSheet.createImpl(globalThis, [{ media: '' }])
-
-styleSheet.replaceSync(`
+const rules = `
     @namespace html "https://www.w3.org/1999/xhtml/";
     @namespace svg "http://www.w3.org/2000/svg";
     style {}
@@ -126,8 +123,8 @@ styleSheet.replaceSync(`
     @keyframes animation { 0% {} }
     @media {}
     @supports (width: 1px) {}
-`)
-
+`
+const styleSheet = CSSStyleSheet.createImpl(globalThis, undefined, { rules })
 const { cssRules: { _rules: [,, styleRule, containerRule, keyframesRule, mediaRule, supportsRule] } } = styleSheet
 const { cssRules: { _rules: [keyframeRule] } } = keyframesRule
 
