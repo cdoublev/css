@@ -323,6 +323,7 @@ export class Text extends CharacterData {
 export class Document extends Node {
 
     adoptedStyleSheets = []
+    characterSet = 'UTF-8'
     fullscreenElement = null
     nodeType = DOCUMENT_NODE_TYPE
     pictureInPictureElement = null
@@ -536,7 +537,7 @@ export class Element extends Node {
 
     /**
      * @param {string} name
-     * @returns {object|null}
+     * @returns {string|null}
      */
     getAttribute(name) {
         return this.getAttributeNS(null, name)
@@ -545,7 +546,7 @@ export class Element extends Node {
     /**
      * @param {string|null} namespace
      * @param {string} name
-     * @returns {object|null}
+     * @returns {string|null}
      */
     getAttributeNS(namespace, name) {
         return this.getAttributeNodeNS(namespace, name)?.value ?? null
@@ -875,7 +876,7 @@ export class HTMLMetaElement extends HTMLElement {
      */
     constructor(properties) {
         super(properties)
-        this.content = this.getAttribute('content') ?? '0'
+        this.content = this.getAttribute('content')
     }
 }
 
