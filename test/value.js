@@ -3935,11 +3935,20 @@ describe('<step-easing-function>', () => {
         assert.invalid('<step-easing-function>', 'steps(1, jump-none)')
     })
     test('representation', () => {
-        assert.representation('<step-easing-function>', 'steps(1)', {
+        const position = keyword('jump-none', ['<step-position>'])
+        const count = {
+            name: 'calc',
+            range: [2, Number.MAX_SAFE_INTEGER],
+            round: true,
+            types: ['<calc()>', '<calc-function>'],
+            value: number(0, ['<calc-value>']),
+        }
+        const steps = {
             name: 'steps',
             types: ['<function>', '<steps()>', '<step-easing-function>'],
-            value: list([integer(1), omitted, omitted]),
-        })
+            value: list([count, comma, position])
+        }
+        assert.representation('<step-easing-function>', 'steps(calc(0), jump-none)', steps)
     })
     test('valid', () => {
         assert.valid('<step-easing-function>', 'step-start', 'steps(1, start)')
