@@ -2352,8 +2352,8 @@ describe('<calc-interpolate()>', () => {
             ['<number>', 'calc-interpolate(0%, 0px: 1, 1: 1)'],
             ['<number>', 'calc-interpolate(0px, 0px: 1, 1: 1)'],
             // Type checking <percentage> in nested <progress-source> or <input-position> contexts
-            ['<number>', 'calc-interpolate(progress(0%, 0%, 1%), progress(0%, 0%, 1%): 1)', 'calc-interpolate(0, 0: 1)'],
-            ['<length-percentage>', 'calc-interpolate(progress(0%, 0%, 1%), progress(0%, 0%, 1%): 1px)'],
+            ['<number>', 'calc-interpolate(min(0%), min(0%): 1)', 'calc-interpolate(0%, 0%: 1)'],
+            ['<length-percentage>', 'calc-interpolate(min(0%), min(0%): 1px)', 'calc-interpolate(0%, 0%: 1px)'],
             ['<length-percentage>', 'calc-interpolate(0%, 0%: 1px)'],
             // Type checking and simplification of <calc-sum> and <calc-interpolate()>
             ['<length-percentage>', 'calc-interpolate(calc(0%), calc(0): calc(1px * 1), 1: 1% + 1px)', 'calc-interpolate(0%, 0: 1px, 1: 1% + 1px)'],
