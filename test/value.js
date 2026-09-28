@@ -2345,26 +2345,71 @@ describe('<calc-interpolate()>', () => {
     })
     test('valid', () => {
         const valid = [
-            // Mixed <progress-source> and <input-position> types
-            ['<number>', 'CALC-INTERPOLATE(--timeline, 0: 0, 1%: 1)', 'calc-interpolate(--timeline, 0: 0, 1%: 1)'],
-            ['<number>', 'calc-interpolate(--timeline, 0px: 1, 1%: 1)'],
-            ['<number>', 'calc-interpolate(0, 0px: 1, 100%: 1)'],
-            ['<number>', 'calc-interpolate(0%, 0px: 1, 1: 1)'],
-            ['<number>', 'calc-interpolate(0px, 0px: 1, 1: 1)'],
-            // Type checking <percentage> in nested <progress-source> or <input-position> contexts
-            ['<number>', 'calc-interpolate(min(0%), min(0%): 1)', 'calc-interpolate(0%, 0%: 1)'],
-            ['<length-percentage>', 'calc-interpolate(min(0%), min(0%): 1px)', 'calc-interpolate(0%, 0%: 1px)'],
-            ['<length-percentage>', 'calc-interpolate(0%, 0%: 1px)'],
-            // Type checking and simplification of <calc-sum> and <calc-interpolate()>
-            ['<length-percentage>', 'calc-interpolate(calc(0%), calc(0): calc(1px * 1), 1: 1% + 1px)', 'calc-interpolate(0%, 0: 1px, 1: 1% + 1px)'],
-            ['<length-percentage>', 'calc(1px * calc-interpolate(0%, 0: 1% / 1px, 1: (1% + 1px) / 1px))'],
-            // Omitted component values
-            ['<number>', 'calc-interpolate(0 by linear linear, 0: 1, linear, 1: 1)', 'calc-interpolate(0, 0: 1, 1: 1)'],
-            // Implicit interpolation stop
-            ['<number>', 'calc-interpolate(0, 0 1: 0)', 'calc-interpolate(0, 0: 0, 1: 0)'],
+            // Single argument
+            ['<number>', 'calc-interpolate(0, 0: 1)', 'calc(1)'],
+            ['<length>', 'calc-interpolate(0, 0: 1em)', 'calc(1em)'],
+            ['<length-percentage>', 'calc-interpolate(0, 0: 1%)', 'calc(1%)'],
+            // Identical units
+            ['<number>', 'calc-interpolate(-1, 0: 0, 1: 2)', 'calc(-2)'],
+            ['<number>', 'calc-interpolate(0, 0: 0, 1: 2)', 'calc(0)'],
+            ['<number>', 'calc-interpolate(0.5, 0: 0, 1: 2)', 'calc(1)'],
+            ['<number>', 'calc-interpolate(1, 0: 0, 1: 2)', 'calc(2)'],
+            ['<number>', 'calc-interpolate(2, 0: 0, 1: 2)', 'calc(4)'],
+            ['<number>', 'calc-interpolate(0, 0em: 0, 1em: 2)', 'calc(0)'],
+            ['<number>', 'CALC-INTERPOLATE(1em by linear linear, 0em: 0, linear, 2em: 2)', 'calc-interpolate(1em, 0em: 0, 2em: 2)'],
+            ['<number>', 'calc-interpolate(50%, 0%: 0, 100%: 2)', 'calc(1)'],
+            ['<length>', 'calc-interpolate(1, 0: 0em, 2: 2em)', 'calc(1em)'],
+            ['<length-percentage>', 'calc-interpolate(1, 0: 0%, 2: 2%)', 'calc(1%)'],
+            ['<percentage>', 'calc-interpolate(1, 0: 0%, 2: 2%)', 'calc(1%)'],
+            // Different units
+            ['<number>', 'calc-interpolate(0.5, 0%: 0, 1: 2)', 'calc(1)'],
+            ['<number>', 'calc-interpolate(0.5, 0px: 0, 1px: 2)', 'calc(1)'],
+            ['<number>', 'calc-interpolate(50%, 0: 0, 1: 2)', 'calc(1)'],
+            ['<number>', 'calc-interpolate(50%, 0px: 0, 1px: 2)', 'calc(1)'],
+            ['<number>', 'calc-interpolate(48px, 0px: 0, 1in: 2)', 'calc(1)'],
+            ['<number>', 'calc-interpolate(1px, 0px: 0, 1em: 2)'],
+            ['<length>', 'calc-interpolate(1, 0: 0px, 2: 1in)', 'calc(48px)'],
+            ['<length>', 'calc-interpolate(1, 0: 0px, 2: 1em)'],
+            ['<length-percentage>', 'calc-interpolate(1, 0: 0px, 2: calc-interpolate(1, 0: 0%, 2: 2%))', 'calc-interpolate(1, 0: 0px, 2: 1%)'],
+            // Stop fixup
+            ['<number>', 'calc-interpolate(0.5, 1: 2, 0: 0)', 'calc(1)'],
+            ['<number>', 'calc-interpolate(-2, 5px: 0, 9px: 1, 1px: 2)', 'calc(2)'],
+            ['<number>', 'calc-interpolate(-1, 5px: 0, 9px: 1, 1px: 2)', 'calc(1)'],
+            ['<number>', 'calc-interpolate(0, 5px: 0, 9px: 1, 1px: 2)', 'calc(0)'],
+            ['<number>', 'calc-interpolate(0.5, 5px: 0, 9px: 1, 1px: 2)', 'calc(1)'],
+            ['<number>', 'calc-interpolate(1, 5px: 0, 9px: 1, 1px: 2)', 'calc(2)'],
+            ['<number>', 'calc-interpolate(2, 5px: 0, 9px: 1, 1px: 2)', 'calc(4)'],
+            // Implicit stop
+            ['<number>', 'calc-interpolate(0, 0 2: 2)', 'calc(2)'],
+            ['<number>', 'calc-interpolate(1, 0 2: 2)', 'calc(2)'],
+            ['<number>', 'calc-interpolate(2, 0 2: 2)', 'calc(2)'],
+            ['<length>', 'calc-interpolate(3, 0 1: 1em, ease, 2: 1px)', 'calc-interpolate(3, 0: 1em, ease, 1: 1em, 2: 1px)'],
+            ['<number>', 'calc-interpolate(0, 0px: 1)', 'calc(1)'],
+            ['<number>', 'calc-interpolate(1, 0px: 1)', 'calc(1)'],
+            ['<number>', 'calc-interpolate(0px, 0px: 1)', 'calc(1)'],
+            ['<number>', 'calc-interpolate(1px, 0px: 1)', 'calc(infinity)'],
+            // Easing
+            ['<number>', 'calc-interpolate(0.5 by ease, 0: 0, 1: 1)', 'calc(0.802403)'],
+            ['<number>', 'calc-interpolate(0.5 ease, 0: 0, 1: 1)', 'calc(0.802403)'],
+            ['<number>', 'calc-interpolate(0.5, 0: 0, ease, 1: 1)', 'calc(0.802403)'],
+            // Blocked simplification
+            ['<number>', 'calc-interpolate(sibling-count(), 0: 0)', 'calc-interpolate(sibling-count(), 0: 0)', styleRule],
+            ['<number>', 'calc-interpolate(1, sibling-count(): 0)', 'calc-interpolate(1, sibling-count(): 0)', styleRule],
+            ['<number>', 'calc-interpolate(1, 0: 0, 1: sibling-count())', 'sibling-count()', styleRule],
+            ['<number>', 'calc-interpolate(1, 0: 0, 2: sibling-count())', 'calc-interpolate(1, 0: 0, 2: sibling-count())', styleRule],
+            ['<length-percentage>', 'calc-interpolate(1, 0: 0px, 1: 1em)', 'calc(1em)'],
+            ['<length-percentage>', 'calc-interpolate(1, 0: 0px, 2: 1em)'],
+            ['<number>', 'calc-interpolate(1 by steps(sibling-count()), 0: 0, 1: 1)', 'calc-interpolate(1 by steps(sibling-count()), 0: 0, 1: 1)', styleRule],
+            ['<number>', 'calc-interpolate(1 steps(sibling-count()), 0: 0, 1: 1)', 'calc(1)', styleRule],
+            ['<number>', 'calc-interpolate(1 steps(sibling-count()), 0: 0, 2: 1)', 'calc-interpolate(1 steps(sibling-count()), 0: 0, 2: 1)', styleRule],
+            ['<number>', 'calc-interpolate(1, 0: 0, steps(sibling-count()), 1: 1)', 'calc(1)', styleRule],
+            ['<number>', 'calc-interpolate(1, 0: 0, steps(sibling-count()), 2: 1)', 'calc-interpolate(1, 0: 0, steps(sibling-count()), 2: 1)', styleRule],
+            // Type checking and simplification of <progress-source> and <input-position>
+            ['<number>', 'calc-interpolate(min(0%), min(0%): 1)', 'calc(1)'],
+            ['<length-percentage>', 'calc-interpolate(min(0%), min(0%): 1px)', 'calc(1px)'],
         ]
-        valid.forEach(([definition, input, expected]) =>
-            assert.valid(definition, input, expected, styleRule))
+        valid.forEach(([definition, input, expected, context]) =>
+            assert.valid(definition, input, expected, context))
     })
 })
 describe('<random()>', () => {
@@ -2387,7 +2432,7 @@ describe('<random()>', () => {
             { base: 0, element: null, identifier: null, scope: 'ua-any-property-1' },
             { base: 1, element: null, identifier: null, scope: 'ua-any-property-2' })
 
-        // Explicit <random-key>
+        // Implicit <random-key>
         assert.valid('<number>', 'RANDOM(1, 1)', 'random(element-scoped ua-any-property-1, 1, 1)', createDeclarationContext(styleRule))
         assert.valid('<number>', 'random(auto, 1, 1)', 'random(element-scoped ua-any-property-1, 1, 1)', createDeclarationContext(styleRule))
         // Identical units
@@ -2975,7 +3020,7 @@ describe('<color>', () => {
         assert.valid('<color>', 'alpha(from green / 50.1%)', 'alpha(from green / 0.5)')
     })
     test('valid <color()>', () => {
-        // Explicit `xyz` color space
+        // Implicit `xyz` color space
         assert.valid('<color>', 'color(xyz 0 0 0)', 'color(xyz-d65 0 0 0)')
         // Out of range arguments
         assert.valid('<color>', 'color(srgb -1 -1 -1 / -1)', 'color(srgb -1 -1 -1 / 0)')
@@ -3079,7 +3124,6 @@ describe('<color>', () => {
         // Omitted <color-interpolation-method> and <percentage>
         assert.valid('<color>', 'color-mix(in oklab, green 50%, green 50%)', 'color-mix(green, green)')
         assert.valid('<color>', 'color-mix(green 75%, green 75%)', 'color-mix(green, green)')
-        // Explicit <percentage>
         assert.valid('<color>', 'color-mix(green 1%, green)', 'color-mix(green 1%, green 99%)')
         assert.valid('<color>', 'color-mix(green calc(50%), green 50%)')
         assert.valid('<color>', 'color-mix(green 25%, green 25%)')
