@@ -1919,9 +1919,11 @@ describe('background', () => {
             ['repeat-y', { 'background-repeat-x': 'no-repeat' }],
             ['space', { 'background-repeat-x': 'space', 'background-repeat-y': 'space' }],
             ['padding-box', { 'background-clip': 'padding-box' }],
-            ['border-box', { 'background-origin': 'border-box' }],
             ['padding-box content-box', { 'background-clip': 'content-box' }],
-            ['border-area', { 'background-clip': 'border-area' }],
+            ['padding-box border-area', { 'background-clip': 'border-area' }],
+            ['border-box', { 'background-origin': 'border-box' }],
+            ['border-area', { 'background-clip': 'border-area', 'background-origin': 'border-box' }],
+            ['text', { 'background-clip': 'text', 'background-origin': 'border-box' }],
         ]
         values.forEach(([input, declared = {}]) => {
             style.background = input
@@ -1932,13 +1934,13 @@ describe('background', () => {
         // All longhands cannot be represented
         style.backgroundImage = 'none, none'
         assert.equal(style.background, '')
-        assert.equal(style.cssText, 'background-image: none, none; background-position: 0% 0%; background-size: auto; background-repeat: repeat; background-attachment: scroll; background-origin: padding-box; background-clip: border-area; background-color: transparent; background-blend-mode: normal;')
+        assert.equal(style.cssText, 'background-image: none, none; background-position: 0% 0%; background-size: auto; background-repeat: repeat; background-attachment: scroll; background-origin: border-box; background-clip: text; background-color: transparent; background-blend-mode: normal;')
         style.backgroundImage = 'initial'
         assert.equal(style.background, '')
-        assert.equal(style.cssText, 'background-image: initial; background-position: 0% 0%; background-size: auto; background-repeat: repeat; background-attachment: scroll; background-origin: padding-box; background-clip: border-area; background-color: transparent; background-blend-mode: normal;')
+        assert.equal(style.cssText, 'background-image: initial; background-position: 0% 0%; background-size: auto; background-repeat: repeat; background-attachment: scroll; background-origin: border-box; background-clip: text; background-color: transparent; background-blend-mode: normal;')
         style.setProperty('background-image', 'none', 'important')
         assert.equal(style.background, '')
-        assert.equal(style.cssText, 'background-image: none !important; background-position: 0% 0%; background-size: auto; background-repeat: repeat; background-attachment: scroll; background-origin: padding-box; background-clip: border-area; background-color: transparent; background-blend-mode: normal;')
+        assert.equal(style.cssText, 'background-image: none !important; background-position: 0% 0%; background-size: auto; background-repeat: repeat; background-attachment: scroll; background-origin: border-box; background-clip: text; background-color: transparent; background-blend-mode: normal;')
         style.background = 'var(--custom)'
         style.backgroundImage = 'var(--custom)'
         assert.equal(style.background, '')
