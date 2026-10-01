@@ -3990,7 +3990,7 @@ describe('<step-easing-function>', () => {
         const steps = {
             name: 'steps',
             types: ['<function>', '<steps()>', '<step-easing-function>'],
-            value: list([count, comma, position])
+            value: list([count, comma, position]),
         }
         assert.representation('<step-easing-function>', 'steps(calc(0), jump-none)', steps)
     })

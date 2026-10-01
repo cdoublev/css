@@ -831,7 +831,7 @@ export class HTMLInputElement extends HTMLElement {
         switch (this.type) {
             case 'checkbox':
             case 'radio':
-                return this.required && !this.checked
+                return (this.required && !this.checked)
                     ? { valueMissing: true }
                     : { valid: true }
             case 'date':

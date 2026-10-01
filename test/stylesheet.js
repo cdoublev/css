@@ -29,16 +29,15 @@ import {
     CSSStyleRule,
     CSSStyleSheet,
     MediaList,
-    StyleSheetList,
 } from '../lib/cssom/index.js'
 import { after, afterEach, describe, it, test } from 'node:test'
 import { HTMLDocument } from './dom.js'
 import assert from 'node:assert/strict'
 import fs from 'node:fs/promises'
 import http from 'node:http'
+import { implForWrapper } from '../lib/cssom/utils.js'
 import { install } from '@cdoublev/css'
 import path from 'node:path'
-import { implForWrapper } from '../lib/cssom/utils.js'
 
 /**
  * @param {string} [rules]
