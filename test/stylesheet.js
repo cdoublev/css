@@ -1000,9 +1000,11 @@ describe('CSSNestedDeclarations', () => {
                 @starting-style { color: red }
                 @supports (color: green) { color: red }
             }
+            @scope { color: green }
         `)
+        const { cssRules: [styleRule, scopeRule] } = styleSheet
 
-        for (const parentRule of styleSheet.cssRules[0].cssRules) {
+        for (const parentRule of [...styleRule.cssRules, scopeRule]) {
 
             const declarations = parentRule.cssRules[0]
 
