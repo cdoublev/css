@@ -616,6 +616,36 @@ describe('CSSFontPaletteValuesRule', () => {
         assert.equal(rule.overrideColors, '0 green')
     })
 })
+describe('CSSFunctionDeclarations', () => {
+    test('properties', () => {
+
+        const styleSheet = createStyleSheet(`
+            @function --name() {
+                @container name { result: 0 }
+                @layer { result: 0 }
+                @media { result: 0 }
+                @scope { result: 0 }
+                @starting-style { result: 0 }
+                @supports (color: green) { result: 0 }
+            }
+        `)
+
+        for (const parentRule of styleSheet.cssRules[0].cssRules) {
+
+            const declarations = parentRule.cssRules[0]
+
+            declarations.style.result = '1'
+
+            // CSSRule
+            assert.equal(declarations.cssText, 'result: 1;')
+            assert.equal(declarations.parentRule, parentRule)
+            assert.equal(declarations.parentStyleSheet, styleSheet)
+
+            // CSSFunctionDeclarations
+            assert.equal(CSSFunctionDescriptors.is(declarations.style), true)
+        }
+    })
+})
 describe('CSSFunctionRule, CSSFunctionDeclarations', () => {
     test('properties', () => {
 
@@ -1017,6 +1047,36 @@ describe('CSSNestedDeclarations', () => {
 
             // CSSNestedDeclarations
             assert.equal(CSSStyleProperties.is(declarations.style), true)
+        }
+    })
+})
+describe('CSSPageDeclarations', () => {
+    test('properties', () => {
+
+        const styleSheet = createStyleSheet(`
+            @page {
+                @container name { color: red }
+                @layer { color: red }
+                @media { color: red }
+                @scope { color: red }
+                @starting-style { color: red }
+                @supports (color: green) { color: red }
+            }
+        `)
+
+        for (const parentRule of styleSheet.cssRules[0].cssRules) {
+
+            const declarations = parentRule.cssRules[0]
+
+            declarations.style.color = 'green'
+
+            // CSSRule
+            assert.equal(declarations.cssText, 'color: green;')
+            assert.equal(declarations.parentRule, parentRule)
+            assert.equal(declarations.parentStyleSheet, styleSheet)
+
+            // CSSPageDeclarations
+            assert.equal(CSSPageDescriptors.is(declarations.style), true)
         }
     })
 })
