@@ -1216,6 +1216,10 @@ describe('CSSStyleRule', () => {
         assert.equal(mediaRule.parentRule, null)
         assert.equal(cssRules[0].conditionText, 'screen')
         assert.equal(cssRules[1].conditionText, 'all')
+
+        rule.insertRule('@page { color: red } color: green')
+
+        assert.equal(rule.cssText, 'style { color: green; @media screen { } @media all { } }')
     })
 })
 describe('CSSSupportsRule', () => {
