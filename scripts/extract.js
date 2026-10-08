@@ -85,6 +85,8 @@ const replaced = {
         'border-start-start-radius': { initial: '0' },
         // TODO: fix `value` of `clip`
         'clip': { value: 'rect([<length> | auto]{4} | [<length> | auto]#{4}) | auto' },
+        // https://github.com/w3c/csswg-drafts/issues/13478
+        'column-width': { initial: 'auto' },
         // TODO: fix `value` of `container-type`
         'container-type': 'normal | [size | inline-size] || scroll-state || anchored',
         // TODO: fix `value` of `copy-into`
@@ -457,6 +459,13 @@ const excluded = {
             // Superseded by CSS Page Floats
             'clear',
             'float',
+            // Superseded by CSS Sizing
+            'block-size',
+            'inline-size',
+            'max-block-size',
+            'max-inline-size',
+            'min-block-size',
+            'min-inline-size',
             // Superseded by CSS Positioned Layout
             'inset',
             'inset-block',
@@ -467,6 +476,10 @@ const excluded = {
             'inset-inline-start',
             // https://github.com/w3c/csswg-drafts/issues/7371
             'text-align',
+        ],
+        'css-multicol': [
+            // Prefer CSS Sizing
+            'column-width',
         ],
         'css-round-display': [
             // https://github.com/w3c/csswg-drafts/issues/6433

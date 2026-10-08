@@ -45,7 +45,7 @@
   "devDependencies": {
     "@cdoublev/eslint-config": "^0.13.0",
     "webidl2js": "cdoublev/webidl2js#es-module",
-    "webref": "w3c/webref#1b58ba90321299d5cf73bac88718b07d198bd79e"
+    "webref": "w3c/webref#18d603ecda27e6fc7b8b755e9d9e6a12d8a04ce2"
   },
   "publishConfig": {
     "access": "public"

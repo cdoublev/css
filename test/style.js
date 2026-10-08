@@ -1665,16 +1665,16 @@ describe('-webkit-line-clamp', () => {
         // none
         style.webkitLineClamp = 'none'
         assert.equal(style.length, longhands.length)
-        assert.equal(style.maxLines, 'none')
-        assert.equal(style.blockEllipsis, 'auto')
-        assert.equal(style.continue, 'auto')
+        assert.equal(style.maxLines, 'auto')
+        assert.equal(style.blockEllipsis, 'ellipsis')
+        assert.equal(style.continue, 'normal')
         assert.equal(style.webkitLineClamp, 'none')
         assert.equal(style.cssText, '-webkit-line-clamp: none;')
 
         // <integer>
         style.webkitLineClamp = '1'
         assert.equal(style.maxLines, '1')
-        assert.equal(style.blockEllipsis, 'auto')
+        assert.equal(style.blockEllipsis, 'ellipsis')
         assert.equal(style.continue, '-webkit-legacy')
         assert.equal(style.webkitLineClamp, '1')
         assert.equal(style.cssText, 'line-clamp: 1 -webkit-legacy;')
@@ -1682,15 +1682,15 @@ describe('-webkit-line-clamp', () => {
         // All longhands cannot be represented
         style.continue = initial('continue')
         assert.equal(style.webkitLineClamp, '')
-        assert.equal(style.cssText, 'max-lines: 1; block-ellipsis: auto; continue: auto;')
+        assert.equal(style.cssText, 'max-lines: 1; block-ellipsis: ellipsis; continue: normal;')
         style.blockEllipsis = initial('block-ellipsis')
         style.continue = '-webkit-legacy'
         assert.equal(style.webkitLineClamp, '')
         assert.equal(style.cssText, 'line-clamp: 1 no-ellipsis -webkit-legacy;')
         style.maxLines = initial('max-lines')
-        style.blockEllipsis = 'auto'
+        style.blockEllipsis = 'ellipsis'
         assert.equal(style.webkitLineClamp, '')
-        assert.equal(style.cssText, 'line-clamp: auto -webkit-legacy;')
+        assert.equal(style.cssText, 'line-clamp: ellipsis -webkit-legacy;')
         style.blockEllipsis = initial('block-ellipsis')
         style.continue = initial('continue')
         assert.equal(style.webkitLineClamp, '')
@@ -3316,24 +3316,24 @@ describe('line-clamp', () => {
         // Omitted values
         style.lineClamp = '1'
         assert.equal(style.maxLines, '1')
-        assert.equal(style.blockEllipsis, 'auto')
+        assert.equal(style.blockEllipsis, 'ellipsis')
         assert.equal(style.continue, 'collapse')
         assert.equal(style.lineClamp, '1')
         assert.equal(style.cssText, 'line-clamp: 1;')
-        style.lineClamp = 'auto'
-        assert.equal(style.maxLines, 'none')
-        assert.equal(style.blockEllipsis, 'auto')
+        style.lineClamp = 'ellipsis'
+        assert.equal(style.maxLines, 'auto')
+        assert.equal(style.blockEllipsis, 'ellipsis')
         assert.equal(style.continue, 'collapse')
-        assert.equal(style.lineClamp, 'auto')
-        assert.equal(style.cssText, 'line-clamp: auto;')
+        assert.equal(style.lineClamp, 'ellipsis')
+        assert.equal(style.cssText, 'line-clamp: ellipsis;')
         style.lineClamp = '1 -webkit-legacy'
         assert.equal(style.maxLines, '1')
-        assert.equal(style.blockEllipsis, 'auto')
+        assert.equal(style.blockEllipsis, 'ellipsis')
         assert.equal(style.continue, '-webkit-legacy')
         assert.equal(style.lineClamp, '1 -webkit-legacy')
         assert.equal(style.cssText, 'line-clamp: 1 -webkit-legacy;')
         style.lineClamp = 'no-ellipsis -webkit-legacy'
-        assert.equal(style.maxLines, 'none')
+        assert.equal(style.maxLines, 'auto')
         assert.equal(style.blockEllipsis, 'no-ellipsis')
         assert.equal(style.continue, '-webkit-legacy')
         assert.equal(style.lineClamp, 'no-ellipsis -webkit-legacy')
@@ -3343,18 +3343,18 @@ describe('line-clamp', () => {
         style.maxLines = '1'
         style.continue = initial('continue')
         assert.equal(style.lineClamp, '')
-        assert.equal(style.cssText, 'max-lines: 1; block-ellipsis: no-ellipsis; continue: auto;')
+        assert.equal(style.cssText, 'max-lines: 1; block-ellipsis: no-ellipsis; continue: normal;')
         style.maxLines = initial('max-lines')
-        style.blockEllipsis = 'auto'
+        style.blockEllipsis = 'ellipsis'
         assert.equal(style.lineClamp, '')
         assert.equal(style.cssText, '-webkit-line-clamp: none;')
         style.blockEllipsis = initial('block-ellipsis')
         style.continue = 'collapse'
         assert.equal(style.lineClamp, '')
-        assert.equal(style.cssText, 'max-lines: none; block-ellipsis: no-ellipsis; continue: collapse;')
+        assert.equal(style.cssText, 'max-lines: auto; block-ellipsis: no-ellipsis; continue: collapse;')
         style.continue = 'discard'
         assert.equal(style.lineClamp, '')
-        assert.equal(style.cssText, 'max-lines: none; block-ellipsis: no-ellipsis; continue: discard;')
+        assert.equal(style.cssText, 'max-lines: auto; block-ellipsis: no-ellipsis; continue: discard;')
     })
 })
 describe('list-style', () => {
@@ -3514,6 +3514,27 @@ describe('mask-border', () => {
             longhands.forEach(longhand => assert.equal(style[longhand], declared[longhand] ?? initial(longhand)))
             assert.equal(style.maskBorder, expected)
         })
+    })
+})
+describe('max-size, min-size, size', () => {
+    test('expansion and reification', () => {
+
+        const style = createStyle()
+        const longhands = shorthands.get('max-size')[0]
+
+        // Initial longhand values
+        style.maxSize = 'none none'
+        assert.equal(style.length, longhands.length)
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+
+        // Omitted values
+        style.maxSize = 'none'
+        longhands.forEach(longhand => assert.equal(style[longhand], initial(longhand)))
+        assert.equal(style.maxSize, 'none')
+        style.maxSize = 'none 1px'
+        assert.equal(style.maxWidth, initial('max-width'))
+        assert.equal(style.maxHeight, '1px')
+        assert.equal(style.maxSize, 'none 1px')
     })
 })
 describe('offset', () => {
