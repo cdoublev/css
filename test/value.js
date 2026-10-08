@@ -28,12 +28,12 @@ import {
     string,
     time,
 } from '../lib/values/value.js'
-import { createContext, parseGrammar } from '../lib/parse/parser.js'
+import { createContext, createVirtualContext } from '../lib/parse/context.js'
 import { describe, test } from 'node:test'
 import { toDegrees, toRadians } from '../lib/utils/math.js'
 import { Assert } from 'node:assert/strict'
-import { createVirtualContext } from '../lib/utils/context.js'
 import { keywords as cssWideKeywords } from '../lib/values/substitutions.js'
+import { parseGrammar } from '../lib/parse/parser.js'
 import properties from '../lib/properties/definitions.js'
 import { serializeComponentValue } from '../lib/serialize.js'
 import { states } from '../lib/state.js'

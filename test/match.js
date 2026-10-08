@@ -41,15 +41,16 @@ import {
 } from './dom.js'
 import { HTML_NAMESPACE, SVG_NAMESPACE, XLINK_NAMESPACE, XML_NAMESPACE } from '../lib/utils/dom/constants.js'
 import assert, { Assert, AssertionError } from 'node:assert/strict'
-import { createContext, parseGrammar } from '../lib/parse/parser.js'
 import { create as createState, states } from '../lib/state.js'
 import { describe, test } from 'node:test'
 import { matchPseudoElementAgainstSelectors, matchTreesAgainstSelectors } from '../lib/match/selector.js'
 import { CSSPseudoElement } from '../lib/cssom/index.js'
+import { createContext } from '../lib/parse/context.js'
 import { install } from '@cdoublev/css'
 import matchMediaQueryList from '../lib/match/media.js'
 import matchSupport from '../lib/match/support.js'
 import { omitted } from '../lib/values/value.js'
+import { parseGrammar } from '../lib/parse/parser.js'
 
 install()
 
