@@ -134,7 +134,7 @@ function serializeTypes(types) {
 /**
  * @param {string} name
  * @param {string} value
- * @param {object} context
+ * @param {string} context
  * @returns {string[]}
  */
 function getInitialValue(name, value, context, depth) {

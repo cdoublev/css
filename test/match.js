@@ -1,4 +1,5 @@
 
+import { Assert, AssertionError } from 'node:assert/strict'
 import {
     Comment,
     DocumentFragment,
@@ -40,7 +41,6 @@ import {
     Text,
 } from './dom.js'
 import { HTML_NAMESPACE, SVG_NAMESPACE, XLINK_NAMESPACE, XML_NAMESPACE } from '../lib/utils/dom/constants.js'
-import assert, { Assert, AssertionError } from 'node:assert/strict'
 import { create as createState, states } from '../lib/state.js'
 import { describe, test } from 'node:test'
 import { matchPseudoElementAgainstSelectors, matchTreesAgainstSelectors } from '../lib/match/selector.js'
@@ -382,7 +382,7 @@ describe('media', () => {
         assert.mismatch('(resolution: 2dppx)')
         assert.match('(resolution: 1dppx)')
         assert.match('(resolution: infinite)', undefined, { devicePixelRatio: Infinity })
-        assert.mismatch('(resolution: calc(infinity))', undefined, { devicePixelRatio: Infinity })
+        assert.mismatch('(resolution: calc(1dppx * infinity))', undefined, { devicePixelRatio: Infinity })
         assert.mismatch('(vertical-viewport-segments: 0)')
         assert.match('(vertical-viewport-segments: 2)', { system: { display: { segments: [1, 2] } } })
         assert.match('(vertical-viewport-segments: 1)')
