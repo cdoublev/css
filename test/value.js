@@ -3711,6 +3711,14 @@ describe('<mf-value>', () => {
             assert.valid('<mf-value>', input, input, context))
     })
 })
+describe('<opacity-value>', () => {
+    test('representation', () => {
+        assert.representation('<opacity-value>', '1', number(1, ['<opacity-value>']))
+    })
+    test('valid', () => {
+        assert.valid('<opacity-value>', '50%', '0.5')
+    })
+})
 describe('<opentype-tag>', () => {
     test('invalid', () => {
         // Less or more than 4 characters
